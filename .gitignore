@@ -1,0 +1,9 @@
+venv/
+.idea/
+__pycache__
+*.env
+*.csv
+static/
+.gcloudignore
+*.json
+*.asm
