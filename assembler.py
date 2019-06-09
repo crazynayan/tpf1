@@ -81,28 +81,28 @@ class AssemblerLine:
         self._parse_line()
         return self
 
-    def get_branch(self, labels, function_call=False):
+    def get_branch(self, labels):
         """
         Check whether assembler line is branching to a label.
         Sanitize the line before calling this function.
         :param labels: list of valid labels.
-        :param function_call: whether branches for commands that call a function (BAS, JAS, ENTRC) need to be returned
-        :return: list of labels where the code branches too.
+        :return: A type of Block.reference dict where the keys Block.GOES and Block.CALLS are initialize with
+                 appropriate branch labels.
         """
-        branches = list()
+        branches = {Block.GOES: list(), Block.CALLS: list()}
         if not labels:
             return branches
         words = [parameter for operand in self.operands for parameter in operand.split('=')]
         for word in words:
             if word in labels:
                 if self.command in self.TRUE_BRANCH:
-                    branches.append(word)
-                if function_call and self.command in self.FUNCTION_CALL:
-                    branches.append(word)
+                    branches[Block.GOES].append(word)
+                if self.command in self.FUNCTION_CALL:
+                    branches[Block.CALLS].append(word)
                 operands = ''.join(self.operands)
                 index = operands.find(word)
                 if index > 0 and operands[index - 1] == '=':
-                    branches.append(word)
+                    branches[Block.GOES].append(word)
         return branches
 
 
@@ -187,52 +187,65 @@ class AssemblerProgram:
         blocks[current_label] = Block(current_label, self.name)
         for assembler_line in self.lines:
             label = assembler_line.label
+            # Current line in a label -> Initialize a new block
             if label:
                 blocks[label] = Block(label, self.name)
+                # If the previous block is falling down to this block then add its reference
                 if not exit_command:
-                    blocks[current_label].add_to_blocks([label])
+                    blocks[current_label].add_references({Block.GOES: [label]})
                 current_label = label
                 exit_command = False
             if assembler_line.command in AssemblerLine.EXIT_COMMANDS:
                 exit_command = True
-            if assembler_line.command in AssemblerLine.FUNCTION_CALL:
-                branches = assembler_line.get_branch(self.labels, function_call=True)
-                if branches:
-                    blocks[current_label].function_calls.extend(branches)
             branches = assembler_line.get_branch(self.labels)
-            if branches:
-                blocks[current_label].add_to_blocks(branches)
+            blocks[current_label].add_references(branches)
         self.blocks = blocks
         if save:
-            for key in blocks:
-                blocks[key].create()
+            for key in self.blocks:
+                self.blocks[key].create()
         return True
+
+    def load_blocks(self):
+        self.blocks = Block.query(dict_type=True, name=self.name)
 
     def create_paths(self, save=False):
         if not self.blocks:
-            self.blocks = Block.query(dict_type=True, name=self.name)
+            self.load_blocks()
         if not self.blocks:
             return False
         self._build_path(self.blocks[self.root_label])
-        function_call_blocks = [self.blocks[key] for key in self.blocks if self.blocks[key].function_calls]
+        # Create paths for function calls
+        call_blocks = [self.blocks[key] for key in self.blocks if self.blocks[key].get_calls()]
         done_labels = set()
-        for block in function_call_blocks:
-            for label in block.function_calls:
+        for block in call_blocks:
+            for label in block.get_calls():
                 if label not in done_labels:
                     self._build_path(self.blocks[label])
                 done_labels.add(label)
+        # Calculate the weight of each path
+        for asm_path in self.paths:
+            asm_path.weight = sum([self.blocks[label].depth for label in asm_path.path])
+        # Save it into database if requested
         if save:
             for asm_path in self.paths:
-                Path(self.name, asm_path).create()
+                asm_path.create()
+            for key in self.blocks:
+                self.blocks[key].update()
 
     def _build_path(self, block, asm_path=None):
         if asm_path:
             asm_path.append(block.label)
         else:
             asm_path = [block.label]
-        for label in block.to_blocks:
+        next_labels = block.get_next()
+        for label in next_labels:
             if label not in asm_path:
                 self._build_path(self.blocks[label], asm_path.copy())
-        if not block.to_blocks:
-            self.paths.append(asm_path)
+            else:   # If label is already in the path (it is looping) then add the loop label in the block.
+                self.blocks[block.label].add_references({Block.LOOPS: [label]})
+        # Add the complete path when the last block is reached
+        if not next_labels:
+            self.paths.append(Path(self.name, asm_path))
+            for label in asm_path:
+                self.blocks[label].depth += 1
         return
