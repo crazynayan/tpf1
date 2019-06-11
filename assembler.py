@@ -1,5 +1,5 @@
 from os import path
-from models import Block, Path
+from models import Block, Path, Reference, Component
 
 
 class AssemblerLine:
@@ -10,8 +10,8 @@ class AssemblerLine:
     FALSE_LABELS = {'DS', 'DC', 'EQU', 'DSECT', 'CSECT'}
     TRUE_BRANCH = {'B', 'BE', 'BNE', 'BH', 'BNH', 'BL', 'BNL', 'BM', 'BNM', 'BP', 'BNP', 'BC', 'BO', 'BNO', 'BZ', 'BNZ',
                    'J', 'JE', 'JNE', 'JH', 'JNH', 'JL', 'JNL', 'JM', 'JNM', 'JP', 'JNP', 'JC', 'JO', 'JNO', 'JZ', 'JNZ'}
-    EXIT_COMMANDS = {'B', 'J', 'ENTNC', 'ENTDC', 'BR', 'EXITC', 'SENDA'}
-    FUNCTION_CALL = {'BAS', 'JAS', 'ENTRC'}
+    EXIT_COMMANDS = Component.TYPE['exit']
+    FUNCTION_CALL = Component.TYPE['call']
 
     def __init__(self, line):
         self.line = line.strip()
@@ -86,23 +86,24 @@ class AssemblerLine:
         Check whether assembler line is branching to a label.
         Sanitize the line before calling this function.
         :param labels: list of valid labels.
-        :return: A type of Block.reference dict where the keys Block.GOES and Block.CALLS are initialize with
-                 appropriate branch labels.
+        :return: A type of Reference objects with the goes and calls attribute of Reference initialize to
+                 the appropriate labels.
         """
-        branches = {Block.GOES: list(), Block.CALLS: list()}
+        branches = Reference()
         if not labels:
             return branches
         words = [parameter for operand in self.operands for parameter in operand.split('=')]
         for word in words:
             if word in labels:
+                label = word
                 if self.command in self.TRUE_BRANCH:
-                    branches[Block.GOES].append(word)
+                    branches.add(goes=label)
                 if self.command in self.FUNCTION_CALL:
-                    branches[Block.CALLS].append(word)
+                    branches.add(calls=label)
                 operands = ''.join(self.operands)
-                index = operands.find(word)
+                index = operands.find(label)
                 if index > 0 and operands[index - 1] == '=':
-                    branches[Block.GOES].append(word)
+                    branches.add(goes=label)
         return branches
 
 
@@ -192,13 +193,13 @@ class AssemblerProgram:
                 blocks[label] = Block(label, self.name)
                 # If the previous block is falling down to this block then add its reference
                 if not exit_command:
-                    blocks[current_label].add_references({Block.GOES: [label]})
+                    blocks[current_label].reference.add(goes=label)
                 current_label = label
                 exit_command = False
             if assembler_line.command in AssemblerLine.EXIT_COMMANDS:
                 exit_command = True
             branches = assembler_line.get_branch(self.labels)
-            blocks[current_label].add_references(branches)
+            blocks[current_label].reference.add(branches)
         self.blocks = blocks
         if save:
             for key in self.blocks:
@@ -242,7 +243,7 @@ class AssemblerProgram:
             if label not in asm_path:
                 self._build_path(self.blocks[label], asm_path.copy())
             else:   # If label is already in the path (it is looping) then add the loop label in the block.
-                self.blocks[block.label].add_references({Block.LOOPS: [label]})
+                self.blocks[block.label].reference.add(loops=label)
         # Add the complete path when the last block is reached
         if not next_labels:
             self.paths.append(Path(self.name, asm_path))

@@ -1,5 +1,5 @@
 from firestore_model import init_firestore_db
-from models import Path, Block
+from models import Path, Block, Reference
 from assembler import AssemblerProgram
 
 
@@ -19,16 +19,16 @@ def show(asm_path, blocks):
     return ''.join(a_path)[:-2]
 
 
-def create(pgm, save=False):
-    if save:
+def create(a_pgm, a_save=False):
+    if a_save:
         Block.delete_all()
-        pgm.create_blocks()
+        a_pgm.create_blocks()
         Path.delete_all()
-        pgm.create_paths(save)
+        a_pgm.create_paths(a_save)
     else:
-        pgm.create_blocks()
-        pgm.create_paths()
-    return pgm
+        a_pgm.create_blocks()
+        a_pgm.create_paths()
+    return a_pgm
 
 
 if __name__ == '__main__':
@@ -48,23 +48,32 @@ if __name__ == '__main__':
     # print(len(pgm.paths))
 
     # For ETA5
-    # pgm_name = 'eta5'
-    # pgm = AssemblerProgram(pgm_name)
-    # save = True
-    # pgm = create(pgm, save)
-    # for key in pgm.blocks:
-    #     print(pgm.blocks[key])
-    # for path in pgm.paths:
-    #     print(show(path, pgm.blocks))
-    # print(len(pgm.paths))
-
-    # Analyze
     pgm_name = 'eta5'
     pgm = AssemblerProgram(pgm_name)
-    pgm.load_blocks()
-    paths = Path.query(name=pgm.name, head='ETA92000')
-    paths.sort(key=lambda item: item.weight)
-    for path in paths:
+    save = False
+    pgm = create(pgm, save)
+    for key in pgm.blocks:
+        print(pgm.blocks[key])
+    for path in pgm.paths:
         print(show(path, pgm.blocks))
+    print(len(pgm.paths))
+
+    # Analyze
+    # pgm_name = 'eta5'
+    # pgm = AssemblerProgram(pgm_name)
+    # pgm.load_blocks()
+    # paths = Path.query(name=pgm.name, head='ETA92000')
+    # paths.sort(key=lambda item: item.weight)
+    # for path in paths:
+    #     print(show(path, pgm.blocks))
+
+    # Test
+    # ref = Reference(goes='A')
+    # ref.add(goes=['B', 'A', 'B', 'C'], calls='B')
+    # print(ref.goes, ref.calls, ref.loops)
+    # block = Block('AAA')
+    # block.reference.add(ref)
+    # block.update()
+    # print(block.reference.goes, block.reference.calls, block.reference.loops)
 
 
