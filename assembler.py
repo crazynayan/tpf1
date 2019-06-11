@@ -1,5 +1,5 @@
 from os import path
-from models import Block, Path, Reference, Component
+from models import Block, Path, References, Component
 
 
 class AssemblerLine:
@@ -23,7 +23,7 @@ class AssemblerLine:
 
     def _parse_line(self):
         """
-        Call from santize line to initialize fields in AssemblerLine
+        Call from sanitize line to initialize fields in AssemblerLine
         :return: None
         """
         words = self.line.split()
@@ -89,7 +89,7 @@ class AssemblerLine:
         :return: A type of Reference objects with the goes and calls attribute of Reference initialize to
                  the appropriate labels.
         """
-        branches = Reference()
+        branches = References()
         if not labels:
             return branches
         words = [parameter for operand in self.operands for parameter in operand.split('=')]
@@ -193,13 +193,13 @@ class AssemblerProgram:
                 blocks[label] = Block(label, self.name)
                 # If the previous block is falling down to this block then add its reference
                 if not exit_command:
-                    blocks[current_label].reference.add(goes=label)
+                    blocks[current_label].add_references(goes=label)
                 current_label = label
                 exit_command = False
             if assembler_line.command in AssemblerLine.EXIT_COMMANDS:
                 exit_command = True
             branches = assembler_line.get_branch(self.labels)
-            blocks[current_label].reference.add(branches)
+            blocks[current_label].add_references(branches)
         self.blocks = blocks
         if save:
             for key in self.blocks:
@@ -208,6 +208,8 @@ class AssemblerProgram:
 
     def load_blocks(self):
         self.blocks = Block.query(dict_type=True, name=self.name)
+        # for key in self.blocks:
+        #     self.blocks[key] = Block.from_dict(self.blocks[key].to_dict())
 
     def create_paths(self, save=False):
         if not self.blocks:
@@ -243,7 +245,7 @@ class AssemblerProgram:
             if label not in asm_path:
                 self._build_path(self.blocks[label], asm_path.copy())
             else:   # If label is already in the path (it is looping) then add the loop label in the block.
-                self.blocks[block.label].reference.add(loops=label)
+                self.blocks[block.label].add_references(loops=label)
         # Add the complete path when the last block is reached
         if not next_labels:
             self.paths.append(Path(self.name, asm_path))

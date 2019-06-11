@@ -333,3 +333,109 @@ class FirestorePage:
         self.has_prev = False
         self.items = None
         self.want = self.NEXT_PAGE
+
+
+class MapToModelMixin:
+    """
+    Overrides from_dict and to_dict of FirestoreModel to ensure firestore maps are converted to/from models while
+    reading and writing from files.
+    Usage:
+    1. For base models: Inherit before FirestoreModel [for e.g. Class(MapToModelMixin, FirestoreModel)].
+    2. For models that are maps of a containing model just inherit MapToModelMixin
+    Override the MAP_OBJECTS field with a set of containing model that are represented by maps in firestore.
+    """
+    MAP_OBJECTS = {}
+    INITIALIZE = 'init'
+
+    def to_dict(self):
+        model_dict = self.__dict__.copy()
+        try:
+            del model_dict['doc_id']
+        except KeyError:
+            pass
+        for field in model_dict:
+            self_field = getattr(self, field)
+            if type(self_field) in self.MAP_OBJECTS:
+                model_dict[field] = getattr(self, field).to_dict()
+            elif isinstance(self_field, list) and self_field and type(self_field[0]) in self.MAP_OBJECTS:
+                model_list = list()
+                if len(self_field) > 1:
+                    for sub_dict in self_field[1:]:
+                        model_list.append(sub_dict.to_dict())
+                model_dict[field] = model_list
+                if len(model_dict) == 1:
+                    return model_list
+        return model_dict
+
+    @classmethod
+    def from_dict(cls, source):
+        model = cls()
+        if isinstance(source, dict):
+            for field in source:
+                if field not in model.__dict__:
+                    continue
+                model_field = getattr(model, field)
+                if type(model_field) in cls.MAP_OBJECTS:
+                    setattr(model, field, type(model_field).from_dict(source[field]))
+                # elif isinstance(model_field, list) and isinstance(source[field], list) \
+                #         and model_field and type(model_field[0]) in cls.MAP_OBJECTS:
+                #     model_list = [type(model_field[0])()]
+                #     for source_dict in source[field]:
+                #         model_list.append(type(model_field[0]).from_dict(source_dict))
+                #     setattr(model, field, model_list)
+                else:
+                    setattr(model, field, source[field])
+        elif isinstance(source, list) and len(model.__dict__) == 1:
+            model_field = getattr(model, next(key for key in model.__dict__))
+            if isinstance(model_field, list) and model_field and type(model_field[0]) in cls.MAP_OBJECTS:
+                model_list = [type(model_field[0])()]
+                for source_dict in source:
+                    model_list.append(type(model_field[0]).from_dict(source_dict))
+                setattr(model, next(key for key in model.__dict__), model_list)
+        return model
+
+
+class CollectionMixin(MapToModelMixin):
+    def __init__(self, ref):
+        self._object_list = list()
+        self._object_list.append(ref())
+
+    def __repr__(self):
+        if self._object_list[0] == self.INITIALIZE and len(self._object_list) == 1:
+            return self.INITIALIZE
+        return ''.join([f'{ref}, ' for ref in self._object_list[1:]])[:-2]
+
+    def __getitem__(self, index):
+        return self._object_list[index]
+
+    def append(self, other):
+        if not isinstance(other, type(self._object_list[0])):
+            return False
+        self._object_list.append(other)
+        return True
+
+    def append_unique(self, other):
+        if not isinstance(other, type(self._object_list[0])):
+            return False
+        if other not in self._object_list:
+            self._object_list.append(other)
+        return True
+
+    def extend(self, others):
+        if not isinstance(others, type(self)) or not others or not isinstance(others[0], type(self._object_list[0])):
+            return False
+        self._object_list.extend(others)
+        return True
+
+    def extend_unique(self, others):
+        if not isinstance(others, type(self)) or not others or not isinstance(others[0], type(self._object_list[0])):
+            return False
+        for other in others:
+            if other not in self._object_list:
+                self._object_list.append(other)
+        return True
+
+    @property
+    def list_values(self):
+        return self._object_list
+

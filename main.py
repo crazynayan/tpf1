@@ -1,5 +1,5 @@
 from firestore_model import init_firestore_db
-from models import Path, Block, Reference
+from models import Path, Block, Reference, References
 from assembler import AssemblerProgram
 
 
@@ -41,7 +41,7 @@ if __name__ == '__main__':
     #     print(f'L={line.label}, C={line.command}, O={line.operands}')
     # pgm.create_blocks()
     # for key in pgm.blocks:
-    #     print(pgm.blocks[key])
+    #     print(pgm.blocks[key].get_str())
     # pgm.create_paths()
     # for path in pgm.paths:
     #     print(show(path, pgm.blocks))
@@ -53,7 +53,7 @@ if __name__ == '__main__':
     save = False
     pgm = create(pgm, save)
     for key in pgm.blocks:
-        print(pgm.blocks[key])
+        print(pgm.blocks[key].get_str())
     for path in pgm.paths:
         print(show(path, pgm.blocks))
     print(len(pgm.paths))
@@ -62,18 +62,17 @@ if __name__ == '__main__':
     # pgm_name = 'eta5'
     # pgm = AssemblerProgram(pgm_name)
     # pgm.load_blocks()
-    # paths = Path.query(name=pgm.name, head='ETA92000')
+    # paths = Path.query(name=pgm.name, head='$$eta5$$')
     # paths.sort(key=lambda item: item.weight)
-    # for path in paths:
+    # for path in paths[:11]:
     #     print(show(path, pgm.blocks))
 
     # Test
-    # ref = Reference(goes='A')
-    # ref.add(goes=['B', 'A', 'B', 'C'], calls='B')
-    # print(ref.goes, ref.calls, ref.loops)
+    # ref = References(goes='A')
+    # ref.add(goes='C', calls='B')
     # block = Block('AAA')
-    # block.reference.add(ref)
+    # block.add_references(ref)
     # block.update()
-    # print(block.reference.goes, block.reference.calls, block.reference.loops)
-
+    # block = Block.query(label='AAA')[0]
+    # print(block.get_str())
 
