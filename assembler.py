@@ -8,10 +8,10 @@ class AssemblerLine:
     TRIM = {'0': 7}
     TRUE_LABELS = {'DS': '0H', 'EQU': '*'}
     FALSE_LABELS = {'DS', 'DC', 'EQU', 'DSECT', 'CSECT'}
-    TRUE_BRANCH = {'B', 'BE', 'BNE', 'BH', 'BNH', 'BL', 'BNL', 'BM', 'BNM', 'BP', 'BNP', 'BC', 'BO', 'BNO', 'BZ', 'BNZ',
+    BRANCH = {'B', 'BE', 'BNE', 'BH', 'BNH', 'BL', 'BNL', 'BM', 'BNM', 'BP', 'BNP', 'BC', 'BO', 'BNO', 'BZ', 'BNZ',
                    'J', 'JE', 'JNE', 'JH', 'JNH', 'JL', 'JNL', 'JM', 'JNM', 'JP', 'JNP', 'JC', 'JO', 'JNO', 'JZ', 'JNZ'}
-    EXIT_COMMANDS = Component.TYPE['exit']
-    FUNCTION_CALL = Component.TYPE['call']
+    EXIT_COMMANDS = {'B', 'J', 'ENTNC', 'ENTDC', 'BR', 'EXITC', 'SENDA'}
+    FUNCTION_CALL = {'BAS', 'JAS', 'ENTRC'}
 
     def __init__(self, line):
         self.line = line.strip()
@@ -96,7 +96,7 @@ class AssemblerLine:
         for word in words:
             if word in labels:
                 label = word
-                if self.command in self.TRUE_BRANCH:
+                if self.command in self.BRANCH:
                     branches.add(goes=label)
                 if self.command in self.FUNCTION_CALL:
                     branches.add(calls=label)
@@ -161,7 +161,7 @@ class AssemblerProgram:
             assembler_line = AssemblerLine(line)
             if self.lines and self.lines[-1].continuation:
                 assembler_line.continuing = True
-                assembler_line.command = self.lines[-1].command
+                assembler_line.command = Component.CONTINUED
             sanitize_line = assembler_line.sanitize()
             if sanitize_line:
                 self.lines.append(sanitize_line)
@@ -185,6 +185,8 @@ class AssemblerProgram:
         blocks = dict()
         current_label = self.root_label
         exit_command = False
+        continue_build = False
+        component = None
         blocks[current_label] = Block(current_label, self.name)
         for assembler_line in self.lines:
             label = assembler_line.label
@@ -200,6 +202,17 @@ class AssemblerProgram:
                 exit_command = True
             branches = assembler_line.get_branch(self.labels)
             blocks[current_label].add_references(branches)
+            if continue_build:
+                component.add_references(self.labels, assembler_line.command, assembler_line.operands)
+            else:
+                component = Component(assembler_line.command, assembler_line.operands)
+                component.add_references(self.labels)
+            if component.can_have_refs:
+                continue_build = True
+            if component.has_refs and not assembler_line.continuation:
+                continue_build = False
+            if not continue_build:
+                blocks[current_label].components.append(component)
         self.blocks = blocks
         if save:
             for key in self.blocks:

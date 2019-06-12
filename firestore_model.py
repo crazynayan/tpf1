@@ -1,6 +1,7 @@
 from firebase_admin import firestore
 from google.cloud.exceptions import NotFound
 from firebase_admin import initialize_app, credentials, get_app
+from google.cloud.firestore import Query
 
 
 def init_firestore_db(gac_key_path, name=None):
@@ -26,8 +27,8 @@ class FirestoreModel:
     DEFAULT = 'name'
     BATCH = None
     DELETE_BATCH_SIZE = 10
-    ORDER_ASCENDING = firestore.Query.ASCENDING
-    ORDER_DESCENDING = firestore.Query.DESCENDING
+    ORDER_ASCENDING = Query.ASCENDING
+    ORDER_DESCENDING = Query.DESCENDING
     try:
         db = firestore.client()
     except ValueError:
@@ -377,12 +378,6 @@ class MapToModelMixin:
                 model_field = getattr(model, field)
                 if type(model_field) in cls.MAP_OBJECTS:
                     setattr(model, field, type(model_field).from_dict(source[field]))
-                # elif isinstance(model_field, list) and isinstance(source[field], list) \
-                #         and model_field and type(model_field[0]) in cls.MAP_OBJECTS:
-                #     model_list = [type(model_field[0])()]
-                #     for source_dict in source[field]:
-                #         model_list.append(type(model_field[0]).from_dict(source_dict))
-                #     setattr(model, field, model_list)
                 else:
                     setattr(model, field, source[field])
         elif isinstance(source, list) and len(model.__dict__) == 1:
@@ -396,12 +391,15 @@ class MapToModelMixin:
 
 
 class CollectionMixin(MapToModelMixin):
-    def __init__(self, ref):
+    def __init__(self, custom_class):
         self._object_list = list()
-        self._object_list.append(ref())
+        if isinstance(custom_class, type(CollectionItemMixin)):
+            self._object_list.append(custom_class())
+        else:
+            self._object_list.append(self.INITIALIZE)
 
     def __repr__(self):
-        if self._object_list[0] == self.INITIALIZE and len(self._object_list) == 1:
+        if self.is_empty:
             return self.INITIALIZE
         return ''.join([f'{ref}, ' for ref in self._object_list[1:]])[:-2]
 
@@ -422,20 +420,54 @@ class CollectionMixin(MapToModelMixin):
         return True
 
     def extend(self, others):
-        if not isinstance(others, type(self)) or not others or not isinstance(others[0], type(self._object_list[0])):
+        if not isinstance(others, type(self)) or others.is_empty or not isinstance(others[0], type(self._object_list[0])):
             return False
-        self._object_list.extend(others)
+        self._object_list.extend(others[1:])
         return True
 
     def extend_unique(self, others):
-        if not isinstance(others, type(self)) or not others or not isinstance(others[0], type(self._object_list[0])):
+        if not isinstance(others, type(self)) or others.is_empty or not isinstance(others[0], type(self._object_list[0])):
             return False
-        for other in others:
+        for other in others[1:]:
             if other not in self._object_list:
                 self._object_list.append(other)
         return True
 
     @property
     def list_values(self):
-        return self._object_list
+        if self.is_empty:
+            return list()
+        else:
+            return self._object_list[1:]
+
+    @property
+    def is_empty(self):
+        return True if len(self._object_list) <= 1 else False
+
+
+class CollectionItemMixin(MapToModelMixin):
+    # Override the DEFAULT with a field name in your class which can never be None
+    DEFAULT = 'name'
+
+    def __init__(self):
+        setattr(self, self.DEFAULT, None)
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+        for key in self.__dict__:
+            if key not in other.__dict__:
+                return False
+            if getattr(self, key) != getattr(other, key):
+                return False
+        return True
+
+    @property
+    def is_empty(self):
+        return True if getattr(self, self.DEFAULT) is None else False
+
+    def get_str(self, text=None):
+        if self.is_empty:
+            return self.INITIALIZE
+        return text if text else f'<{self.DEFAULT}: {getattr(self, self.DEFAULT)}>'
 
