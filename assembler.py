@@ -1,5 +1,5 @@
 from os import path
-from models import Block, Path, References, Component
+from models import Block, Path, Component
 
 
 class AssemblerLine:
@@ -8,10 +8,6 @@ class AssemblerLine:
     TRIM = {'0': 7}
     TRUE_LABELS = {'DS': '0H', 'EQU': '*'}
     FALSE_LABELS = {'DS', 'DC', 'EQU', 'DSECT', 'CSECT'}
-    BRANCH = {'B', 'BE', 'BNE', 'BH', 'BNH', 'BL', 'BNL', 'BM', 'BNM', 'BP', 'BNP', 'BC', 'BO', 'BNO', 'BZ', 'BNZ',
-                   'J', 'JE', 'JNE', 'JH', 'JNH', 'JL', 'JNL', 'JM', 'JNM', 'JP', 'JNP', 'JC', 'JO', 'JNO', 'JZ', 'JNZ'}
-    EXIT_COMMANDS = {'B', 'J', 'ENTNC', 'ENTDC', 'BR', 'EXITC', 'SENDA'}
-    FUNCTION_CALL = {'BAS', 'JAS', 'ENTRC'}
 
     def __init__(self, line):
         self.line = line.strip()
@@ -20,6 +16,9 @@ class AssemblerLine:
         self.operands = list()
         self.continuation = False
         self.continuing = False
+
+    def __repr__(self):
+        return f'{self.command} {self.operands}'
 
     def _parse_line(self):
         """
@@ -81,34 +80,13 @@ class AssemblerLine:
         self._parse_line()
         return self
 
-    def get_branch(self, labels):
-        """
-        Check whether assembler line is branching to a label.
-        Sanitize the line before calling this function.
-        :param labels: list of valid labels.
-        :return: A type of Reference objects with the goes and calls attribute of Reference initialize to
-                 the appropriate labels.
-        """
-        branches = References()
-        if not labels:
-            return branches
-        words = [parameter for operand in self.operands for parameter in operand.split('=')]
-        for word in words:
-            if word in labels:
-                label = word
-                if self.command in self.BRANCH:
-                    branches.add(goes=label)
-                if self.command in self.FUNCTION_CALL:
-                    branches.add(calls=label)
-                operands = ''.join(self.operands)
-                index = operands.find(label)
-                if index > 0 and operands[index - 1] == '=':
-                    branches.add(goes=label)
-        return branches
-
 
 class AssemblerProgram:
     EXT = {'.asm', '.txt'}
+    SET_CC = {'CLC', 'CLI', 'LTR', 'TM', 'OC', 'CH', 'SR'}
+    CHECK_CC = {'BE', 'BNE', 'BH', 'BNH', 'BL', 'BNL', 'BM', 'BNM', 'BP', 'BNP', 'BC', 'BO', 'BNO', 'BZ', 'BNZ',
+                'JE', 'JNE', 'JH', 'JNH', 'JL', 'JNL', 'JM', 'JNM', 'JP', 'JNP', 'JC', 'JO', 'JNO', 'JZ', 'JNZ'}
+    EXIT = {'B', 'J', 'ENTNC', 'ENTDC', 'BR', 'EXITC', 'SENDA'}
 
     def __init__(self, name):
         self.name = name
@@ -161,7 +139,6 @@ class AssemblerProgram:
             assembler_line = AssemblerLine(line)
             if self.lines and self.lines[-1].continuation:
                 assembler_line.continuing = True
-                assembler_line.command = Component.CONTINUED
             sanitize_line = assembler_line.sanitize()
             if sanitize_line:
                 self.lines.append(sanitize_line)
@@ -175,44 +152,58 @@ class AssemblerProgram:
         self.labels = [line.label for line in self.lines if line.label]
         return True
 
+    def _get_blocks(self):
+        lines = list()
+        for line in self.lines:
+            if line.label:
+                yield line.label, lines
+                lines = [line]
+            else:
+                lines.append(line)
+
+    def _get_components(self, component_lines):
+        lines = list()
+        index = 0
+        while index < len(component_lines):
+            line = component_lines[index]
+            lines.append(line)
+            if line.command in self.SET_CC:
+                temp_index = index + 1
+                temp_lines = lines.copy()
+                while temp_index < len(component_lines) and temp_index < index + 5:
+                    temp_line = component_lines[temp_index]
+                    temp_lines.append(temp_line)
+                    if temp_line.command in self.CHECK_CC:
+                        yield temp_lines
+                        lines = list()
+                        index = temp_index
+                        break
+                    elif temp_line.command in self.SET_CC or temp_line.command in self.EXIT:
+                        break
+                    temp_index += 1
+            if not line.continuation and lines:
+                yield lines
+                lines = list()
+            index += 1
+
     def create_blocks(self, save=False):
         """
         Create code blocks and save it to the database
-        :return: True if blocks created else false
+        :param save: Will store it in database if true
+        :return: None
         """
         if not self.labels and not self.first_pass():
             return False
         blocks = dict()
         current_label = self.root_label
-        exit_command = False
-        continue_build = False
-        component = None
         blocks[current_label] = Block(current_label, self.name)
-        for assembler_line in self.lines:
-            label = assembler_line.label
-            # Current line in a label -> Initialize a new block
-            if label:
-                blocks[label] = Block(label, self.name)
-                # If the previous block is falling down to this block then add its reference
-                if not exit_command:
-                    blocks[current_label].add_references(goes=label)
-                current_label = label
-                exit_command = False
-            if assembler_line.command in AssemblerLine.EXIT_COMMANDS:
-                exit_command = True
-            branches = assembler_line.get_branch(self.labels)
-            blocks[current_label].add_references(branches)
-            if continue_build:
-                component.add_references(self.labels, assembler_line.command, assembler_line.operands)
-            else:
-                component = Component(assembler_line.command, assembler_line.operands)
-                component.add_references(self.labels)
-            if component.can_have_refs:
-                continue_build = True
-            if component.has_refs and not assembler_line.continuation:
-                continue_build = False
-            if not continue_build:
-                blocks[current_label].components.append(component)
+        for label, block_lines in self._get_blocks():
+            for component_lines in self._get_components(block_lines):
+                blocks[current_label].components.append(Component(component_lines, self.labels))
+            if not blocks[current_label].ends_in_exit():
+                blocks[current_label].set_fall_down(label)
+            current_label = label
+            blocks[current_label] = Block(current_label, self.name)
         self.blocks = blocks
         if save:
             for key in self.blocks:
@@ -221,8 +212,6 @@ class AssemblerProgram:
 
     def load_blocks(self):
         self.blocks = Block.query(dict_type=True, name=self.name)
-        # for key in self.blocks:
-        #     self.blocks[key] = Block.from_dict(self.blocks[key].to_dict())
 
     def create_paths(self, save=False):
         if not self.blocks:
@@ -258,7 +247,8 @@ class AssemblerProgram:
             if label not in asm_path:
                 self._build_path(self.blocks[label], asm_path.copy())
             else:   # If label is already in the path (it is looping) then add the loop label in the block.
-                self.blocks[block.label].add_references(loops=label)
+                if label not in self.blocks[block.label].get_loops():
+                    self.blocks[block.label].add_loop_label(label)
         # Add the complete path when the last block is reached
         if not next_labels:
             self.paths.append(Path(self.name, asm_path))

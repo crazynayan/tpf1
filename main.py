@@ -36,27 +36,25 @@ if __name__ == '__main__':
     # For temp
     # pgm_name = 'temp'
     # pgm = AssemblerProgram(pgm_name)
-    # # pgm.first_pass()
-    # # for line in pgm.lines:
-    # #     print(f'L={line.label}, C={line.command}, O={line.operands}')
     # pgm.create_blocks()
+    # pgm.create_paths()
     # for key in pgm.blocks:
     #     print(pgm.blocks[key].get_str())
-    # # pgm.create_paths()
-    # # for path in pgm.paths:
-    # #     print(show(path, pgm.blocks))
-    # # print(len(pgm.paths))
+    # for path in pgm.paths:
+    #     print(show(path, pgm.blocks))
+    # print(len(pgm.paths))
 
     # For ETA5
     pgm_name = 'eta5'
     pgm = AssemblerProgram(pgm_name)
-    save = False
+    save = True
     pgm = create(pgm, save)
     for key in pgm.blocks:
         print(pgm.blocks[key].get_str())
-    # for path in pgm.paths:
-    #     print(show(path, pgm.blocks))
-    # print(len(pgm.paths))
+    pgm.paths.sort(key=lambda item: item.weight)
+    for path in pgm.paths:
+        print(show(path, pgm.blocks))
+    print(len(pgm.paths))
 
     # Analyze
     # pgm_name = 'eta5'

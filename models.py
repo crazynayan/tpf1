@@ -3,7 +3,6 @@ from firestore_model import FirestoreModel, MapToModelMixin, CollectionMixin, Co
 
 class Register:
     INVALID = '??'
-    DEFAULT = '_reg'
     REG = {
         'R0': ['0', '00', 'R0', 'R00', 'RAC'],
         'R1': ['1', '01', 'R1', 'R01', 'RG1'],
@@ -101,7 +100,7 @@ class Operand(CollectionItemMixin):
             self.type = self.OperandType.KEY_VALUE
             key = operand.split('=')[0]
             value = operand.split('=')[1]
-            self.field = (key, value)
+            self.field = {'key': key, 'value': value}
         else:
             self.type = self.OperandType.FLD
             self.field = operand
@@ -119,83 +118,39 @@ class Operands(CollectionMixin):
 
 
 class Reference(CollectionItemMixin):
-    TYPE = {'goes', 'calls', 'loops'}
+    TYPE = {'goes', 'calls', 'loops', 'falls'}
     DEFAULT = 'type'
 
-    def __init__(self, ref_type=None, label=None):
+    def __init__(self, ref_type=None, label=None, condition=None):
         super().__init__()
         self.type = ref_type
         self.label = label
+        self.condition = condition
 
     def __repr__(self):
-        return self.get_str(f'{self.type} to {self.label}')
+        if self.condition:
+            return self.get_str(f'{self.type} to {self.label} on {self.condition}')
+        else:
+            return self.get_str(f'{self.type} to {self.label}')
 
 
 class References(CollectionMixin):
     MAP_OBJECTS = {Reference}
 
-    def __init__(self, ref=None, **kwargs):
+    def __init__(self):
         super().__init__(Reference)
-        self.add(ref, **kwargs)
-
-    def add(self, ref=None, **kwargs):
-        if ref and isinstance(ref, Reference):
-            self.append_unique(ref)
-            return
-        if ref and isinstance(ref, References):
-            self.extend_unique(ref)
-            return
-        for key in kwargs:
-            if key in Reference.TYPE and kwargs[key]:
-                new_ref = Reference(ref_type=key, label=kwargs[key])
-                self.append_unique(new_ref)
-
-    def get_next(self):
-        return [ref.label for ref in self.list_values if ref.type == 'goes']
-
-    def get_loops(self):
-        return [ref.label for ref in self.list_values if ref.type == 'loops']
-
-    def get_calls(self):
-        return [ref.label for ref in self.list_values if ref.type == 'calls']
 
 
 class Component(CollectionItemMixin):
     MAP_OBJECTS = {References, Operands}
-    DEFAULT = 'type'
-    CONTINUED = 'CONTINUED'
-    BRANCH = {'B', 'BE', 'BNE', 'BH', 'BNH', 'BL', 'BNL', 'BM', 'BNM', 'BP', 'BNP', 'BC', 'BO', 'BNO', 'BZ', 'BNZ',
-              'J', 'JE', 'JNE', 'JH', 'JNH', 'JL', 'JNL', 'JM', 'JNM', 'JP', 'JNP', 'JC', 'JO', 'JNO', 'JZ', 'JNZ'}
+    DEFAULT = 'command'
+    EXIT = {'B', 'J', 'ENTNC', 'ENTDC', 'BR', 'EXITC', 'SENDA'}
+    CALL = {'BAS', 'JAS', 'ENTRC'}
+    HAS_REF = {'BAS', 'JAS', 'B', 'J'}
+    CHECK_CC = {'BE', 'BNE', 'BH', 'BNH', 'BL', 'BNL', 'BM', 'BNM', 'BP', 'BNP', 'BC', 'BO', 'BNO', 'BZ', 'BNZ',
+                'JE', 'JNE', 'JH', 'JNH', 'JL', 'JNL', 'JM', 'JNM', 'JP', 'JNP', 'JC', 'JO', 'JNO', 'JZ', 'JNZ'}
 
-    class ComponentType:
-        COMPARE = 'compare'
-        SET = 'set'
-        CALL = 'call'
-        EXIT = 'exit'
-        OTHER = 'other'
-        DATABASE = 'db'
-        TYPES = [  # TODO Add SR in COMPARE and support multi-line compare which is optional
-            {'type': COMPARE, 'command': {'CLC', 'CLI', 'LTR', 'TM', 'OC', 'CH'}, 'has_refs': True},
-            {'type': SET, 'command': {'MVC', 'MVI', 'OI', 'NI', 'L', 'LA'}, 'has_refs': False},
-            {'type': CALL, 'command': {'BAS', 'JAS', 'ENTRC'}, 'has_refs': False},
-            {'type': EXIT, 'command': {'B', 'J', 'ENTNC', 'ENTDC', 'BR', 'EXITC', 'SENDA'}, 'has_refs': False},
-            {'type': DATABASE, 'command': {'PDRED', 'DBRED'}, 'has_refs': True},
-        ]
-
-        def __init__(self, command=None, type=None):
-            self.type = None
-            if command:
-                self.type = next((c_type for c_type in self.TYPES if command in c_type['command']), None)
-            if type and not self.type:
-                self.type = next((c_type for c_type in self.TYPES if type == c_type['type']), None)
-
-        def get_type(self):
-            return self.type['type'] if self.type else self.OTHER
-
-        def has_refs(self):
-            return self.type['has_refs'] if self.type else False
-
-    def __init__(self, command=None, operands=None):
+    def __init__(self, lines=None, labels=None):
         super().__init__()
         self.type = None
         self.references = References()
@@ -203,68 +158,83 @@ class Component(CollectionItemMixin):
         self.operands = Operands()
         self.output = None
         self.input = None
-        self.comparator = None
-        self.set(command, operands)
-
-    def set(self, command, operands):
-        self.command = command
-        self.type = self.ComponentType(command=self.command).get_type()
-        self.add_operands(operands)
-        if self.type == self.ComponentType.SET:
-            self.output = Operands().append(self.operands[1])
-            self.input = Operands().append(self.operands[2])
-        elif self.type == self.ComponentType.COMPARE:
-            self.input = self.operands
-
-    def add_operands(self, operands):
-        if isinstance(operands, Operands):
-            self.operands.extend(operands)
-        elif isinstance(operands, list) and operands:
-            if isinstance(operands[0], str):
-                for operand in operands:
-                    if operand:
-                        self.operands.append(Operand(operand))
-            elif isinstance(operands[0], Operand):
-                self.operands.extend(operands)
-
-    def add_references(self, labels, command=None, operands=None):
-        if command == self.CONTINUED:
-            self.add_operands(operands)
-            kv_list = [operand.key_value for operand in self.operands.list_values if operand.key_value]
-            for kv in kv_list:
-                if kv[1] in labels:
-                    self.references.add(goes=kv[1])
-                    self.comparator = kv[0]
+        # Set appropriate values
+        if not lines:
             return
-        if command in self.BRANCH or self.command in self.BRANCH:
-            label = None
-            if operands:
-                label = next((label for label in operands if label in labels), None)
-            if not label:
-                label = next((operand.field for operand in self.operands.list_values if operand.field in labels), None)
-            if label:
-                self.references.add(goes=label)
-                self.comparator = command
-        if self.type == self.ComponentType.CALL:
-            label = next((operand.field for operand in self.operands.list_values if operand.field in labels), None)
-            if label:
-                self.references.add(calls=label)
+        if isinstance(lines, str):
+            # Create dummy component
+            self.command = lines
+            return
+        self.command = lines[0].command
+        if len(lines) > 1:
+            if lines[0].continuation:
+                # Continuing lines, generally executable macros withs key-value pairs.
+                # TODO Does NOT take care of scenario of a single operand divided into multi-line
+                for line in lines:
+                    self.add_operands(line.operands)
+                self.add_refs_with_key_value(labels)
+            else:   # Multi-line with SET_CC and CHECK_CC
+                # TODO Does NOT take care of scenario where there are lines between SET_CC and CHECK_CC
+                self.add_operands(lines[0].operands)
+                line = next((line for line in lines if line.command in self.CHECK_CC), None)
+                if line and line.operands:
+                    self.add_references(goes=line.operands[0], on=line.command)
+        else:   # There is only one line
+            line = lines[0]
+            self.add_operands(line.operands)
+            if line.command in self.HAS_REF:
+                # Instructions that have a branch label independent of the CC (BAS, B ...).
+                if line.command in self.CALL and len(line.operands) > 1:
+                    # BAS, JAS
+                    self.add_references(calls=line.operands[1])
+                elif len(line.operands) > 0:
+                    # B, J
+                    self.add_references(goes=line.operands[0])
+            else:   # All other commands
+                self.add_refs_with_key_value(labels)
+
+    @property
+    def is_exit(self):
+        return self.command in self.EXIT
 
     def __repr__(self):
         component = [f'{self.command}']
-        if self.type != self.ComponentType.OTHER:
-            component.append(f' ({self.type})')
-        if self.has_refs:
-            component.append(f' {self.comparator}->{self.references[1]}')
+        for reference in self.references.list_values:
+            component.append(f'->{reference}')
         return self.get_str(''.join(component))
 
-    @property
-    def can_have_refs(self):
-        return self.ComponentType(type=self.type).has_refs()
+    def add_operands(self, operands):
+        for operand in operands:
+            if operand:
+                self.operands.append(Operand(operand))
 
-    @property
-    def has_refs(self):
-        return not self.references.is_empty
+    def add_references(self, **kwargs):
+        on = kwargs['on'] if 'on' in kwargs else None
+        for key in kwargs:
+            if key in Reference.TYPE and kwargs[key]:
+                new_ref = Reference(ref_type=key, label=kwargs[key], condition=on)
+                self.references.append_unique(new_ref)
+
+    def add_refs_with_key_value(self, labels):
+        operands = [operand.key_value for operand in self.operands.list_values if operand.key_value]
+        for operand in operands:
+            if operand['value'] in labels:
+                self.add_references(goes=operand['value'], on=operand['key'])
+
+    def add_loop_ref(self, label):
+        self.add_references(loops=label)
+
+    def add_fall_down_ref(self, label):
+        self.add_references(falls=label)
+
+    def get_next(self):
+        return [ref.label for ref in self.references.list_values if ref.type in {'goes', 'falls'}]
+
+    def get_loops(self):
+        return [ref.label for ref in self.references.list_values if ref.type == 'loops']
+
+    def get_calls(self):
+        return [ref.label for ref in self.references.list_values if ref.type == 'calls']
 
 
 class Components(CollectionMixin):
@@ -284,7 +254,6 @@ class Block(MapToModelMixin, FirestoreModel):
         self.label = label if label else 'LABEL_ERROR'
         self.doc_id = self.label
         self.name = name
-        # TODO Make references methods in Block as property
         self.references = References()
         self.components = Components()
         self.depth = 0
@@ -310,16 +279,45 @@ class Block(MapToModelMixin, FirestoreModel):
         return ''.join(block)
 
     def get_next(self):
-        return self.references.get_next()
+        labels = list()
+        for component in self.components.list_values:
+            for label in component.get_next():
+                if label not in labels:
+                    labels.append(label)
+        return labels
 
     def get_calls(self):
-        return self.references.get_calls()
+        labels = list()
+        for component in self.components.list_values:
+            for label in component.get_calls():
+                if label not in labels:
+                    labels.append(label)
+        return labels
 
     def get_loops(self):
-        return self.references.get_loops()
+        labels = list()
+        for component in self.components.list_values:
+            for label in component.get_loops():
+                if label not in labels:
+                    labels.append(label)
+        return labels
 
-    def add_references(self, ref=None, **kwargs):
-        self.references.add(ref, **kwargs)
+    def set_fall_down(self, label):
+        if self.components.is_empty:
+            self.components.append(Component('NOP'))
+        self.components[-1].add_fall_down_ref(label)  # TODO soft code NOP and fall_down later
+
+    def add_loop_label(self, label):
+        if self.components.is_empty:
+            return
+        components = [c for c in self.components.list_values for next_label in c.get_next() if next_label == label]
+        for component in components:
+            component.add_loop_ref(label)
+
+    def ends_in_exit(self):
+        if self.components.is_empty:
+            return False
+        return self.components[-1].is_exit
 
 
 class Path(FirestoreModel):
