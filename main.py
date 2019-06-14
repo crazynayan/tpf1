@@ -60,6 +60,9 @@ if __name__ == '__main__':
     # pgm_name = 'eta5'
     # pgm = AssemblerProgram(pgm_name)
     # pgm.load_blocks()
+    # commands = {component.command for key in pgm.blocks for component in pgm.blocks[key].components.list_values}
+    # for command in commands:
+    #     print(command)
     # paths = Path.query(name=pgm.name, head='$$eta5$$')
     # paths.sort(key=lambda item: item.weight)
     # for path in paths[:11]:

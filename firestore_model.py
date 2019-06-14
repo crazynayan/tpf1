@@ -1,7 +1,6 @@
-from firebase_admin import firestore
 from google.cloud.exceptions import NotFound
-from firebase_admin import initialize_app, credentials, get_app
 from google.cloud.firestore import Query
+from firebase_admin import firestore, initialize_app, credentials, get_app
 
 
 def init_firestore_db(gac_key_path, name=None):
@@ -420,13 +419,17 @@ class CollectionMixin(MapToModelMixin):
         return True
 
     def extend(self, others):
-        if not isinstance(others, type(self)) or others.is_empty or not isinstance(others[0], type(self._object_list[0])):
+        if not isinstance(others, type(self)) or \
+                others.is_empty or \
+                not isinstance(others[0], type(self._object_list[0])):
             return False
         self._object_list.extend(others[1:])
         return True
 
     def extend_unique(self, others):
-        if not isinstance(others, type(self)) or others.is_empty or not isinstance(others[0], type(self._object_list[0])):
+        if not isinstance(others, type(self)) or \
+                others.is_empty or \
+                not isinstance(others[0], type(self._object_list[0])):
             return False
         for other in others[1:]:
             if other not in self._object_list:
@@ -470,4 +473,3 @@ class CollectionItemMixin(MapToModelMixin):
         if self.is_empty:
             return self.INITIALIZE
         return text if text else f'<{self.DEFAULT}: {getattr(self, self.DEFAULT)}>'
-

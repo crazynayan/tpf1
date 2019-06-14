@@ -1,5 +1,6 @@
 from os import path
 from models import Block, Path, Component
+from commands import commands
 
 
 class AssemblerLine:
@@ -83,10 +84,6 @@ class AssemblerLine:
 
 class AssemblerProgram:
     EXT = {'.asm', '.txt'}
-    SET_CC = {'CLC', 'CLI', 'LTR', 'TM', 'OC', 'CH', 'SR'}
-    CHECK_CC = {'BE', 'BNE', 'BH', 'BNH', 'BL', 'BNL', 'BM', 'BNM', 'BP', 'BNP', 'BC', 'BO', 'BNO', 'BZ', 'BNZ',
-                'JE', 'JNE', 'JH', 'JNH', 'JL', 'JNL', 'JM', 'JNM', 'JP', 'JNP', 'JC', 'JO', 'JNO', 'JZ', 'JNZ'}
-    EXIT = {'B', 'J', 'ENTNC', 'ENTDC', 'BR', 'EXITC', 'SENDA'}
 
     def __init__(self, name):
         self.name = name
@@ -161,24 +158,25 @@ class AssemblerProgram:
             else:
                 lines.append(line)
 
-    def _get_components(self, component_lines):
+    @staticmethod
+    def _get_components(component_lines):
         lines = list()
         index = 0
         while index < len(component_lines):
             line = component_lines[index]
             lines.append(line)
-            if line.command in self.SET_CC:
+            if line.command and commands[line.command]['set_cc']:
                 temp_index = index + 1
                 temp_lines = lines.copy()
                 while temp_index < len(component_lines) and temp_index < index + 5:
                     temp_line = component_lines[temp_index]
                     temp_lines.append(temp_line)
-                    if temp_line.command in self.CHECK_CC:
+                    if commands[temp_line.command]['check_cc']:
                         yield temp_lines
                         lines = list()
                         index = temp_index
                         break
-                    elif temp_line.command in self.SET_CC or temp_line.command in self.EXIT:
+                    elif commands[temp_line.command]['set_cc'] or commands[temp_line.command]['exit']:
                         break
                     temp_index += 1
             if not line.continuation and lines:
@@ -199,7 +197,8 @@ class AssemblerProgram:
         blocks[current_label] = Block(current_label, self.name)
         for label, block_lines in self._get_blocks():
             for component_lines in self._get_components(block_lines):
-                blocks[current_label].components.append(Component(component_lines, self.labels))
+                if commands[component_lines[0].command]['create']:
+                    blocks[current_label].components.append(Component(component_lines, self.labels))
             if not blocks[current_label].ends_in_exit():
                 blocks[current_label].set_fall_down(label)
             current_label = label
@@ -249,8 +248,8 @@ class AssemblerProgram:
             else:   # If label is already in the path (it is looping) then add the loop label in the block.
                 if label not in self.blocks[block.label].get_loops():
                     self.blocks[block.label].add_loop_label(label)
-        # Add the complete path when the last block is reached
-        if not next_labels:
+        # Add the complete path when the last block is reached or the only next labels are loop labels
+        if not next_labels or len(next_labels) == len(block.get_loops()):
             self.paths.append(Path(self.name, asm_path))
             for label in asm_path:
                 self.blocks[label].depth += 1

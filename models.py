@@ -1,4 +1,5 @@
 from firestore_model import FirestoreModel, MapToModelMixin, CollectionMixin, CollectionItemMixin
+from commands import commands
 
 
 class Register:
@@ -144,11 +145,6 @@ class References(CollectionMixin):
 class Component(CollectionItemMixin):
     MAP_OBJECTS = {References, Operands}
     DEFAULT = 'command'
-    EXIT = {'B', 'J', 'ENTNC', 'ENTDC', 'BR', 'EXITC', 'SENDA'}
-    CALL = {'BAS', 'JAS', 'ENTRC'}
-    HAS_REF = {'BAS', 'JAS', 'B', 'J'}
-    CHECK_CC = {'BE', 'BNE', 'BH', 'BNH', 'BL', 'BNL', 'BM', 'BNM', 'BP', 'BNP', 'BC', 'BO', 'BNO', 'BZ', 'BNZ',
-                'JE', 'JNE', 'JH', 'JNH', 'JL', 'JNL', 'JM', 'JNM', 'JP', 'JNP', 'JC', 'JO', 'JNO', 'JZ', 'JNZ'}
 
     def __init__(self, lines=None, labels=None):
         super().__init__()
@@ -176,15 +172,15 @@ class Component(CollectionItemMixin):
             else:   # Multi-line with SET_CC and CHECK_CC
                 # TODO Does NOT take care of scenario where there are lines between SET_CC and CHECK_CC
                 self.add_operands(lines[0].operands)
-                line = next((line for line in lines if line.command in self.CHECK_CC), None)
+                line = next((line for line in lines if commands[line.command]['check_cc']), None)
                 if line and line.operands:
                     self.add_references(goes=line.operands[0], on=line.command)
         else:   # There is only one line
             line = lines[0]
             self.add_operands(line.operands)
-            if line.command in self.HAS_REF:
+            if commands[line.command]['has_branch']:
                 # Instructions that have a branch label independent of the CC (BAS, B ...).
-                if line.command in self.CALL and len(line.operands) > 1:
+                if commands[line.command]['call'] and len(line.operands) > 1:
                     # BAS, JAS
                     self.add_references(calls=line.operands[1])
                 elif len(line.operands) > 0:
@@ -195,7 +191,7 @@ class Component(CollectionItemMixin):
 
     @property
     def is_exit(self):
-        return self.command in self.EXIT
+        return commands[self.command]['exit']
 
     def __repr__(self):
         component = [f'{self.command}']
@@ -247,14 +243,13 @@ class Components(CollectionMixin):
 class Block(MapToModelMixin, FirestoreModel):
     COLLECTION = 'block'
     DEFAULT = 'label'
-    MAP_OBJECTS = {References, Components}
+    MAP_OBJECTS = {Components}
 
     def __init__(self, label=None, name=None):
         super().__init__()
         self.label = label if label else 'LABEL_ERROR'
         self.doc_id = self.label
         self.name = name
-        self.references = References()
         self.components = Components()
         self.depth = 0
 
