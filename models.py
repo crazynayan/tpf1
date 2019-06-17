@@ -1,5 +1,5 @@
 from firestore_model import FirestoreModel, MapToModelMixin, CollectionMixin, CollectionItemMixin
-from commands import commands
+from commands import cmd
 
 
 class Register:
@@ -172,15 +172,15 @@ class Component(CollectionItemMixin):
             else:   # Multi-line with SET_CC and CHECK_CC
                 # TODO Does NOT take care of scenario where there are lines between SET_CC and CHECK_CC
                 self.add_operands(lines[0].operands)
-                line = next((line for line in lines if commands[line.command]['check_cc']), None)
+                line = next((line for line in lines if cmd.check(line.command, 'check_cc')), None)
                 if line and line.operands:
                     self.add_references(goes=line.operands[0], on=line.command)
         else:   # There is only one line
             line = lines[0]
             self.add_operands(line.operands)
-            if commands[line.command]['has_branch']:
+            if cmd.check(line.command, 'has_branch'):
                 # Instructions that have a branch label independent of the CC (BAS, B ...).
-                if commands[line.command]['call'] and len(line.operands) > 1:
+                if cmd.check(line.command, 'call') and len(line.operands) > 1:
                     # BAS, JAS
                     self.add_references(calls=line.operands[1])
                 elif len(line.operands) > 0:
@@ -191,7 +191,7 @@ class Component(CollectionItemMixin):
 
     @property
     def is_exit(self):
-        return commands[self.command]['exit']
+        return cmd.check(self.command, 'exit')
 
     def __repr__(self):
         component = [f'{self.command}']

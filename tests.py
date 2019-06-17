@@ -15,8 +15,8 @@ class TestTPF(unittest.TestCase):
         pgm.create_paths()
         for _, block in pgm.blocks.items():
             db_block = Block.query_first(name=pgm_name, label=block.label)
-            next_labels = [ref.label for ref in db_block.references if ref.type == 'goes']
-            self.assertListEqual(next_labels, block.get_next(), block.get_str())
+            self.assertListEqual(db_block.get_next(), block.get_next(), block.get_str())
+            self.assertEqual(db_block.get_str(), block.get_str(), block.get_str())
 
     def test_path_count(self):
         self.assertEqual(1550, len(Path.query(name='eta5')))

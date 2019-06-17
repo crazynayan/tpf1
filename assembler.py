@@ -1,6 +1,6 @@
 from os import path
 from models import Block, Path, Component
-from commands import commands
+from commands import cmd
 
 
 class AssemblerLine:
@@ -165,18 +165,18 @@ class AssemblerProgram:
         while index < len(component_lines):
             line = component_lines[index]
             lines.append(line)
-            if line.command and commands[line.command]['set_cc']:
+            if line.command and cmd.check(line.command, 'set_cc'):
                 temp_index = index + 1
                 temp_lines = lines.copy()
                 while temp_index < len(component_lines) and temp_index < index + 5:
                     temp_line = component_lines[temp_index]
                     temp_lines.append(temp_line)
-                    if commands[temp_line.command]['check_cc']:
+                    if cmd.check(temp_line.command, 'check_cc'):
                         yield temp_lines
                         lines = list()
                         index = temp_index
                         break
-                    elif commands[temp_line.command]['set_cc'] or commands[temp_line.command]['exit']:
+                    elif cmd.check(temp_line.command, 'set_cc') or cmd.check(temp_line.command, 'exit'):
                         break
                     temp_index += 1
             if not line.continuation and lines:
@@ -197,7 +197,7 @@ class AssemblerProgram:
         blocks[current_label] = Block(current_label, self.name)
         for label, block_lines in self._get_blocks():
             for component_lines in self._get_components(block_lines):
-                if commands[component_lines[0].command]['create']:
+                if cmd.check(component_lines[0].command, 'create'):
                     blocks[current_label].components.append(Component(component_lines, self.labels))
             if not blocks[current_label].ends_in_exit():
                 blocks[current_label].set_fall_down(label)

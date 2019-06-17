@@ -45,21 +45,21 @@ if __name__ == '__main__':
     # print(len(pgm.paths))
 
     # For ETA5
-    pgm_name = 'eta5'
-    pgm = AssemblerProgram(pgm_name)
-    save = True
-    pgm = create(pgm, save)
-    for key in pgm.blocks:
-        print(pgm.blocks[key].get_str())
-    pgm.paths.sort(key=lambda item: item.weight)
-    for path in pgm.paths:
-        print(show(path, pgm.blocks))
-    print(len(pgm.paths))
-
-    # Analyze
     # pgm_name = 'eta5'
     # pgm = AssemblerProgram(pgm_name)
-    # pgm.load_blocks()
+    # save = False
+    # pgm = create(pgm, save)
+    # for key in pgm.blocks:
+    #     print(pgm.blocks[key].get_str())
+    # pgm.paths.sort(key=lambda item: item.weight)
+    # for path in pgm.paths:
+    #     print(show(path, pgm.blocks))
+    # print(len(pgm.paths))
+
+    # Analyze
+    pgm_name = 'eta5'
+    pgm = AssemblerProgram(pgm_name)
+    pgm.load_blocks()
     # commands = {component.command for key in pgm.blocks for component in pgm.blocks[key].components.list_values}
     # for command in commands:
     #     print(command)
@@ -67,6 +67,10 @@ if __name__ == '__main__':
     # paths.sort(key=lambda item: item.weight)
     # for path in paths[:11]:
     #     print(show(path, pgm.blocks))
+    path = Path.query_first(name=pgm_name, head='$$eta5$$', weight=4595)
+    print(show(path, pgm.blocks))
+    for label in path.path:
+        print(pgm.blocks[label].get_str())
 
     # Test
     # ref = References(goes='A')
