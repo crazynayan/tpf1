@@ -5,5 +5,5 @@ __pycache__
 *.csv
 static/
 .gcloudignore
-*.json
+tpf1-key.json
 *.asm

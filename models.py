@@ -5,22 +5,22 @@ from commands import cmd
 class Register:
     INVALID = '??'
     REG = {
-        'R0': ['0', '00', 'R0', 'R00', 'RAC'],
-        'R1': ['1', '01', 'R1', 'R01', 'RG1'],
-        'R2': ['2', '02', 'R2', 'R02', 'RGA'],
-        'R3': ['3', '03', 'R3', 'R03', 'RGB'],
-        'R4': ['4', '04', 'R4', 'R04', 'RGC'],
-        'R5': ['5', '05', 'R5', 'R05', 'RGD'],
-        'R6': ['6', '06', 'R6', 'R06', 'RGE'],
-        'R7': ['7', '07', 'R7', 'R07', 'RGF'],
-        'R8': ['8', '08', 'R8', 'R08', 'RAP'],
-        'R9': ['9', '09', 'R9', 'R09', 'REB'],
-        'R10': ['10', 'R10', 'RLA'],
-        'R11': ['10', 'R10', 'RLB'],
-        'R12': ['10', 'R10', 'RLC'],
-        'R13': ['10', 'R10', 'RLD'],
-        'R14': ['10', 'R10', 'RDA'],
-        'R15': ['10', 'R10', 'RDB'],
+        'R0': ['R0', 'R00', 'RAC'],
+        'R1': ['R1', 'R01', 'RG1'],
+        'R2': ['R2', 'R02', 'RGA'],
+        'R3': ['R3', 'R03', 'RGB'],
+        'R4': ['R4', 'R04', 'RGC'],
+        'R5': ['R5', 'R05', 'RGD'],
+        'R6': ['R6', 'R06', 'RGE'],
+        'R7': ['R7', 'R07', 'RGF'],
+        'R8': ['R8', 'R08', 'RAP'],
+        'R9': ['R9', 'R09', 'REB'],
+        'R10': ['R10', 'RLA'],
+        'R11': ['R11', 'RLB'],
+        'R12': ['R12', 'RLC'],
+        'R13': ['R13', 'RLD'],
+        'R14': ['R14', 'RDA'],
+        'R15': ['R15', 'RDB'],
     }
 
     def __init__(self, reg=None):
@@ -47,46 +47,35 @@ class Operand(CollectionItemMixin):
         REG = 'r'
         FLD = 'f'
         BASE_DSP = 'bd'
-        BASE_DSP_LEN = 'bdl'
-        BASE_DSP_IDX = 'bdx'
-        FLD_LEN = 'fl'
-        FLD_DSP = 'fd'
-        FLD_DSP_LEN = 'fdl'
-        BASE_DSP_OTH = 'bdo'
-        IMMEDIATE = 'i'
+        # BASE_DSP_LEN = 'bdl'
+        # BASE_DSP_IDX = 'bdx'
+        # FLD_LEN = 'fl'
+        # FLD_DSP = 'fd'
+        # FLD_DSP_LEN = 'fdl'
+        # BASE_DSP_OTH = 'bdo'
         KEY_VALUE = 'kv'
-        ONLY_VALUE = 'v'
-        TYPE = (REG, FLD, BASE_DSP, BASE_DSP_LEN, BASE_DSP_IDX, FLD_LEN, FLD_DSP, FLD_DSP_LEN, BASE_DSP_OTH,
-                IMMEDIATE, KEY_VALUE, ONLY_VALUE)
-
-        def __init__(self, value=None):
-            if not value:
-                value = self.FLD
-            if value not in self.TYPE:
-                value = self.FLD
-            self._type = value
-
-        def __repr__(self):
-            return self._type
-
-        def __get__(self, instance, owner):
-            return self._type
-
-        def __set__(self, instance, value):
-            if value not in self.TYPE:
-                value = self.FLD
-            self._type = value
+        # ONLY_VALUE = 'v'
+        CONSTANT = 'c'
 
     def __init__(self, operand=None):
         super().__init__()
         self.type = None
         self.field = None                   # Will be the field name or the complete operand text
-        self.constant = False               # For literals it will be True. TODO change it to Constant()
         if operand:
             self.set(operand)
 
     def __repr__(self):
-        return self.get_str(f'{self.field}({self.type})')
+        text = self.field
+        if self.type == self.OperandType.KEY_VALUE:
+            text = f"{self.field['key']}:{self.field['value']}"
+        elif self.type == self.OperandType.CONSTANT:
+            text = str(self.field)
+        elif self.type == self.OperandType.BASE_DSP:
+            if 'length' in self.field:
+                text = f"{self.field['base']}[{self.field['dsp']}:{self.field['dsp']+self.field['length']}]"
+            else:
+                text = f"{self.field['base']}[{self.field['dsp']}]"
+        return self.get_str(text)
 
     def set(self, operand):
         """
@@ -94,14 +83,62 @@ class Operand(CollectionItemMixin):
         :param operand: is a string of characters
         :return: None
         """
+        if not operand:
+            return
         if Register(operand).is_valid():
             self.type = self.OperandType.REG
             self.field = str(Register(operand))
         elif len(operand) > 1 and '=' in operand[1:]:
+            # This is a key value operand.
+            # Generally found in user defined macros (for e.g. FIELD=NAME)
             self.type = self.OperandType.KEY_VALUE
             key = operand.split('=')[0]
             value = operand.split('=')[1]
             self.field = {'key': key, 'value': value}
+        elif operand.count("'") == 2:
+            # This is a constant data.
+            # Either an immediate or constant or literal data type where the values are present inline.
+            self.type = self.OperandType.CONSTANT
+            data_type = operand[1] if operand[0] == '=' else operand[0]
+            data_type = data_type.upper()
+            start_index = operand.find("'") + 1
+            end_index = start_index + operand[start_index:].find("'")
+            data_value = operand[start_index: end_index]
+            if data_type == 'X':
+                self.field = int(data_value, 16)
+            elif data_type == 'C':
+                self.field = data_value
+            elif data_type == 'H' or data_type == 'F':
+                self.field = int(data_value)
+        elif operand[0].isdigit() and '(' not in operand:
+            self.type = self.OperandType.CONSTANT
+            self.field = int(operand)
+        elif operand[0].isdigit() and '(' in operand:
+            self.type = self.OperandType.BASE_DSP
+            # Remove the trailing )
+            operand = operand[:-1]
+            words = operand.split('(')
+            displacement = int(words[0])
+            index = None
+            length = None
+            if ';' in operand:
+                words = words[1].split(';')
+                if Register(words[0]).is_valid() and Register(words[1]).is_valid():
+                    index = str(Register(words[0]))
+                    base = str(Register(words[1]))
+                else:
+                    if Register(words[0]).is_valid():
+                        base = str(Register(words[0]))
+                    else:
+                        base = str(Register(words[1]))
+                        length = int(words[0]) if words[0] else None
+            else:
+                base = str(Register(words[1]))
+            self.field = {'base': base, 'dsp': displacement}
+            if index:
+                self.field['index'] = index
+            if length:
+                self.field['length'] = length
         else:
             self.type = self.OperandType.FLD
             self.field = operand
@@ -109,6 +146,22 @@ class Operand(CollectionItemMixin):
     @property
     def key_value(self):
         return self.field if self.type == self.OperandType.KEY_VALUE else None
+
+    @property
+    def base_dsp(self):
+        return self.field if self.type == self.OperandType.BASE_DSP else None
+
+    @property
+    def variable(self):
+        return self.field if self.type == self.OperandType.FLD else None
+
+    @property
+    def register(self):
+        return self.field if self.type == self.OperandType.REG else None
+
+    @property
+    def constant(self):
+        return self.field if self.type == self.OperandType.CONSTANT else None
 
 
 class Operands(CollectionMixin):
@@ -188,6 +241,37 @@ class Component(CollectionItemMixin):
                     self.add_references(goes=line.operands[0])
             else:   # All other commands
                 self.add_refs_with_key_value(labels)
+        if cmd.check(self.command, 'combine_operands'):
+            self.combine_operands_for_tm()
+        self.combine_operands_if_same()
+
+    def combine_operands_for_tm(self):
+        operand1 = self.operands[1]
+        operand2 = self.operands[2]
+        text = [f'{operand1}.']
+        if operand2.variable:
+            text.append(operand2.variable)
+        else:  # Assume it to be of constant type
+            # Identify bits
+            bit_map = {'0': 0x80, '1': 0x40, '2': 0x20, '3': 0x10, '4': 0x08, '5': 0x04, '6': 0x02, '7': 0x01}
+            bit_text = ['BIT']
+            for bit, bit_value in bit_map.items():
+                if operand2.constant & bit_value == bit_value:
+                    bit_text.append(f'{bit}/')
+            text.append(''.join(bit_text)[:-1])
+            if text[0] == 'WA0ET4.' and text[1] == 'BIT3':
+                text[1] = '#WA0TTY'
+        self.operands = Operands()
+        self.operands.append(Operand(''.join(text)))
+
+    def combine_operands_if_same(self):
+        if len(self.operands.list_values) != 2:
+            return
+        if self.operands[1] != self.operands[2]:
+            return
+        operand1 = self.operands[1]
+        self.operands = Operands()
+        self.operands.append(operand1)
 
     @property
     def is_exit(self):
@@ -229,8 +313,58 @@ class Component(CollectionItemMixin):
     def get_loops(self):
         return [ref.label for ref in self.references.list_values if ref.type == 'loops']
 
+    def get_goes(self):
+        return [ref.label for ref in self.references.list_values if ref.type == 'goes']
+
     def get_calls(self):
         return [ref.label for ref in self.references.list_values if ref.type == 'calls']
+
+    def get_text(self, direction=True, label=None):
+        operands = self.operands.list_values
+        if not operands:
+            return ''
+        is_key_value = [operand for operand in operands if operand.key_value]
+        if is_key_value:
+            cmd_text = self.command
+            key = cmd.check(self.command, 'key_text')
+            cmd_text2 = operands[0].variable if operands[0].variable else None
+            cmd_text = f'{cmd_text}.{cmd_text2}' if cmd_text2 else cmd_text
+            value = next((operand.key_value['value'] for operand in self.operands.list_values
+                          if operand.key_value and operand.key_value['key'] == key), None)
+            cmd_text = f'{cmd_text}.{value}' if value else cmd_text
+            if direction:
+                key = next((operand.key_value['key'] for operand in self.operands.list_values
+                            if operand.key_value and operand.key_value['value'] == label), None)
+                if not key:
+                    return ''
+                return f'{cmd_text} {key}'
+            else:
+                labels = self.get_goes()
+                if not labels:
+                    return ''
+                keys = [operand.key_value['key'] for operand in self.operands.list_values
+                        if operand.key_value and operand.key_value['value'] in labels]
+                if not keys:
+                    return ''
+                keys_text = [f'{key[3:]} & ' if len(key) > 3 and key[:3] == 'NOT' else f'NOT {key} & ' for key in keys]
+                keys_text = ''.join(keys_text)[:-3]
+                return f'{cmd_text} {keys_text}'
+        else:
+            if cmd.check(self.command, 'has_branch'):
+                return ''
+            ref = next((ref for ref in self.references.list_values if ref.type == 'goes'), None)
+            if not ref or not ref.label:
+                return ''
+            # TODO Do special processing for CLI commands to get the text 'is numeric' or 'is alphas'
+            #  Weight 4972, 7832
+            condition, operator = cmd.get_text(self.command, ref.condition, opposite=not direction)
+            if len(operands) == 1:
+                text = f'{operands[0]} {condition}'
+            elif operator:
+                text = f'{operands[0]} {operator} {operands[1]} {condition}'
+            else:
+                text = f'{operands[0]} {condition} {operands[1]}'
+            return text
 
 
 class Components(CollectionMixin):
@@ -314,6 +448,43 @@ class Block(MapToModelMixin, FirestoreModel):
             return False
         return self.components[-1].is_exit
 
+    def ends_in_program_exit(self):
+        is_exit = self.ends_in_exit()
+        if is_exit:
+            is_exit = False if cmd.check(self.components[-1].command, 'has_branch') else True
+        return is_exit
+
+    def get_text(self, label, prefix=''):
+        text_list = list()
+        for component in self.components.list_values:
+            text = None
+            if label in component.get_goes():
+                text = component.get_text(True, label)
+                if text:
+                    text_list.append(prefix + text)
+                break
+            elif component.get_goes():
+                text = component.get_text(False)
+            if text:
+                text_list.append(prefix + text)
+        if not text_list:
+            return ''
+        text_list.append('')
+        return '\n'.join(text_list)
+
+    def get_path(self, label):
+        component_path = list()
+        label_components = [c for c in self.components.list_values if label in c.get_next()]
+        for label_component in label_components:
+            components = dict()
+            components[label] = list()
+            for component in self.components.list_values:
+                components[label].append(component)
+                if component == label_component:
+                    break
+            component_path.append(components)
+        return component_path
+
 
 class Path(FirestoreModel):
     COLLECTION = 'path'
@@ -325,6 +496,9 @@ class Path(FirestoreModel):
         self.path = asm_path if asm_path else list()
         self.weight = 0
         self.head = self.path[0] if self.path else None
+        self.tail = self.path[-1] if self.path else None
+        self.exit_on_loop = False
+        self.exit_on_program = False
 
     def __repr__(self):
         return f'{self.name}-{self.head}({self.weight}, {len(self.path)})'

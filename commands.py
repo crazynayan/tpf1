@@ -25,6 +25,27 @@ class _Command:
             return False
         return self._data[command][attribute]
 
+    def get_text(self, command, condition, opposite=False):
+        """
+        Return the text of a condition
+        :param command: The compare command (CLC, SR, OI) which has a condition
+        :param condition: The condition associated with the command (BZ, JNZ)
+        :param opposite: If True then return the text for its opposite condition
+        :return: text for the condition and the operator for math instruction
+        """
+        if command not in self._data or condition not in self._data:
+            return '', ''
+        if opposite and 'opposite' in self._data[condition] and self._data[condition]['opposite']:
+            condition = self._data[condition]['opposite']
+        text_condition = self._data[condition]['text'] if self._data[condition]['text'] else ''
+        text_operator = ''
+        if 'branch_type' in self._data[command]:
+            if self._data[command]['branch_type'] in self._data[condition]:
+                text_condition = self._data[condition][self._data[command]['branch_type']]
+            if self._data[command]['branch_type'] in self._data[command]:
+                text_operator = self._data[command][self._data[command]['branch_type']]
+        return text_condition, text_operator
+
 
 # This is the cmd object which needs to be imported by other applications.
 cmd = _Command()

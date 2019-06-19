@@ -241,16 +241,61 @@ class AssemblerProgram:
             asm_path.append(block.label)
         else:
             asm_path = [block.label]
+        path_loops = False
         next_labels = block.get_next()
         for label in next_labels:
             if label not in asm_path:
                 self._build_path(self.blocks[label], asm_path.copy())
             else:   # If label is already in the path (it is looping) then add the loop label in the block.
+                path_loops = True
                 if label not in self.blocks[block.label].get_loops():
                     self.blocks[block.label].add_loop_label(label)
-        # Add the complete path when the last block is reached or the only next labels are loop labels
-        if not next_labels or len(next_labels) == len(block.get_loops()):
-            self.paths.append(Path(self.name, asm_path))
+        # Add the complete path when the last component of the block is exiting the program
+        # or at least one loop label found
+        if block.ends_in_program_exit() or path_loops:
+            new_path = Path(self.name, asm_path)
+            new_path.exit_on_loop = True if path_loops else False
+            new_path.exit_on_program = True if block.ends_in_program_exit() else False
+            self.paths.append(new_path)
             for label in asm_path:
                 self.blocks[label].depth += 1
         return
+
+
+def get_text_from_path(asm_path, blocks=None):
+    # TODO code for checking invalid path. Two condition cannot be opposite.
+    #  Weight = 5245, 7091, 7299, 8157
+    #  Dependant on macro code.
+    if not blocks:
+        blocks = dict()
+        for label in asm_path.path:
+            block = Block.query_first(name=asm_path.name, label=label)
+            if block:
+                blocks[label] = block
+    text_list = list()
+    next_index = 1
+    for label in asm_path.path:
+        if label != asm_path.path[-1]:
+            text = blocks[label].get_text(asm_path.path[next_index], prefix=' ' * 10)
+            text_list.append(f'{label}:\n')
+            if text:
+                text_list.append(text)
+        next_index += 1
+    return ''.join(text_list)
+
+
+def analyze_path(asm_path, blocks=None):
+    if not blocks:
+        blocks = dict()
+        for label in asm_path.path:
+            block = Block.query_first(name=asm_path.name, label=label)
+            if block:
+                blocks[label] = block
+    component_paths = list()
+    for index, label in enumerate(asm_path.path):
+        if label == asm_path.path[-1]:
+            break
+        # Get a list of component path. Each component path has a list of components.
+        # component -> components -> component_path -> component_paths
+        component_path = blocks[label].get_path(asm_path.path[index + 1])
+        component_paths.append(component_path)
