@@ -14,7 +14,8 @@
         "has_branch": 1
     },
     "BACKC": {
-        "create": 1
+        "create": 1,
+        "exit": 1
     },
     "BAS": {
         "call": 1,
@@ -156,11 +157,9 @@
         "create": 1,
         "key_text": "REF"
     },
-    "DBOPN": {
-        "create": 1
-    },
     "DBRED": {
-        "create": 1
+        "create": 1,
+        "key_text": "REF"
     },
     "ENTDC": {
         "create": 1,

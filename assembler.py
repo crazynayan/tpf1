@@ -217,17 +217,17 @@ class AssemblerProgram:
             self.load_blocks()
         if not self.blocks:
             return False
-        self._build_path(self.blocks[self.root_label])
+        self._build_merge_path(self.blocks[self.root_label])
         # Create paths for function calls
         call_blocks = [self.blocks[key] for key in self.blocks if self.blocks[key].get_calls()]
         done_labels = set()
         for block in call_blocks:
             for label in block.get_calls():
                 if label not in done_labels:
-                    self._build_path(self.blocks[label])
+                    self._build_merge_path(self.blocks[label])
                 done_labels.add(label)
-        # Calculate the weight of each path
-        for asm_path in self.paths:
+        # Calculate the weight & determine the validity of each path
+        for index, asm_path in enumerate(self.paths):
             asm_path.weight = sum([self.blocks[label].depth for label in asm_path.path])
         # Save it into database if requested
         if save:
@@ -236,66 +236,45 @@ class AssemblerProgram:
             for key in self.blocks:
                 self.blocks[key].update()
 
+    def _build_merge_path(self, block):
+        self._build_path(block)
+        merge_labels = {s_path.path[-1] for s_path in self.paths if s_path.exit_on_merge}
+        for label in merge_labels:
+            if label not in {s_path.path[0] for s_path in self.paths}:
+                self._build_merge_path(self.blocks[label])
+
     def _build_path(self, block, asm_path=None):
+        # Update asm path
         if asm_path:
             asm_path.append(block.label)
+            # Traversal required if multiple blocks not pointing to this block
+            from_blocks = [self.blocks[label] for label in self.blocks if block.label in self.blocks[label].get_next()]
+            traverse = True if len(from_blocks) <= 1 else False
         else:
             asm_path = [block.label]
-        path_loops = False
+            traverse = True
+        # Get all next labels
         next_labels = block.get_next()
-        for label in next_labels:
-            if label not in asm_path:
+        # Check for loops & add loop labels to block
+        loop_labels = [label for label in next_labels if label in asm_path]
+        for label in loop_labels:
+            if label not in self.blocks[block.label].get_loops():
+                self.blocks[block.label].add_loop_label(label)
+        # Get all other labels that do not loop and build path on them (recursive)
+        # Only build path, if traversal required
+        path_labels = [label for label in next_labels if label not in asm_path]
+        for label in path_labels:
+            if traverse:
                 self._build_path(self.blocks[label], asm_path.copy())
-            else:   # If label is already in the path (it is looping) then add the loop label in the block.
-                path_loops = True
-                if label not in self.blocks[block.label].get_loops():
-                    self.blocks[block.label].add_loop_label(label)
         # Add the complete path when the last component of the block is exiting the program
-        # or at least one loop label found
-        if block.ends_in_program_exit() or path_loops:
+        # or at least one loop label found and the block ends in exit
+        # or the block is merging from multiple blocks
+        if block.ends_in_program_exit() or (loop_labels and block.ends_in_exit()) or not traverse:
             new_path = Path(self.name, asm_path)
-            new_path.exit_on_loop = True if path_loops else False
+            new_path.exit_on_loop = True if loop_labels else False
             new_path.exit_on_program = True if block.ends_in_program_exit() else False
+            new_path.exit_on_merge = True if not traverse else False
             self.paths.append(new_path)
             for label in asm_path:
                 self.blocks[label].depth += 1
         return
-
-
-def get_text_from_path(asm_path, blocks=None):
-    # TODO code for checking invalid path. Two condition cannot be opposite.
-    #  Weight = 5245, 7091, 7299, 8157
-    #  Dependant on macro code.
-    if not blocks:
-        blocks = dict()
-        for label in asm_path.path:
-            block = Block.query_first(name=asm_path.name, label=label)
-            if block:
-                blocks[label] = block
-    text_list = list()
-    next_index = 1
-    for label in asm_path.path:
-        if label != asm_path.path[-1]:
-            text = blocks[label].get_text(asm_path.path[next_index], prefix=' ' * 10)
-            text_list.append(f'{label}:\n')
-            if text:
-                text_list.append(text)
-        next_index += 1
-    return ''.join(text_list)
-
-
-def analyze_path(asm_path, blocks=None):
-    if not blocks:
-        blocks = dict()
-        for label in asm_path.path:
-            block = Block.query_first(name=asm_path.name, label=label)
-            if block:
-                blocks[label] = block
-    component_paths = list()
-    for index, label in enumerate(asm_path.path):
-        if label == asm_path.path[-1]:
-            break
-        # Get a list of component path. Each component path has a list of components.
-        # component -> components -> component_path -> component_paths
-        component_path = blocks[label].get_path(asm_path.path[index + 1])
-        component_paths.append(component_path)

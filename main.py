@@ -1,7 +1,6 @@
 from firestore_model import init_firestore_db
 from models import Path, Block  # ,  Reference, References, Component, Operands
-from assembler import get_text_from_path, AssemblerProgram
-from side_car import ComponentPath
+from assembler import AssemblerProgram
 
 
 def show(asm_path, blocks):
@@ -32,18 +31,19 @@ def create(a_pgm, a_save=False):
     return a_pgm
 
 
-def show_last_path(paths=None, blocks=None):
-    if not paths:
-        paths = Path.query(head='$$eta5$$')
+def show_last_path(asm_paths=None, blocks=None):
+    if not asm_paths:
+        asm_paths = Path.query(head='$$eta5$$')
     labels = list()
-    for path in paths:
+    for path in asm_paths:
         last = path.path[-1]
-        if last not in [label[0] for label in labels]:
-            count = len([path for path in paths if path.path[-1] == last])
+        if f'{last:8}' not in [label[0] for label in labels]:
+            count = len([path for path in asm_paths if path.path[-1] == last])
             block = blocks[last] if blocks else Block.query_first(label=last)
             cmd = block.components[-1].command + ' ' + str(block.components[-1].operands[1])
-            labels.append((last, count, cmd, path.exit_on_program, path.exit_on_loop))
-    labels.sort(key=lambda item: item[1])
+            labels.append((f'{last:8}', count, f'{cmd:20}',
+                           f'P:{path.exit_on_program:2}', f'L:{path.exit_on_loop:2}', f'M:{path.exit_on_merge:2}'))
+    labels.sort(key=lambda item: item[0])
     for label in labels:
         print(label)
 
@@ -62,42 +62,55 @@ if __name__ == '__main__':
     # print(len(pgm.paths))
 
     # # For ETA5
-    # pgm_name = 'eta5'
-    # pgm = AssemblerProgram(pgm_name)
-    # save = False
-    # pgm = create(pgm, save)
+    pgm_name = 'eta5'
+    pgm = AssemblerProgram(pgm_name)
+    save = False
+    pgm = create(pgm, save)
     # for key in pgm.blocks:
     #     print(pgm.blocks[key].get_str())
-    # pgm.paths.sort(key=lambda item: item.weight)
-    # for path in pgm.paths:
-    #     print(show(path, pgm.blocks))
-    # print(len(pgm.paths))
-    # # show_last_path(pgm.paths, pgm.blocks)
-    # # with open('path_text.txt', 'w') as file:
-    # #     for path in pgm.paths:
-    # #         if path.exit_on_program:
-    # #             file.write(f"{'-'*31}{path.weight}{'-'*(31-len(str(path.weight)))}\n")
-    # #             file.write(f"{get_text_from_path(path, pgm.blocks)}\n")
-    # #     print('File created.')
+    pgm.paths.sort(key=lambda item: item.path)
+    paths = pgm.paths
+    for path in paths:
+        print(show(path, pgm.blocks))
+    # for path in paths:
+    #     print(ComponentPath(path).get_text())
+    print(len(paths))
+    show_last_path(paths, pgm.blocks)
+    for path in paths:
+        print(f"{'-'*25}{path.head} to {path.tail}{'-'*25}")
+        for index, label in enumerate(path.path):
+            if label == path.tail:
+                if path.exit_on_program:
+                    print(f"{label:10}{pgm.blocks[label].components[-1].command}")
+                # elif path.exit_on_merge:
+                #     labels = {path.path[1] for path in paths if path.head == label and len(path.path) > 1}
+                #     for next_label in labels:
+                #         print(pgm.blocks[label].get_text(next_label))
+            else:
+                print(pgm.blocks[label].get_text(path.path[index + 1]))
+
+    # with open('path_text.txt', 'w') as file:
+    #     for path in pgm.paths:
+    #         if path.exit_on_program:
+    #             file.write(f"{'-'*31}{path.weight}{'-'*(31-len(str(path.weight)))}\n")
+    #     print('File created.')
 
     # Analyze
-    pgm = AssemblerProgram('eta5')
-    pgm.create_blocks()
-    # commands = {component.command for key in pgm.blocks for component in pgm.blocks[key].components.list_values}
-    # for command in commands:
-    #     print(command)
-    paths = Path.query(weight=51)
-    paths.sort(key=lambda item: item.weight)
-    for path in paths:
-        print(f"{'-'*31}{path.weight}{'-'*(31-len(str(path.weight)))}")
-        print(get_text_from_path(path, pgm.blocks))
-    cp = ComponentPath(paths[0])
-    cp.analyze(pgm.blocks)
-    for cs in cp.component_path:
-        print('-'*64)
-        print(cs)
-    print(len(cp.component_path))
+    # pgm = AssemblerProgram('eta5')
+    # pgm.create_blocks()
+    # # commands = {component.command for key in pgm.blocks for component in pgm.blocks[key].components.list_values}
+    # # for command in commands:
+    # #     print(command)
+    # paths = Path.query(weight=33993)
+    # # cp = ComponentPath(paths[0])
+    # # cp.analyze(pgm.blocks)
+    # # for c in cp.component_path:
+    # #     print(c)
+    # # print(len(cp.component_path))
+    # for index, label in enumerate(paths[0].path[:-1]):
+    #     print(pgm.blocks[label].get_text(paths[0].path[index + 1]))
 
+    # print(cp.get_text())
 
     # Test
     # ref = References(goes='A')
@@ -111,4 +124,3 @@ if __name__ == '__main__':
     # block.update()
     # block = Block.query(label='AAA')[0]
     # print(block.get_str())
-
