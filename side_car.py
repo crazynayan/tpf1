@@ -56,8 +56,8 @@ class SmartComponent:
         found = next((label for label in self._component.get_goes() if label == lookup_label), None)
         return True if found else False
 
-    def get_text(self, label):
-        return self._component.get_text(self.direction, label)
+    def get_text(self, labels):
+        return self._component.get_text(self.direction, labels)
 
 
 class SmartBlock:
@@ -105,7 +105,7 @@ class SmartBlock:
         text = list()
         text.append(f'{self.label}:')
         for component in self.get_conditional():
-            text.append(f"{' '*10}{component.get_text(self.next_label)}")
+            text.append(f"{' '*10}{component.get_text([self.next_label])}")
         return '\n'.join(text)
 
 
@@ -219,3 +219,170 @@ class ComponentPath:
         if component1.condition != component2.condition and component1.direction == component2.direction:
             return False
         return True
+
+
+class Analyze:
+    def __init__(self, head, tail, blocks):
+        self.head = head
+        self.tail = tail
+        self.blocks = blocks
+        try:
+            self._paths = self.search(blocks[head])
+        except KeyError:
+            self._paths = list()
+        self._replace = list()
+
+    def search(self, block, asm_path=None):
+        if asm_path:
+            asm_path.append(block.label)
+        else:
+            asm_path = [block.label]
+        path_labels = [label for label in block.get_next() if label not in asm_path]
+        path_labels.extend([label for label in block.get_calls() if label not in asm_path])
+        found_paths = list()
+        for label in path_labels:
+            if label == self.tail:
+                found_path = asm_path.copy()
+                found_path.append(label)
+                found_paths.append(found_path)
+            else:
+                search_paths = self.search(self.blocks[label], asm_path.copy())
+                found_paths.extend(search_paths)
+        return found_paths
+
+    def get_count(self):
+        return len(self._paths)
+
+    def get_all(self):
+        return self._paths
+
+    def get_normal_path(self):
+        normal_len, normal = self._get_max(self._paths)
+        return normal[0] if normal_len else list()
+
+    def get_text(self, path=None):
+        path = self.get_normal_path() if not path else path
+        text = list()
+        for index, label in enumerate(path):
+            # Get all conditions of the path (Exclude fall down)
+            conditional = [component for component in self.blocks[label].components.list_values
+                           if component.conditional]
+            text.append(label)
+            # Get the true components that goes or falls down to any where in the path
+            true_components = [component for component in self.blocks[label].components.list_values
+                               if set(component.get_goes()) & set(path[index + 1:])] \
+                if index + 1 < len(path) else list()
+            # For all components, IGNORE the components that go to / fall down within the path
+            # and display everything else.
+            # Continue only till the last component that go to / fall down within the path.
+            for component in conditional:
+                if component in true_components:
+                    if component == true_components[-1] and self.blocks[label].fall_down not in path[index + 1:]:
+                        # Last component that goes to the path. (Does NOT fall down to the path)
+                        # Do NOT check for other conditional components after this
+                        text.append(f"{' '*10}{component.get_text(True, path[index + 1:])}")
+                        break
+                    else:
+                        text.append(f"{' '*10}{component.get_text(False)} **CAN GO WITHIN PATH ON OPPOSITE**")
+                elif set(component.get_goes()) & set(path[: index + 1]):
+                    text.append(f"{' '*10}{component.get_text(False)} **LOOPS ON OPPOSITE**")
+                elif label != path[-1] or self.blocks[label].ends_in_program_exit():
+                    text.append(f"{' '*10}{component.get_text(False)}")
+            # If the last block ends in exit then display the exit condition
+            if label == path[-1] and self.blocks[label].ends_in_program_exit():
+                component = self.blocks[label].components.list_values[-1]
+                end_text = [f"{' '*10}{component.command}"]
+                if component.is_key_value:
+                    msg = next((operand.key_value['value'] for operand in component.operands.list_values
+                                if operand.key_value and operand.key_value['key'] == 'MSG'), None)
+                else:
+                    msg = next((operand.variable for operand in component.operands.list_values
+                                if operand.variable), None)
+                if msg:
+                    end_text.append(msg)
+                text.append(' '.join(end_text))
+        return '\n'.join(text)
+
+    def update(self, paths):
+        self._paths = paths
+
+    def normalize(self, paths=None):
+        if paths is None:
+            paths = self._paths
+        max_len, max_paths = self._get_max(paths)
+        if not max_len:
+            return paths
+        other_paths = list()
+        for asm_path in paths:
+            if len(asm_path) == max_len:
+                continue
+            found = next((max_path for max_path in max_paths if set(asm_path).issubset(max_path)), None)
+            if not found:
+                other_paths.append(asm_path)
+        max_paths.extend(self.normalize(other_paths))
+        return max_paths
+
+    def remove_paths_with_one_difference(self, paths=None):
+        if paths is None:
+            paths = self._paths
+        max_len, max_paths = self._get_max(paths)
+        if not max_len:
+            return paths
+        other_paths = [asm_path for asm_path in paths if asm_path not in max_paths]
+        delete_paths = list()
+        for path1, path2 in combinations(range(len(max_paths)), 2):
+            if max_paths[path1] in delete_paths or max_paths[path2] in delete_paths:
+                continue
+            labels = list(set(max_paths[path1]) - set(max_paths[path2]))
+            if len(labels) != 1:
+                continue
+            index = max_paths[path1].index(labels[0])
+            if max_paths[path1][index - 1] == max_paths[path2][index - 1] and \
+               max_paths[path1][index + 1] == max_paths[path2][index + 1]:
+                remove_path = max_paths[path2]
+                keep_path = max_paths[path1]
+                delete_paths.append(remove_path)
+                replace = {'removed': remove_path[index], 'kept': keep_path[index]}
+                if replace not in self._replace:
+                    self._replace.append(replace)
+        max_paths = [asm_path for asm_path in max_paths if asm_path not in delete_paths]
+        max_paths.extend(self.remove_paths_with_one_difference(other_paths))
+        return max_paths
+
+    @staticmethod
+    def _get_max(paths):
+        if not paths:
+            return 0, list()
+        max_len = max([len(asm_path) for asm_path in paths])
+        max_paths = [asm_path for asm_path in paths if len(asm_path) == max_len]
+        return max_len, max_paths
+
+    def critical_paths(self):
+        paths = self._paths
+        if len(paths) <= 1:
+            return paths
+        min_len = min([len(asm_path) for asm_path in paths])
+        # Identify the last common label from start
+        start = self.head
+        for index in range(min_len):
+            labels = [asm_path[index] for asm_path in paths]
+            if not all(label == labels[0] for label in labels):
+                break
+            start = labels[0]
+        # Identify the last common label from end
+        end = self.tail
+        for index in range(-1, -min_len - 1, -1):
+            labels = [asm_path[index] for asm_path in paths]
+            if not all(label == labels[0] for label in labels):
+                break
+            end = labels[0]
+        # Return the sliced path from start to end for each path
+        return [asm_path[asm_path.index(start): asm_path.index(end) + 1] for asm_path in paths]
+
+    def get_replaced_labels(self):
+        if not self._replace:
+            return 'No path removed.'
+        text = list()
+        for replace in self._replace:
+            text.append(f"Removed: {replace['removed']}. Kept: {replace['kept']}.")
+        return '\n'.join(text)

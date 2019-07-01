@@ -26,7 +26,14 @@ class AssemblerLine:
         Call from sanitize line to initialize fields in AssemblerLine
         :return: None
         """
-        words = self.line.split()
+        line = self.line
+        # Convert spaces within quotes to ;
+        if line.count("'") == 2:
+            start = line.index("'")
+            data = line[start: line[start + 1:].index("'") + start + 2]
+            new_data = data.replace(' ', ';')
+            line = line.replace(data, new_data)
+        words = line.split()
         if self.line[0] == ' ':
             label = None
             if not self.continuing:
@@ -46,6 +53,7 @@ class AssemblerLine:
                 self.label = label
         # Set Operands
         if operands:
+            # Convert (2,R4) to (2;R4)
             conversion = False
             converted = list()
             for char in operands:

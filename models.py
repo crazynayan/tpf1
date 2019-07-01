@@ -94,6 +94,10 @@ class Operand(CollectionItemMixin):
             self.type = self.OperandType.KEY_VALUE
             key = operand.split('=')[0]
             value = operand.split('=')[1]
+            if value[0] == "'":
+                # For quoted text, replace ; with space and remove the quotes
+                value = value.replace(';', ' ')
+                value = value.replace("'", '')
             self.field = {'key': key, 'value': value}
         elif operand.count("'") == 2:
             # This is a constant data.
@@ -201,12 +205,9 @@ class Component(CollectionItemMixin):
 
     def __init__(self, lines=None, labels=None):
         super().__init__()
-        self.type = None
         self.references = References()
         self.command = None
         self.operands = Operands()
-        self.output = None
-        self.input = None
         # Set appropriate values
         if not lines:
             return
@@ -215,6 +216,8 @@ class Component(CollectionItemMixin):
             self.command = lines
             return
         self.command = lines[0].command
+        if cmd.check(self.command, 'no_operand'):
+            return
         if len(lines) > 1:
             if lines[0].continuation:
                 # Continuing lines, generally executable macros withs key-value pairs.
@@ -291,6 +294,10 @@ class Component(CollectionItemMixin):
     def conditional(self):
         return True if self.get_goes() and not cmd.check(self.command, 'has_branch') else False
 
+    @property
+    def fall_down(self):
+        return next((ref.label for ref in self.references.list_values if ref.type == 'falls'), None)
+
     def add_operands(self, operands):
         for operand in operands:
             if operand:
@@ -327,7 +334,7 @@ class Component(CollectionItemMixin):
     def get_calls(self):
         return [ref.label for ref in self.references.list_values if ref.type == 'calls']
 
-    def get_text(self, direction=True, label=None):
+    def get_text(self, direction=True, labels=None):
         operands = self.operands.list_values
         if not operands:
             return ''
@@ -340,11 +347,12 @@ class Component(CollectionItemMixin):
                           if operand.key_value and operand.key_value['key'] == key), None)
             cmd_text = f'{cmd_text}.{value}' if value else cmd_text
             if direction:
-                key = next((operand.key_value['key'] for operand in self.operands.list_values
-                            if operand.key_value and operand.key_value['value'] == label), None)
-                if not key:
+                keys = [operand.key_value['key'] for operand in self.operands.list_values
+                        if operand.key_value and operand.key_value['value'] in labels]
+                if not keys:
                     return ''
-                return f'{cmd_text} {key}'
+                keys_text = ''.join([f'{key} or ' for key in keys])[:-3]
+                return f'{cmd_text} {keys_text}'
             else:
                 labels = self.get_goes()
                 if not labels:
@@ -400,6 +408,10 @@ class Block(MapToModelMixin, FirestoreModel):
     def __repr__(self):
         return f'{self.label}({self.depth})'
 
+    @property
+    def fall_down(self):
+        return self.components[-1].fall_down if self.components.list_values else None
+
     def get_str(self):
         block = [self.__repr__()]
         if not self.components.is_empty:
@@ -438,14 +450,6 @@ class Block(MapToModelMixin, FirestoreModel):
                     labels.append(label)
         return labels
 
-    def get_conditional(self):
-        """
-        Return a list of component that have conditions.
-        Useful for printing conditional text.
-        :return: A list of component.
-        """
-        return [component for component in self.components.list_values if component.conditional]
-
     def set_fall_down(self, label):
         if self.components.is_empty:
             self.components.append(Component('NOP'))
@@ -479,14 +483,14 @@ class Block(MapToModelMixin, FirestoreModel):
         for component in conditional:
             if component == next_label[-1]:
                 if goes_label and component == goes_label[-1]:
-                    text_list.append(f"{' '*10}{component.get_text(True, label)}")
+                    text_list.append(f"{' '*10}{component.get_text(True, [label])}")
                 else:
-                    text_list.append(f"{' '*10}{component.get_text(False, label)}")
+                    text_list.append(f"{' '*10}{component.get_text(False)}")
                 break
             elif component in goes_label:
-                text_list.append(f"{' '*10}{component.get_text(True, label)} **OR**")
+                text_list.append(f"{' '*10}{component.get_text(True, [label])} **OR**")
             else:
-                text_list.append(f"{' '*10}{component.get_text(False, label)}")
+                text_list.append(f"{' '*10}{component.get_text(False)}")
         return '\n'.join(text_list)
 
     def get_path(self, label):
@@ -518,8 +522,6 @@ class Path(FirestoreModel):
         self.exit_on_loop = False
         self.exit_on_program = False
         self.exit_on_merge = False
-        self.valid = True
-        self.sub_path_count = 0
 
     def __repr__(self):
-        return f'{self.name}-{self.head}({self.weight}, {len(self.path)}, {self.sub_path_count})'
+        return f'{self.name}-{self.head}({self.weight}, {len(self.path)})'
