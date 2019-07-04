@@ -6,6 +6,7 @@
         "branch_type": "math",
         "create": 1,
         "math": "+",
+        "set_1": 1,
         "set_cc": 1
     },
     "B": {
@@ -146,10 +147,12 @@
         "set_cc": 1
     },
     "CVB": {
-        "create": 1
+        "create": 1,
+        "set_1": 1
     },
     "CVD": {
-        "create": 1
+        "create": 1,
+        "set_2": 1
     },
     "DBCLS": {
         "create": 1
@@ -184,10 +187,12 @@
         "exit": 1
     },
     "IC": {
-        "create": 1
+        "create": 1,
+        "set_1": 1
     },
     "ICM": {
-        "create": 1
+        "create": 1,
+        "set_1": 1
     },
     "J": {
         "create": 1,
@@ -296,19 +301,23 @@
         "text": "OFF"
     },
     "L": {
-        "create": 1
+        "create": 1,
+        "set_1": 1
     },
     "LA": {
-        "create": 1
+        "create": 1,
+        "set_1": 1
     },
     "LHI": {
-        "create": 1
+        "create": 1,
+        "set_1": 1
     },
     "LM": {
         "create": 1
     },
     "LR": {
-        "create": 1
+        "create": 1,
+        "set_1": 1
     },
     "LTR": {
         "branch_type": "binary",
@@ -316,19 +325,25 @@
         "set_cc": 1
     },
     "MVC": {
-        "create": 1
+        "create": 1,
+        "set_1": 1
     },
     "MVI": {
-        "create": 1
+        "create": 1,
+        "set_1": 1
     },
     "N": {
         "branch_type": "bit",
         "create": 1,
+        "math": "&",
+        "set_1": 1,
         "set_cc": 1
     },
     "NI": {
         "branch_type": "bit",
+        "combine_operands": 1,
         "create": 1,
+        "set_1": 1,
         "set_cc": 1
     },
     "OC": {
@@ -338,11 +353,14 @@
     },
     "OI": {
         "branch_type": "bit",
+        "combine_operands": 1,
         "create": 1,
+        "set_1": 1,
         "set_cc": 1
     },
     "PACK": {
-        "create": 1
+        "create": 1,
+        "set_1": 1
     },
     "PDCLS": {
         "create": 1
@@ -368,16 +386,20 @@
         "branch_type": "math",
         "create": 1,
         "math": "-",
+        "set_1": 1,
         "set_cc": 1
     },
     "ST": {
-        "create": 1
+        "create": 1,
+        "set_2": 1
     },
     "STC": {
-        "create": 1
+        "create": 1,
+        "set_2": 1
     },
     "STH": {
-        "create": 1
+        "create": 1,
+        "set_2": 1
     },
     "STM": {
         "create": 1
@@ -392,11 +414,13 @@
         "set_cc": 1
     },
     "UNPK": {
-        "create": 1
+        "create": 1,
+        "set_1": 1
     },
     "XC": {
         "branch_type": "binary",
         "create": 1,
+        "set_1": 1,
         "set_cc": 1
     }
 }

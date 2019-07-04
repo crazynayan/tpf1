@@ -42,35 +42,43 @@ class Register:
 
 class Operand(CollectionItemMixin):
     DEFAULT = 'type'
-
-    class OperandType:
-        REG = 'r'
-        FLD = 'f'
-        BASE_DSP = 'bd'
-        # BASE_DSP_LEN = 'bdl'
-        # BASE_DSP_IDX = 'bdx'
-        # FLD_LEN = 'fl'
-        # FLD_DSP = 'fd'
-        # FLD_DSP_LEN = 'fdl'
-        # BASE_DSP_OTH = 'bdo'
-        KEY_VALUE = 'kv'
-        # ONLY_VALUE = 'v'
-        CONSTANT = 'c'
+    # Operand types
+    REG = 'r'
+    FLD = 'f'
+    BASE_DSP = 'bd'
+    KEY_VALUE = 'kv'
+    CONSTANT = 'c'
+    BIT = 'b'
 
     def __init__(self, operand=None):
         super().__init__()
-        self.type = None
+        self.type = list()
         self.field = None                   # Will be the field name or the complete operand text
         if operand:
             self.set(operand)
 
     def __repr__(self):
         text = self.field
-        if self.type == self.OperandType.KEY_VALUE:
+        if self.KEY_VALUE in self.type:
             text = f"{self.field['key']}:{self.field['value']}"
-        elif self.type == self.OperandType.CONSTANT:
+        elif self.BIT in self.type:
+            if self.CONSTANT in self.type:
+                bit_map = {'0': 0x80, '1': 0x40, '2': 0x20, '3': 0x10, '4': 0x08, '5': 0x04, '6': 0x02, '7': 0x01}
+                bit_text = ['BIT']
+                for bit, bit_value in bit_map.items():
+                    if self.field['bits'] & bit_value == bit_value:
+                        bit_text.append(f'{bit}/')
+                bit_text = ''.join(bit_text)[:-1]
+            else:
+                bit_text = self.field['bits']
+            if self.BASE_DSP in self.type:
+                byte_text = f"{self.field['byte']['base']}[{self.field['byte']['dsp']}]"
+            else:
+                byte_text = self.field['byte']
+            text = f"{byte_text}.{bit_text}"
+        elif self.CONSTANT in self.type:
             text = str(self.field)
-        elif self.type == self.OperandType.BASE_DSP:
+        elif self.BASE_DSP in self.type:
             if 'length' in self.field:
                 text = f"{self.field['base']}[{self.field['dsp']}:{self.field['dsp']+self.field['length']}]"
             else:
@@ -83,15 +91,13 @@ class Operand(CollectionItemMixin):
         :param operand: is a string of characters
         :return: None
         """
-        if not operand:
-            return
         if Register(operand).is_valid():
-            self.type = self.OperandType.REG
+            self.type.append(self.REG)
             self.field = str(Register(operand))
         elif len(operand) > 1 and '=' in operand[1:]:
             # This is a key value operand.
             # Generally found in user defined macros (for e.g. FIELD=NAME)
-            self.type = self.OperandType.KEY_VALUE
+            self.type.append(self.KEY_VALUE)
             key = operand.split('=')[0]
             value = operand.split('=')[1]
             if value[0] == "'":
@@ -102,9 +108,10 @@ class Operand(CollectionItemMixin):
         elif operand.count("'") == 2:
             # This is a constant data.
             # Either an immediate or constant or literal data type where the values are present inline.
-            self.type = self.OperandType.CONSTANT
+            self.type.append(self.CONSTANT)
             data_type = operand[1] if operand[0] == '=' else operand[0]
             data_type = data_type.upper()
+            data_type = operand[3] if data_type == 'A' or data_type == 'Y' else data_type
             start_index = operand.find("'") + 1
             end_index = start_index + operand[start_index:].find("'")
             data_value = operand[start_index: end_index]
@@ -115,10 +122,10 @@ class Operand(CollectionItemMixin):
             elif data_type == 'H' or data_type == 'F':
                 self.field = int(data_value)
         elif operand[0].isdigit() and '(' not in operand:
-            self.type = self.OperandType.CONSTANT
+            self.type.append(self.CONSTANT)
             self.field = int(operand)
         elif operand[0].isdigit() and '(' in operand:
-            self.type = self.OperandType.BASE_DSP
+            self.type.append(self.BASE_DSP)
             # Remove the trailing )
             operand = operand[:-1]
             words = operand.split('(')
@@ -144,28 +151,101 @@ class Operand(CollectionItemMixin):
             if length:
                 self.field['length'] = length
         else:
-            self.type = self.OperandType.FLD
-            self.field = operand
+            self.type.append(self.FLD)
+            # TODO Ignore Field with base/length/displacement for now
+            self.field = operand.split('(', 1)[0].split('+', 1)[0].split('-', 1)[0]
 
     @property
     def key_value(self):
-        return self.field if self.type == self.OperandType.KEY_VALUE else None
+        return self.field if self.KEY_VALUE in self.type else None
 
     @property
     def base_dsp(self):
-        return self.field if self.type == self.OperandType.BASE_DSP else None
+        return self.field if self.BASE_DSP in self.type and self.BIT not in self.type else None
 
     @property
     def variable(self):
-        return self.field if self.type == self.OperandType.FLD else None
+        return self.field if self.FLD in self.type else None
 
     @property
     def register(self):
-        return self.field if self.type == self.OperandType.REG else None
+        return self.field if self.REG in self.type else None
 
     @property
     def constant(self):
-        return self.field if self.type == self.OperandType.CONSTANT else None
+        return self.field if self.CONSTANT in self.type and self.BIT not in self.type else None
+
+    @property
+    def bit(self):
+        return self.field if self.BIT in self.type else None
+
+    @classmethod
+    def combine(cls, operand1, operand2):
+        """
+        Combine 2 operands for bit instructions into one operand.
+        This can be called only after the 2 operands are created
+        :param operand1: First operand (A field or a base-dsp)
+        :param operand2: Second operand (A field or a bit value)
+        :return: composite operand
+        """
+        model = cls()
+        model.type.append(cls.BIT)
+        model.type.extend([op_type for op_type in operand1.type])
+        model.type.extend([op_type for op_type in operand2.type])
+        model.field = dict()
+        model.field['byte'] = operand1.field
+        model.field['bits'] = operand2.field
+        return model
+
+    def get_any_reg(self):
+        if self.register:
+            return self.field
+        elif self.base_dsp:
+            return self.field['base']
+        elif self.bit:
+            return self.field['byte']['base'] if self.BASE_DSP in self.type else None
+        else:
+            return None
+
+    def get_any_field(self):
+        if self.bit:
+            return self.field['byte']
+        elif self.variable:
+            return self.field
+        return None
+
+    def old_check(self, operands):
+        """
+        Check whether the current operand matches with any of the list in operands
+        :param operands: A list of operands of type Operand
+        :return: True if match is found else False
+        """
+        if self.key_value:
+            return False
+        elif self.register or self.base_dsp:
+            register = self.field['base'] if self.base_dsp else self.field
+            return register in [operand.get_any_reg() for operand in operands if operand.get_any_reg()]
+        elif self.bit:
+            if self.BASE_DSP in self.type:
+                return self.field['byte']['base'] in [operand.get_any_reg()
+                                                      for operand in operands if operand.get_any_reg()]
+            else:
+                return self.field['byte'] in [operand.get_any_field()
+                                              for operand in operands if operand.get_any_field()]
+        else:
+            return self.field in [operand.get_any_field() for operand in operands if operand.get_any_field()]
+
+    def check(self, operands):
+        register = self.get_any_reg()
+        field = self.get_any_field()
+        for index, operand in enumerate(operands):
+            if register and register == operand.get_any_reg():
+                del operands[index]
+                return True, operands
+            if field and field == operand.get_any_field():
+                del operands[index]
+                return True, operands
+        return False, operands
 
 
 class Operands(CollectionMixin):
@@ -244,37 +324,19 @@ class Component(CollectionItemMixin):
                     self.add_references(goes=line.operands[0])
             else:   # All other commands
                 self.add_refs_with_key_value(labels)
+        # Combine operands for bit instructions like TM, NI, OI
         if cmd.check(self.command, 'combine_operands'):
-            self._combine_operands_for_tm()
-        self._combine_operands_if_same()
-
-    def _combine_operands_for_tm(self):
-        operand1 = self.operands[1]
-        operand2 = self.operands[2]
-        text = [f'{operand1}.']
-        if operand2.variable:
-            text.append(operand2.variable)
-        else:  # Assume it to be of constant type
-            # Identify bits
-            bit_map = {'0': 0x80, '1': 0x40, '2': 0x20, '3': 0x10, '4': 0x08, '5': 0x04, '6': 0x02, '7': 0x01}
-            bit_text = ['BIT']
-            for bit, bit_value in bit_map.items():
-                if operand2.constant & bit_value == bit_value:
-                    bit_text.append(f'{bit}/')
-            text.append(''.join(bit_text)[:-1])
-            if text[0] == 'WA0ET4.' and text[1] == 'BIT3':
-                text[1] = '#WA0TTY'
-        self.operands = Operands()
-        self.operands.append(Operand(''.join(text)))
-
-    def _combine_operands_if_same(self):
-        if len(self.operands.list_values) != 2:
-            return
-        if self.operands[1] != self.operands[2]:
-            return
-        operand1 = self.operands[1]
-        self.operands = Operands()
-        self.operands.append(operand1)
+            operand1 = self.operands[1]
+            operand2 = self.operands[2]
+            if operand1.variable == 'WA0ET4' and operand2.constant == 0x10:
+                operand2 = Operand('#WA0TTY')
+            self.operands = Operands()
+            self.operands.append(Operand.combine(operand1, operand2))
+        # Combine operands if same
+        if len(self.operands.list_values) == 2 and self.operands[1] == self.operands[2]:
+            operand1 = self.operands[1]
+            self.operands = Operands()
+            self.operands.append(operand1)
 
     def __repr__(self):
         component = [f'{self.command}']
@@ -291,7 +353,7 @@ class Component(CollectionItemMixin):
         return True if [operand for operand in self.operands.list_values if operand.key_value] else False
 
     @property
-    def conditional(self):
+    def is_conditional(self):
         return True if self.get_goes() and not cmd.check(self.command, 'has_branch') else False
 
     @property
@@ -335,6 +397,8 @@ class Component(CollectionItemMixin):
         return [ref.label for ref in self.references.list_values if ref.type == 'calls']
 
     def get_text(self, direction=True, labels=None):
+        if not self.is_conditional:
+            return self._get_set_text()
         operands = self.operands.list_values
         if not operands:
             return ''
@@ -371,7 +435,6 @@ class Component(CollectionItemMixin):
             if not ref or not ref.label:
                 return ''
             # TODO Do special processing for CLI commands to get the text 'is numeric' or 'is alphas'
-            #  Weight 4972, 7832
             condition, operator = cmd.get_text(self.command, ref.condition, opposite=not direction)
             if len(operands) == 1:
                 text = f'{operands[0]} {condition}'
@@ -380,6 +443,46 @@ class Component(CollectionItemMixin):
             else:
                 text = f'{operands[0]} {condition} {operands[1]}'
             return text
+
+    def check_set(self, operands):
+        if not cmd.check(self.command, 'set_1') and not cmd.check(self.command, 'set_2'):
+            return False, operands
+        if not self.operands.list_values:
+            return False, operands
+        operand1 = self.operands.list_values[0]
+        operand2 = self.operands.list_values[1] if len(self.operands.list_values) > 1 else None
+        if cmd.check(self.command, 'set_1'):
+            found, remaining_operands = operand1.check(operands)
+            if found:
+                if operand2 and operand2.constant is None:
+                    remaining_operands.append(operand2)
+                if cmd.check(self.command, 'math'):
+                    remaining_operands.append(operand1)
+                return True, remaining_operands
+        elif cmd.check(self.command, 'set_2') and operand2:
+            found, remaining_operands = operand2.check(operands)
+            if found:
+                remaining_operands.append(operand1)
+                return True, remaining_operands
+        return False, operands
+
+    def _get_set_text(self):
+        if not self.operands.list_values:
+            return ''
+        operand1 = self.operands.list_values[0]
+        operand2 = self.operands.list_values[1] if len(self.operands.list_values) > 1 else None
+        if self.command == 'OI':
+            return f'Turn ON {operand1}'
+        elif self.command == 'NI':
+            return f'Turn OFF {operand1}'
+        elif not operand2:
+            return f'{operand1} = 0'
+        elif cmd.check(self.command, 'math'):
+            return f"{operand1} {cmd.check(self.command, 'math')}= {operand2}"
+        elif cmd.check(self.command, 'set_2'):
+            return f'{operand2} = {operand1}'
+        else:
+            return f'{operand1} = {operand2}'
 
 
 class Components(CollectionMixin):
@@ -472,26 +575,6 @@ class Block(MapToModelMixin, FirestoreModel):
         if is_exit:
             is_exit = False if cmd.check(self.components[-1].command, 'has_branch') else True
         return is_exit
-
-    def get_text(self, label):
-        goes_label = [component for component in self.components.list_values if label in component.get_goes()]
-        next_label = [component for component in self.components.list_values if label in component.get_next()]
-        conditional = [component for component in self.components.list_values if component.get_next()]
-        if not next_label:
-            return ''
-        text_list = [self.label]
-        for component in conditional:
-            if component == next_label[-1]:
-                if goes_label and component == goes_label[-1]:
-                    text_list.append(f"{' '*10}{component.get_text(True, [label])}")
-                else:
-                    text_list.append(f"{' '*10}{component.get_text(False)}")
-                break
-            elif component in goes_label:
-                text_list.append(f"{' '*10}{component.get_text(True, [label])} **OR**")
-            else:
-                text_list.append(f"{' '*10}{component.get_text(False)}")
-        return '\n'.join(text_list)
 
     def get_path(self, label):
         component_path = list()

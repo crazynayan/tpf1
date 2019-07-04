@@ -9,9 +9,9 @@ def analyze_path(start, end):
     pgm.create_blocks()
     paths = Analyze(start, end, pgm.blocks)
     print(f'Before normalization: {paths.get_count()}')
-    paths.update(paths.normalize())
+    paths.update(paths=paths.normalize())
     print(f'After normalization : {paths.get_count()}')
-    paths.update(paths.remove_paths_with_one_difference())
+    paths.update(paths=paths.remove_paths_with_one_difference())
     print(f'After removal       : {paths.get_count()}')
     for path in paths.get_all():
         print(path)
@@ -21,13 +21,15 @@ def analyze_path(start, end):
     for path in critical:
         print(path)
     print('\nNormal Path Text')
-    print(paths.get_text())
-    print('\nCritical Path Text')
-    for path in critical:
-        print(path)
-    for path in critical:
-        print('='*165)
-        print(paths.get_text(path))
+    paths.update(smart_blocks=paths.create_smart_blocks())
+    print(paths.get_smart_text())
+    # if len(critical) >= 1:
+    #     print('\nCritical Path Text')
+    #     for path in critical:
+    #         print(path)
+    #     for path in critical:
+    #         print('='*165)
+    #         print(paths.get_smart_text(path))
 
 
 def show(asm_path, blocks):
@@ -129,15 +131,3 @@ if __name__ == '__main__':
     #     print(pgm.blocks[label].get_text(paths[0].path[index + 1]))
     analyze_path('$$eta5$$', 'ETA5250')
 
-    # Test
-    # ref = References(goes='A')
-    # ref.add(goes='C', calls='B')
-    # ref.add(goes='A', calls='A', loops='A')
-    # block = Block('AAA')
-    # block.add_references(ref)
-    # block.components.append(Component('L', ['R1', 'CE1CR1']))
-    # block.components.append(Component('LA', ['R7', 'EBW040']))
-    # block.components.append(Component('TM', ['WA0ET4', '#WA0TTY']))
-    # block.update()
-    # block = Block.query(label='AAA')[0]
-    # print(block.get_str())
