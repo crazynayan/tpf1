@@ -46,6 +46,13 @@ class _Command:
                 text_operator = self._data[command][self._data[command]['branch_type']]
         return text_condition, text_operator
 
+    def get_operator(self, condition, opposite=False):
+        if condition not in self._data:
+            return ''
+        if opposite and 'opposite' in self._data[condition] and self._data[condition]['opposite']:
+            condition = self._data[condition]['opposite']
+        return self._data[condition]['operator'] if 'operator' in self._data[condition] else ''
+
 
 # This is the cmd object which needs to be imported by other applications.
 cmd = _Command()

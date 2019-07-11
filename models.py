@@ -1,3 +1,4 @@
+from copy import copy
 from firestore_model import FirestoreModel, MapToModelMixin, CollectionMixin, CollectionItemMixin
 from commands import cmd
 
@@ -105,7 +106,7 @@ class Operand(CollectionItemMixin):
                 value = value.replace(';', ' ')
                 value = value.replace("'", '')
             self.field = {'key': key, 'value': value}
-        elif operand.count("'") == 2:
+        elif operand.count("'") == 2 and '-' not in operand:
             # This is a constant data.
             # Either an immediate or constant or literal data type where the values are present inline.
             self.type.append(self.CONSTANT)
@@ -121,6 +122,8 @@ class Operand(CollectionItemMixin):
                 self.field = data_value
             elif data_type == 'H' or data_type == 'F':
                 self.field = int(data_value)
+            elif data_type == 'B':
+                self.field = int(data_value, 2)
         elif operand[0].isdigit() and '(' not in operand:
             self.type.append(self.CONSTANT)
             self.field = int(operand)
@@ -150,6 +153,19 @@ class Operand(CollectionItemMixin):
                 self.field['index'] = index
             if length:
                 self.field['length'] = length
+        elif '-' in operand:
+            words = operand.split('-', 1)
+            operand1 = Operand(words[0])
+            operand2 = Operand(words[1])
+            if operand1.constant and operand1.constant == 255 and operand2.variable:
+                self.field = operand2.variable
+                self.type.append(self.FLD)
+            elif operand1.constant and operand2.constant:
+                self.field = operand1.constant - operand2.constant
+                self.type.append(self.CONSTANT)
+            else:
+                self.field = words[0]
+                self.type.append(self.FLD)
         else:
             self.type.append(self.FLD)
             # TODO Ignore Field with base/length/displacement for now
@@ -214,28 +230,13 @@ class Operand(CollectionItemMixin):
             return self.field
         return None
 
-    def old_check(self, operands):
+    def check(self, operands):
         """
-        Check whether the current operand matches with any of the list in operands
+        Check whether the current operand matches with any of the list in operands.
+        Fuzzy match. Used by search method which may become obselete.
         :param operands: A list of operands of type Operand
         :return: True if match is found else False
         """
-        if self.key_value:
-            return False
-        elif self.register or self.base_dsp:
-            register = self.field['base'] if self.base_dsp else self.field
-            return register in [operand.get_any_reg() for operand in operands if operand.get_any_reg()]
-        elif self.bit:
-            if self.BASE_DSP in self.type:
-                return self.field['byte']['base'] in [operand.get_any_reg()
-                                                      for operand in operands if operand.get_any_reg()]
-            else:
-                return self.field['byte'] in [operand.get_any_field()
-                                              for operand in operands if operand.get_any_field()]
-        else:
-            return self.field in [operand.get_any_field() for operand in operands if operand.get_any_field()]
-
-    def check(self, operands):
         register = self.get_any_reg()
         field = self.get_any_field()
         for index, operand in enumerate(operands):
@@ -357,8 +358,16 @@ class Component(CollectionItemMixin):
         return True if self.get_goes() and not cmd.check(self.command, 'has_branch') else False
 
     @property
+    def is_set(self):
+        return cmd.check(self.command, 'set_1') or cmd.check(self.command, 'set_2')
+
+    @property
     def fall_down(self):
         return next((ref.label for ref in self.references.list_values if ref.type == 'falls'), None)
+
+    @property
+    def condition(self):
+        return next((ref.condition for ref in self.references.list_values if ref.type == 'goes'), None)
 
     def add_operands(self, operands):
         for operand in operands:
@@ -608,3 +617,90 @@ class Path(FirestoreModel):
 
     def __repr__(self):
         return f'{self.name}-{self.head}({self.weight}, {len(self.path)})'
+
+
+class State(FirestoreModel):
+    COLLECTION = 'state'
+    DEFAULT = 'name'
+    SAME_PATH_LEN = 22
+    LOOP_FACTOR = 2
+    PATH_CHECK = 5
+
+    def __init__(self, head=None):
+        super().__init__()
+        self.path = list()
+        self.head = head if head else '$$ERROR$$'
+        self.tail = None
+        self.known = dict()
+        self.assume = dict()
+
+    def is_same(self, states):
+        return any(any(self.path == state.path[index: index+len(self.path)]
+                       for index, _ in enumerate(state.path)) for state in states)
+
+    def traverse(self, states, next_label):
+        if self.path.count(next_label) >= self.LOOP_FACTOR:
+            return False
+        if len(self.path) < self.SAME_PATH_LEN:
+            return True
+        return not any(any(self.path[-self.PATH_CHECK:] == state.path[index: index+self.PATH_CHECK]
+                       for index, _ in enumerate(state.path)) for state in states)
+
+    def value_from_variable(self, variable):
+        if variable in self.known:
+            return self.known[variable]
+        elif variable in self.assume:
+            return self.assume[variable]
+        return None
+
+    def copy(self, variable=False, path=False):
+        state = copy(self)
+        if variable:
+            state.known = self.known.copy()
+            state.assume = self.assume.copy()
+        if path:
+            state.path = self.path.copy()
+        return state
+
+    def get_operand_type(self, operand):
+        if operand.constant is not None:
+            return 'constant'
+        operand = str(operand)
+        if operand in self.known:
+            return 'known'
+        if operand in self.assume:
+            return 'assume'
+        return 'new'
+
+    def get_operand_value(self, operand):
+        if operand.constant is not None:
+            return operand.constant
+        operand = str(operand)
+        if operand in self.known:
+            return self.known[operand]
+        if operand in self.assume:
+            return self.assume[operand]
+        return 0
+
+
+class Node(MapToModelMixin, FirestoreModel):
+    COLLECTION = 'block'
+    DEFAULT = 'label'
+    MAP_OBJECTS = {Components}
+
+    def __init__(self, label=None, name=None):
+        super().__init__()
+        self.label = label if label else 'LABEL_ERROR'
+        self.doc_id = self.label
+        self.name = name
+        self.components = Components()
+
+    def create(self):
+        self.update(self.doc_id)
+
+    def __repr__(self):
+        return f'{self.label}'
+
+    @property
+    def fall_down(self):
+        return self.components[-1].fall_down if self.components.list_values else None

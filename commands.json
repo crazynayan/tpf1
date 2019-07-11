@@ -17,7 +17,8 @@
     "BACKC": {
         "create": 1,
         "exit": 1,
-        "no_operand": 1
+        "no_operand": 1,
+        "return": 0
     },
     "BAS": {
         "call": 1,
@@ -34,18 +35,21 @@
     "BE": {
         "check_cc": 1,
         "compare": "is",
+        "operator": "==",
         "opposite": "BNE",
         "text": "="
     },
     "BH": {
         "check_cc": 1,
         "compare": ">",
+        "operator": ">",
         "opposite": "BNH",
         "text": ">"
     },
     "BL": {
         "check_cc": 1,
         "compare": "<",
+        "operator": "<",
         "opposite": "BNL",
         "text": "<"
     },
@@ -53,24 +57,28 @@
         "bit": "anyone ON",
         "check_cc": 1,
         "math": "< 0",
+        "operator": "< 0",
         "opposite": "BNM",
         "text": "< 0"
     },
     "BNE": {
         "check_cc": 1,
         "compare": "is not",
+        "operator": "!=",
         "opposite": "BE",
         "text": "!="
     },
     "BNH": {
         "check_cc": 1,
         "compare": "<=",
+        "operator": "<=",
         "opposite": "BH",
         "text": "<="
     },
     "BNL": {
         "check_cc": 1,
         "compare": ">=",
+        "operator": ">=",
         "opposite": "BL",
         "text": ">="
     },
@@ -78,6 +86,7 @@
         "bit": "anyone OFF",
         "check_cc": 1,
         "math": ">= 0",
+        "operator": ">= 0",
         "opposite": "BM",
         "text": ">= 0"
     },
@@ -85,12 +94,14 @@
         "bit": "OFF",
         "check_cc": 1,
         "math": "not overflow",
+        "operator": "== 0",
         "opposite": "BO",
         "text": "OFF"
     },
     "BNP": {
         "check_cc": 1,
         "math": "<= 0",
+        "operator": "<= 0",
         "opposite": "BP",
         "text": "<= 0"
     },
@@ -99,6 +110,7 @@
         "bit": "ON",
         "check_cc": 1,
         "math": "is not 0",
+        "operator": "!= 0",
         "opposite": "BZ",
         "text": "ON"
     },
@@ -106,24 +118,28 @@
         "bit": "ON",
         "check_cc": 1,
         "math": "overflow",
+        "operator": "!= 0",
         "opposite": "BNO",
         "text": "ON"
     },
     "BP": {
         "check_cc": 1,
         "math": "> 0",
+        "operator": "> 0",
         "opposite": "BNP",
         "text": "> 0"
     },
     "BR": {
         "create": 1,
-        "exit": 1
+        "exit": 1,
+        "return": 1
     },
     "BZ": {
         "binary": "has no data",
         "bit": "OFF",
         "check_cc": 1,
         "math": "is 0",
+        "operator": "== 0",
         "opposite": "BNZ",
         "text": "OFF"
     },
@@ -211,18 +227,21 @@
     "JE": {
         "check_cc": 1,
         "compare": "is",
+        "operator": "==",
         "opposite": "JNE",
         "text": "="
     },
     "JH": {
         "check_cc": 1,
         "compare": ">",
+        "operator": ">",
         "opposite": "JNH",
         "text": ">"
     },
     "JL": {
         "check_cc": 1,
         "compare": "<",
+        "operator": "<",
         "opposite": "JNL",
         "text": "<"
     },
@@ -230,24 +249,28 @@
         "bit": "anyone ON",
         "check_cc": 1,
         "math": "< 0",
+        "operator": "< 0",
         "opposite": "JNM",
         "text": "< 0"
     },
     "JNE": {
         "check_cc": 1,
         "compare": "is not",
+        "operator": "!=",
         "opposite": "JE",
         "text": "!="
     },
     "JNH": {
         "check_cc": 1,
         "compare": "<=",
+        "operator": "<=",
         "opposite": "JH",
         "text": "<="
     },
     "JNL": {
         "check_cc": 1,
         "compare": ">=",
+        "operator": ">=",
         "opposite": "JL",
         "text": ">="
     },
@@ -255,6 +278,7 @@
         "bit": "anyone OFF",
         "check_cc": 1,
         "math": ">= 0",
+        "operator": ">= 0",
         "opposite": "JM",
         "text": ">= 0"
     },
@@ -262,12 +286,14 @@
         "bit": "OFF",
         "check_cc": 1,
         "math": "not overflow",
+        "operator": "== 0",
         "opposite": "JO",
         "text": "OFF"
     },
     "JNP": {
         "check_cc": 1,
         "math": "<= 0",
+        "operator": "<= 0",
         "opposite": "JP",
         "text": "<= 0"
     },
@@ -276,6 +302,7 @@
         "bit": "ON",
         "check_cc": 1,
         "math": "is not 0",
+        "operator": "== 1",
         "opposite": "JZ",
         "text": "ON"
     },
@@ -283,12 +310,14 @@
         "bit": "ON",
         "check_cc": 1,
         "math": "overflow",
+        "operator": "== 1",
         "opposite": "JNO",
         "text": "ON"
     },
     "JP": {
         "check_cc": 1,
         "math": "> 0",
+        "operator": "> 0",
         "opposite": "JNP",
         "text": "> 0"
     },
@@ -297,6 +326,7 @@
         "bit": "OFF",
         "check_cc": 1,
         "math": "is 0",
+        "operator": "== 0",
         "opposite": "JNZ",
         "text": "OFF"
     },
@@ -343,6 +373,7 @@
         "branch_type": "bit",
         "combine_operands": 1,
         "create": 1,
+        "math": "&",
         "set_1": 1,
         "set_cc": 1
     },
@@ -355,6 +386,7 @@
         "branch_type": "bit",
         "combine_operands": 1,
         "create": 1,
+        "math": "|",
         "set_1": 1,
         "set_cc": 1
     },

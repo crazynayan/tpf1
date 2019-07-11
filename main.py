@@ -9,17 +9,19 @@ def analyze_path(start, end):
     pgm.create_blocks()
     paths = Analyze(start, end, pgm.blocks)
     print(f'Before normalization: {paths.get_count()}')
-    paths.update(paths=paths.normalize())
-    print(f'After normalization : {paths.get_count()}')
-    paths.update(paths=paths.remove_paths_with_one_difference())
-    print(f'After removal       : {paths.get_count()}')
-    for path in paths.get_all():
-        print(path)
-    print(paths.get_replaced_labels())
-    critical = paths.critical_paths()
-    print('Critical path')
-    for path in critical:
-        print(path)
+    # paths.update(states=paths.normalize())
+    # print(f'After normalization : {paths.get_count()}')
+    # paths.update(paths=paths.remove_paths_with_one_difference())
+    # print(f'After removal       : {paths.get_count()}')
+    for state in paths.get_all():
+        print(f"{'Path':10}{state.path}")
+        print(f"{'Known':10}{state.known}")
+        print(f"{'Assume':10}{state.assume}")
+    # print(paths.get_replaced_labels())
+    # critical = paths.critical_paths()
+    # print('Critical path')
+    # for path in critical:
+    #     print(path)
     print('\nNormal Path Text')
     paths.update(smart_blocks=paths.create_smart_blocks())
     print(paths.get_smart_text())
@@ -86,16 +88,18 @@ def show_last_path(asm_paths=None, blocks=None):
 if __name__ == '__main__':
     init_firestore_db('tpf1-key.json')
     # For temp
-    # pgm_name = 'temp'
+    # pgm_name = 'tmp2'
     # pgm = AssemblerProgram(pgm_name)
     # pgm.create_blocks()
-    # pgm.create_paths()
-    # for key in pgm.blocks:
-    #     print(pgm.blocks[key].get_str())
-    # for path in pgm.paths:
-    #     print(show(path, pgm.blocks))
-    # print(len(pgm.paths))
-
+    # paths = Analyze('ETA5230', 'ETA5250', pgm.blocks)
+    # print('Normal Path')
+    # print(paths.get_normal_state().path)
+    # print('All paths')
+    # for state in paths.get_all():
+    #     print(f"{'Path':10}{state.path}")
+    #     print(f"{'Known':10}{state.known}")
+    #     print(f"{'Assume':10}{state.assume}")
+    # print(paths.get_count())
     # # For ETA5
     # pgm_name = 'eta5'
     # pgm = AssemblerProgram(pgm_name)

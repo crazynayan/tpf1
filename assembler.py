@@ -165,6 +165,7 @@ class AssemblerProgram:
                 lines = [line]
             else:
                 lines.append(line)
+        yield None, lines
 
     @staticmethod
     def _get_components(component_lines):
@@ -207,6 +208,8 @@ class AssemblerProgram:
             for component_lines in self._get_components(block_lines):
                 if cmd.check(component_lines[0].command, 'create'):
                     blocks[current_label].components.append(Component(component_lines, self.labels))
+            if label is None:
+                break
             if not blocks[current_label].ends_in_exit():
                 blocks[current_label].set_fall_down(label)
             current_label = label
