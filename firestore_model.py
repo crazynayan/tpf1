@@ -411,6 +411,12 @@ class CollectionMixin(MapToModelMixin):
         self._object_list.append(other)
         return True
 
+    def remove(self, other):
+        if not isinstance(other, type(self._object_list[0])) or other not in self._object_list:
+            return False
+        self._object_list.remove(other)
+        return True
+
     def append_unique(self, other):
         if not isinstance(other, type(self._object_list[0])):
             return False

@@ -321,7 +321,7 @@ class Component(CollectionItemMixin):
                     # BAS, JAS
                     self.add_references(calls=line.operands[1])
                 elif len(line.operands) > 0:
-                    # B, J
+                    # B, J (But not BR)
                     self.add_references(goes=line.operands[0])
             else:   # All other commands
                 self.add_refs_with_key_value(labels)
@@ -350,6 +350,12 @@ class Component(CollectionItemMixin):
         return cmd.check(self.command, 'exit')
 
     @property
+    def is_program_exit(self):
+        return cmd.check(self.command, 'exit') and \
+               not cmd.check(self.command, 'has_branch') and \
+               not cmd.check(self.command, 'return')
+
+    @property
     def is_key_value(self):
         return True if [operand for operand in self.operands.list_values if operand.key_value] else False
 
@@ -360,6 +366,14 @@ class Component(CollectionItemMixin):
     @property
     def is_set(self):
         return cmd.check(self.command, 'set_1') or cmd.check(self.command, 'set_2')
+
+    @property
+    def is_call(self):
+        return cmd.check(self.command, 'call') and cmd.check(self.command, 'has_branch')
+
+    @property
+    def is_return(self):
+        return cmd.check(self.command, 'return') and not self.operands.is_empty
 
     @property
     def fall_down(self):
@@ -523,20 +537,6 @@ class Block(MapToModelMixin, FirestoreModel):
     @property
     def fall_down(self):
         return self.components[-1].fall_down if self.components.list_values else None
-
-    def get_str(self):
-        block = [self.__repr__()]
-        if not self.components.is_empty:
-            block.append('\n')
-            block.append(''.join([f'{comp}, ' for comp in self.components.list_values])[:-2])
-            block.append('\n')
-        if self.get_next():
-            block.append(f' --> {self.get_next()}')
-        if self.get_calls():
-            block.append(f' |-> {self.get_calls()}')
-        if self.get_loops():
-            block.append(f' <-> {self.get_loops()}')
-        return ''.join(block)
 
     def get_next(self):
         labels = list()
@@ -703,4 +703,41 @@ class Node(MapToModelMixin, FirestoreModel):
 
     @property
     def fall_down(self):
-        return self.components[-1].fall_down if self.components.list_values else None
+        return self.components[-1].fall_down
+
+    @property
+    def is_program_exit(self):
+        return self.components[-1].is_program_exit
+
+    @property
+    def is_exit(self):
+        return self.components[-1].is_exit
+
+    @property
+    def is_return(self):
+        return self.components[-1].is_return
+
+    def get_calls(self):
+        return [component for component in self.components.list_values if component.is_call]
+
+    def get_next(self):
+        return self.components[-1].get_next()
+
+    def set_fall_down(self, label):
+        """
+        Used for creating nodes
+        :param label: the label to fall down
+        :return:
+        """
+        if self.components.is_empty:
+            self.components.append(Component('NOP'))
+        self.components[-1].add_fall_down_ref(label)
+
+    def get_str(self):
+        """
+        Used by main method.
+        :return:
+        """
+        text = [f'{self.label:12}']
+        text.extend([f'{component}, ' for component in self.components.list_values])
+        return ''.join(text)[:-2]

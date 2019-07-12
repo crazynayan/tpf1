@@ -1,5 +1,5 @@
 from os import path
-from models import Block, Path, Component
+from models import Block, Path, Component, Node
 from commands import cmd
 
 
@@ -101,6 +101,7 @@ class AssemblerProgram:
         self.labels = list()
         self.blocks = dict()
         self.paths = list()
+        self.nodes = dict()
 
     def set_file_name(self, file_path=None):
         """
@@ -173,7 +174,8 @@ class AssemblerProgram:
         index = 0
         while index < len(component_lines):
             line = component_lines[index]
-            lines.append(line)
+            if cmd.check(line.command, 'create') or (line.continuing and lines):
+                lines.append(line)
             if line.command and cmd.check(line.command, 'set_cc'):
                 temp_index = index + 1
                 temp_lines = lines.copy()
@@ -289,3 +291,43 @@ class AssemblerProgram:
             for label in asm_path:
                 self.blocks[label].depth += 1
         return
+
+    def create_nodes(self, save=False):
+        """
+        Create code blocks and save it to the database
+        :param save: Will store it in database if true
+        :return: None
+        """
+        if not self.labels and not self.first_pass():
+            return False
+        nodes = dict()
+        current_label = self.root_label
+        nodes[current_label] = Node(current_label, self.name)
+        for label, block_lines in self._get_blocks():
+            label_index = 0
+            last_lines = None
+            for last_lines in self._get_components(block_lines):
+                pass
+            for component_lines in self._get_components(block_lines):
+                component = Component(component_lines, self.labels)
+                nodes[current_label].components.append(component)
+                if component.is_conditional and component_lines != last_lines:
+                    label_index += 1
+                    if '-' not in current_label:
+                        fall_down_label = f'{current_label}-{label_index}'
+                    else:
+                        fall_down_label = f"{current_label.split('-', 1)[0]}-{label_index}"
+                    nodes[current_label].set_fall_down(fall_down_label)
+                    current_label = fall_down_label
+                    nodes[current_label] = Node(current_label, self.name)
+            if label is None:
+                break
+            if not nodes[current_label].is_exit:
+                nodes[current_label].set_fall_down(label)
+            current_label = label
+            nodes[current_label] = Node(current_label, self.name)
+        self.nodes = nodes
+        if save:
+            for key in self.nodes:
+                self.nodes[key].create()
+        return True

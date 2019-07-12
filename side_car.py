@@ -1,4 +1,6 @@
-from models import Component, Block, State
+import networkx as nx
+from networkx import DiGraph
+from models import Component, Block, State, Node
 from commands import cmd
 
 
@@ -56,7 +58,7 @@ class SmartBlock(Block):
         self.components = components
 
 
-class Analyze:
+class OldAnalyze:
     def __init__(self, head, tail, blocks):
         self.exit_states = list()
         self.blocks = blocks
@@ -67,24 +69,6 @@ class Analyze:
             state.tail = tail
             self.smart_search(head, self.blocks[head].components.list_values[0], state)
         self._replace = list()
-
-    # def search(self, block, asm_path=None):
-    #     if asm_path is not None:
-    #         asm_path.append(block.label)
-    #     else:
-    #         asm_path = [block.label]
-    #     path_labels = [label for label in block.get_next() if label not in asm_path]
-    #     path_labels.extend([label for label in block.get_calls() if label not in asm_path])
-    #     found_paths = list()
-    #     for label in path_labels:
-    #         if label == self.tail:
-    #             found_path = asm_path.copy()
-    #             found_path.append(label)
-    #             found_paths.append(found_path)
-    #         else:
-    #             search_paths = self.search(self.blocks[label], asm_path.copy())
-    #             found_paths.extend(search_paths)
-    #     return found_paths
 
     def smart_search(self, label, component, state, save=True):
         """
@@ -369,67 +353,77 @@ class Analyze:
         max_states.extend(self.normalize(other_states))
         return max_states
 
-    # def remove_paths_with_one_difference(self, paths=None):
-    #     if paths is None:
-    #         paths = self._paths
-    #     max_len, max_paths = self._get_max(paths)
-    #     if not max_len:
-    #         return paths
-    #     other_paths = [asm_path for asm_path in paths if asm_path not in max_paths]
-    #     delete_paths = list()
-    #     for path1, path2 in combinations(range(len(max_paths)), 2):
-    #         if max_paths[path1] in delete_paths or max_paths[path2] in delete_paths:
-    #             continue
-    #         labels = list(set(max_paths[path1]) - set(max_paths[path2]))
-    #         if len(labels) != 1:
-    #             continue
-    #         index = max_paths[path1].index(labels[0])
-    #         if max_paths[path1][index - 1] == max_paths[path2][index - 1] and \
-    #            max_paths[path1][index + 1] == max_paths[path2][index + 1]:
-    #             remove_path = max_paths[path2]
-    #             keep_path = max_paths[path1]
-    #             delete_paths.append(remove_path)
-    #             replace = {'removed': remove_path[index], 'kept': keep_path[index]}
-    #             if replace not in self._replace:
-    #                 self._replace.append(replace)
-    #     max_paths = [asm_path for asm_path in max_paths if asm_path not in delete_paths]
-    #     max_paths.extend(self.remove_paths_with_one_difference(other_paths))
-    #     return max_paths
 
-    # def critical_paths(self):
-    #     paths = self._paths
-    #     if len(paths) <= 1:
-    #         return paths
-    #     min_len = min([len(asm_path) for asm_path in paths])
-    #     # Identify the last common label from start
-    #     start = self.head
-    #     for index in range(min_len):
-    #         labels = [asm_path[index] for asm_path in paths]
-    #         if not all(label == labels[0] for label in labels):
-    #             break
-    #         start = labels[0]
-    #     # Identify the last common label from end
-    #     end = self.tail
-    #     for index in range(-1, -min_len - 1, -1):
-    #         labels = [asm_path[index] for asm_path in paths]
-    #         if not all(label == labels[0] for label in labels):
-    #             break
-    #         end = labels[0]
-    #     # Return the sliced path from start to end for each path
-    #     return [asm_path[asm_path.index(start): asm_path.index(end) + 1] for asm_path in paths]
+class Analyze:
+    def __init__(self, nodes, root=None):
+        self.nodes = nodes
+        if root is None:
+            self.root_label = next((label for label in nodes.keys() if label[:2] == '$$'), None)
+        else:
+            self.root_label = root
+        graph = DiGraph()
+        for label, node in nodes.items():
+            graph.add_node(label)
+            for next_label in node.get_next():
+                graph.add_edge(label, next_label)
+        self.graph = graph
 
-    # def get_replaced_labels(self):
-    #     if not self._replace:
-    #         return 'No path removed.'
-    #     text = list()
-    #     for replace in self._replace:
-    #         text.append(f"Removed: {replace['removed']}. Kept: {replace['kept']}.")
-    #     return '\n'.join(text)
-    #
-    # def get_smart_operands(self):
-    #     return [operand for block in self._smart_blocks
-    #             for component in block.components
-    #             for operand in component.operands.list_values
-    #             if component.is_conditional and
-    #             component.tag not in [component.WITHIN_PATH, component.LOOP] and
-    #             not operand.key_value and operand.constant is None]
+    def get_heads(self):
+        # noinspection PyCallingNonCallable
+        return [in_node for in_node, in_degree in self.graph.in_degree() if in_degree == 0]
+
+    def get_tails(self):
+        # noinspection PyCallingNonCallable
+        return [out_node for out_node, out_degree in self.graph.out_degree() if out_degree == 0]
+
+    def get_head_tails(self):
+        """
+        Match all heads and tails that are in the path
+        :return: a dict with head as the key and a list of tails that are in its path
+        """
+        head_tails = dict()
+        for head in self.get_heads():
+            for tail in self.get_tails():
+                if nx.has_path(self.graph, head, tail):
+                    if head in head_tails:
+                        head_tails[head].append(tail)
+                    else:
+                        head_tails[head] = [tail]
+        return head_tails
+
+    def combine_calls(self):
+        nodes_with_calls = [node for _, node in self.nodes.items() if node.get_calls()]
+        head_tails = self.get_head_tails()
+        for node in nodes_with_calls:
+            components = node.components.list_values
+            label_index = 0
+            current_label = node.label
+            for index, component in enumerate(components):
+                if current_label != node.label:
+                    self.nodes[current_label].components.append(component)
+                    self.nodes[node.label].components.remove(component)
+                if not component.is_call:
+                    continue
+                if index < len(components) - 1:
+                    label_index += 1
+                    if '.' not in node.label:
+                        return_label = f'{current_label}.{label_index}'
+                    else:
+                        return_label = f"{current_label.split('.', 1)[0]}.{label_index}"
+                    self.nodes[return_label] = Node(return_label, node.name)
+                    self.graph.add_node(return_label)
+                else:
+                    # Calls like BAS will always have fall down label if they are last component
+                    return_label = node.fall_down
+                call_label = str(component.operands.list_values[1])
+                component.add_references(goes=call_label)
+                self.graph.add_edge(current_label, call_label)
+                for tail in head_tails[call_label]:
+                    # TODO If a branch goes to a subroutine label then it won't be part of head
+                    self.nodes[tail].components[-1].add_references(goes=return_label)
+                    self.graph.add_edge(tail, return_label)
+                current_label = return_label
+
+
+
+

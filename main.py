@@ -101,37 +101,31 @@ if __name__ == '__main__':
     #     print(f"{'Assume':10}{state.assume}")
     # print(paths.get_count())
     # # For ETA5
-    # pgm_name = 'eta5'
-    # pgm = AssemblerProgram(pgm_name)
-    # save = False
-    # pgm = create(pgm, save)
-    # # for key in pgm.blocks:
-    # #     print(pgm.blocks[key].get_str())
-    # pgm.paths.sort(key=lambda item: item.path)
-    # paths = pgm.paths
-    # for path in paths:
-    #     print(show(path, pgm.blocks))
-    # # for path in paths:
-    # #     print(ComponentPath(path).get_text())
-    # print(len(paths))
-    # show_last_path(paths, pgm.blocks)
-    # for path in paths:
-    #     print(f"{'-'*25}{path.head} to {path.tail}{'-'*25}")
-    #     for index, label in enumerate(path.path):
-    #         if label == path.tail:
-    #             if path.exit_on_program:
-    #                 print(f"{label:10}{pgm.blocks[label].components[-1].command}")
-    #         else:
-    #             print(pgm.blocks[label].get_text(path.path[index + 1]))
+    pgm_name = 'eta5'
+    pgm = AssemblerProgram(pgm_name)
+    save = False
+    pgm.create_nodes(save)
+    for key in pgm.nodes:
+        print(pgm.nodes[key].get_str())
+    print(len(pgm.nodes))
+    exit_nodes = [pgm.nodes[key] for key in pgm.nodes if pgm.nodes[key].is_program_exit]
+    for node in exit_nodes:
+        print(node.get_str())
+    g = Analyze(pgm.nodes)
+    g.combine_calls()
+    for key in pgm.nodes:
+        print(pgm.nodes[key].get_str())
+    print(len(pgm.nodes))
+
 
     # Analyze
-    # pgm = AssemblerProgram('eta5')
-    # pgm.create_blocks()
-    # commands = {component.command for key in pgm.blocks for component in pgm.blocks[key].components.list_values}
-    # for command in commands:
-    #     print(command)
-    # paths = Path.query(weight=33993)
-    # for index, label in enumerate(paths[0].path[:-1]):
-    #     print(pgm.blocks[label].get_text(paths[0].path[index + 1]))
-    analyze_path('$$eta5$$', 'ETA5250')
+    # # pgm = AssemblerProgram('eta5')
+    # # pgm.create_blocks()
+    # # commands = {component.command for key in pgm.blocks for component in pgm.blocks[key].components.list_values}
+    # # for command in commands:
+    # #     print(command)
+    # # paths = Path.query(weight=33993)
+    # # for index, label in enumerate(paths[0].path[:-1]):
+    # #     print(pgm.blocks[label].get_text(paths[0].path[index + 1]))
+    # analyze_path('$$eta5$$', 'ETA5250')
 
