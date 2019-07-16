@@ -1,6 +1,6 @@
 import networkx as nx
 from networkx import DiGraph
-from models import Component, Block, State, Node
+from models import Component, State
 from commands import cmd
 
 
@@ -29,35 +29,6 @@ class SmartComponent(Component):
         return model
 
 
-class SmartBlock(Block):
-    def __init__(self, block, prior_path, follow_path):
-        super().__init__(block.label)
-        components = list()
-        # Get the true components that goes or falls down to any where in the path
-        true_components = [component for component in block.components.list_values
-                           if set(component.get_goes()) & set(follow_path)]
-        for component in block.components.list_values:
-            display = True if component.is_conditional else False
-            if component in true_components:
-                if component == true_components[-1] and block.fall_down not in follow_path:
-                    # Last component that goes to the path. (Does NOT fall down to the path)
-                    # No other components are added after this
-                    components.append(SmartComponent.from_component(component,
-                                                                    display=display,
-                                                                    direction=True,
-                                                                    follow_path=follow_path))
-                    break
-                else:
-                    components.append(SmartComponent.from_component(component,
-                                                                    display=display,
-                                                                    tag=SmartComponent.WITHIN_PATH))
-            elif set(component.get_goes()) & set(prior_path):
-                components.append(SmartComponent.from_component(component, display=display, tag=SmartComponent.LOOP))
-            elif follow_path or block.ends_in_program_exit():
-                components.append(SmartComponent.from_component(component, display=display))
-        self.components = components
-
-
 class OldAnalyze:
     def __init__(self, head, tail, blocks):
         self.exit_states = list()
@@ -82,7 +53,7 @@ class OldAnalyze:
         if save:
             state = state.copy(path=True)
             state.path.append(label)
-        if label == state.tail:
+        if label == state.path[-1]:
             if not state.is_same(self._states):
                 self._states.append(state)
                 print(f'F:{len(self._states)}')
@@ -275,98 +246,61 @@ class OldAnalyze:
         max_states = [state for state in states if len(state.path) == max_len]
         return max_len, max_states
 
-    def create_smart_blocks(self, state=None):
-        state = self.get_normal_state() if state is None else state
-        if state is None:
-            return list()
-        smart_blocks = list()
-        # Step 1 - Create a list SmartBlocks for each label in the path
-        for index, label in enumerate(state.path):
-            prior_path = state.path[: index + 1]
-            follow_path = state.path[index + 1:] if label != state.path[-1] else list()
-            smart_blocks.append(SmartBlock(self.blocks[label], prior_path, follow_path))
-        # Step 2 - Reverse the path
-        smart_blocks.reverse()
-        for block in smart_blocks:
-            block.components.reverse()
-        # Step 3 - Update the display attribute of each component
-        for main_block_index, block in enumerate(smart_blocks):
-            for main_index, component in enumerate(block.components):
-                if not component.is_conditional:
-                    continue
-                # Get the operands of the current component
-                operands = [operand for operand in component.operands.list_values
-                            if not operand.key_value and operand.constant is None]
-                if component == block.components[-1]:
-                    main_block_index += 1
-                exit_flag = False
-                for block_index in range(main_block_index, len(smart_blocks)):
-                    start_index = main_index + 1 if smart_blocks[block_index].label == block.label else 0
-                    for index in range(start_index, len(smart_blocks[block_index].components)):
-                        display, operands = smart_blocks[block_index].components[index].check_set(operands)
-                        if display:
-                            smart_blocks[block_index].components[index].display = True
-                            if not operands:
-                                exit_flag = True
-                                break
-                    if exit_flag:
-                        break
-        # Step 4 - Restore the order of the path
-        smart_blocks.reverse()
-        for block in smart_blocks:
-            block.components.reverse()
-        return smart_blocks
-
-    def get_smart_text(self, state=None):
-        if state:
-            smart_blocks = self.create_smart_blocks(state)
-        elif self._smart_blocks:
-            smart_blocks = self._smart_blocks
-        else:
-            smart_blocks = self.create_smart_blocks()
-        text = list()
-        for block in smart_blocks:
-            text.append(block.label)
-            block_text = [f"{' '*10}{component.get_text(component.direction, component.follow_path):40}{component.tag}"
-                          for component in block.components
-                          if component.display]
-            if block_text:
-                text.extend(block_text)
-        return '\n'.join(text)
-
     def update(self, states=None, smart_blocks=None):
         self._states = states if states is not None else self._states
         self._smart_blocks = smart_blocks if smart_blocks is not None else self._smart_blocks
 
-    def normalize(self, states=None):
-        states = self._states if states is None else states
-        max_len, max_states = self._get_max(states)
-        if not max_len:
-            return states
-        other_states = list()
-        for state in states:
-            if len(state.path) == max_len:
-                continue
-            found = next((max_state.path for max_state in max_states if set(state.path).issubset(max_state.path)), None)
-            if not found:
-                other_states.append(state)
-        max_states.extend(self.normalize(other_states))
-        return max_states
-
 
 class Analyze:
     def __init__(self, nodes, root=None):
-        self.nodes = nodes
         if root is None:
             self.root_label = next((label for label in nodes.keys() if label[:2] == '$$'), None)
         else:
             self.root_label = root
         graph = DiGraph()
+        # Add all the goes and falls edges
         for label, node in nodes.items():
             graph.add_node(label)
             for next_label in node.get_next():
                 graph.add_edge(label, next_label)
+        # Add returns to nodes
+        call_nodes = [node for _, node in nodes.items() if node.get_call()]
+        return_nodes = [node for _, node in nodes.items() if node.is_return]
+        for call_node in call_nodes:
+            return_node = next(return_node for return_node in return_nodes
+                               if nx.has_path(graph, call_node.get_call(), return_node.label))
+            call_node.set_return(return_node.label)
+            return_node.set_return(call_node.fall_down)
+        # Add goes edges to subroutine calls
+        for call_node in call_nodes:
+            graph.add_edge(call_node.label, call_node.get_call())
+            return_node = nodes[next(iter(call_node.get_returns()))]
+            if len(return_node.get_returns()) == 1:
+                # Include subroutine to the main path if there is only one call
+                graph.add_edge(return_node.label, call_node.fall_down)
+                graph.remove_edge(call_node.label, call_node.fall_down)
+        # Create a DAG (Directed Acyclic Graph) from the graph. (Remove cycles)
+        dag = graph.copy()
+        loop_edges = list()
+        while not nx.is_directed_acyclic_graph(dag):
+            cycle_edges = nx.find_cycle(dag, self.root_label)
+            loop_edges.append(cycle_edges[-1])
+            dag.remove_edge(*cycle_edges[-1])
+        # Add loops to the nodes
+        for loop_edge in loop_edges:
+            nodes[loop_edge[0]].set_loop(loop_edge[1])
+        # Reduce all the extra paths ('OR' paths) in the dag
+        dag = nx.transitive_reduction(dag)
+        # Save paths to all exit points
+        exit_labels = [node.label for _, node in nodes.items() if node.is_program_exit]
+        paths = dict()
+        for exit_label in exit_labels:
+            paths[exit_label] = list(nx.all_simple_paths(dag, self.root_label, exit_label))
+        # Save graphs, nodes and paths
+        self.dag = dag
         self.graph = graph
+        self.nodes = nodes
+        self.paths = paths
 
     def get_heads(self):
         # noinspection PyCallingNonCallable
@@ -376,54 +310,15 @@ class Analyze:
         # noinspection PyCallingNonCallable
         return [out_node for out_node, out_degree in self.graph.out_degree() if out_degree == 0]
 
-    def get_head_tails(self):
-        """
-        Match all heads and tails that are in the path
-        :return: a dict with head as the key and a list of tails that are in its path
-        """
-        head_tails = dict()
-        for head in self.get_heads():
-            for tail in self.get_tails():
-                if nx.has_path(self.graph, head, tail):
-                    if head in head_tails:
-                        head_tails[head].append(tail)
-                    else:
-                        head_tails[head] = [tail]
-        return head_tails
-
-    def combine_calls(self):
-        nodes_with_calls = [node for _, node in self.nodes.items() if node.get_calls()]
-        head_tails = self.get_head_tails()
-        for node in nodes_with_calls:
-            components = node.components.list_values
-            label_index = 0
-            current_label = node.label
-            for index, component in enumerate(components):
-                if current_label != node.label:
-                    self.nodes[current_label].components.append(component)
-                    self.nodes[node.label].components.remove(component)
-                if not component.is_call:
-                    continue
-                if index < len(components) - 1:
-                    label_index += 1
-                    if '.' not in node.label:
-                        return_label = f'{current_label}.{label_index}'
-                    else:
-                        return_label = f"{current_label.split('.', 1)[0]}.{label_index}"
-                    self.nodes[return_label] = Node(return_label, node.name)
-                    self.graph.add_node(return_label)
-                else:
-                    # Calls like BAS will always have fall down label if they are last component
-                    return_label = node.fall_down
-                call_label = str(component.operands.list_values[1])
-                component.add_references(goes=call_label)
-                self.graph.add_edge(current_label, call_label)
-                for tail in head_tails[call_label]:
-                    # TODO If a branch goes to a subroutine label then it won't be part of head
-                    self.nodes[tail].components[-1].add_references(goes=return_label)
-                    self.graph.add_edge(tail, return_label)
-                current_label = return_label
-
-
-
-
+    def show(self, exit_label):
+        for path in self.paths[exit_label]:
+            state = State(path)
+            for label in path:
+                state.label = label
+                for component in self.nodes[label].components.list_values:
+                    state = component.execute(state)
+            print('\n'.join(state.text))
+            if not state.valid:
+                print('*********** INVALID PATH *************')
+            print(state.condition)
+            print(f"{'*'*100}")

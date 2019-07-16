@@ -196,7 +196,7 @@
     "EX": {
         "branch_type": "depends",
         "create": 1,
-        "set_cc": 1
+        "set_cc": 0
     },
     "EXITC": {
         "create": 1,

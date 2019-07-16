@@ -213,41 +213,6 @@ class Operand(CollectionItemMixin):
         model.field['bits'] = operand2.field
         return model
 
-    def get_any_reg(self):
-        if self.register:
-            return self.field
-        elif self.base_dsp:
-            return self.field['base']
-        elif self.bit:
-            return self.field['byte']['base'] if self.BASE_DSP in self.type else None
-        else:
-            return None
-
-    def get_any_field(self):
-        if self.bit:
-            return self.field['byte']
-        elif self.variable:
-            return self.field
-        return None
-
-    def check(self, operands):
-        """
-        Check whether the current operand matches with any of the list in operands.
-        Fuzzy match. Used by search method which may become obselete.
-        :param operands: A list of operands of type Operand
-        :return: True if match is found else False
-        """
-        register = self.get_any_reg()
-        field = self.get_any_field()
-        for index, operand in enumerate(operands):
-            if register and register == operand.get_any_reg():
-                del operands[index]
-                return True, operands
-            if field and field == operand.get_any_field():
-                del operands[index]
-                return True, operands
-        return False, operands
-
 
 class Operands(CollectionMixin):
     MAP_OBJECTS = {Operand}
@@ -257,7 +222,7 @@ class Operands(CollectionMixin):
 
 
 class Reference(CollectionItemMixin):
-    TYPE = {'goes', 'calls', 'loops', 'falls'}
+    TYPE = {'goes', 'calls', 'loops', 'falls', 'returns'}
     DEFAULT = 'type'
 
     def __init__(self, ref_type=None, label=None, condition=None):
@@ -413,15 +378,16 @@ class Component(CollectionItemMixin):
     def get_loops(self):
         return [ref.label for ref in self.references.list_values if ref.type == 'loops']
 
+    def get_returns(self):
+        return [ref.label for ref in self.references.list_values if ref.type == 'returns']
+
     def get_goes(self):
         return [ref.label for ref in self.references.list_values if ref.type == 'goes']
 
     def get_calls(self):
         return [ref.label for ref in self.references.list_values if ref.type == 'calls']
 
-    def get_text(self, direction=True, labels=None):
-        if not self.is_conditional:
-            return self._get_set_text()
+    def _get_conditional_text(self, direction=True, labels=None):
         operands = self.operands.list_values
         if not operands:
             return ''
@@ -467,28 +433,6 @@ class Component(CollectionItemMixin):
                 text = f'{operands[0]} {condition} {operands[1]}'
             return text
 
-    def check_set(self, operands):
-        if not cmd.check(self.command, 'set_1') and not cmd.check(self.command, 'set_2'):
-            return False, operands
-        if not self.operands.list_values:
-            return False, operands
-        operand1 = self.operands.list_values[0]
-        operand2 = self.operands.list_values[1] if len(self.operands.list_values) > 1 else None
-        if cmd.check(self.command, 'set_1'):
-            found, remaining_operands = operand1.check(operands)
-            if found:
-                if operand2 and operand2.constant is None:
-                    remaining_operands.append(operand2)
-                if cmd.check(self.command, 'math'):
-                    remaining_operands.append(operand1)
-                return True, remaining_operands
-        elif cmd.check(self.command, 'set_2') and operand2:
-            found, remaining_operands = operand2.check(operands)
-            if found:
-                remaining_operands.append(operand1)
-                return True, remaining_operands
-        return False, operands
-
     def _get_set_text(self):
         if not self.operands.list_values:
             return ''
@@ -507,6 +451,59 @@ class Component(CollectionItemMixin):
         else:
             return f'{operand1} = {operand2}'
 
+    def execute(self, state):
+        state = state.copy()
+        operand1 = self.operands.list_values[0]
+        operand2 = self.operands.list_values[1] if len(self.operands.list_values) > 1 else None
+        math = cmd.check(self.command, 'math')
+        if self.is_set:
+            set_text = self._get_set_text()
+            pre_text = state.get_text(operand1, operand2)
+            if operand2 is None:
+                if operand1.bit:
+                    if isinstance(operand1.bit['bits'], int):
+                        _, target_value = state.get_type_value(operand1.bit['byte'])
+                        source_value = eval(f"operand1.bit['bits'] {math} target_value")
+                        state.assign_with_1(operand1.bit['byte'], source_value)
+                    else:  # TODO remove the complication of bit being a string by doing macro lookup in operand create
+                        source_value = 0 if math == '&' else 1
+                        state.assign_with_1(operand1, source_value)
+                else:
+                    state.assign_with_1(operand1, 0)
+            else:
+                if cmd.check(self.command, 'set_2'):
+                    operand1, operand2 = operand2, operand1
+                state.assign_with_2(operand1, operand2, math)
+            post_text = state.get_text(operand1, operand2)
+            if state.capture_set:
+                state.text.append(f'{set_text:40}{pre_text:40}{post_text:40}{state.label}')
+        if self.is_conditional:
+            next_label = state.path[state.path.index(state.label) + 1] \
+                if state.path.index(state.label) + 1 < len(state.path) else None
+            if next_label in self.get_goes():
+                operator = cmd.get_operator(self.condition)
+                condition_text = self._get_conditional_text(direction=True, labels=state.path)
+            else:
+                operator = cmd.get_operator(self.condition, opposite=True)
+                condition_text = self._get_conditional_text(direction=False, labels=state.path)
+            star = ''
+            if self.is_key_value:
+                pre_text = ''
+                post_text = ''
+            else:
+                pre_text = state.get_text(operand1, operand2)
+                if operand2 is None or math:
+                    if not state.condition_with_1(operand1, operator):
+                        state.valid = False
+                        star = '*'
+                else:
+                    if not state.condition_with_2(operand1, operand2, operator):
+                        state.valid = False
+                        star = '*'
+                post_text = state.get_text(operand1, operand2)
+            state.text.append(f'{condition_text:40}{pre_text:40}{post_text:40}{star}{state.label}')
+        return state
+
 
 class Components(CollectionMixin):
     MAP_OBJECTS = {Component}
@@ -515,172 +512,150 @@ class Components(CollectionMixin):
         super().__init__(Component)
 
 
-class Block(MapToModelMixin, FirestoreModel):
-    COLLECTION = 'block'
-    DEFAULT = 'label'
-    MAP_OBJECTS = {Components}
+class State:
+    CONSTANT = 'data'
+    KNOWN = 'known'
+    UPDATED = 'updated'
+    CONDITION = 'condition'
+    INIT = 'init'
 
-    def __init__(self, label=None, name=None):
-        super().__init__()
-        self.label = label if label else 'LABEL_ERROR'
-        self.doc_id = self.label
-        self.name = name
-        self.components = Components()
-        self.depth = 0
-
-    def create(self):
-        self.update(self.doc_id)
-
-    def __repr__(self):
-        return f'{self.label}({self.depth})'
-
-    @property
-    def fall_down(self):
-        return self.components[-1].fall_down if self.components.list_values else None
-
-    def get_next(self):
-        labels = list()
-        for component in self.components.list_values:
-            for label in component.get_next():
-                if label not in labels:
-                    labels.append(label)
-        return labels
-
-    def get_calls(self):
-        labels = list()
-        for component in self.components.list_values:
-            for label in component.get_calls():
-                if label not in labels:
-                    labels.append(label)
-        return labels
-
-    def get_loops(self):
-        labels = list()
-        for component in self.components.list_values:
-            for label in component.get_loops():
-                if label not in labels:
-                    labels.append(label)
-        return labels
-
-    def set_fall_down(self, label):
-        if self.components.is_empty:
-            self.components.append(Component('NOP'))
-        self.components[-1].add_fall_down_ref(label)  # TODO soft code NOP and fall_down later
-
-    def add_loop_label(self, label):
-        if self.components.is_empty:
-            return
-        components = [c for c in self.components.list_values for next_label in c.get_next() if next_label == label]
-        for component in components:
-            component.add_loop_ref(label)
-
-    def ends_in_exit(self):
-        if self.components.is_empty:
-            return False
-        return self.components[-1].is_exit
-
-    def ends_in_program_exit(self):
-        is_exit = self.ends_in_exit()
-        if is_exit:
-            is_exit = False if cmd.check(self.components[-1].command, 'has_branch') else True
-        return is_exit
-
-    def get_path(self, label):
-        component_path = list()
-        label_components = [c for c in self.components.list_values if label in c.get_next()]
-        for label_component in label_components:
-            components = dict()
-            components['label'] = self.label
-            components['items'] = list()
-            for component in self.components.list_values:
-                components['items'].append(component)
-                if component == label_component:
-                    break
-            component_path.append(components)
-        return component_path
-
-
-class Path(FirestoreModel):
-    COLLECTION = 'path'
-    DEFAULT = 'name'
-
-    def __init__(self, name=None, asm_path=None):
-        super().__init__()
-        self.name = name if name else 'ERROR PROGRAM'
-        self.path = asm_path if asm_path else list()
-        self.weight = 0
-        self.head = self.path[0] if self.path else None
-        self.tail = self.path[-1] if self.path else None
-        self.exit_on_loop = False
-        self.exit_on_program = False
-        self.exit_on_merge = False
-
-    def __repr__(self):
-        return f'{self.name}-{self.head}({self.weight}, {len(self.path)})'
-
-
-class State(FirestoreModel):
-    COLLECTION = 'state'
-    DEFAULT = 'name'
-    SAME_PATH_LEN = 22
-    LOOP_FACTOR = 2
-    PATH_CHECK = 5
-
-    def __init__(self, head=None):
-        super().__init__()
-        self.path = list()
-        self.head = head if head else '$$ERROR$$'
-        self.tail = None
+    def __init__(self, path, label=None):
+        self.path = path
+        self.label = path[0] if label is None else label
         self.known = dict()
-        self.assume = dict()
+        self.updated = dict()
+        self.condition = dict()
+        self.init = dict()
+        self.valid = True
+        self.text = list()
+        self.capture_set = True
 
-    def is_same(self, states):
-        return any(any(self.path == state.path[index: index+len(self.path)]
-                       for index, _ in enumerate(state.path)) for state in states)
+    def get_type_value(self, operand):
+        if not isinstance(operand, str) and operand.constant is not None:
+            return self.CONSTANT, operand.constant
+        operand = str(operand)
+        if operand in self.known:
+            return self.KNOWN, self.known[operand]
+        if operand in self.updated:
+            return self.UPDATED, self.updated[operand]
+        if operand in self.condition:
+            return self.CONDITION, self.condition[operand]
+        if operand in self.init:
+            return self.INIT, self.init[operand]
+        return self.INIT, 0
 
-    def traverse(self, states, next_label):
-        if self.path.count(next_label) >= self.LOOP_FACTOR:
-            return False
-        if len(self.path) < self.SAME_PATH_LEN:
+    def _del_operand(self, operand):
+        if operand in self.known:
+            del self.known[operand]
+        elif operand in self.updated:
+            del self.updated[operand]
+        elif operand in self.condition:
+            del self.condition[operand]
+        elif operand in self.init:
+            del self.init[operand]
+
+    def _set_value(self, operand, operand_type, value):
+        if not isinstance(operand, str) and operand.constant is not None:
+            return
+        operand = str(operand)
+        self._del_operand(operand)
+        if operand_type == self.KNOWN or operand_type == self.CONSTANT:
+            self.known[operand] = value
+        elif operand_type == self.UPDATED:
+            self.updated[operand] = value
+        elif operand_type == self.CONDITION:
+            self.condition[operand] = value
+        elif operand_type == self.INIT:
+            self.init[operand] = value
+
+    def assign_with_2(self, operand1, operand2, math=None):
+        operand1_type, operand1_value = self.get_type_value(operand1)
+        operand2_type, operand2_value = self.get_type_value(operand2)
+        if math:
+            value = eval(f'operand1_value {math} operand2_value')
+        else:
+            operand1_type = operand2_type if operand2_type != self.CONDITION else self.UPDATED
+            value = operand2_value
+        if operand1_type == self.CONDITION:
+            operand1_type = self.UPDATED
+        self._set_value(operand1, operand1_type, value)
+
+    def assign_with_1(self, operand, value):
+        self._del_operand(str(operand))
+        self._set_value(operand, self.KNOWN, value)
+
+    def condition_with_1(self, operand, operator):
+        """
+        Evaluate for single operand component.
+        operand type INIT are upgraded to CONDITION
+        :param operand: The operand of type Operand
+        :param operator: The operator ('==0' or '!=0') is used to get the value for INIT type.
+                         Pass the opposite operator for condition that falls down.
+        :return: True, if the con
+        """
+        operand_type, operand_value = self.get_type_value(operand)
+        if operand_type == self.INIT:
+            if not eval(f'operand_value {operator}'):
+                operand_value = self._operand_value_by_operator(operator)
+            self._del_operand(str(operand))
+            self._set_value(operand, self.CONDITION, operand_value)
             return True
-        return not any(any(self.path[-self.PATH_CHECK:] == state.path[index: index+self.PATH_CHECK]
-                       for index, _ in enumerate(state.path)) for state in states)
+        else:
+            return eval(f'operand_value {operator}')
 
-    def value_from_variable(self, variable):
-        if variable in self.known:
-            return self.known[variable]
-        elif variable in self.assume:
-            return self.assume[variable]
+    def condition_with_2(self, operand1, operand2, operator):
+        operand1_type, operand1_value = self.get_type_value(operand1)
+        operand2_type, operand2_value = self.get_type_value(operand2)
+        if operand1_type == self.INIT:
+            if not eval(f'operand1_value {operator} operand2_value'):
+                operand1_value = self._operand_value_by_operator(operator, operand2_value)
+            self._del_operand(str(operand1))
+            self._set_value(operand1, self.CONDITION, operand1_value)
+            return True
+        elif operand2_type == self.INIT:
+            if not eval(f'operand1_value {operator} operand2_value'):
+                operand2_value = self._operand_value_by_operator(operator, operand1_value)
+            self._del_operand(str(operand2))
+            self._set_value(operand2, self.CONDITION, operand2_value)
+            return True
+        else:
+            return eval(f'operand1_value {operator} operand2_value')
+
+    def get_text(self, operand1, operand2=None):
+        operand1_type, operand1_value = self.get_type_value(operand1)
+        if operand2 is None:
+            return f'{operand1}({operand1_type[0]})={operand1_value}'
+        else:
+            operand2_type, operand2_value = self.get_type_value(operand2)
+            return f'{operand1}({operand1_type[0]})={operand1_value}, {operand2}({operand2_type[0]})={operand2_value}'
+
+    @staticmethod
+    def _operand_value_by_operator(operator, data=None):
+        if data is None:
+            value_list = [0, 1, -1]
+        else:
+            if isinstance(data, int):
+                value_list = [data, data + 1, data - 1]
+            elif isinstance(data, str):
+                data1 = chr(ord(data[0]) + 1) + data[1:]
+                data2 = chr(ord(data[0]) - 1) + data[1:]
+                value_list = [data, data1, data2]
+            else:
+                value_list = [data]
+        for value in value_list:
+            if data is None and eval(f'value {operator}'):
+                return value
+            if data is not None and eval(f'data {operator} value'):
+                return value
         return None
 
-    def copy(self, variable=False, path=False):
+    def copy(self):
         state = copy(self)
-        if variable:
-            state.known = self.known.copy()
-            state.assume = self.assume.copy()
-        if path:
-            state.path = self.path.copy()
+        state.known = self.known.copy()
+        state.updated = self.updated.copy()
+        state.condition = self.condition.copy()
+        state.init = self.init.copy()
         return state
-
-    def get_operand_type(self, operand):
-        if operand.constant is not None:
-            return 'constant'
-        operand = str(operand)
-        if operand in self.known:
-            return 'known'
-        if operand in self.assume:
-            return 'assume'
-        return 'new'
-
-    def get_operand_value(self, operand):
-        if operand.constant is not None:
-            return operand.constant
-        operand = str(operand)
-        if operand in self.known:
-            return self.known[operand]
-        if operand in self.assume:
-            return self.assume[operand]
-        return 0
 
 
 class Node(MapToModelMixin, FirestoreModel):
@@ -717,11 +692,14 @@ class Node(MapToModelMixin, FirestoreModel):
     def is_return(self):
         return self.components[-1].is_return
 
-    def get_calls(self):
-        return [component for component in self.components.list_values if component.is_call]
+    def get_call(self):
+        return next(iter(self.components[-1].get_calls()), None)
 
     def get_next(self):
         return self.components[-1].get_next()
+
+    def get_returns(self):
+        return self.components[-1].get_returns()
 
     def set_fall_down(self, label):
         """
@@ -731,7 +709,13 @@ class Node(MapToModelMixin, FirestoreModel):
         """
         if self.components.is_empty:
             self.components.append(Component('NOP'))
-        self.components[-1].add_fall_down_ref(label)
+        self.components[-1].add_references(falls=label)
+
+    def set_return(self, label):
+        self.components[-1].add_references(returns=label)
+
+    def set_loop(self, label):
+        self.components[-1].add_references(loops=label)
 
     def get_str(self):
         """

@@ -1,4 +1,6 @@
+# noinspection PyPackageRequirements
 from google.cloud.exceptions import NotFound
+# noinspection PyPackageRequirements
 from google.cloud.firestore import Query
 from firebase_admin import firestore, initialize_app, credentials, get_app
 

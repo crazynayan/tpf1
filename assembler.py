@@ -1,5 +1,5 @@
 from os import path
-from models import Block, Path, Component, Node
+from models import Component, Node
 from commands import cmd
 
 
@@ -195,106 +195,10 @@ class AssemblerProgram:
                 lines = list()
             index += 1
 
-    def create_blocks(self, save=False):
-        """
-        Create code blocks and save it to the database
-        :param save: Will store it in database if true
-        :return: None
-        """
-        if not self.labels and not self.first_pass():
-            return False
-        blocks = dict()
-        current_label = self.root_label
-        blocks[current_label] = Block(current_label, self.name)
-        for label, block_lines in self._get_blocks():
-            for component_lines in self._get_components(block_lines):
-                if cmd.check(component_lines[0].command, 'create'):
-                    blocks[current_label].components.append(Component(component_lines, self.labels))
-            if label is None:
-                break
-            if not blocks[current_label].ends_in_exit():
-                blocks[current_label].set_fall_down(label)
-            current_label = label
-            blocks[current_label] = Block(current_label, self.name)
-        self.blocks = blocks
-        if save:
-            for key in self.blocks:
-                self.blocks[key].create()
-        return True
-
-    def load_blocks(self):
-        self.blocks = Block.query(dict_type=True, name=self.name)
-
-    def create_paths(self, save=False):
-        if not self.blocks:
-            self.load_blocks()
-        if not self.blocks:
-            return False
-        self._build_merge_path(self.blocks[self.root_label])
-        # Create paths for function calls
-        call_blocks = [self.blocks[key] for key in self.blocks if self.blocks[key].get_calls()]
-        done_labels = set()
-        for block in call_blocks:
-            for label in block.get_calls():
-                if label not in done_labels:
-                    self._build_merge_path(self.blocks[label])
-                done_labels.add(label)
-        # Calculate the weight & determine the validity of each path
-        for index, asm_path in enumerate(self.paths):
-            asm_path.weight = sum([self.blocks[label].depth for label in asm_path.path])
-        # Save it into database if requested
-        if save:
-            for asm_path in self.paths:
-                asm_path.create()
-            for key in self.blocks:
-                self.blocks[key].update()
-
-    def _build_merge_path(self, block):
-        self._build_path(block)
-        merge_labels = {s_path.path[-1] for s_path in self.paths if s_path.exit_on_merge}
-        for label in merge_labels:
-            if label not in {s_path.path[0] for s_path in self.paths}:
-                self._build_merge_path(self.blocks[label])
-
-    def _build_path(self, block, asm_path=None):
-        # Update asm path
-        if asm_path:
-            asm_path.append(block.label)
-            # Traversal required if multiple blocks not pointing to this block
-            from_blocks = [self.blocks[label] for label in self.blocks if block.label in self.blocks[label].get_next()]
-            traverse = True if len(from_blocks) <= 1 else False
-        else:
-            asm_path = [block.label]
-            traverse = True
-        # Get all next labels
-        next_labels = block.get_next()
-        # Check for loops & add loop labels to block
-        loop_labels = [label for label in next_labels if label in asm_path]
-        for label in loop_labels:
-            if label not in self.blocks[block.label].get_loops():
-                self.blocks[block.label].add_loop_label(label)
-        # Get all other labels that do not loop and build path on them (recursive)
-        # Only build path, if traversal required
-        path_labels = [label for label in next_labels if label not in asm_path]
-        for label in path_labels:
-            if traverse:
-                self._build_path(self.blocks[label], asm_path.copy())
-        # Add the complete path when the last component of the block is exiting the program
-        # or at least one loop label found and the block ends in exit
-        # or the block is merging from multiple blocks
-        if block.ends_in_program_exit() or (loop_labels and block.ends_in_exit()) or not traverse:
-            new_path = Path(self.name, asm_path)
-            new_path.exit_on_loop = True if loop_labels else False
-            new_path.exit_on_program = True if block.ends_in_program_exit() else False
-            new_path.exit_on_merge = True if not traverse else False
-            self.paths.append(new_path)
-            for label in asm_path:
-                self.blocks[label].depth += 1
-        return
-
     def create_nodes(self, save=False):
         """
-        Create code blocks and save it to the database
+        Create code nodes and save it to the database.
+        Nodes break at exit, conditions, calls, branches and loops
         :param save: Will store it in database if true
         :return: None
         """
@@ -311,7 +215,7 @@ class AssemblerProgram:
             for component_lines in self._get_components(block_lines):
                 component = Component(component_lines, self.labels)
                 nodes[current_label].components.append(component)
-                if component.is_conditional and component_lines != last_lines:
+                if (component.is_conditional or component.is_call) and component_lines != last_lines:
                     label_index += 1
                     if '-' not in current_label:
                         fall_down_label = f'{current_label}-{label_index}'
