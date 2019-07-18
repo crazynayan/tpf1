@@ -291,18 +291,20 @@ class Component(CollectionItemMixin):
             else:   # All other commands
                 self.add_refs_with_key_value(labels)
         # Combine operands for bit instructions like TM, NI, OI
+        operand1 = self.operands.list_values[0] if len(self.operands.list_values) > 0 else None
+        operand2 = self.operands.list_values[1] if len(self.operands.list_values) > 1 else None
         if cmd.check(self.command, 'combine_operands'):
-            operand1 = self.operands[1]
-            operand2 = self.operands[2]
             if operand1.variable == 'WA0ET4' and operand2.constant == 0x10:
                 operand2 = Operand('#WA0TTY')
             self.operands = Operands()
             self.operands.append(Operand.combine(operand1, operand2))
         # Combine operands if same
-        if len(self.operands.list_values) == 2 and self.operands[1] == self.operands[2]:
-            operand1 = self.operands[1]
-            self.operands = Operands()
-            self.operands.append(operand1)
+        if operand2 is not None and operand1 == operand2:
+            self.operands.remove(operand2)
+        # Update operand for BCTR
+        if self.command == 'BCTR' and operand2.constant == 0:
+            self.operands.remove(operand2)
+            self.operands.append(Operand('1'))
 
     def __repr__(self):
         component = [f'{self.command}']
@@ -476,8 +478,9 @@ class Component(CollectionItemMixin):
                 state.assign_with_2(operand1, operand2, math)
             post_text = state.get_text(operand1, operand2)
             if state.capture_set:
-                state.text.append(f'{set_text:40}{pre_text:40}{post_text:40}{state.label}')
+                state.text.append(f'    {set_text:36}{pre_text:40}{post_text:40}{state.label}')
         if self.is_conditional:
+            update = False
             next_label = state.path[state.path.index(state.label) + 1] \
                 if state.path.index(state.label) + 1 < len(state.path) else None
             if next_label in self.get_goes():
@@ -485,6 +488,8 @@ class Component(CollectionItemMixin):
                 condition_text = self._get_conditional_text(direction=True, labels=state.path)
             else:
                 operator = cmd.get_operator(self.condition, opposite=True)
+                update = any(label in state.path[state.path.index(next_label):]
+                             for label in self.get_goes() if next_label)
                 condition_text = self._get_conditional_text(direction=False, labels=state.path)
             star = ''
             if self.is_key_value:
@@ -493,11 +498,11 @@ class Component(CollectionItemMixin):
             else:
                 pre_text = state.get_text(operand1, operand2)
                 if operand2 is None or math:
-                    if not state.condition_with_1(operand1, operator):
+                    if not state.condition_with_1(operand1, operator, update):
                         state.valid = False
                         star = '*'
                 else:
-                    if not state.condition_with_2(operand1, operand2, operator):
+                    if not state.condition_with_2(operand1, operand2, operator, update):
                         state.valid = False
                         star = '*'
                 post_text = state.get_text(operand1, operand2)
@@ -572,7 +577,9 @@ class State:
         operand1_type, operand1_value = self.get_type_value(operand1)
         operand2_type, operand2_value = self.get_type_value(operand2)
         if math:
-            value = eval(f'operand1_value {math} operand2_value')
+            operand1_value = int(operand1_value) if isinstance(operand2_value, int) else operand1_value
+            operand2_value = int(operand2_value) if isinstance(operand1_value, int) else operand2_value
+            value = eval(f'{operand1_value} {math} {operand2_value}')
         else:
             operand1_type = operand2_type if operand2_type != self.CONDITION else self.UPDATED
             value = operand2_value
@@ -584,39 +591,46 @@ class State:
         self._del_operand(str(operand))
         self._set_value(operand, self.KNOWN, value)
 
-    def condition_with_1(self, operand, operator):
+    def condition_with_1(self, operand, operator, update):
         """
         Evaluate for single operand component.
         operand type INIT are upgraded to CONDITION
         :param operand: The operand of type Operand
         :param operator: The operator ('==0' or '!=0') is used to get the value for INIT type.
                          Pass the opposite operator for condition that falls down.
+        :param update: update type is UPDATED if True else the update type is CONDITION
         :return: True, if the con
         """
         operand_type, operand_value = self.get_type_value(operand)
         if operand_type == self.INIT:
+            update_type = self.INIT if update else self.CONDITION
+            update_type = self.INIT if operator == '!= 0' else update_type
             if not eval(f'operand_value {operator}'):
                 operand_value = self._operand_value_by_operator(operator)
             self._del_operand(str(operand))
-            self._set_value(operand, self.CONDITION, operand_value)
+            self._set_value(operand, update_type, operand_value)
             return True
         else:
             return eval(f'operand_value {operator}')
 
-    def condition_with_2(self, operand1, operand2, operator):
+    def condition_with_2(self, operand1, operand2, operator, update):
         operand1_type, operand1_value = self.get_type_value(operand1)
         operand2_type, operand2_value = self.get_type_value(operand2)
+        operand1_value = str(operand1_value) if isinstance(operand2_value, str) else operand1_value
+        operand2_value = str(operand2_value) if isinstance(operand1_value, str) else operand2_value
+        update_type = self.INIT if update else self.CONDITION
+        update_type = self.INIT if operator == '!=' else update_type
         if operand1_type == self.INIT:
             if not eval(f'operand1_value {operator} operand2_value'):
                 operand1_value = self._operand_value_by_operator(operator, operand2_value)
             self._del_operand(str(operand1))
-            self._set_value(operand1, self.CONDITION, operand1_value)
+            self._set_value(operand1, update_type, operand1_value)
             return True
         elif operand2_type == self.INIT:
             if not eval(f'operand1_value {operator} operand2_value'):
                 operand2_value = self._operand_value_by_operator(operator, operand1_value)
             self._del_operand(str(operand2))
-            self._set_value(operand2, self.CONDITION, operand2_value)
+            self._set_value(operand2, update_type, operand2_value)
             return True
         else:
             return eval(f'operand1_value {operator} operand2_value')

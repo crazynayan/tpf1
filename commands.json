@@ -17,8 +17,7 @@
     "BACKC": {
         "create": 1,
         "exit": 1,
-        "no_operand": 1,
-        "return": 0
+        "no_operand": 1
     },
     "BAS": {
         "call": 1,
@@ -30,7 +29,9 @@
         "opposite": "BC"
     },
     "BCTR": {
-        "create": 1
+        "create": 1,
+        "math": "-",
+        "set_1": 1
     },
     "BE": {
         "check_cc": 1,
@@ -91,7 +92,7 @@
         "text": ">= 0"
     },
     "BNO": {
-        "bit": "OFF",
+        "bit": "is OFF",
         "check_cc": 1,
         "math": "not overflow",
         "operator": "== 0",
@@ -107,7 +108,7 @@
     },
     "BNZ": {
         "binary": "has some data",
-        "bit": "ON",
+        "bit": "is ON",
         "check_cc": 1,
         "math": "is not 0",
         "operator": "!= 0",
@@ -115,7 +116,7 @@
         "text": "ON"
     },
     "BO": {
-        "bit": "ON",
+        "bit": "is ON",
         "check_cc": 1,
         "math": "overflow",
         "operator": "!= 0",
@@ -136,7 +137,7 @@
     },
     "BZ": {
         "binary": "has no data",
-        "bit": "OFF",
+        "bit": "is OFF",
         "check_cc": 1,
         "math": "is 0",
         "operator": "== 0",
@@ -195,8 +196,7 @@
     },
     "EX": {
         "branch_type": "depends",
-        "create": 1,
-        "set_cc": 0
+        "create": 1
     },
     "EXITC": {
         "create": 1,
@@ -283,7 +283,7 @@
         "text": ">= 0"
     },
     "JNO": {
-        "bit": "OFF",
+        "bit": "is OFF",
         "check_cc": 1,
         "math": "not overflow",
         "operator": "== 0",
@@ -299,7 +299,7 @@
     },
     "JNZ": {
         "binary": "has some data",
-        "bit": "ON",
+        "bit": "is ON",
         "check_cc": 1,
         "math": "is not 0",
         "operator": "== 1",
@@ -307,7 +307,7 @@
         "text": "ON"
     },
     "JO": {
-        "bit": "ON",
+        "bit": "is ON",
         "check_cc": 1,
         "math": "overflow",
         "operator": "== 1",
@@ -323,7 +323,7 @@
     },
     "JZ": {
         "binary": "has no data",
-        "bit": "OFF",
+        "bit": "is OFF",
         "check_cc": 1,
         "math": "is 0",
         "operator": "== 0",

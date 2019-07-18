@@ -293,14 +293,15 @@ class Analyze:
         dag = nx.transitive_reduction(dag)
         # Save paths to all exit points
         exit_labels = [node.label for _, node in nodes.items() if node.is_program_exit]
-        paths = dict()
+        flows = dict()
         for exit_label in exit_labels:
-            paths[exit_label] = list(nx.all_simple_paths(dag, self.root_label, exit_label))
+            paths = list(nx.all_simple_paths(dag, self.root_label, exit_label))
+            flows[exit_label] = [{'path': path} for path in paths]
         # Save graphs, nodes and paths
         self.dag = dag
         self.graph = graph
         self.nodes = nodes
-        self.paths = paths
+        self.flows = flows
 
     def get_heads(self):
         # noinspection PyCallingNonCallable
@@ -311,14 +312,32 @@ class Analyze:
         return [out_node for out_node, out_degree in self.graph.out_degree() if out_degree == 0]
 
     def show(self, exit_label):
-        for path in self.paths[exit_label]:
-            state = State(path)
-            for label in path:
+        for flow in self.flows[exit_label]:
+            state = State(flow['path'])
+            state.capture_set = True
+            for label in flow['path']:
                 state.label = label
                 for component in self.nodes[label].components.list_values:
                     state = component.execute(state)
-            print('\n'.join(state.text))
-            if not state.valid:
-                print('*********** INVALID PATH *************')
-            print(state.condition)
-            print(f"{'*'*100}")
+            flow['state'] = state
+        # Print to Terminal
+        print(f"{'*'*60} VALID PATH {'*'*60}")
+        valid_flows = [flow for flow in self.flows[exit_label] if flow['state'].valid]
+        for index, flow in enumerate(valid_flows):
+            print(index+1, flow['path'])
+        for index, flow in enumerate(valid_flows):
+            print(index+1, flow['state'].condition)
+        print(f"{'*'*59} INVALID PATH {'*'*59}")
+        invalid_flows = [flow for flow in self.flows[exit_label] if not flow['state'].valid]
+        for index, flow in enumerate(invalid_flows):
+            print(index+1, flow['path'])
+        for index, flow in enumerate(invalid_flows):
+            print(index+1, flow['state'].condition)
+        for index, flow in enumerate(valid_flows):
+            print(f"{'*'*60} VALID {index+1:4} {'*'*60}")
+            print('\n'.join(flow['state'].text))
+            print(f"Required {flow['state'].condition}")
+            print(f"Output   {flow['state'].known}")
+        # for index, flow in enumerate(invalid_flows):
+        #     print(f"{'*'*60} INVLD {index+1:4} {'*'*60}")
+        #     print('\n'.join(flow['state'].text))
