@@ -31,12 +31,6 @@ class Register:
     def __repr__(self):
         return self._reg
 
-    def __set__(self, instance, value):
-        self._reg = next((key for key in self.REG for reg_val in self.REG[key] if reg_val == value), self.INVALID)
-
-    def __get__(self, instance, owner):
-        return self._reg
-
     def is_valid(self):
         return self._reg != self.INVALID
 
@@ -177,7 +171,13 @@ class Operand(CollectionItemMixin):
 
     @property
     def base_dsp(self):
-        return self.field if self.BASE_DSP in self.type and self.BIT not in self.type else None
+        if self.BASE_DSP in self.type:
+            if self.BIT in self.type:
+                return self.field['byte']
+            else:
+                return self.field
+        else:
+            return None
 
     @property
     def variable(self):
@@ -194,6 +194,16 @@ class Operand(CollectionItemMixin):
     @property
     def bit(self):
         return self.field if self.BIT in self.type else None
+
+    @property
+    def base_reg(self):
+        if self.BASE_DSP in self.type:
+            if self.BIT in self.type:
+                return self.field['byte']['base']
+            else:
+                return self.field['base']
+        else:
+            return None
 
     @classmethod
     def combine(cls, operand1, operand2):
@@ -212,6 +222,30 @@ class Operand(CollectionItemMixin):
         model.field['byte'] = operand1.field
         model.field['bits'] = operand2.field
         return model
+
+    def get_base_text(self, base):
+        base_name = self.get_base_name(base)
+        base_dsp = self.base_dsp
+        if base_dsp is not None:
+            reg = base_dsp['base']
+            dsp = base_dsp['dsp']
+            length = base_dsp['length'] if 'length' in base_dsp else None
+            return f"{base_name}[{reg}+{dsp}]" if length is None \
+                else f"{base_name}[{reg}+{dsp}: {reg}+{dsp + length}]"
+        else:
+            return base_name
+
+    def get_base_name(self, base):
+        base_reg = self.base_reg
+        if base_reg is not None:
+            if base_reg in base:
+                return base[base_reg]
+            else:
+                return f'{str(base_reg)}_AREA'
+        elif self.bit is not None and isinstance(self.field['bits'], int):
+            return self.field['byte']
+        else:
+            return self
 
 
 class Operands(CollectionMixin):
@@ -389,7 +423,7 @@ class Component(CollectionItemMixin):
     def get_calls(self):
         return [ref.label for ref in self.references.list_values if ref.type == 'calls']
 
-    def _get_conditional_text(self, direction=True, labels=None):
+    def _get_conditional_text(self, direction=True, labels=None, base=None):
         operands = self.operands.list_values
         if not operands:
             return ''
@@ -427,19 +461,26 @@ class Component(CollectionItemMixin):
                 return ''
             # TODO Do special processing for CLI commands to get the text 'is numeric' or 'is alphas'
             condition, operator = cmd.get_text(self.command, ref.condition, opposite=not direction)
+            operand1 = operands[0]
+            operand1 = operand1.get_base_text(base)
             if len(operands) == 1:
-                text = f'{operands[0]} {condition}'
-            elif operator:
-                text = f'{operands[0]} {operator} {operands[1]} {condition}'
+                text = f'{operand1} {condition}'
             else:
-                text = f'{operands[0]} {condition} {operands[1]}'
+                operand2 = operands[1]
+                operand2 = operand2.get_base_text(base)
+                if operator:
+                    text = f'{operand1} {operator} {operand2} {condition}'
+                else:
+                    text = f'{operand1} {condition} {operand2}'
             return text
 
-    def _get_set_text(self):
+    def _get_set_text(self, base=None):
         if not self.operands.list_values:
             return ''
         operand1 = self.operands.list_values[0]
         operand2 = self.operands.list_values[1] if len(self.operands.list_values) > 1 else None
+        operand1 = operand1.get_base_text(base)
+        operand2 = operand2.get_base_text(base) if operand2 is not None else str()
         if self.command == 'OI':
             return f'Turn ON {operand1}'
         elif self.command == 'NI':
@@ -457,25 +498,32 @@ class Component(CollectionItemMixin):
         state = state.copy()
         operand1 = self.operands.list_values[0]
         operand2 = self.operands.list_values[1] if len(self.operands.list_values) > 1 else None
+        if self.command == 'LA' and str(operand2) == 'PD0_C_ITM':
+            state.base[str(operand1)] = state.list_name
         math = cmd.check(self.command, 'math')
         if self.is_set:
-            set_text = self._get_set_text()
+            set_text = self._get_set_text(state.base)
             pre_text = state.get_text(operand1, operand2)
             if operand2 is None:
-                if operand1.bit:
-                    if isinstance(operand1.bit['bits'], int):
-                        _, target_value = state.get_type_value(operand1.bit['byte'])
-                        source_value = eval(f"operand1.bit['bits'] {math} target_value")
-                        state.assign_with_1(operand1.bit['byte'], source_value)
-                    else:  # TODO remove the complication of bit being a string by doing macro lookup in operand create
-                        source_value = 0 if math == '&' else 1
-                        state.assign_with_1(operand1, source_value)
-                else:
-                    state.assign_with_1(operand1, 0)
+                state.assign_with_1(operand1, math=math)
             else:
                 if cmd.check(self.command, 'set_2'):
                     operand1, operand2 = operand2, operand1
-                state.assign_with_2(operand1, operand2, math)
+                if self.command == 'LA' and operand2.base_dsp is not None:
+                    value = state.get_base_value(operand2.base_dsp)
+                    state.assign_with_1(operand1, value=value)
+                    try:
+                        state.base[str(operand1)] = state.base[operand2.base_dsp['base']]
+                    except KeyError:
+                        pass
+                elif self.command == 'LA' and str(operand2) == 'PD0_C_ITM':
+                    state.base[str(operand1)] = state.list_name
+                    state.assign_with_1(operand1)
+                else:
+                    cvb = True if self.command == 'CVB' else False
+                    state.assign_with_2(operand1, operand2, math, cvb=cvb)
+                    if str(operand1) in state.base and not math:
+                        del state.base[str(operand1)]
             post_text = state.get_text(operand1, operand2)
             if state.capture_set:
                 state.text.append(f'    {set_text:36}{pre_text:40}{post_text:40}{state.label}')
@@ -485,16 +533,18 @@ class Component(CollectionItemMixin):
                 if state.path.index(state.label) + 1 < len(state.path) else None
             if next_label in self.get_goes():
                 operator = cmd.get_operator(self.condition)
-                condition_text = self._get_conditional_text(direction=True, labels=state.path)
+                condition_text = self._get_conditional_text(direction=True, labels=state.path, base=state.base)
             else:
                 operator = cmd.get_operator(self.condition, opposite=True)
                 update = any(label in state.path[state.path.index(next_label):]
                              for label in self.get_goes() if next_label)
-                condition_text = self._get_conditional_text(direction=False, labels=state.path)
+                condition_text = self._get_conditional_text(direction=False, labels=state.path, base=state.base)
             star = ''
             if self.is_key_value:
                 pre_text = ''
                 post_text = ''
+                list_name = condition_text.split()[0]
+                state.list_name = list_name.replace('.', '_')
             else:
                 pre_text = state.get_text(operand1, operand2)
                 if operand2 is None or math:
@@ -534,10 +584,14 @@ class State:
         self.valid = True
         self.text = list()
         self.capture_set = True
+        self.list_name = str()
+        self.base = dict()
 
     def get_type_value(self, operand):
-        if not isinstance(operand, str) and operand.constant is not None:
-            return self.CONSTANT, operand.constant
+        if isinstance(operand, Operand) and operand.constant is not None:
+            constant = operand.constant
+            constant = list(constant) if isinstance(constant, str) else [constant]
+            return self.CONSTANT, constant
         operand = str(operand)
         if operand in self.known:
             return self.KNOWN, self.known[operand]
@@ -547,9 +601,10 @@ class State:
             return self.CONDITION, self.condition[operand]
         if operand in self.init:
             return self.INIT, self.init[operand]
-        return self.INIT, 0
+        return self.INIT, [0]
 
     def _del_operand(self, operand):
+        operand = str(operand)
         if operand in self.known:
             del self.known[operand]
         elif operand in self.updated:
@@ -560,7 +615,7 @@ class State:
             del self.init[operand]
 
     def _set_value(self, operand, operand_type, value):
-        if not isinstance(operand, str) and operand.constant is not None:
+        if isinstance(operand, Operand) and operand.constant is not None:
             return
         operand = str(operand)
         self._del_operand(operand)
@@ -573,23 +628,55 @@ class State:
         elif operand_type == self.INIT:
             self.init[operand] = value
 
-    def assign_with_2(self, operand1, operand2, math=None):
-        operand1_type, operand1_value = self.get_type_value(operand1)
-        operand2_type, operand2_value = self.get_type_value(operand2)
+    def assign_with_2(self, operand1, operand2, math=None, cvb=False):
+        operand1_name = operand1.get_base_name(self.base)
+        operand2_name = operand2.get_base_name(self.base)
+        operand1_type, operand1_value = self.get_type_value(operand1_name)
+        operand2_type, operand2_value = self.get_type_value(operand2_name)
         if math:
+            operand1_value = operand1_value[0]
+            if operand2.base_dsp is None:
+                operand2_value = operand2_value[0]
+            else:
+                operand2_value = self.get_slice(operand2_value, operand2.base_dsp)[0]
             operand1_value = int(operand1_value) if isinstance(operand2_value, int) else operand1_value
             operand2_value = int(operand2_value) if isinstance(operand1_value, int) else operand2_value
             value = eval(f'{operand1_value} {math} {operand2_value}')
+            value = [value]
         else:
             operand1_type = operand2_type if operand2_type != self.CONDITION else self.UPDATED
-            value = operand2_value
+            value = operand2_value.copy()
+            if operand2.base_dsp is not None:
+                value = self.get_slice(value, operand2.base_dsp)
+            if operand1.base_dsp is not None:
+                value = self.set_slice(operand1_value, operand1.base_dsp, value)
         if operand1_type == self.CONDITION:
             operand1_type = self.UPDATED
-        self._set_value(operand1, operand1_type, value)
+        if cvb:
+            value = [int(''.join([str(element) for element in value]))]
+        self._set_value(operand1_name, self.KNOWN, value)
 
-    def assign_with_1(self, operand, value):
-        self._del_operand(str(operand))
-        self._set_value(operand, self.KNOWN, value)
+    def assign_with_1(self, operand, math=None, value=None):
+        operand_name = operand.get_base_name(self.base)
+        _, operand_value = self.get_type_value(operand_name)
+        base_dsp = operand.base_dsp
+        if operand.bit is not None:
+            bits = operand.bit['bits']
+            if isinstance(bits, int):
+                if base_dsp is not None:
+                    value = self.get_slice(operand_value, base_dsp)
+                else:
+                    value = operand_value
+                value = eval(f"{bits} {math} {value[0]}")
+            else:
+                value = 0 if math == '&' else 1
+            value = [value]
+        else:
+            value = [0] if value is None else value
+        if base_dsp is not None:
+            value = self.set_slice(operand_value, base_dsp, value)
+        self._del_operand(operand_name)
+        self._set_value(operand_name, self.KNOWN, value)
 
     def condition_with_1(self, operand, operator, update):
         """
@@ -599,66 +686,131 @@ class State:
         :param operator: The operator ('==0' or '!=0') is used to get the value for INIT type.
                          Pass the opposite operator for condition that falls down.
         :param update: update type is UPDATED if True else the update type is CONDITION
-        :return: True, if the con
+        :return: True, if the condition evaluates to True else False. Upgraded Conditions are always True.
         """
-        operand_type, operand_value = self.get_type_value(operand)
+        operand_name = operand.get_base_name(self.base)
+        operand_type, operand_value = self.get_type_value(operand_name)
+        base_dsp = operand.base_dsp
+        value = self.get_slice(operand_value, base_dsp) if base_dsp is not None else operand_value
+        bits = operand.bit['bits'] if operand.bit is not None and isinstance(operand.bit['bits'], int) else None
+        if bits is not None:
+            if bits == 0xF0:
+                operator = f'.isdigit() {operator}'
+                if isinstance(value[0], int):
+                    value[0] = 'A'
+            else:
+                value[0] &= bits
         if operand_type == self.INIT:
             update_type = self.INIT if update else self.CONDITION
             update_type = self.INIT if operator == '!= 0' else update_type
-            if not eval(f'operand_value {operator}'):
-                operand_value = self._operand_value_by_operator(operator)
-            self._del_operand(str(operand))
-            self._set_value(operand, update_type, operand_value)
+            if not eval(f'value[0]{operator}'):
+                value = self._operand_value_by_operator(operator)
+            self._del_operand(str(operand_name))
+            if base_dsp is not None:
+                value = self.set_slice(operand_value, base_dsp, value)
+            self._set_value(operand_name, update_type, value)
             return True
         else:
-            return eval(f'operand_value {operator}')
+            return eval(f'value[0]{operator}')
 
     def condition_with_2(self, operand1, operand2, operator, update):
-        operand1_type, operand1_value = self.get_type_value(operand1)
-        operand2_type, operand2_value = self.get_type_value(operand2)
-        operand1_value = str(operand1_value) if isinstance(operand2_value, str) else operand1_value
-        operand2_value = str(operand2_value) if isinstance(operand1_value, str) else operand2_value
+        operand1_name = operand1.get_base_name(self.base)
+        operand2_name = operand2.get_base_name(self.base)
+        operand1_type, operand1_value = self.get_type_value(operand1_name)
+        operand2_type, operand2_value = self.get_type_value(operand2_name)
+        base_dsp1 = operand1.base_dsp
+        base_dsp2 = operand2.base_dsp
+        value1 = self.get_slice(operand1_value, base_dsp1) if base_dsp1 is not None else operand1_value
+        value2 = self.get_slice(operand2_value, base_dsp2) if base_dsp2 is not None else operand2_value
+        operand1_numeric = [ord(char) if isinstance(char, str) else char for char in value1]
+        operand2_numeric = [ord(char) if isinstance(char, str) else char for char in value2]
         update_type = self.INIT if update else self.CONDITION
         update_type = self.INIT if operator == '!=' else update_type
+        update_type = self.INIT  # Temp code
         if operand1_type == self.INIT:
-            if not eval(f'operand1_value {operator} operand2_value'):
-                operand1_value = self._operand_value_by_operator(operator, operand2_value)
-            self._del_operand(str(operand1))
-            self._set_value(operand1, update_type, operand1_value)
+            if not eval(f'{operand1_numeric} {operator} {operand2_numeric}'):
+                value1 = self._operand_value_by_operator(operator, value2)
+            self._del_operand(operand1_name)
+            if base_dsp1 is not None:
+                value1 = self.set_slice(operand1_value, base_dsp1, value1)
+            self._set_value(operand1_name, update_type, value1)
             return True
         elif operand2_type == self.INIT:
-            if not eval(f'operand1_value {operator} operand2_value'):
-                operand2_value = self._operand_value_by_operator(operator, operand1_value)
+            if not eval(f'{operand1_numeric} {operator} {operand2_numeric}'):
+                value2 = self._operand_value_by_operator(operator, value1)
             self._del_operand(str(operand2))
-            self._set_value(operand2, update_type, operand2_value)
+            if base_dsp2 is not None:
+                value2 = self.set_slice(operand2_value, base_dsp2, value2)
+            self._set_value(operand2_name, update_type, value2)
             return True
         else:
-            return eval(f'operand1_value {operator} operand2_value')
+            return eval(f'{operand1_numeric} {operator} {operand2_numeric}')
+
+    def get_slice(self, list_data, base_dsp):
+        _, base_value = self.get_type_value(base_dsp['base'])
+        _, index_value = self.get_type_value(base_dsp['index']) if 'index' in base_dsp else 0, [0]
+        length = base_dsp['length'] if 'length'in base_dsp else 1
+        start_index = base_value[0] + index_value[0] + base_dsp['dsp']
+        while len(list_data) < start_index + length:
+            list_data.append(0)
+        return list_data[start_index: start_index + length]
+
+    def set_slice(self, list_data, base_dsp, other_list_data):
+        _, base_value = self.get_type_value(base_dsp['base'])
+        _, index_value = self.get_type_value(base_dsp['index']) if 'index' in base_dsp else 0, [0]
+        length = base_dsp['length'] if 'length'in base_dsp else 1
+        start_index = base_value[0] + index_value[0] + base_dsp['dsp']
+        while len(list_data) < start_index + length:
+            list_data.append(0)
+        while len(other_list_data) < length:
+            other_list_data.append(0)
+        for other_index, list_index in enumerate(range(start_index, start_index + length)):
+            list_data[list_index] = other_list_data[other_index]
+        return list_data
+
+    def get_base_value(self, base_dsp):
+        _, base_value = self.get_type_value(base_dsp['base'])
+        _, index_value = self.get_type_value(base_dsp['index']) if 'index' in base_dsp else 0, [0]
+        return [base_value[0] + index_value[0] + base_dsp['dsp']]
 
     def get_text(self, operand1, operand2=None):
-        operand1_type, operand1_value = self.get_type_value(operand1)
-        if operand2 is None:
-            return f'{operand1}({operand1_type[0]})={operand1_value}'
+        operand1_name = operand1.get_base_name(self.base)
+        operand1_type, operand1_value = self.get_type_value(operand1_name)
+        operand1_value = ''.join([f"{char:02x}" if isinstance(char, int) else f"'{char}" for char in operand1_value])
+        if operand2 is None or operand2.constant is not None:
+            return f'{operand1_name}({operand1_type[0]})={operand1_value}'
         else:
-            operand2_type, operand2_value = self.get_type_value(operand2)
-            return f'{operand1}({operand1_type[0]})={operand1_value}, {operand2}({operand2_type[0]})={operand2_value}'
+            operand2_name = operand2.get_base_name(self.base)
+            operand2_type, operand2_value = self.get_type_value(operand2_name)
+            operand2_value = ''.join([f"{char:02x}" if isinstance(char, int) else f"'{char}"
+                                       for char in operand2_value])
+            if operand1.constant is not None:
+                return f'{operand2_name}({operand2_type[0]})={operand2_value}'
+            else:
+                return f'{operand1_name}({operand1_type[0]})={operand1_value}, ' \
+                       f'{operand2_name}({operand2_type[0]})={operand2_value}'
 
     @staticmethod
     def _operand_value_by_operator(operator, data=None):
         if data is None:
-            value_list = [0, 1, -1]
+            if operator[:3] == '.is':
+                value_list = ['1', 'A']
+            else:
+                value_list = [0, 1, -1]
         else:
-            if isinstance(data, int):
-                value_list = [data, data + 1, data - 1]
-            elif isinstance(data, str):
-                data1 = chr(ord(data[0]) + 1) + data[1:]
-                data2 = chr(ord(data[0]) - 1) + data[1:]
+            if isinstance(data[0], int):
+                value_list = [[data[0]], [data[0] + 1], [data[0] - 1]]
+            elif isinstance(data[0], str):
+                data1 = data.copy()
+                data2 = data.copy()
+                data1[0] = chr(ord(data[0]) + 1)
+                data2[0] = chr(ord(data[0]) - 1)
                 value_list = [data, data1, data2]
             else:
                 value_list = [data]
         for value in value_list:
             if data is None and eval(f'value {operator}'):
-                return value
+                return [value]
             if data is not None and eval(f'data {operator} value'):
                 return value
         return None
@@ -673,7 +825,7 @@ class State:
 
 
 class Node(MapToModelMixin, FirestoreModel):
-    COLLECTION = 'block'
+    COLLECTION = 'node'
     DEFAULT = 'label'
     MAP_OBJECTS = {Components}
 
@@ -716,11 +868,6 @@ class Node(MapToModelMixin, FirestoreModel):
         return self.components[-1].get_returns()
 
     def set_fall_down(self, label):
-        """
-        Used for creating nodes
-        :param label: the label to fall down
-        :return:
-        """
         if self.components.is_empty:
             self.components.append(Component('NOP'))
         self.components[-1].add_references(falls=label)
@@ -730,12 +877,3 @@ class Node(MapToModelMixin, FirestoreModel):
 
     def set_loop(self, label):
         self.components[-1].add_references(loops=label)
-
-    def get_str(self):
-        """
-        Used by main method.
-        :return:
-        """
-        text = [f'{self.label:12}']
-        text.extend([f'{component}, ' for component in self.components.list_values])
-        return ''.join(text)[:-2]
