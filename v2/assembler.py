@@ -2,6 +2,51 @@ import re
 import os
 
 
+class Error:
+    NO_ERROR = 0
+    DS_DUP_FACTOR = 'DS - Duplication factor is not a number.'
+    DS_DATA_TYPE = 'DS - Invalid data type.'
+    EXP_INVALID_KEY = 'Expression - Field not present in data map for no data type.'
+    EXP_INVALID_KEY_L = 'Expression - Field not present in data map for length attribute.'
+    EXP_INVALID_KEY_X = 'Expression - Field not present in data map for hex data type.'
+    EXP_DATA_TYPE = 'Expression - Invalid data type.'
+    EXP_NOT_NUMBER = 'Expression - Not a number.'
+    EXP_EVAL_FAIL = 'Expression - Function eval failed.'
+
+
+class Line:
+    def __init__(self):
+        self.label = None
+        self.command = None
+        self.operand = None
+        self.continuation = False
+
+    @classmethod
+    def from_line(cls, data, continuing=False):
+        line = cls()
+        if len(data) > 71 and data[71] != ' ':
+            line.continuation = True
+            data = data[:71]
+        words = re.findall(r"(?:[^L]'.*?'|\S)+", data)
+        if data[0] == ' ':
+            # The label is None since there is no label
+            words.insert(0, None)
+        if continuing:
+            # The command is None for continued lines
+            words.insert(0, None)
+        line.label = words[0]
+        line.command = words[1] if len(words) > 1 else None
+        line.operand = words[2] if len(words) > 2 else None
+        return line
+
+    def remove_suffix(self):
+        self.label = next(iter(self.label.split('&'))) if self.label is not None else None
+        return self
+
+    def __repr__(self):
+        return f'{self.label}:{self.command}:{self.operand}'
+
+
 class File:
     CVS_C2 = {'Ch', 'RC', 'VE', '==', '**', 'ng', '/u', '1.'}
     TRIM = {'0': 7, ' ': 1}
@@ -9,6 +54,7 @@ class File:
 
     @classmethod
     def open(cls, file_name):
+        # Open the file
         try:
             with open(file_name, 'r', errors='replace') as file:
                 lines = file.readlines()
@@ -37,33 +83,8 @@ class File:
         return lines
 
 
-class Line:
-    def __init__(self):
-        self.label = None
-        self.command = None
-        self.operand = None
-
-    @classmethod
-    def from_line(cls, data):
-        line = cls()
-        words = data.split()
-        if data[0] == ' ':
-            words.insert(0, None)
-        line.label = words[0]
-        line.command = words[1] if len(words) > 1 else None
-        line.operand = words[2] if len(words) > 2 else None
-        return line
-
-    def remove_suffix(self):
-        self.label = next(iter(self.label.split('&'))) if self.label is not None else None
-        return self
-
-    def __repr__(self):
-        return f'{self.label}:{self.command}:{self.operand}'
-
-
 class DsOperand:
-    DATA_TYPES = {'X': 1, 'C': 1, 'P': 1, 'Z': 1, 'H': 2, 'F': 4, 'D': 8, 'FD': 8}
+    DATA_TYPES = {'X': 1, 'C': 1, 'H': 2, 'F': 4, 'D': 8, 'FD': 8, 'B': 1}
 
     def __init__(self):
         self.duplication_factor = 1
@@ -91,6 +112,9 @@ class MacroFile:
         self.data_mapped = False
         self.base = None
 
+    def __repr__(self):
+        return f'{self.file_name}:{self.data_mapped}:{self.base}'
+
 
 class Macro:
     EXT = {'.mac', '.txt'}
@@ -98,9 +122,9 @@ class Macro:
     ACCEPTED_COMMANDS = {'DS', 'EQU', 'ORG', 'DSECT'}
 
     def __init__(self):
-        self.data_map = dict()
-        self.files = dict()
-        self.lines = list()
+        self.data_map = dict()  # Dictionary of SymbolTable. Field name is key.
+        self.files = dict()     # Dictionary of MacroFile. Marco name is key
+        self.errors = list()
         for file_name in os.listdir(self.FOLDER_NAME):
             if len(file_name) < 6 or file_name[-4:] not in self.EXT:
                 continue
@@ -112,16 +136,40 @@ class Macro:
             return False
         if self.files[macro].data_mapped:
             return True
-        lines = File.open(self.files[macro].file_name)
-        lines = [Line.from_line(line) for line in lines]
+        # Get the data from line after removing CVS and empty lines.
+        file_lines = File.open(self.files[macro].file_name)
+        # Create a list of Line objects
+        lines = list()
+        prior_line = None
+        main_line = None
+        for data in file_lines:
+            continuing = True if prior_line is not None and prior_line.continuation else False
+            line = Line.from_line(data, continuing)
+            if not continuing:
+                lines.append(line)
+                main_line = line
+            else:
+                main_line.operand = main_line.operand + line.operand \
+                    if main_line.operand is not None else line.operand
+            prior_line = line
+        # Remove suffix like &CG1 from label
         lines = [line.remove_suffix() for line in lines if line.command in self.ACCEPTED_COMMANDS]
+        # Create SymbolTable for each label and add it to data_map.
+        equate_list = list()
+        ds_list = list()
         location_counter = 0
         for line in lines:
             total_length = 0
             length = 1
             dsp = -1
             if line.command == 'DS':
-                operand = self.get_ds_operand(line.operand, location_counter)
+                operand, result = self.get_ds_operand(line.operand, location_counter)
+                if result != Error.NO_ERROR:
+                    if operand.duplication_factor == 0:
+                        ds_list.append((line, location_counter))
+                    else:
+                        self.errors.append(f'{result} {line} {macro}')
+                    continue
                 length = operand.length
                 total_length = operand.duplication_factor * length
                 data_type_length = DsOperand.DATA_TYPES[operand.data_type]
@@ -129,7 +177,10 @@ class Macro:
                     location_counter += 1
                 dsp = location_counter
             elif line.command == 'EQU':
-                dsp = self.get_value(line.operand, location_counter)
+                dsp, result = self._get_value(line.operand, location_counter)
+                if result != Error.NO_ERROR:
+                    equate_list.append((line, location_counter))
+                    continue
             elif line.command == 'DSECT':
                 dsp = 0
                 length = 0
@@ -137,36 +188,33 @@ class Macro:
                 symbol_table = SymbolTable(line.label, dsp, length, macro)
                 self.data_map[line.label] = symbol_table
             if line.command == 'ORG':
-                location_counter = self.get_value(line.operand, location_counter)
+                dsp, result = self._get_value(line.operand, location_counter)
+                if result != Error.NO_ERROR:
+                    self.errors.append(f'{result} {line} {macro}')
+                    continue
+                location_counter = dsp
             else:
                 location_counter += total_length
+        # Add the saved equates which were not added in the first pass
+        for line, location_counter in equate_list:
+            dsp, result = self._get_value(line.operand, location_counter)
+            if result != Error.NO_ERROR:
+                self.errors.append(f'{result} {line} {macro}')
+                continue
+            symbol_table = SymbolTable(line.label, dsp, 1, macro)
+            self.data_map[line.label] = symbol_table
+        # Add the saved DS which were not added in the first pass
+        for line, location_counter in ds_list:
+            operand, result = self.get_ds_operand(line.operand, location_counter)
+            if result != Error.NO_ERROR:
+                self.errors.append(f'{result} {line} {macro}')
+                continue
+            length = operand.length
+            dsp = location_counter
+            symbol_table = SymbolTable(line.label, dsp, length, macro)
+            self.data_map[line.label] = symbol_table
+        # Indicate data is mapped for that macro
         self.files[macro].data_mapped = True
-
-    def get_value(self, operand, location_counter):
-        exp_list = re.split(r"([+*-])", operand)
-        exp_list = [expression for expression in exp_list if expression]
-        exp_list = [expression if expression == '+' or expression == '-' or (expression == '*' and index % 2 == 1)
-                    else str(self.evaluate(expression, location_counter))
-                    for index, expression in enumerate(exp_list)]
-        return eval(''.join(exp_list))
-
-    def evaluate(self, expression, location_counter):
-        data_type, field = next(iter(re.findall(r"^([A-Z]\')*([^']+)", expression)))
-        if field == '*':
-            return location_counter
-        elif not data_type:
-            if field.isdigit():
-                return int(field)
-            else:
-                field = next(iter(field.split('&')))
-                return self.data_map[field].dsp
-        elif data_type[0] == 'L':
-            field = next(iter(field.split('&')))
-            return self.data_map[field].length
-        elif data_type[0] == 'X':
-            return int(field, 16)
-        else:
-            return int(field)
 
     def get_ds_operand(self, operand, location_counter):
         ds_operand = DsOperand()
@@ -177,8 +225,77 @@ class Macro:
         # ([^)]*)   = Captures everything till ) if present. The length can be any expression. (length)
         # \)*       = Ignores the trailing  ) if present.
         duplication_factor, data_type, length = next(iter(re.findall(r"(^\d*)([^L]+)L*\(*([^)]*)\)*", operand)))
-        ds_operand.duplication_factor = int(duplication_factor) if duplication_factor else 1
-        ds_operand.data_type = data_type if data_type in DsOperand.DATA_TYPES else 'X'
-        ds_operand.length = self.get_value(length, location_counter) \
-            if length else DsOperand.DATA_TYPES[ds_operand.data_type]
-        return ds_operand
+        if duplication_factor:
+            try:
+                ds_operand.duplication_factor = int(duplication_factor)
+            except ValueError:
+                return ds_operand, Error.DS_DUP_FACTOR
+        else:
+            ds_operand.duplication_factor = 1
+        if data_type not in DsOperand.DATA_TYPES:
+            return ds_operand, Error.DS_DATA_TYPE
+        ds_operand.data_type = data_type
+        if length:
+            ds_operand.length, result = self._get_value(length, location_counter)
+            if result != Error.NO_ERROR:
+                return ds_operand, result
+        else:
+            ds_operand.length = DsOperand.DATA_TYPES[ds_operand.data_type]
+        return ds_operand, Error.NO_ERROR
+
+    def _get_value(self, operand, location_counter):
+        if operand.isdigit():
+            return int(operand), Error.NO_ERROR
+        exp_list = re.split(r"([+*()-])", operand)
+        exp_list = [expression for expression in exp_list if expression and expression not in '()']
+        eval_list = list()
+        data_type = str()
+        for index, expression in enumerate(exp_list):
+            if expression == '+' or expression == '-' or (expression == '*' and index % 2 == 1):
+                eval_list.append(expression)
+            else:
+                value, data_type, result = self._evaluate(expression, location_counter)
+                if result != Error.NO_ERROR:
+                    return None, result
+                eval_list.append(str(value))
+        if len(eval_list) == 1 and data_type == 'C':
+            return eval_list[0], Error.NO_ERROR
+        try:
+            return eval(''.join(eval_list)), Error.NO_ERROR
+        except (SyntaxError, NameError, TypeError, ValueError) as _:
+            return None, Error.EXP_EVAL_FAIL
+
+    def _evaluate(self, expression, location_counter):
+        if expression.isdigit():
+            return int(expression), str(), Error.NO_ERROR
+        if expression == '*':
+            return location_counter, str(), Error.NO_ERROR
+        data_type, field = next(iter(re.findall(r"^([\w&]+)\'*([^']*)", expression)))
+        if not field:
+            field, data_type = data_type, field
+        if not data_type:
+            field = next(iter(field.split('&')))
+            try:
+                return self.data_map[field].dsp, data_type, Error.NO_ERROR
+            except KeyError:
+                return field, data_type, Error.EXP_INVALID_KEY
+        elif data_type == 'L':
+            field = next(iter(field.split('&')))
+            try:
+                return self.data_map[field].length, data_type, Error.NO_ERROR
+            except KeyError:
+                return field, data_type, Error.EXP_INVALID_KEY_L
+        elif data_type not in DsOperand.DATA_TYPES:
+            return None, data_type, Error.EXP_DATA_TYPE
+        elif data_type == 'X':
+            try:
+                return int(field, 16), data_type, Error.NO_ERROR
+            except ValueError:
+                return field, data_type, Error.EXP_INVALID_KEY_X
+        elif data_type == 'C':
+            return field, data_type, Error.NO_ERROR
+        else:
+            try:
+                return int(field), data_type, Error.NO_ERROR
+            except ValueError:
+                return field, data_type, Error.EXP_NOT_NUMBER
