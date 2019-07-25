@@ -7,3 +7,4 @@ static/
 .gcloudignore
 tpf1-key.json
 *.asm
+macro/

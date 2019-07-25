@@ -6,7 +6,7 @@ class _Command:
     # Import the instance of the class declared at the bottom.
     def __init__(self):
         try:
-            with open('commands.json') as json_file:
+            with open('v1/commands.json') as json_file:
                 self._data = json.load(json_file)
         except FileNotFoundError:
             self._data = None

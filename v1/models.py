@@ -1,6 +1,6 @@
 from copy import copy
-from firestore_model import FirestoreModel, MapToModelMixin, CollectionMixin, CollectionItemMixin
-from commands import cmd
+from v1.firestore_model import FirestoreModel, MapToModelMixin, CollectionMixin, CollectionItemMixin
+from v1.commands import cmd
 
 
 class Register:

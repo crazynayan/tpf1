@@ -1,6 +1,6 @@
 from os import path
-from models import Component, Node
-from commands import cmd
+from v1.models import Component, Node
+from v1.commands import cmd
 
 
 class AssemblerLine:
@@ -116,7 +116,7 @@ class AssemblerProgram:
             if file_path[-1] != '/':
                 file_path += '/'
             for ext in self.EXT:
-                file_name = file_path + ext
+                file_name = file_path + self.name + ext
                 if path.isfile(file_name):
                     self.file_name = file_name
                     return True

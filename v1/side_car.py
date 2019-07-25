@@ -1,6 +1,6 @@
 import networkx as nx
 from networkx import DiGraph
-from models import State
+from v1.models import State
 
 
 class Analyze:
@@ -83,5 +83,5 @@ class Analyze:
             print(f"Required {flow['state'].condition}")
             print(f"Output   {flow['state'].known}")
         for index, flow in enumerate(invalid_flows):
-            print(f"{'*'*60} INVLD {index+1:4} {'*'*60}")
+            print(f"{'*'*60}INVALID{index+1:4} {'*'*60}")
             print('\n'.join(flow['state'].text))
