@@ -1,6 +1,6 @@
 import re
 
-from v2.data_type import FieldBaseDsp, Bits
+from v2.data_type import FieldBaseDsp, Bits8
 from v2.errors import Error
 
 
@@ -20,8 +20,9 @@ class Instruction:
         return list() if self.fall_down is None else [self.fall_down]
 
     @staticmethod
-    def get_2_operands(operands):
-        return next(iter(re.findall(r"^([^,]+),(.+)", operands)))
+    def split_operands(operands):
+        # Split operands separated by commas. Ignore commas enclosed in parenthesis.
+        return re.split(r",(?![^()]*\))", operands)
 
 
 class FieldBits(Instruction):
@@ -33,11 +34,11 @@ class FieldBits(Instruction):
     @classmethod
     def from_operand(cls, label, command, operand, macro):
         instruction = cls(label, command)
-        operand1, operand2 = instruction.get_2_operands(operand)
+        operand1, operand2 = instruction.split_operands(operand)
         field, result = FieldBaseDsp.from_operand(operand1, macro)
         if result != Error.NO_ERROR:
             return instruction, result
-        bits, result = Bits.from_operand(operand2, macro)
+        bits, result = Bits8.from_operand(operand2, macro)
         if result != Error.NO_ERROR:
             return instruction, result
         instruction.field = field

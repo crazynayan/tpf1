@@ -55,7 +55,7 @@ class Macro:
             macro_file = MacroFile(f'{self.FOLDER_NAME}/{file_name}')
             self.files[file_name[:-4].upper()] = macro_file
 
-    def load(self, macro):
+    def load(self, macro, base=None):
         if macro not in self.files:
             return False
         if self.files[macro].data_mapped:
@@ -127,6 +127,10 @@ class Macro:
             self.data_map[line.label] = symbol_table
         # Indicate data is mapped for that macro
         self.files[macro].data_mapped = True
+        if base is not None and base.is_valid():
+            self.files[macro].base = base
+            self.base[str(base)] = macro
+        return True
 
     def get_ds_operand(self, operand, location_counter):
         ds_operand = DsOperand()
@@ -179,7 +183,7 @@ class Macro:
 
     def evaluate(self, expression, location_counter=-1):
         if expression.isdigit():
-            return int(expression), str(), Error.NO_ERROR
+            return int(expression), self.INTEGER, Error.NO_ERROR
         if expression == '*':
             return location_counter, str(), Error.NO_ERROR
         try:

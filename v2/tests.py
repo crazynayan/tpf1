@@ -1,5 +1,8 @@
 import unittest
-from v2.macro import Macro, Error
+
+from v2.errors import Error
+from v2.macro import Macro
+from v2.segment import Segment
 
 
 class MacroTest(unittest.TestCase):
@@ -109,4 +112,79 @@ class MacroTest(unittest.TestCase):
         macro_name = 'UI2PF'
         self._common_checks(macro_name)
         self.assertEqual(98, self.macro.data_map['#UI2098'].dsp)
-        # self.assertEqual(0xF2, self.macro.data_map['#UI2NXT'].dsp)  # Need SYSEQ macro
+        # self.assertEqual(0xF2, self.macro.data_map['#UI2NXT'].dsp)  # TODO Need SYSEQ macro
+
+
+class SegmentTest(unittest.TestCase):
+    NUMBER_OF_FILES = 2
+
+    def setUp(self) -> None:
+        self.seg = Segment()
+
+    def _common_checks(self, seg_name, accepted_errors_list=None):
+        accepted_errors_list = list() if accepted_errors_list is None else accepted_errors_list
+        self.seg.load(seg_name)
+        self.assertListEqual(accepted_errors_list, self.seg.errors, '\n\n\n' + '\n'.join(self.seg.errors))
+        self.assertTrue(self.seg.files[seg_name].loaded)
+
+    def test_files(self):
+        self.assertTrue('ETA5' in self.seg.files)
+        self.assertTrue('TS01' in self.seg.files)
+        self.assertFalse('EB0EB' in self.seg.files)
+        self.assertEqual(self.NUMBER_OF_FILES, len(self.seg.files), 'Update number of files in SegmentTest')
+
+    def test_field_bits(self):
+        seg_name = 'TS01'
+        accepted_errors_list = [
+            f"{Error.FBD_NO_LEN} None:OI:23(2,R9),1 {seg_name}",
+            f"{Error.FBD_INVALID_BASE} None:OI:EBW000(L'EBW001),1 {seg_name}",
+            f"{Error.FBD_INVALID_KEY} None:OI:ERROR_FIELD,1 {seg_name}",
+            f"{Error.FBD_INVALID_KEY_BASE} None:OI:PD0_C_ITM,1 {seg_name}",
+            f"{Error.FBD_INVALID_DSP} None:OI:C'A'(R2),1 {seg_name}",
+            f"{Error.BITS_INVALID_NUMBER} None:OI:EBW000,250+250 {seg_name}",
+            f"{Error.BITS_INVALID_BIT} None:OI:EBW000,#PD0_FLDEMP {seg_name}",
+        ]
+        self.seg.macro.load('PD0WRK')
+        del self.seg.macro.files['PD0WRK']
+        self._common_checks(seg_name, accepted_errors_list)
+        # Check EBW008-EBW000(2),1
+        label = '$$TS01$$.1'
+        self.assertEqual('R2', self.seg.nodes[label].field.base.reg)
+        self.assertEqual(8, self.seg.nodes[label].field.dsp)
+        self.assertEqual('R2_AREA', self.seg.nodes[label].field.name)
+        self.assertTrue(self.seg.nodes[label].bits.bit7.on)
+        self.assertEqual("#BIT7", self.seg.nodes[label].bits.bit7.name)
+        # Check EBW000,X'80'
+        label = '$$TS01$$.2'
+        self.assertEqual('R9', self.seg.nodes[label].field.base.reg)
+        self.assertEqual(8, self.seg.nodes[label].field.dsp)
+        self.assertEqual('EBW000', self.seg.nodes[label].field.name)
+        self.assertTrue(self.seg.nodes[label].bits.bit0.on)
+        self.assertEqual("#BIT0", self.seg.nodes[label].bits.bit0.name)
+        self.assertEqual(0x80, self.seg.nodes[label].bits.value)
+        # Check 23(R9),23
+        label = '$$TS01$$.3'
+        self.assertEqual('EBW015', self.seg.nodes[label].field.name)
+        self.assertEqual('R9', self.seg.nodes[label].field.base.reg)
+        self.assertEqual(23, self.seg.nodes[label].field.dsp)
+        self.assertTrue(self.seg.nodes[label].bits.bit7.on)
+        self.assertEqual("#BIT3+#BIT5+#BIT6+#BIT7", self.seg.nodes[label].bits.text)
+        self.assertEqual(0b00010111, self.seg.nodes[label].bits.value)
+        # Check EBT000+L'CE1DSTMP(R9),CE1SEW+CE1CPS+CE1DTX+CE1SNP
+        label = '$$TS01$$.4'
+        self.assertEqual('EBT008', self.seg.nodes[label].field.name)
+        self.assertEqual('R9', self.seg.nodes[label].field.base.reg)
+        self.assertEqual(0x78, self.seg.nodes[label].field.dsp)
+        self.assertEqual("CE1SEW+CE1CPS+CE1DTX+CE1SNP", self.seg.nodes[label].bits.text)
+        self.assertEqual(0xf0, self.seg.nodes[label].bits.value)
+        self.assertTrue(self.seg.nodes[label].bits.bit_by_name('CE1DTX').on)
+        self.assertFalse(self.seg.nodes[label].bits.bit6.on)
+        # Check L'EBW000+3+EBW008-EBW000(9),X'FF'-CE1SEW-CE1CPS
+        label = '$$TS01$$.5'
+        self.assertEqual('EBW004', self.seg.nodes[label].field.name)
+        self.assertEqual('R9', self.seg.nodes[label].field.base.reg)
+        self.assertEqual(0x0c, self.seg.nodes[label].field.dsp)
+        self.assertEqual("#BITA-CE1SEW-CE1CPS", self.seg.nodes[label].bits.text)
+        self.assertEqual(0x3f, self.seg.nodes[label].bits.value)
+        self.assertFalse(self.seg.nodes[label].bits.bit_by_name('CE1CPS').on)
+        self.assertTrue(self.seg.nodes[label].bits.bit6.on)
