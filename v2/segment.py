@@ -50,7 +50,14 @@ class Segment:
         lines = Line.from_file(file_lines)
         label_index = 1
         current_label = self.files[seg_name].root_label
-        for line in lines:
+        for line in Line.yield_lines(lines):
+            if len(line) == 1:
+                line = line[0]
+                check_line = None
+            else:
+                check_line = line[-1]
+                other_lines = line[1:-1]
+                line = line[0]
             prior_label = current_label
             if not line.label:
                 # Add the suffix to the label
@@ -66,13 +73,23 @@ class Segment:
                 self.nodes[prior_label].fall_down = current_label
             except KeyError:    # Will only fail the first time
                 pass
+            # Create and empty instruction for a label with no instruction (EQU * or DS 0H)
+            if current_label == line.label and not self.macro.is_location_counter_changed(line):
+                node = ins.Instruction(line.label, line.command)
+                self.nodes[current_label] = node
+                continue
             # Get the instruction class based on the command and create the dynamic instruction object
             instruction_class = cmd.check(line.command, 'create')
             if not instruction_class:
                 self.errors.append(f'{Error.INSTRUCTION_INVALID} {line} {seg_name}')
                 continue
-            node, result = eval(f"ins.{instruction_class}.from_operand(current_label, "
-                                f"line.command, line.operand, self.macro)")
+            method = 'from_operand'
+            parameters = 'current_label, line.command, line.operand, self.macro'
+            if check_line is not None:
+                instruction_class += 'Conditional'
+                method += '_condition'
+                parameters += ', check_line.operand, check_line.command'
+            node, result = eval(f"ins.{instruction_class}.{method}({parameters})")
             if result == Error.NO_ERROR:
                 self.nodes[current_label] = node
             else:

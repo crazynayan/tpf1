@@ -189,3 +189,15 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual(0x3f, self.seg.nodes[label].bits.value)
         self.assertFalse(self.seg.nodes[label].bits.bit_by_name('CE1CPS').on)
         self.assertTrue(self.seg.nodes[label].bits.bit6.on)
+        # Check TM with BZ TS010010
+        label = '$$TS01$$.6'
+        self.assertEqual('TS010010', self.seg.nodes[label].goes)
+        self.assertEqual('BZ', self.seg.nodes[label].on)
+        self.assertSetEqual({'$$TS01$$.7', 'TS010010'}, self.seg.nodes[label].next_labels)
+        # Check fall down to label
+        label = '$$TS01$$.7'
+        self.assertEqual('TS010010', self.seg.nodes[label].fall_down)
+        # Check EQU *
+        label = 'TS010010'
+        self.assertEqual(label, self.seg.nodes[label].label)
+        self.assertEqual('EQU', self.seg.nodes[label].command)

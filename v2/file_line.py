@@ -1,5 +1,7 @@
 import re
 
+from v2.command import cmd
+
 
 class File:
     CVS_C2 = {'Ch', 'RC', 'VE', '==', '**', 'ng', '/u', '1.'}
@@ -46,6 +48,7 @@ class Line:
 
     @classmethod
     def from_line(cls, file_line, continuing=False):
+        # Create a line object from a single file line.
         line = cls()
         if len(file_line) > 71 and file_line[71] != ' ':
             line.continuation = True
@@ -79,9 +82,45 @@ class Line:
             prior_line = line
         return lines
 
+    @classmethod
+    def yield_lines(cls, lines):
+        lines_to_yield = list()
+        yielded_lines = list()
+        for index, line in enumerate(lines):
+            if line in yielded_lines:
+                continue
+            lines_to_yield.append(line)
+            if line.is_conditional:
+                try:
+                    for check_line in lines[index + 1:]:
+                        if check_line.is_check_condition:
+                            lines_to_yield.append(check_line)
+                            break
+                        if check_line.stop_checking_for_conditions:
+                            break
+                        lines_to_yield.append(check_line)
+                except IndexError:
+                    pass
+            yield lines_to_yield
+            yielded_lines = lines_to_yield
+            lines_to_yield = list()
+
     def remove_suffix(self):
         self.label = next(iter(self.label.split('&'))) if self.label is not None else None
         return self
+
+    @property
+    def is_conditional(self):
+        return True if cmd.check(self.command, 'set_cc') else False
+
+    @property
+    def is_check_condition(self):
+        return cmd.check(self.command, 'check_cc')
+
+    @property
+    def stop_checking_for_conditions(self):
+        return True if cmd.check(self.command, 'set_cc') or cmd.check(self.command, 'exit') or self.label is not None \
+            or not cmd.command_check(self.command) else False
 
     def __repr__(self):
         return f'{self.label}:{self.command}:{self.operand}'

@@ -220,3 +220,11 @@ class Macro:
                 return int(field), self.INTEGER, Error.NO_ERROR
             except ValueError:
                 return field, data_type, Error.EXP_NOT_NUMBER
+
+    @staticmethod
+    def is_location_counter_changed(line):
+        if line.command == 'EQU' and line.operand == '*':
+            return False
+        if line.command == 'DS' and line.operand[0] == '0':
+            return False
+        return True
