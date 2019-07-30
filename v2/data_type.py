@@ -112,7 +112,7 @@ class Bit:
         return f"{self.name}:0x{self.value:02x}:{state}"
 
 
-class Bits8:
+class Bits:
     PREFIX = '#BIT'
     VALID_VALUE = {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01}
 

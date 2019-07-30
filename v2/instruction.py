@@ -1,6 +1,6 @@
 import re
 
-from v2.data_type import FieldBaseDsp, Bits8
+from v2.data_type import FieldBaseDsp, Bits
 from v2.errors import Error
 
 
@@ -38,7 +38,7 @@ class FieldBits(Instruction):
         field, result = FieldBaseDsp.from_operand(operand1, macro)
         if result != Error.NO_ERROR:
             return instruction, result
-        bits, result = Bits8.from_operand(operand2, macro)
+        bits, result = Bits.from_operand(operand2, macro)
         if result != Error.NO_ERROR:
             return instruction, result
         instruction.field = field

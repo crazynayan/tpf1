@@ -1,0 +1,460 @@
+{
+    "AAGET": {
+        "create": 1
+    },
+    "AR": {
+        "branch_type": "math",
+        "create": 1,
+        "math": "+",
+        "set_1": 1,
+        "set_cc": 1
+    },
+    "B": {
+        "create": 1,
+        "exit": 1,
+        "has_branch": 1
+    },
+    "BACKC": {
+        "create": 1,
+        "exit": 1,
+        "no_operand": 1
+    },
+    "BAS": {
+        "call": 1,
+        "create": 1,
+        "has_branch": 1
+    },
+    "BC": {
+        "check_cc": 1,
+        "opposite": "BC"
+    },
+    "BCTR": {
+        "create": 1,
+        "math": "-",
+        "set_1": 1
+    },
+    "BE": {
+        "check_cc": 1,
+        "compare": "is",
+        "operator": "==",
+        "opposite": "BNE",
+        "text": "="
+    },
+    "BH": {
+        "check_cc": 1,
+        "compare": ">",
+        "operator": ">",
+        "opposite": "BNH",
+        "text": ">"
+    },
+    "BL": {
+        "check_cc": 1,
+        "compare": "<",
+        "operator": "<",
+        "opposite": "BNL",
+        "text": "<"
+    },
+    "BM": {
+        "bit": "anyone ON",
+        "check_cc": 1,
+        "math": "< 0",
+        "operator": "< 0",
+        "opposite": "BNM",
+        "text": "< 0"
+    },
+    "BNE": {
+        "check_cc": 1,
+        "compare": "is not",
+        "operator": "!=",
+        "opposite": "BE",
+        "text": "!="
+    },
+    "BNH": {
+        "check_cc": 1,
+        "compare": "<=",
+        "operator": "<=",
+        "opposite": "BH",
+        "text": "<="
+    },
+    "BNL": {
+        "check_cc": 1,
+        "compare": ">=",
+        "operator": ">=",
+        "opposite": "BL",
+        "text": ">="
+    },
+    "BNM": {
+        "bit": "anyone OFF",
+        "check_cc": 1,
+        "math": ">= 0",
+        "operator": ">= 0",
+        "opposite": "BM",
+        "text": ">= 0"
+    },
+    "BNO": {
+        "bit": "is OFF",
+        "check_cc": 1,
+        "math": "not overflow",
+        "operator": "== 0",
+        "opposite": "BO",
+        "text": "OFF"
+    },
+    "BNP": {
+        "check_cc": 1,
+        "math": "<= 0",
+        "operator": "<= 0",
+        "opposite": "BP",
+        "text": "<= 0"
+    },
+    "BNZ": {
+        "binary": "has some data",
+        "bit": "is ON",
+        "check_cc": 1,
+        "math": "is not 0",
+        "operator": "!= 0",
+        "opposite": "BZ",
+        "text": "ON"
+    },
+    "BO": {
+        "bit": "is ON",
+        "check_cc": 1,
+        "math": "overflow",
+        "operator": "!= 0",
+        "opposite": "BNO",
+        "text": "ON"
+    },
+    "BP": {
+        "check_cc": 1,
+        "math": "> 0",
+        "operator": "> 0",
+        "opposite": "BNP",
+        "text": "> 0"
+    },
+    "BR": {
+        "create": 1,
+        "exit": 1,
+        "return": 1
+    },
+    "BZ": {
+        "binary": "has no data",
+        "bit": "is OFF",
+        "check_cc": 1,
+        "math": "is 0",
+        "operator": "== 0",
+        "opposite": "BNZ",
+        "text": "OFF"
+    },
+    "CFCMA": {
+        "create": 1,
+        "key_text": "SREF"
+    },
+    "CH": {
+        "branch_type": "compare",
+        "create": 1,
+        "set_cc": 1
+    },
+    "CLC": {
+        "branch_type": "compare",
+        "create": 1,
+        "set_cc": 1
+    },
+    "CLI": {
+        "branch_type": "compare",
+        "create": 1,
+        "set_cc": 1
+    },
+    "CVB": {
+        "create": 1,
+        "set_1": 1
+    },
+    "CVD": {
+        "create": 1,
+        "set_2": 1
+    },
+    "DBCLS": {
+        "create": 1
+    },
+    "DBIFB": {
+        "create": 1,
+        "key_text": "REF"
+    },
+    "DBRED": {
+        "create": 1,
+        "key_text": "REF"
+    },
+    "ENTDC": {
+        "create": 1,
+        "exit": 1
+    },
+    "ENTNC": {
+        "create": 1,
+        "exit": 1
+    },
+    "ENTRC": {
+        "call": 1,
+        "create": 1
+    },
+    "EX": {
+        "branch_type": "depends",
+        "create": 1
+    },
+    "EXITC": {
+        "create": 1,
+        "exit": 1
+    },
+    "IC": {
+        "create": 1,
+        "set_1": 1
+    },
+    "ICM": {
+        "create": 1,
+        "set_1": 1
+    },
+    "J": {
+        "create": 1,
+        "exit": 1,
+        "has_branch": 1
+    },
+    "JAS": {
+        "call": 1,
+        "create": 1,
+        "has_branch": 1
+    },
+    "JC": {
+        "check_cc": 1,
+        "opposite": "JC"
+    },
+    "JE": {
+        "check_cc": 1,
+        "compare": "is",
+        "operator": "==",
+        "opposite": "JNE",
+        "text": "="
+    },
+    "JH": {
+        "check_cc": 1,
+        "compare": ">",
+        "operator": ">",
+        "opposite": "JNH",
+        "text": ">"
+    },
+    "JL": {
+        "check_cc": 1,
+        "compare": "<",
+        "operator": "<",
+        "opposite": "JNL",
+        "text": "<"
+    },
+    "JM": {
+        "bit": "anyone ON",
+        "check_cc": 1,
+        "math": "< 0",
+        "operator": "< 0",
+        "opposite": "JNM",
+        "text": "< 0"
+    },
+    "JNE": {
+        "check_cc": 1,
+        "compare": "is not",
+        "operator": "!=",
+        "opposite": "JE",
+        "text": "!="
+    },
+    "JNH": {
+        "check_cc": 1,
+        "compare": "<=",
+        "operator": "<=",
+        "opposite": "JH",
+        "text": "<="
+    },
+    "JNL": {
+        "check_cc": 1,
+        "compare": ">=",
+        "operator": ">=",
+        "opposite": "JL",
+        "text": ">="
+    },
+    "JNM": {
+        "bit": "anyone OFF",
+        "check_cc": 1,
+        "math": ">= 0",
+        "operator": ">= 0",
+        "opposite": "JM",
+        "text": ">= 0"
+    },
+    "JNO": {
+        "bit": "is OFF",
+        "check_cc": 1,
+        "math": "not overflow",
+        "operator": "== 0",
+        "opposite": "JO",
+        "text": "OFF"
+    },
+    "JNP": {
+        "check_cc": 1,
+        "math": "<= 0",
+        "operator": "<= 0",
+        "opposite": "JP",
+        "text": "<= 0"
+    },
+    "JNZ": {
+        "binary": "has some data",
+        "bit": "is ON",
+        "check_cc": 1,
+        "math": "is not 0",
+        "operator": "== 1",
+        "opposite": "JZ",
+        "text": "ON"
+    },
+    "JO": {
+        "bit": "is ON",
+        "check_cc": 1,
+        "math": "overflow",
+        "operator": "== 1",
+        "opposite": "JNO",
+        "text": "ON"
+    },
+    "JP": {
+        "check_cc": 1,
+        "math": "> 0",
+        "operator": "> 0",
+        "opposite": "JNP",
+        "text": "> 0"
+    },
+    "JZ": {
+        "binary": "has no data",
+        "bit": "is OFF",
+        "check_cc": 1,
+        "math": "is 0",
+        "operator": "== 0",
+        "opposite": "JNZ",
+        "text": "OFF"
+    },
+    "L": {
+        "create": 1,
+        "set_1": 1
+    },
+    "LA": {
+        "create": 1,
+        "set_1": 1
+    },
+    "LHI": {
+        "create": 1,
+        "set_1": 1
+    },
+    "LM": {
+        "create": 1
+    },
+    "LR": {
+        "create": 1,
+        "set_1": 1
+    },
+    "LTR": {
+        "branch_type": "binary",
+        "create": 1,
+        "set_cc": 1
+    },
+    "MVC": {
+        "create": 1,
+        "set_1": 1
+    },
+    "MVI": {
+        "create": 1,
+        "set_1": 1
+    },
+    "N": {
+        "branch_type": "bit",
+        "create": 1,
+        "math": "&",
+        "set_1": 1,
+        "set_cc": 1
+    },
+    "NI": {
+        "branch_type": "bit",
+        "create": "FieldBits",
+        "math": "&",
+        "set_1": 1,
+        "set_cc": 1,
+        "source": "field & bits",
+        "target": "field"
+    },
+    "OC": {
+        "branch_type": "binary",
+        "create": 1,
+        "set_cc": 1
+    },
+    "OI": {
+        "branch_type": "bit",
+        "create": "FieldBits",
+        "math": "|",
+        "set_1": 1,
+        "set_cc": 1,
+        "source": "field | bits",
+        "target": "field"
+    },
+    "PACK": {
+        "create": 1,
+        "set_1": 1
+    },
+    "PDCLS": {
+        "create": 1
+    },
+    "PDRED": {
+        "create": 1,
+        "key_text": "FIELD"
+    },
+    "PNRCC": {
+        "create": 1
+    },
+    "PNRCM": {
+        "create": 1
+    },
+    "SENDA": {
+        "create": 1,
+        "exit": 1
+    },
+    "SERRC": {
+        "create": 1
+    },
+    "SR": {
+        "branch_type": "math",
+        "create": 1,
+        "math": "-",
+        "set_1": 1,
+        "set_cc": 1
+    },
+    "ST": {
+        "create": 1,
+        "set_2": 1
+    },
+    "STC": {
+        "create": 1,
+        "set_2": 1
+    },
+    "STH": {
+        "create": 1,
+        "set_2": 1
+    },
+    "STM": {
+        "create": 1
+    },
+    "SYSRA": {
+        "create": 1
+    },
+    "TM": {
+        "branch_type": "bit",
+        "condition": "field & bits on",
+        "create": "FieldBits",
+        "set_cc": 1
+    },
+    "UNPK": {
+        "create": 1,
+        "set_1": 1
+    },
+    "XC": {
+        "branch_type": "binary",
+        "create": 1,
+        "set_1": 1,
+        "set_cc": 1
+    }
+}

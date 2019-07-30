@@ -143,6 +143,7 @@ class SegmentTest(unittest.TestCase):
             f"{Error.FBD_INVALID_DSP} None:OI:C'A'(R2),1 {seg_name}",
             f"{Error.BITS_INVALID_NUMBER} None:OI:EBW000,250+250 {seg_name}",
             f"{Error.BITS_INVALID_BIT} None:OI:EBW000,#PD0_FLDEMP {seg_name}",
+            f"{Error.INSTRUCTION_INVALID} None:ERR:EBW000,1 {seg_name}",
         ]
         self.seg.macro.load('PD0WRK')
         del self.seg.macro.files['PD0WRK']

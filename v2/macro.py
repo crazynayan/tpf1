@@ -1,5 +1,7 @@
 import re
 import os
+
+from config import config
 from v2.errors import Error
 from v2.file_line import File, Line
 
@@ -39,7 +41,7 @@ class MacroFile:
 
 class Macro:
     EXT = {'.mac', '.txt'}
-    FOLDER_NAME = '../macro'
+    FOLDER_NAME = os.path.join(config.ROOT_DIR, 'macro')
     ACCEPTED_COMMANDS = {'DS', 'EQU', 'ORG', 'DSECT'}
     FIELD_LOOKUP = '$FIELD_LOOKUP$'
     INTEGER = '$INTEGER$'
@@ -52,7 +54,7 @@ class Macro:
         for file_name in os.listdir(self.FOLDER_NAME):
             if len(file_name) < 6 or file_name[-4:] not in self.EXT:
                 continue
-            macro_file = MacroFile(f'{self.FOLDER_NAME}/{file_name}')
+            macro_file = MacroFile(os.path.join(self.FOLDER_NAME, file_name))
             self.files[file_name[:-4].upper()] = macro_file
 
     def load(self, macro, base=None):

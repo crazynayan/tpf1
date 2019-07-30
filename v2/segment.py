@@ -1,10 +1,13 @@
 import os
+# noinspection PyUnresolvedReferences
 import v2.instruction as ins
 
+from config import config
 from v2.file_line import File, Line
 from v2.macro import Macro
 from v2.errors import Error
 from v2.data_type import Register
+from v2.command import cmd
 
 
 class SegmentFile:
@@ -19,7 +22,7 @@ class SegmentFile:
 
 class Segment:
     EXT = {'.asm', '.txt'}
-    FOLDER_NAME = '../asm'
+    FOLDER_NAME = os.path.join(config.ROOT_DIR, 'asm')
     LABEL_SEPARATOR = '.'
 
     def __init__(self):
@@ -31,7 +34,7 @@ class Segment:
         for file_name in os.listdir(self.FOLDER_NAME):
             if len(file_name) < 6 or file_name[-4:].lower() not in self.EXT:
                 continue
-            seg_file = SegmentFile(f'{self.FOLDER_NAME}/{file_name}')
+            seg_file = SegmentFile(os.path.join(self.FOLDER_NAME, file_name))
             seg_name = file_name[:-4].upper()
             seg_file.root_label = f'$${seg_name}$$'
             self.files[seg_name] = seg_file
@@ -50,6 +53,7 @@ class Segment:
         for line in lines:
             prior_label = current_label
             if not line.label:
+                # Add the suffix to the label
                 if self.LABEL_SEPARATOR in current_label:
                     current_label = f'{current_label.split(self.LABEL_SEPARATOR)[0]}{self.LABEL_SEPARATOR}{label_index}'
                 else:
@@ -57,11 +61,18 @@ class Segment:
                 label_index += 1
             else:
                 current_label = line.label
+            # Update the prior label with fall down
             try:        # TODO Also check if the prior node is NOT an exit command
                 self.nodes[prior_label].fall_down = current_label
             except KeyError:    # Will only fail the first time
                 pass
-            node, result = ins.FieldBits.from_operand(current_label, line.command, line.operand, self.macro)
+            # Get the instruction class based on the command and create the dynamic instruction object
+            instruction_class = cmd.check(line.command, 'create')
+            if not instruction_class:
+                self.errors.append(f'{Error.INSTRUCTION_INVALID} {line} {seg_name}')
+                continue
+            node, result = eval(f"ins.{instruction_class}.from_operand(current_label, "
+                                f"line.command, line.operand, self.macro)")
             if result == Error.NO_ERROR:
                 self.nodes[current_label] = node
             else:

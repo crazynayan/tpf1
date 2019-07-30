@@ -14,5 +14,6 @@ class Error:
     FBD_INVALID_KEY_BASE = 'FieldBaseDsp - Macro not present for identifying base register.'
     FBD_INVALID_BASE = 'FieldBaseDsp - Invalid base register specified.'
     FBD_INVALID_DSP = 'FieldBaseDsp - Invalid displacement specified.'
-    BITS_INVALID_NUMBER = 'Bits8 - Invalid number.'
-    BITS_INVALID_BIT = 'Bits8 - Invalid bit value.'
+    BITS_INVALID_NUMBER = 'Bits - Invalid number.'
+    BITS_INVALID_BIT = 'Bits - Invalid bit value.'
+    INSTRUCTION_INVALID = 'Instruction - Invalid Class'
