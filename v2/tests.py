@@ -2,7 +2,7 @@ import unittest
 
 from v2.errors import Error
 from v2.macro import Macro
-from v2.segment import Segment
+from v2.segment import Segment, Label
 
 
 class MacroTest(unittest.TestCase):
@@ -55,6 +55,9 @@ class MacroTest(unittest.TestCase):
         self._common_checks(macro_name)
         self.assertEqual(20, self.macro.data_map['SH0EQT'].length)
         self.assertEqual(14, self.macro.data_map['SH0CON'].dsp)
+        self.assertEqual(0x323, self.macro.data_map['SH0EQT'].dsp)
+        self.assertEqual(0x337, self.macro.data_map['SH0SMK'].dsp)
+        self.assertEqual(16, self.macro.data_map['SH0SMK'].length)
 
     def test_PR001W(self):
         macro_name = 'PR001W'
@@ -116,7 +119,7 @@ class MacroTest(unittest.TestCase):
 
 
 class SegmentTest(unittest.TestCase):
-    NUMBER_OF_FILES = 2
+    NUMBER_OF_FILES = 3
 
     def setUp(self) -> None:
         self.seg = Segment()
@@ -201,3 +204,43 @@ class SegmentTest(unittest.TestCase):
         label = 'TS010010'
         self.assertEqual(label, self.seg.nodes[label].label)
         self.assertEqual('EQU', self.seg.nodes[label].command)
+
+    def test_reg_reg(self):
+        seg_name = 'TS02'
+        accepted_errors_list = [
+            f"{Error.REG_INVALID} TS02E010:LR:R16,R15 {seg_name}",
+            f"{Error.REG_INVALID} TS02E020:LR:R1,RBD {seg_name}",
+        ]
+        self._common_checks(seg_name, accepted_errors_list)
+        # Check R02,RDA
+        label = 'TS020010'
+        self.assertEqual('R2', self.seg.nodes[label].reg1.reg)
+        self.assertEqual('R14', self.seg.nodes[label].reg2.reg)
+        # Check RGA,2 with JNZ TS020010 & it contains a before_goes
+        label = 'TS020020'
+        self.assertEqual('R2', self.seg.nodes[label].reg1.reg)
+        self.assertEqual('R2', self.seg.nodes[label].reg2.reg)
+        self.assertEqual('JNZ', self.seg.nodes[label].on)
+        self.assertSetEqual({'TS020030', 'TS020040'}, self.seg.nodes[label].next_labels)
+        self.assertEqual(4, self.seg.nodes[label].before_goes)
+        # Check 4,R04
+        label = 'TS020030'
+        self.assertEqual('R4', self.seg.nodes[label].reg1.reg)
+        self.assertEqual('R4', self.seg.nodes[label].reg2.reg)
+        self.assertSetEqual({'TS020040'}, self.seg.nodes[label].next_labels)
+        # Check DS    0H
+        label = 'TS020040'
+        self.assertEqual(label, self.seg.nodes[label].label)
+        self.assertEqual('DS', self.seg.nodes[label].command)
+        # Check  BCTR  R5,0
+        label = 'TS020040.1'
+        self.assertEqual('R5', self.seg.nodes[label].reg1.reg)
+        self.assertEqual('R0', self.seg.nodes[label].reg2.reg)
+        # Check the saved instruction inside $$TS02$$.2
+        label = 'TS020020'
+        goes_label = Label(label, Label.BEFORE_GOES_SEPARATOR)
+        for _ in range(self.seg.nodes[label].before_goes):
+            goes_label.index += 1
+            self.assertEqual('R6', self.seg.nodes[str(goes_label)].reg1.reg)
+            self.assertIsNone(self.seg.nodes[str(goes_label)].fall_down)
+        self.assertEqual('R7', self.seg.nodes[str(goes_label)].reg2.reg)

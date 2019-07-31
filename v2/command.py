@@ -24,7 +24,7 @@ def download_commands():
                 if command not in command_dict:
                     command_dict[command] = dict()
                 command_dict[command][key] = value
-    with open(os.path.join(config.ROOT_FOLDER, 'commands.json'), 'w') as json_file:
+    with open(os.path.join(config.ROOT_DIR, 'commands.json'), 'w') as json_file:
         json.dump(command_dict, json_file, ensure_ascii=False, sort_keys=True, indent=4)
     print(command_dict)
     print('File created')

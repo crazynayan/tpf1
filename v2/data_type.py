@@ -88,13 +88,9 @@ class FieldBaseDsp(Field):
         if not isinstance(dsp, int) or dsp < 0:
             return field, Error.FBD_INVALID_DSP
         # Get field name
-        name = base.reg + '_AREA'
-        try:
-            macro_name = macro.base[base.reg]
-            name = next(label for label, symbol_table in macro.data_map.items()
-                        if symbol_table.dsp == dsp and symbol_table.macro == macro_name)
-        except (KeyError, StopIteration):
-            pass
+        possible_name = macro.get_field_name(base, dsp)
+        name = base.reg + '_AREA' if possible_name is None else possible_name
+        # Update the object and return it
         field.base = base
         field.dsp = dsp
         field.name = name

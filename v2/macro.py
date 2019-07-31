@@ -228,3 +228,12 @@ class Macro:
         if line.command == 'DS' and line.operand[0] == '0':
             return False
         return True
+
+    def get_field_name(self, base, dsp):
+        try:
+            macro_name = self.base[base.reg]
+            return next(label for label, symbol_table in self.data_map.items()
+                        if symbol_table.dsp == dsp and symbol_table.macro == macro_name)
+        except (KeyError, StopIteration):
+            return None
+

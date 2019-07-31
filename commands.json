@@ -4,7 +4,7 @@
     },
     "AR": {
         "branch_type": "math",
-        "create": 1,
+        "create": "RegisterRegister",
         "math": "+",
         "set_1": 1,
         "set_cc": 1
@@ -29,7 +29,7 @@
         "opposite": "BC"
     },
     "BCTR": {
-        "create": 1,
+        "create": "RegisterRegister",
         "math": "-",
         "set_1": 1
     },
@@ -346,12 +346,12 @@
         "create": 1
     },
     "LR": {
-        "create": 1,
+        "create": "RegisterRegister",
         "set_1": 1
     },
     "LTR": {
         "branch_type": "binary",
-        "create": 1,
+        "create": "RegisterRegister",
         "set_cc": 1
     },
     "MVC": {
@@ -418,7 +418,7 @@
     },
     "SR": {
         "branch_type": "math",
-        "create": 1,
+        "create": "RegisterRegister",
         "math": "-",
         "set_1": 1,
         "set_cc": 1

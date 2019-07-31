@@ -1,6 +1,6 @@
 import re
 
-from v2.data_type import FieldBaseDsp, Bits
+from v2.data_type import FieldBaseDsp, Bits, Register
 from v2.errors import Error
 
 
@@ -15,6 +15,14 @@ class Instruction:
             return f"{self.label}:{self.command}"
         else:
             return f"{self.label}:{self.command}:falls to {self.fall_down}"
+
+    @classmethod
+    def from_operand(cls, label, command, operand, macro):
+        instruction = cls(label, command)
+        return instruction.set_operand(operand, macro)
+
+    def set_operand(self, operand, macro):
+        return self, Error.NO_ERROR
 
     @property
     def next_labels(self):
@@ -31,9 +39,15 @@ class Conditional(Instruction):
         Instruction.__init__(self, label, command)
         self.goes = goes
         self.on = on
+        self.before_goes = 0
 
     def __repr__(self):
         return f"{super().__repr__()}:on {self.on}:goes to {self.goes}"
+
+    @classmethod
+    def from_operand_condition(cls, label, command, operand, macro, goes, on):
+        instruction = cls(label, command, goes, on)
+        return instruction.set_operand(operand, macro)
 
     @property
     def next_labels(self):
@@ -48,11 +62,6 @@ class FieldBits(Instruction):
         Instruction.__init__(self, label, command)
         self.field = None
         self.bits = None
-
-    @classmethod
-    def from_operand(cls, label, command, operand, macro):
-        instruction = cls(label, command)
-        return instruction.set_operand(operand, macro)
 
     def set_operand(self, operand, macro):
         operand1, operand2 = self.split_operands(operand)
@@ -71,7 +80,22 @@ class FieldBitsConditional(FieldBits, Conditional):
     def __init__(self, label, command, goes, on):
         Conditional.__init__(self, label, command, goes, on)
 
-    @classmethod
-    def from_operand_condition(cls, label, command, operand, macro, goes, on):
-        instruction = cls(label, command, goes, on)
-        return instruction.set_operand(operand, macro)
+
+class RegisterRegister(Instruction):
+    def __init__(self, label, command):
+        Instruction.__init__(self, label, command)
+        self.reg1 = None
+        self.reg2 = None
+
+    def set_operand(self, operand, macro):
+        operand1, operand2 = self.split_operands(operand)
+        self.reg1 = Register(operand1)
+        self.reg2 = Register(operand2)
+        if not self.reg1.is_valid() or not self.reg2.is_valid():
+            return self, Error.REG_INVALID
+        return self, Error.NO_ERROR
+
+
+class RegisterRegisterConditional(RegisterRegister, Conditional):
+    def __init__(self, label, command, goes, on):
+        Conditional.__init__(self, label, command, goes, on)

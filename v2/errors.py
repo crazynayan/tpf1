@@ -16,4 +16,5 @@ class Error:
     FBD_INVALID_DSP = 'FieldBaseDsp - Invalid displacement specified.'
     BITS_INVALID_NUMBER = 'Bits - Invalid number.'
     BITS_INVALID_BIT = 'Bits - Invalid bit value.'
-    INSTRUCTION_INVALID = 'Instruction - Invalid Class'
+    INSTRUCTION_INVALID = 'Instruction - Invalid Class.'
+    REG_INVALID = 'Register - Invalid.'
