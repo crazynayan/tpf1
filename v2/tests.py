@@ -6,7 +6,7 @@ from v2.segment import Segment, Label
 
 
 class MacroTest(unittest.TestCase):
-    NUMBER_OF_FILES = 9
+    NUMBER_OF_FILES = 12
 
     def setUp(self) -> None:
         self.macro = Macro()
@@ -20,7 +20,8 @@ class MacroTest(unittest.TestCase):
     def _common_checks(self, macro_name, accepted_errors_list=None):
         accepted_errors_list = list() if accepted_errors_list is None else accepted_errors_list
         self.macro.load(macro_name)
-        self.assertListEqual(accepted_errors_list, self.macro.errors, '\n\n\n' + '\n'.join(self.macro.errors))
+        self.assertListEqual(accepted_errors_list, self.macro.errors, '\n\n\n' + '\n'.join(list(
+            set(self.macro.errors) - set(accepted_errors_list))))
         self.assertTrue(self.macro.files[macro_name].data_mapped)
 
     def test_WA0AA(self):
@@ -119,7 +120,7 @@ class MacroTest(unittest.TestCase):
 
 
 class SegmentTest(unittest.TestCase):
-    NUMBER_OF_FILES = 4
+    NUMBER_OF_FILES = 5
 
     def setUp(self) -> None:
         self.seg = Segment()
@@ -324,3 +325,46 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('R15', self.seg.nodes[label].field.base.reg)
         self.assertEqual(4, self.seg.nodes[label].field.dsp)
         self.assertIsNone(self.seg.nodes[label].field.index)
+
+    def test_field_variants(self):
+        seg_name = 'TS04'
+        accepted_errors_list = [
+            f"{Error.FL_INVALID_LEN} None:MVC:23(L'CE1WKA+60,R3),26(R4) {seg_name}",
+            f"{Error.FL_INVALID_LEN} None:XC:CE1WKA(#$BCLASS),CE1WKA {seg_name}",
+            f"{Error.FL_LEN_REQUIRED} None:OC:EBW000(,R4),EBW000 {seg_name}",
+        ]
+        self._common_checks(seg_name, accepted_errors_list)
+        # Check FieldLenField
+        # XC    CE1WKA,CE1WKA
+        label = 'TS040100.1'
+        self.assertEqual('CE1WKA', self.seg.nodes[label].field_len.name)
+        self.assertEqual('R9', self.seg.nodes[label].field_len.base.reg)
+        self.assertEqual(0x8, self.seg.nodes[label].field_len.dsp)
+        self.assertEqual(212, self.seg.nodes[label].field_len.length)
+        # CLC   L'CE1WKA+EBW000+4(CE1FA1-CE1FA0,R9),CE1FA1(R9) with BNE   TS040110
+        label = 'TS040100.2'
+        self.assertEqual('EBCFW0', self.seg.nodes[label].field_len.name)
+        self.assertEqual('R9', self.seg.nodes[label].field_len.base.reg)
+        self.assertEqual(0xe0, self.seg.nodes[label].field_len.dsp)
+        self.assertEqual(8, self.seg.nodes[label].field_len.length)
+        self.assertEqual('EBCFW1', self.seg.nodes[label].field.name)
+        self.assertEqual(0xe8, self.seg.nodes[label].field.dsp)
+        self.assertEqual('BNE', self.seg.nodes[label].on)
+        self.assertEqual('TS040110', self.seg.nodes[label].goes)
+        # MVC   EBW000(L'CE1WKA-1),EBW001
+        label = 'TS040100.3'
+        self.assertEqual('EBW000', self.seg.nodes[label].field_len.name)
+        self.assertEqual('R9', self.seg.nodes[label].field_len.base.reg)
+        self.assertEqual(0x8, self.seg.nodes[label].field_len.dsp)
+        self.assertEqual(211, self.seg.nodes[label].field_len.length)
+        self.assertEqual('EBW001', self.seg.nodes[label].field.name)
+        self.assertEqual(0x9, self.seg.nodes[label].field.dsp)
+        self.assertEqual('TS040110', self.seg.nodes[label].fall_down)
+        # MVC   23(L'CE1WKA,R3),26(R4)
+        label = 'TS040110.1'
+        self.assertEqual('R3_AREA', self.seg.nodes[label].field_len.name)
+        self.assertEqual('R3', self.seg.nodes[label].field_len.base.reg)
+        self.assertEqual(23, self.seg.nodes[label].field_len.dsp)
+        self.assertEqual(212, self.seg.nodes[label].field_len.length)
+        self.assertEqual('R4_AREA', self.seg.nodes[label].field.name)
+        self.assertEqual(26, self.seg.nodes[label].field.dsp)

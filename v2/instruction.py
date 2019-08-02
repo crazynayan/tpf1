@@ -96,7 +96,7 @@ class FieldLenField(Instruction):
         result = self.field_len.set(operand1, macro, self.MAX_LEN)
         if result == Error.NO_ERROR:
             self.field = FieldBaseDsp()
-            result = self.field.set(operand1, macro)
+            result = self.field.set(operand2, macro, self.field_len.length)
         return self, result
 
 

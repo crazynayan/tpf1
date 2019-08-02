@@ -29,7 +29,7 @@ class File:
             return list()
         # Find the character that is added by CVS on each line
         char = ''
-        if all(line[0] == lines[0][0] for line in lines if line.strip):
+        if all(line[0] == lines[0][0] for line in lines):
             char = lines[0][0]
         # Remove (TRIM) the character from each line
         if char in cls.TRIM:
@@ -53,9 +53,10 @@ class Line:
         if len(file_line) > 71 and file_line[71] != ' ':
             line.continuation = True
             file_line = file_line[:71]
+        # Split the line in words. Keep words within single quotes together. Note: L' has only one quote.
         words = re.findall(r"(?:[^L]'.*?'|\S)+", file_line)
         if file_line[0] == ' ':
-            # The label is None since there is no label
+            # The label is None for lines with first character space (No label)
             words.insert(0, None)
         if continuing:
             # The command is None for continued lines
@@ -69,12 +70,11 @@ class Line:
     def from_file(cls, file_lines):
         # Create a list of Line objects. Also combines multiple continuing lines in a single line object.
         lines = list()
-        prior_line = None
+        prior_line = Line()
         main_line = None
         for file_line in file_lines:
-            continuing = True if prior_line is not None and prior_line.continuation else False
-            line = cls.from_line(file_line, continuing)
-            if not continuing:
+            line = cls.from_line(file_line, prior_line.continuation)
+            if not prior_line.continuation:
                 lines.append(line)
                 main_line = line
             else:

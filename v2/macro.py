@@ -161,13 +161,15 @@ class Macro:
             ds_operand.length = DsOperand.DATA_TYPES[ds_operand.data_type]
         return ds_operand, Error.NO_ERROR
 
-    def get_value(self, operand, location_counter=-1):
+    def get_value(self, operand, location_counter=None):
         if operand.isdigit():
             return int(operand), Error.NO_ERROR
         exp_list = re.split(r"([+*()-])", operand)
         exp_list = [expression for expression in exp_list if expression and expression not in '()']
+        if len(exp_list) == 1:
+            value, data_type, result = self.evaluate(exp_list[0], location_counter)
+            return value, result
         eval_list = list()
-        data_type = str()
         for index, expression in enumerate(exp_list):
             if expression == '+' or expression == '-' or (expression == '*' and index % 2 == 1):
                 eval_list.append(expression)
@@ -176,11 +178,9 @@ class Macro:
                 if result != Error.NO_ERROR:
                     return None, result
                 eval_list.append(str(value))
-        if len(eval_list) == 1 and data_type == 'C':
-            return eval_list[0], Error.NO_ERROR
         try:
             return eval(''.join(eval_list)), Error.NO_ERROR
-        except (SyntaxError, NameError, TypeError, ValueError) as _:
+        except (SyntaxError, NameError, TypeError, ValueError):
             return None, Error.EXP_EVAL_FAIL
 
     def evaluate(self, expression, location_counter=-1):
@@ -189,7 +189,7 @@ class Macro:
         if expression == '*':
             return location_counter, str(), Error.NO_ERROR
         try:
-            data_type, field = next(iter(re.findall(r"^([\w&#]+)'*([^']*)", expression)))
+            data_type, field = next(iter(re.findall(r"^([\w&#$]+)'*([^']*)", expression)))
         except StopIteration:
             return str(), str(), Error.EXP_REGEX
         if not field:
@@ -234,7 +234,7 @@ class Macro:
             macro_name = self.base[base.reg]
             matches = {label: symbol_table for label, symbol_table in self.data_map.items()
                        if symbol_table.dsp == dsp and symbol_table.macro == macro_name}
-            return min(matches, key=lambda item: abs(matches[item].length - length))
+            return min(matches, key=lambda label: abs(matches[label].length - length))
         except (KeyError, ValueError):
             return None
 

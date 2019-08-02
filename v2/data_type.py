@@ -92,14 +92,14 @@ class FieldBaseDsp(Field):
     def __init__(self):
         super().__init__()
 
-    def set(self, operand, macro):
+    def set(self, operand, macro, length=1):
         operand1, operand2, error = self.split_operand(operand)
         if error:
             result = Error.FBD_NO_LEN
         elif not operand2:
             _, result = self.set_base_dsp_by_name(operand1, macro)
         else:
-            result = self.set_base_dsp_by_operands(operand2, operand1, macro, 1)
+            result = self.set_base_dsp_by_operands(operand2, operand1, macro, length)
         return result
 
 
@@ -132,10 +132,10 @@ class FieldLen(Field):
     def set(self, operand, macro, max_len):
         operand1, operand2, operand3 = self.split_operand(operand)
         length = -1
-        if not operand2 and not operand3:
+        if not operand3:
             length, result = self.set_base_dsp_by_name(operand1, macro)
-        elif not operand3:
-            result = Error.FL_BASE_REQUIRED
+            if operand2 and result == Error.NO_ERROR:
+                length, result = macro.get_value(operand2)
         elif not operand2:
             result = Error.FL_LEN_REQUIRED
         else:
@@ -148,9 +148,6 @@ class FieldLen(Field):
             else:
                 result = Error.FL_INVALID_LEN
         return result
-
-
-
 
 
 class Bit:

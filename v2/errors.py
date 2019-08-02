@@ -21,5 +21,4 @@ class Error:
     REG_INVALID = 'Register - Invalid.'
     RFX_INVALID_REG = 'RegisterFieldIndex - Invalid register specified'
     FL_LEN_REQUIRED = 'FieldLen - Length required.'
-    FL_BASE_REQUIRED = 'FieldLen - Base required.'
     FL_INVALID_LEN = 'FieldLen - Invalid length.'
