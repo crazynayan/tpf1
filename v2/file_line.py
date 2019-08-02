@@ -92,13 +92,15 @@ class Line:
             lines_to_yield.append(line)
             if line.is_conditional:
                 try:
+                    other_lines = list()
                     for check_line in lines[index + 1:]:
                         if check_line.is_check_condition:
+                            lines_to_yield.extend(other_lines)
                             lines_to_yield.append(check_line)
                             break
                         if check_line.stop_checking_for_conditions:
                             break
-                        lines_to_yield.append(check_line)
+                        other_lines.append(check_line)
                 except IndexError:
                     pass
             yield lines_to_yield

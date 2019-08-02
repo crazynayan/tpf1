@@ -44,57 +44,113 @@ class Field:
         return f"{self.name}:{self.base}+{self.dsp}"
 
     @staticmethod
-    def get_base_dsp(operand):
+    def split_operand(operand):
         # Returns up to 3 elements that are first divided by ( and then by a , and then by a )
         return next(iter(re.findall(r"^([^(]+)\(*([^,)]*),*([^)]*)\)*", operand)))
 
-    @staticmethod
-    def get_expression_count(expression):
-        return len(re.split(r"[+-]", expression))
+    def set_base_dsp_by_name(self, name, macro):
+        length = 0
+        if name.isdigit() or len(re.split(r"['+-]", name)) > 1:
+            dsp, result = macro.get_value(name)
+            if result != Error.NO_ERROR:
+                return length, result
+            base = Register('R0')
+            name = 'R0_AREA'
+        else:
+            try:
+                dsp = macro.data_map[name].dsp
+            except KeyError:
+                return length, Error.FBD_INVALID_KEY
+            length = macro.data_map[name].length
+            try:
+                base = macro.files[macro.data_map[name].macro].base
+            except KeyError:
+                return length, Error.FBD_INVALID_KEY_BASE
+        self.name = name
+        self.dsp = dsp
+        self.base = base
+        return length, Error.NO_ERROR
+
+    def set_base_dsp_by_operands(self, base, dsp, macro, length):
+        # Set base register
+        self.base = Register(base)
+        if not self.base.is_valid():
+            return Error.FBD_INVALID_BASE
+        # Set displacement
+        self.dsp, result = macro.get_value(dsp)
+        if result != Error.NO_ERROR:
+            return result
+        if not isinstance(self.dsp, int) or self.dsp < 0:
+            return Error.FBD_INVALID_DSP
+        # Set name
+        possible_name = macro.get_field_name(self.base, self.dsp, length)
+        self.name = self.base.reg + '_AREA' if possible_name is None else possible_name
+        return Error.NO_ERROR
 
 
 class FieldBaseDsp(Field):
     def __init__(self):
         super().__init__()
 
-    @classmethod
-    def from_operand(cls, operand, macro):
-        field = cls()
-        dsp, base, error = field.get_base_dsp(operand)
+    def set(self, operand, macro):
+        operand1, operand2, error = self.split_operand(operand)
         if error:
-            return field, Error.FBD_NO_LEN
-        if not base:
-            name = dsp
-            try:
-                dsp = macro.data_map[name].dsp
-            except KeyError:
-                return field, Error.FBD_INVALID_KEY
-            try:
-                base = macro.files[macro.data_map[name].macro].base
-            except KeyError:
-                return field, Error.FBD_INVALID_KEY_BASE
-            field.name = name
-            field.dsp = dsp
-            field.base = base
-            return field, Error.NO_ERROR
-        # Get base register
-        base = Register(base)
-        if not base.is_valid():
-            return field, Error.FBD_INVALID_BASE
-        # Get displacement
-        dsp, result = macro.get_value(dsp)
-        if result != Error.NO_ERROR:
-            return field, result
-        if not isinstance(dsp, int) or dsp < 0:
-            return field, Error.FBD_INVALID_DSP
-        # Get field name
-        possible_name = macro.get_field_name(base, dsp)
-        name = base.reg + '_AREA' if possible_name is None else possible_name
-        # Update the object and return it
-        field.base = base
-        field.dsp = dsp
-        field.name = name
-        return field, Error.NO_ERROR
+            result = Error.FBD_NO_LEN
+        elif not operand2:
+            _, result = self.set_base_dsp_by_name(operand1, macro)
+        else:
+            result = self.set_base_dsp_by_operands(operand2, operand1, macro, 1)
+        return result
+
+
+class FieldIndex(Field):
+    def __init__(self):
+        super().__init__()
+        self.index = None
+
+    def set(self, operand, macro, length):
+        operand1, operand2, operand3 = self.split_operand(operand)
+        if not operand2 and not operand3:
+            _, result = self.set_base_dsp_by_name(operand1, macro)
+        elif not operand3:
+            result = self.set_base_dsp_by_operands(operand2, operand1, macro, length)
+        elif not operand2:
+            result = self.set_base_dsp_by_operands(operand3, operand1, macro, length)
+        else:
+            result = self.set_base_dsp_by_operands(operand3, operand1, macro, length)
+            if result == Error.NO_ERROR:
+                self.index = Register(operand2)
+                result = Error.NO_ERROR if self.index.is_valid() else Error.FX_INVALID_INDEX
+        return result
+
+
+class FieldLen(Field):
+    def __init__(self):
+        super().__init__()
+        self.length = 0
+
+    def set(self, operand, macro, max_len):
+        operand1, operand2, operand3 = self.split_operand(operand)
+        length = -1
+        if not operand2 and not operand3:
+            length, result = self.set_base_dsp_by_name(operand1, macro)
+        elif not operand3:
+            result = Error.FL_BASE_REQUIRED
+        elif not operand2:
+            result = Error.FL_LEN_REQUIRED
+        else:
+            length, result = macro.get_value(operand2)
+            if result == Error.NO_ERROR:
+                result = self.set_base_dsp_by_operands(operand3, operand1, macro, length)
+        if result == Error.NO_ERROR:
+            if isinstance(length, int) and 0 <= length <= max_len:
+                self.length = length if length > 0 else 1
+            else:
+                result = Error.FL_INVALID_LEN
+        return result
+
+
+
 
 
 class Bit:
@@ -162,31 +218,25 @@ class Bits:
         bit = next(bit for _, bit in self.__dict__.items() if bit.value == value)
         bit.on = False
 
-    @classmethod
-    def from_number(cls, number):
-        bits = cls()
+    def set_from_number(self, number):
         value = 0x80
         while value > 0:
             if value & number != 0:
-                bits.on_by_value(value)
+                self.on_by_value(value)
             value = value >> 1
-        return bits
 
-    @classmethod
-    def from_operand(cls, operand, macro):
+    def set(self, operand, macro):
         number, result = macro.get_value(operand)
-        if result != Error.NO_ERROR:
-            return cls(), result
-        if not isinstance(number, int) or number < 0 or number > 255:
-            return cls(), Error.BITS_INVALID_NUMBER
-        bits8 = cls().from_number(number)
-        # Add the name from the expression
-        for expression in re.split(f"[+-]", operand):
-            value, data_type, result = macro.evaluate(expression)
-            if result != Error.NO_ERROR:
-                return bits8, result
-            if data_type == macro.FIELD_LOOKUP:
-                if value not in cls.VALID_VALUE:
-                    return bits8, Error.BITS_INVALID_BIT
-                bits8.set_name(expression, value)
-        return bits8, Error.NO_ERROR
+        if result == Error.NO_ERROR:
+            result = Error.NO_ERROR if isinstance(number, int) and 0 <= number <= 255 else Error.BITS_INVALID_NUMBER
+            if result == Error.NO_ERROR:
+                self.set_from_number(number)
+                # Add the name from the expression
+                for expression in re.split(f"[+-]", operand):
+                    value, data_type, result = macro.evaluate(expression)
+                    if result == Error.NO_ERROR and data_type == macro.FIELD_LOOKUP:
+                        if value in self.VALID_VALUE:
+                            self.set_name(expression, value)
+                        else:
+                            result = Error.BITS_INVALID_BIT
+        return result

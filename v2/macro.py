@@ -229,11 +229,12 @@ class Macro:
             return False
         return True
 
-    def get_field_name(self, base, dsp):
+    def get_field_name(self, base, dsp, length):
         try:
             macro_name = self.base[base.reg]
-            return next(label for label, symbol_table in self.data_map.items()
-                        if symbol_table.dsp == dsp and symbol_table.macro == macro_name)
-        except (KeyError, StopIteration):
+            matches = {label: symbol_table for label, symbol_table in self.data_map.items()
+                       if symbol_table.dsp == dsp and symbol_table.macro == macro_name}
+            return min(matches, key=lambda item: abs(matches[item].length - length))
+        except (KeyError, ValueError):
             return None
 

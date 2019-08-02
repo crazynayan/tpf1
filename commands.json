@@ -150,25 +150,28 @@
     },
     "CH": {
         "branch_type": "compare",
-        "create": 1,
+        "create": "RegisterFieldIndex",
+        "field_len": 2,
         "set_cc": 1
     },
     "CLC": {
         "branch_type": "compare",
-        "create": 1,
+        "create": "FieldLenField",
         "set_cc": 1
     },
     "CLI": {
         "branch_type": "compare",
-        "create": 1,
+        "create": "FieldData",
         "set_cc": 1
     },
     "CVB": {
-        "create": 1,
+        "create": "RegisterFieldIndex",
+        "field_len": 8,
         "set_1": 1
     },
     "CVD": {
-        "create": 1,
+        "create": "RegisterFieldIndex",
+        "field_len": 8,
         "set_2": 1
     },
     "DBCLS": {
@@ -203,11 +206,12 @@
         "exit": 1
     },
     "IC": {
-        "create": 1,
+        "create": "RegisterFieldIndex",
+        "field_len": 1,
         "set_1": 1
     },
     "ICM": {
-        "create": 1,
+        "create": "RegisterDataField",
         "set_1": 1
     },
     "J": {
@@ -331,19 +335,20 @@
         "text": "OFF"
     },
     "L": {
-        "create": 1,
+        "create": "RegisterFieldIndex",
+        "field_len": 4,
         "set_1": 1
     },
     "LA": {
-        "create": 1,
+        "create": "RegisterFieldIndex",
         "set_1": 1
     },
     "LHI": {
-        "create": 1,
+        "create": "RegisterData",
         "set_1": 1
     },
     "LM": {
-        "create": 1
+        "create": "RegisterRegisterField"
     },
     "LR": {
         "create": "RegisterRegister",
@@ -355,16 +360,17 @@
         "set_cc": 1
     },
     "MVC": {
-        "create": 1,
+        "create": "FieldLenField",
         "set_1": 1
     },
     "MVI": {
-        "create": 1,
+        "create": "FieldData",
         "set_1": 1
     },
     "N": {
         "branch_type": "bit",
-        "create": 1,
+        "create": "RegisterFieldIndex",
+        "field_len": 4,
         "math": "&",
         "set_1": 1,
         "set_cc": 1
@@ -380,7 +386,7 @@
     },
     "OC": {
         "branch_type": "binary",
-        "create": 1,
+        "create": "FieldLenField",
         "set_cc": 1
     },
     "OI": {
@@ -393,7 +399,7 @@
         "target": "field"
     },
     "PACK": {
-        "create": 1,
+        "create": "FieldLenFieldLen",
         "set_1": 1
     },
     "PDCLS": {
@@ -424,19 +430,22 @@
         "set_cc": 1
     },
     "ST": {
-        "create": 1,
+        "create": "RegisterFieldIndex",
+        "field_len": 4,
         "set_2": 1
     },
     "STC": {
-        "create": 1,
+        "create": "RegisterFieldIndex",
+        "field_len": 1,
         "set_2": 1
     },
     "STH": {
-        "create": 1,
+        "create": "RegisterFieldIndex",
+        "field_len": 2,
         "set_2": 1
     },
     "STM": {
-        "create": 1
+        "create": "RegisterRegisterField"
     },
     "SYSRA": {
         "create": 1
@@ -448,12 +457,12 @@
         "set_cc": 1
     },
     "UNPK": {
-        "create": 1,
+        "create": "FieldLenFieldLen",
         "set_1": 1
     },
     "XC": {
         "branch_type": "binary",
-        "create": 1,
+        "create": "FieldLenField",
         "set_1": 1,
         "set_cc": 1
     }

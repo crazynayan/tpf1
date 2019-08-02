@@ -119,7 +119,7 @@ class MacroTest(unittest.TestCase):
 
 
 class SegmentTest(unittest.TestCase):
-    NUMBER_OF_FILES = 3
+    NUMBER_OF_FILES = 4
 
     def setUp(self) -> None:
         self.seg = Segment()
@@ -127,7 +127,8 @@ class SegmentTest(unittest.TestCase):
     def _common_checks(self, seg_name, accepted_errors_list=None):
         accepted_errors_list = list() if accepted_errors_list is None else accepted_errors_list
         self.seg.load(seg_name)
-        self.assertListEqual(accepted_errors_list, self.seg.errors, '\n\n\n' + '\n'.join(self.seg.errors))
+        self.assertListEqual(accepted_errors_list, self.seg.errors, '\n\n\n' + '\n'.join(list(
+            set(self.seg.errors) - set(accepted_errors_list))))
         self.assertTrue(self.seg.files[seg_name].loaded)
 
     def test_files(self):
@@ -244,3 +245,82 @@ class SegmentTest(unittest.TestCase):
             self.assertEqual('R6', self.seg.nodes[str(goes_label)].reg1.reg)
             self.assertIsNone(self.seg.nodes[str(goes_label)].fall_down)
         self.assertEqual('R7', self.seg.nodes[str(goes_label)].reg2.reg)
+
+    def test_reg_index(self):
+        seg_name = 'TS03'
+        accepted_errors_list = [
+            f"{Error.RFX_INVALID_REG} None:L:R16,EBW000 {seg_name}",
+            f"{Error.FBD_INVALID_BASE} None:LA:R1,2(R1,R3,R4) {seg_name}",
+            f"{Error.FX_INVALID_INDEX} None:LA:R1,2(ABC,R1) {seg_name}",
+        ]
+        self._common_checks(seg_name, accepted_errors_list)
+        # L     R1,CE1CR1
+        label = '$$TS03$$.1'
+        self.assertEqual('R1', self.seg.nodes[label].reg.reg)
+        self.assertEqual('CE1CR1', self.seg.nodes[label].field.name)
+        self.assertEqual('R9', self.seg.nodes[label].field.base.reg)
+        self.assertEqual(0x170, self.seg.nodes[label].field.dsp)
+        self.assertIsNone(self.seg.nodes[label].field.index)
+        # LA    R2,2
+        label = '$$TS03$$.2'
+        self.assertEqual('R2', self.seg.nodes[label].reg.reg)
+        self.assertEqual('R0_AREA', self.seg.nodes[label].field.name)
+        self.assertEqual('R0', self.seg.nodes[label].field.base.reg)
+        self.assertEqual(2, self.seg.nodes[label].field.dsp)
+        self.assertIsNone(self.seg.nodes[label].field.index)
+        # IC    R1,3(R3,R4)
+        label = '$$TS03$$.3'
+        self.assertEqual('R1', self.seg.nodes[label].reg.reg)
+        self.assertEqual('R4_AREA', self.seg.nodes[label].field.name)
+        self.assertEqual('R4', self.seg.nodes[label].field.base.reg)
+        self.assertEqual(3, self.seg.nodes[label].field.dsp)
+        self.assertEqual('R3', self.seg.nodes[label].field.index.reg)
+        # STH   R3,L'CE1CR1
+        label = '$$TS03$$.4'
+        self.assertEqual('R3', self.seg.nodes[label].reg.reg)
+        self.assertEqual('R0_AREA', self.seg.nodes[label].field.name)
+        self.assertEqual('R0', self.seg.nodes[label].field.base.reg)
+        self.assertEqual(4, self.seg.nodes[label].field.dsp)
+        self.assertIsNone(self.seg.nodes[label].field.index)
+        # N     R5,EBW008-EB0EB(R6)
+        label = '$$TS03$$.5'
+        self.assertEqual('R5', self.seg.nodes[label].reg.reg)
+        self.assertEqual('R6_AREA', self.seg.nodes[label].field.name)
+        self.assertEqual('R6', self.seg.nodes[label].field.base.reg)
+        self.assertEqual(16, self.seg.nodes[label].field.dsp)
+        self.assertIsNone(self.seg.nodes[label].field.index)
+        # ST    R2,L'EBW000+2(R6,)
+        label = '$$TS03$$.6'
+        self.assertEqual('R2', self.seg.nodes[label].reg.reg)
+        self.assertEqual('R6_AREA', self.seg.nodes[label].field.name)
+        self.assertEqual('R6', self.seg.nodes[label].field.base.reg)
+        self.assertEqual(3, self.seg.nodes[label].field.dsp)
+        self.assertIsNone(self.seg.nodes[label].field.index)
+        # STC   5,EBT000(0,9)
+        label = '$$TS03$$.7'
+        self.assertEqual('R5', self.seg.nodes[label].reg.reg)
+        self.assertEqual('EBT000', self.seg.nodes[label].field.name)
+        self.assertEqual('R9', self.seg.nodes[label].field.base.reg)
+        self.assertEqual(0x070, self.seg.nodes[label].field.dsp)
+        self.assertEqual('R0', self.seg.nodes[label].field.index.reg)
+        # STC   CVB   RGC,L'CE1CR1+EBW000(,REB)
+        label = '$$TS03$$.8'
+        self.assertEqual('R4', self.seg.nodes[label].reg.reg)
+        self.assertEqual('EBW004', self.seg.nodes[label].field.name)
+        self.assertEqual('R9', self.seg.nodes[label].field.base.reg)
+        self.assertEqual(12, self.seg.nodes[label].field.dsp)
+        self.assertIsNone(self.seg.nodes[label].field.index)
+        # CVD   R06,6000(R00,R00)
+        label = '$$TS03$$.9'
+        self.assertEqual('R6', self.seg.nodes[label].reg.reg)
+        self.assertEqual('R0_AREA', self.seg.nodes[label].field.name)
+        self.assertEqual('R0', self.seg.nodes[label].field.base.reg)
+        self.assertEqual(6000, self.seg.nodes[label].field.dsp)
+        self.assertEqual('R0', self.seg.nodes[label].field.index.reg)
+        # CH    R15,4(R15)
+        label = '$$TS03$$.10'
+        self.assertEqual('R15', self.seg.nodes[label].reg.reg)
+        self.assertEqual('R15_AREA', self.seg.nodes[label].field.name)
+        self.assertEqual('R15', self.seg.nodes[label].field.base.reg)
+        self.assertEqual(4, self.seg.nodes[label].field.dsp)
+        self.assertIsNone(self.seg.nodes[label].field.index)

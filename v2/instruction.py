@@ -1,7 +1,8 @@
 import re
 
-from v2.data_type import FieldBaseDsp, Bits, Register
+from v2.data_type import FieldBaseDsp, Bits, Register, FieldIndex, FieldLen
 from v2.errors import Error
+from v2.command import cmd
 
 
 class Instruction:
@@ -32,6 +33,9 @@ class Instruction:
     def split_operands(operands):
         # Split operands separated by commas. Ignore commas enclosed in parenthesis.
         return re.split(r",(?![^()]*\))", operands)
+
+    def get_attribute(self, attribute):
+        return cmd.check(self.command, attribute)
 
 
 class Conditional(Instruction):
@@ -65,18 +69,38 @@ class FieldBits(Instruction):
 
     def set_operand(self, operand, macro):
         operand1, operand2 = self.split_operands(operand)
-        field, result = FieldBaseDsp.from_operand(operand1, macro)
-        if result != Error.NO_ERROR:
-            return self, result
-        bits, result = Bits.from_operand(operand2, macro)
-        if result != Error.NO_ERROR:
-            return self, result
-        self.field = field
-        self.bits = bits
-        return self, Error.NO_ERROR
+        self.field = FieldBaseDsp()
+        result = self.field.set(operand1, macro)
+        if result == Error.NO_ERROR:
+            self.bits = Bits()
+            result = self.bits.set(operand2, macro)
+        return self, result
 
 
 class FieldBitsConditional(FieldBits, Conditional):
+    def __init__(self, label, command, goes, on):
+        Conditional.__init__(self, label, command, goes, on)
+
+
+class FieldLenField(Instruction):
+    MAX_LEN = 256
+
+    def __init__(self, label, command):
+        Instruction.__init__(self, label, command)
+        self.field_len = None
+        self.field = None
+
+    def set_operand(self, operand, macro):
+        operand1, operand2 = self.split_operands(operand)
+        self.field_len = FieldLen()
+        result = self.field_len.set(operand1, macro, self.MAX_LEN)
+        if result == Error.NO_ERROR:
+            self.field = FieldBaseDsp()
+            result = self.field.set(operand1, macro)
+        return self, result
+
+
+class FieldLenFieldConditional(FieldLenField, Conditional):
     def __init__(self, label, command, goes, on):
         Conditional.__init__(self, label, command, goes, on)
 
@@ -91,11 +115,35 @@ class RegisterRegister(Instruction):
         operand1, operand2 = self.split_operands(operand)
         self.reg1 = Register(operand1)
         self.reg2 = Register(operand2)
-        if not self.reg1.is_valid() or not self.reg2.is_valid():
-            return self, Error.REG_INVALID
-        return self, Error.NO_ERROR
+        result = Error.NO_ERROR if self.reg1.is_valid() and self.reg2.is_valid() else Error.REG_INVALID
+        return self, result
 
 
 class RegisterRegisterConditional(RegisterRegister, Conditional):
     def __init__(self, label, command, goes, on):
         Conditional.__init__(self, label, command, goes, on)
+
+
+class RegisterFieldIndex(Instruction):
+    def __init__(self, label, command):
+        Instruction.__init__(self, label, command)
+        self.field = None
+        self.reg = None
+
+    def set_operand(self, operand, macro):
+        length = int(self.get_attribute('field_len'))
+        operand1, operand2 = self.split_operands(operand)
+        self.reg = Register(operand1)
+        result = Error.NO_ERROR if self.reg.is_valid() else Error.RFX_INVALID_REG
+        if result == Error.NO_ERROR:
+            self.field = FieldIndex()
+            result = self.field.set(operand2, macro, length)
+        return self, result
+
+
+class RegisterFieldIndexConditional(RegisterFieldIndex, Conditional):
+    def __init__(self, label, command, goes, on):
+        Conditional.__init__(self, label, command, goes, on)
+
+
+

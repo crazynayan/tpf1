@@ -6,6 +6,5 @@ __pycache__
 static/
 .gcloudignore
 tpf1-key.json
-*.asm
 macro/
 eta5.asm
