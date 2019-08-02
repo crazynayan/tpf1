@@ -50,6 +50,7 @@ class MacroTest(unittest.TestCase):
         self.assertEqual(0x70, self.macro.data_map['EBT000'].dsp)
         self.assertEqual(0xD4, self.macro.data_map['EBSW01'].dsp)
         self.assertEqual(8, self.macro.data_map['CE1ERS15'].length)
+        self.assertEqual(0x2c8, self.macro.data_map['CE1SSQ'].dsp)
 
     def test_SH0HS(self):
         macro_name = 'SH0HS'
@@ -332,6 +333,9 @@ class SegmentTest(unittest.TestCase):
             f"{Error.FL_INVALID_LEN} None:MVC:23(L'CE1WKA+60,R3),26(R4) {seg_name}",
             f"{Error.FL_INVALID_LEN} None:XC:CE1WKA(#$BCLASS),CE1WKA {seg_name}",
             f"{Error.FL_LEN_REQUIRED} None:OC:EBW000(,R4),EBW000 {seg_name}",
+            f"{Error.FL_INVALID_LEN} None:PACK:CE1DCT,10(17,R15) {seg_name}",
+            f"{Error.FD_INVALID_DATA} None:MVI:EBW000,256 {seg_name}",
+            f"{Error.FD_INVALID_DATA} None:MVI:EBW000,C'AB' {seg_name}",
         ]
         self._common_checks(seg_name, accepted_errors_list)
         # Check FieldLenField
@@ -368,3 +372,33 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual(212, self.seg.nodes[label].field_len.length)
         self.assertEqual('R4_AREA', self.seg.nodes[label].field.name)
         self.assertEqual(26, self.seg.nodes[label].field.dsp)
+        # PACK  CE1DCT,CE1DET
+        label = 'TS040200.1'
+        self.assertEqual('CE1DCT', self.seg.nodes[label].field_len1.name)
+        self.assertEqual('CE1DET', self.seg.nodes[label].field_len2.name)
+        self.assertEqual('R9', self.seg.nodes[label].field_len2.base.reg)
+        self.assertEqual(16, self.seg.nodes[label].field_len1.length)
+        self.assertEqual(4, self.seg.nodes[label].field_len2.length)
+        self.assertEqual(0x374, self.seg.nodes[label].field_len1.dsp)
+        self.assertEqual(0x370, self.seg.nodes[label].field_len2.dsp)
+        # UNPK  EBW008-EBW000(L'CE1FA1,R3),10(16,R15)
+        label = 'TS040200.2'
+        self.assertEqual('R3_AREA', self.seg.nodes[label].field_len1.name)
+        self.assertEqual('R15_AREA', self.seg.nodes[label].field_len2.name)
+        self.assertEqual('R15', self.seg.nodes[label].field_len2.base.reg)
+        self.assertEqual(4, self.seg.nodes[label].field_len1.length)
+        self.assertEqual(16, self.seg.nodes[label].field_len2.length)
+        self.assertEqual(8, self.seg.nodes[label].field_len1.dsp)
+        self.assertEqual(10, self.seg.nodes[label].field_len2.dsp)
+        # CLI   EBW000,#$BCLASS with BNE   TS040310
+        label = 'TS040300.1'
+        self.assertEqual('EBW000', self.seg.nodes[label].field.name)
+        self.assertEqual('B', self.seg.nodes[label].data)
+        self.assertEqual('BNE', self.seg.nodes[label].on)
+        self.assertEqual('TS040310', self.seg.nodes[label].goes)
+        # MVI   23(R4),L'CE1WKA
+        label = 'TS040300.2'
+        self.assertEqual('R4_AREA', self.seg.nodes[label].field.name)
+        self.assertEqual('R4', self.seg.nodes[label].field.base.reg)
+        self.assertEqual(23, self.seg.nodes[label].field.dsp)
+        self.assertEqual(212, self.seg.nodes[label].data)

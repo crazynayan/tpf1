@@ -105,6 +105,51 @@ class FieldLenFieldConditional(FieldLenField, Conditional):
         Conditional.__init__(self, label, command, goes, on)
 
 
+class FieldLenFieldLen(Instruction):
+    MAX_LEN = 16
+
+    def __init__(self, label, command):
+        Instruction.__init__(self, label, command)
+        self.field_len1 = None
+        self.field_len2 = None
+
+    def set_operand(self, operand, macro):
+        operand1, operand2 = self.split_operands(operand)
+        self.field_len1 = FieldLen()
+        result = self.field_len1.set(operand1, macro, self.MAX_LEN)
+        if result == Error.NO_ERROR:
+            self.field_len2 = FieldLen()
+            result = self.field_len2.set(operand2, macro, self.MAX_LEN)
+        return self, result
+
+
+class FieldData(Instruction):
+    DATA_LENGTH = 1
+
+    def __init__(self, label, command):
+        Instruction.__init__(self, label, command)
+        self.field = None
+        self.data = None
+
+    def set_operand(self, operand, macro):
+        operand1, operand2 = self.split_operands(operand)
+        self.field = FieldBaseDsp()
+        result = self.field.set(operand1, macro)
+        if result == Error.NO_ERROR:
+            self.data, result = macro.get_value(operand2)
+            if result == Error.NO_ERROR:
+                if isinstance(self.data, int) and not 0 <= self.data <= (1 << 8 * self.DATA_LENGTH) - 1:
+                    result = Error.FD_INVALID_DATA
+                elif isinstance(self.data, str) and len(self.data) > self.DATA_LENGTH:
+                    result = Error.FD_INVALID_DATA
+        return self, result
+
+
+class FieldDataConditional(FieldData, Conditional):
+    def __init__(self, label, command, goes, on):
+        Conditional.__init__(self, label, command, goes, on)
+
+
 class RegisterRegister(Instruction):
     def __init__(self, label, command):
         Instruction.__init__(self, label, command)
@@ -144,6 +189,3 @@ class RegisterFieldIndex(Instruction):
 class RegisterFieldIndexConditional(RegisterFieldIndex, Conditional):
     def __init__(self, label, command, goes, on):
         Conditional.__init__(self, label, command, goes, on)
-
-
-
