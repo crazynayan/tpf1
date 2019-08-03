@@ -17,3 +17,5 @@ TS010010 EQU   *
          OI    EBW000,250+250          CANNOT HAVE GREATER THAN 255
          OI    EBW000,#PD0_FLDEMP
          ERR   EBW000,1
+         OI    -1(R2),1
+         OI    4096(R2),1

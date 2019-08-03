@@ -23,3 +23,6 @@ class Error:
     FL_LEN_REQUIRED = 'FieldLen - Length required.'
     FL_INVALID_LEN = 'FieldLen - Invalid length.'
     FD_INVALID_DATA = 'FieldData - Invalid data.'
+    RD_NO_CHAR = 'RegisterData - Immediate Data cannot be character.'
+    RD_INVALID_NUMBER = 'RegisterData - Invalid number.'
+    RDF_INVALID_DATA = 'RegisterDataField - Invalid data.'

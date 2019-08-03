@@ -80,7 +80,7 @@ class Field:
         self.dsp, result = macro.get_value(dsp)
         if result != Error.NO_ERROR:
             return result
-        if not isinstance(self.dsp, int) or self.dsp < 0:
+        if not isinstance(self.dsp, int) or not 0 <= self.dsp <= 4095:
             return Error.FBD_INVALID_DSP
         # Set name
         possible_name = macro.get_field_name(self.base, self.dsp, length)

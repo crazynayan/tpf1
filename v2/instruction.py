@@ -124,7 +124,7 @@ class FieldLenFieldLen(Instruction):
 
 
 class FieldData(Instruction):
-    DATA_LENGTH = 1
+    DATA_LENGTH = 1     # 1 Byte
 
     def __init__(self, label, command):
         Instruction.__init__(self, label, command)
@@ -187,5 +187,85 @@ class RegisterFieldIndex(Instruction):
 
 
 class RegisterFieldIndexConditional(RegisterFieldIndex, Conditional):
+    def __init__(self, label, command, goes, on):
+        Conditional.__init__(self, label, command, goes, on)
+
+
+class RegisterData(Instruction):
+    DATA_LENGTH = 16    # 16 bits
+
+    def __init__(self, label, command):
+        super().__init__(label, command)
+        self.reg = None
+        self.data = None
+
+    def set_operand(self, operand, macro):
+        operand1, operand2 = self.split_operands(operand)
+        self.reg = Register(operand1)
+        if self.reg.is_valid():
+            self.data, result = macro.get_value(operand2)
+            if result == Error.NO_ERROR:
+                if not isinstance(self.data, int):
+                    result = Error.RD_NO_CHAR
+                elif self.data >= 1 << self.DATA_LENGTH:
+                    result = Error.RD_INVALID_NUMBER
+                elif self.data < -1 << self.DATA_LENGTH - 1:
+                    result = Error.RD_INVALID_NUMBER
+                elif self.data >= 1 << self.DATA_LENGTH - 1:
+                    self.data -= 1 << self.DATA_LENGTH
+        else:
+            result = Error.REG_INVALID
+        return self, result
+
+
+class RegisterDataConditional(RegisterData, Conditional):
+    def __init__(self, label, command, goes, on):
+        Conditional.__init__(self, label, command, goes, on)
+
+
+class RegisterRegisterField(Instruction):
+    def __init__(self, label, command):
+        super().__init__(label, command)
+        self.reg1 = None
+        self.reg2 = None
+        self.field = None
+
+    def set_operand(self, operand, macro):
+        operand1, operand2, operand3 = self.split_operands(operand)
+        self.reg1 = Register(operand1)
+        self.reg2 = Register(operand2)
+        result = Error.NO_ERROR if self.reg1.is_valid() and self.reg2.is_valid() else Error.REG_INVALID
+        if result == Error.NO_ERROR:
+            self.field = FieldBaseDsp()
+            result = self.field.set(operand3, macro, 40)
+        return self, result
+
+
+class RegisterDataField(Instruction):
+    MAX_DATA = (1 << 4) - 1
+
+    def __init__(self, label, command):
+        super().__init__(label, command)
+        self.reg = None
+        self.data = None
+        self.field = None
+
+    def set_operand(self, operand, macro):
+        operand1, operand2, operand3 = self.split_operands(operand)
+        self.reg = Register(operand1)
+        if self.reg.is_valid():
+            self.data, result = macro.get_value(operand2)
+            if result == Error.NO_ERROR:
+                if isinstance(self.data, int) and 1 <= self.data <= self.MAX_DATA:
+                    self.field = FieldBaseDsp()
+                    result = self.field.set(operand3, macro, bin(self.data).count('1'))
+                else:
+                    result = Error.RDF_INVALID_DATA
+        else:
+            result = Error.REG_INVALID
+        return self, result
+
+
+class RegisterDataFieldConditional(RegisterDataField, Conditional):
     def __init__(self, label, command, goes, on):
         Conditional.__init__(self, label, command, goes, on)

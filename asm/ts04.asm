@@ -19,6 +19,6 @@ TS040300 DS    0H               VALID FOR FIELD DATA
          BNE   TS040310
          MVI   23(R4),L'CE1WKA
 TS040310 DS    0H
-TS04E100 DS    0H               ERROR FOR FIELD DATA
+TS04E300 DS    0H               ERROR FOR FIELD DATA
          MVI   EBW000,256
          MVI   EBW000,C'AB'

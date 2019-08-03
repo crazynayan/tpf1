@@ -2,6 +2,10 @@
     "AAGET": {
         "create": 1
     },
+    "AHI": {
+        "create": "RegisterData",
+        "set_cc": 1
+    },
     "AR": {
         "branch_type": "math",
         "create": "RegisterRegister",
@@ -438,6 +442,9 @@
         "create": "RegisterFieldIndex",
         "field_len": 1,
         "set_2": 1
+    },
+    "STCM": {
+        "create": "RegisterDataField"
     },
     "STH": {
         "create": "RegisterFieldIndex",

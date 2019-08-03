@@ -6,7 +6,7 @@
          ST    R2,L'EBW000+2(R6,)
          STC   5,EBT000(0,9)
          CVB   RGC,L'CE1CR1+EBW000(,REB)
-         CVD   R06,6000(R00,R00)
+         CVD   R06,4095(R00,R00)
          CH    R15,4(R15)
 TS03E010 DS    0H                   ERROR PATHS
          L     R16,EBW000

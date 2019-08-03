@@ -215,6 +215,8 @@ class Macro:
                 return field, data_type, Error.EXP_INVALID_KEY_X
         if data_type == 'C':
             return field, data_type, Error.NO_ERROR
+        if data_type == 'B':
+            return int(field, 2), data_type, Error.NO_ERROR
         else:
             try:
                 return int(field), self.INTEGER, Error.NO_ERROR
