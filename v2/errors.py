@@ -26,3 +26,5 @@ class Error:
     RD_NO_CHAR = 'RegisterData - Immediate Data cannot be character.'
     RD_INVALID_NUMBER = 'RegisterData - Invalid number.'
     RDF_INVALID_DATA = 'RegisterDataField - Invalid data.'
+    BC_INDEX = 'BranchCondition - Index is not yet supported in Branch instructions.'
+    BC_INVALID_MASK = 'BranchCondition - Mask value not present in the command file.'

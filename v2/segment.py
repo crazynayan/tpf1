@@ -21,7 +21,6 @@ class SegmentFile:
 
 class Label:
     SEPARATOR = '.'
-    BEFORE_GOES_SEPARATOR = '*'
 
     def __init__(self, name, separator=None):
         self.name = name
@@ -68,25 +67,20 @@ class Segment:
             else:
                 current_label = Label(line.label)
             # Update the prior label with fall down
-            try:        # TODO Also check if the prior node is NOT an exit command
-                self.nodes[str(prior_label)].fall_down = str(current_label)
+            try:
+                prior_node = self.nodes[str(prior_label)]
+                if prior_node.is_fall_down:
+                    prior_node.fall_down = str(current_label)
             except KeyError:    # Will only fail the first time
                 pass
             prior_label = current_label
             current_label = str(current_label)
-            if len(ins_line) == 1:
-                self._create_node(ins_line[0], None, current_label, seg_name)
-                continue
-            self._create_node(ins_line[0], ins_line[-1], current_label, seg_name)
-            goes_label = Label(current_label, Label.BEFORE_GOES_SEPARATOR)
-            for line in ins_line[1:-1]:
-                self.nodes[current_label].before_goes += 1
-                goes_label.index += 1
-                self._create_node(line, None, str(goes_label), seg_name)
+            other_lines = ins_line[1:] if len(ins_line) > 1 else list()
+            self._create_node(ins_line[0], other_lines, current_label, seg_name)
         self.files[seg_name].loaded = True
         return True
 
-    def _create_node(self, line, check_line, current_label, seg_name):
+    def _create_node(self, line, other_lines, current_label, seg_name):
         # Create and empty instruction for a label with no instruction (EQU * or DS 0H)
         if current_label == line.label and not self.macro.is_location_counter_changed(line):
             node = ins.Instruction(line.label, line.command)
@@ -97,15 +91,21 @@ class Segment:
         if not instruction_class:
             self.errors.append(f'{Error.INSTRUCTION_INVALID} {line} {seg_name}')
             return
-        method = 'from_operand'
         parameters = 'current_label, line.command, line.operand, self.macro'
-        if check_line is not None:
-            instruction_class += 'Conditional'
-            method += '_condition'
-            parameters += ', check_line.operand, check_line.command'
-        node, result = eval(f"ins.{instruction_class}.{method}({parameters})")
-        if result == Error.NO_ERROR:
-            self.nodes[current_label] = node
-        else:
+        node, result = eval(f"ins.{instruction_class}.from_operand({parameters})")
+        if result != Error.NO_ERROR:
             self.errors.append(f'{result} {line} {seg_name}')
+            return
+        # Get the instruction class based on the command and create the dynamic instruction object for conditions
+        for line in other_lines:
+            instruction_class = cmd.check(line.command, 'create')
+            if not instruction_class:
+                self.errors.append(f'{Error.INSTRUCTION_INVALID} {line} {seg_name}')
+                return
+            condition, result = eval(f"ins.{instruction_class}.from_operand({parameters})")
+            if result != Error.NO_ERROR:
+                self.errors.append(f'{result} {line} {seg_name}')
+                return
+            node.conditions.append(condition)
+        self.nodes[current_label] = node
         return

@@ -14,13 +14,14 @@
         "set_cc": 1
     },
     "B": {
-        "create": 1,
-        "exit": 1,
-        "has_branch": 1
+        "create": "BranchCondition",
+        "has_branch": 1,
+        "mask": 15,
+        "no_fall_down": 1
     },
     "BACKC": {
-        "create": 1,
-        "exit": 1,
+        "create": "Exit",
+        "no_fall_down": 1,
         "no_operand": 1
     },
     "BAS": {
@@ -30,6 +31,7 @@
     },
     "BC": {
         "check_cc": 1,
+        "create": "BranchCondition",
         "opposite": "BC"
     },
     "BCTR": {
@@ -40,6 +42,8 @@
     "BE": {
         "check_cc": 1,
         "compare": "is",
+        "create": "BranchCondition",
+        "mask": 8,
         "operator": "==",
         "opposite": "BNE",
         "text": "="
@@ -47,6 +51,8 @@
     "BH": {
         "check_cc": 1,
         "compare": ">",
+        "create": "BranchCondition",
+        "mask": 2,
         "operator": ">",
         "opposite": "BNH",
         "text": ">"
@@ -54,6 +60,8 @@
     "BL": {
         "check_cc": 1,
         "compare": "<",
+        "create": "BranchCondition",
+        "mask": 4,
         "operator": "<",
         "opposite": "BNL",
         "text": "<"
@@ -61,6 +69,8 @@
     "BM": {
         "bit": "anyone ON",
         "check_cc": 1,
+        "create": "BranchCondition",
+        "mask": 4,
         "math": "< 0",
         "operator": "< 0",
         "opposite": "BNM",
@@ -69,6 +79,8 @@
     "BNE": {
         "check_cc": 1,
         "compare": "is not",
+        "create": "BranchCondition",
+        "mask": 7,
         "operator": "!=",
         "opposite": "BE",
         "text": "!="
@@ -76,6 +88,8 @@
     "BNH": {
         "check_cc": 1,
         "compare": "<=",
+        "create": "BranchCondition",
+        "mask": 13,
         "operator": "<=",
         "opposite": "BH",
         "text": "<="
@@ -83,6 +97,8 @@
     "BNL": {
         "check_cc": 1,
         "compare": ">=",
+        "create": "BranchCondition",
+        "mask": 11,
         "operator": ">=",
         "opposite": "BL",
         "text": ">="
@@ -90,6 +106,8 @@
     "BNM": {
         "bit": "anyone OFF",
         "check_cc": 1,
+        "create": "BranchCondition",
+        "mask": 11,
         "math": ">= 0",
         "operator": ">= 0",
         "opposite": "BM",
@@ -98,6 +116,8 @@
     "BNO": {
         "bit": "is OFF",
         "check_cc": 1,
+        "create": "BranchCondition",
+        "mask": 14,
         "math": "not overflow",
         "operator": "== 0",
         "opposite": "BO",
@@ -105,6 +125,8 @@
     },
     "BNP": {
         "check_cc": 1,
+        "create": "BranchCondition",
+        "mask": 13,
         "math": "<= 0",
         "operator": "<= 0",
         "opposite": "BP",
@@ -114,6 +136,8 @@
         "binary": "has some data",
         "bit": "is ON",
         "check_cc": 1,
+        "create": "BranchCondition",
+        "mask": 7,
         "math": "is not 0",
         "operator": "!= 0",
         "opposite": "BZ",
@@ -122,6 +146,8 @@
     "BO": {
         "bit": "is ON",
         "check_cc": 1,
+        "create": "BranchCondition",
+        "mask": 1,
         "math": "overflow",
         "operator": "!= 0",
         "opposite": "BNO",
@@ -129,6 +155,8 @@
     },
     "BP": {
         "check_cc": 1,
+        "create": "BranchCondition",
+        "mask": 2,
         "math": "> 0",
         "operator": "> 0",
         "opposite": "BNP",
@@ -136,13 +164,15 @@
     },
     "BR": {
         "create": 1,
-        "exit": 1,
+        "no_fall_down": 1,
         "return": 1
     },
     "BZ": {
         "binary": "has no data",
         "bit": "is OFF",
         "check_cc": 1,
+        "create": "BranchCondition",
+        "mask": 8,
         "math": "is 0",
         "operator": "== 0",
         "opposite": "BNZ",
@@ -191,11 +221,11 @@
     },
     "ENTDC": {
         "create": 1,
-        "exit": 1
+        "no_fall_down": 1
     },
     "ENTNC": {
         "create": 1,
-        "exit": 1
+        "no_fall_down": 1
     },
     "ENTRC": {
         "call": 1,
@@ -206,8 +236,9 @@
         "create": 1
     },
     "EXITC": {
-        "create": 1,
-        "exit": 1
+        "create": "Exit",
+        "no_fall_down": 1,
+        "no_operand": 1
     },
     "IC": {
         "create": "RegisterFieldIndex",
@@ -219,9 +250,10 @@
         "set_1": 1
     },
     "J": {
-        "create": 1,
-        "exit": 1,
-        "has_branch": 1
+        "create": "BranchCondition",
+        "has_branch": 1,
+        "mask": 15,
+        "no_fall_down": 1
     },
     "JAS": {
         "call": 1,
@@ -230,11 +262,14 @@
     },
     "JC": {
         "check_cc": 1,
+        "create": "BranchCondition",
         "opposite": "JC"
     },
     "JE": {
         "check_cc": 1,
         "compare": "is",
+        "create": "BranchCondition",
+        "mask": 8,
         "operator": "==",
         "opposite": "JNE",
         "text": "="
@@ -242,6 +277,8 @@
     "JH": {
         "check_cc": 1,
         "compare": ">",
+        "create": "BranchCondition",
+        "mask": 2,
         "operator": ">",
         "opposite": "JNH",
         "text": ">"
@@ -249,6 +286,8 @@
     "JL": {
         "check_cc": 1,
         "compare": "<",
+        "create": "BranchCondition",
+        "mask": 4,
         "operator": "<",
         "opposite": "JNL",
         "text": "<"
@@ -256,6 +295,8 @@
     "JM": {
         "bit": "anyone ON",
         "check_cc": 1,
+        "create": "BranchCondition",
+        "mask": 4,
         "math": "< 0",
         "operator": "< 0",
         "opposite": "JNM",
@@ -264,6 +305,8 @@
     "JNE": {
         "check_cc": 1,
         "compare": "is not",
+        "create": "BranchCondition",
+        "mask": 7,
         "operator": "!=",
         "opposite": "JE",
         "text": "!="
@@ -271,6 +314,8 @@
     "JNH": {
         "check_cc": 1,
         "compare": "<=",
+        "create": "BranchCondition",
+        "mask": 13,
         "operator": "<=",
         "opposite": "JH",
         "text": "<="
@@ -278,6 +323,8 @@
     "JNL": {
         "check_cc": 1,
         "compare": ">=",
+        "create": "BranchCondition",
+        "mask": 11,
         "operator": ">=",
         "opposite": "JL",
         "text": ">="
@@ -285,6 +332,8 @@
     "JNM": {
         "bit": "anyone OFF",
         "check_cc": 1,
+        "create": "BranchCondition",
+        "mask": 11,
         "math": ">= 0",
         "operator": ">= 0",
         "opposite": "JM",
@@ -293,13 +342,21 @@
     "JNO": {
         "bit": "is OFF",
         "check_cc": 1,
+        "create": "BranchCondition",
+        "mask": 14,
         "math": "not overflow",
         "operator": "== 0",
         "opposite": "JO",
         "text": "OFF"
     },
+    "JNOP": {
+        "create": "BranchCondition",
+        "mask": 0
+    },
     "JNP": {
         "check_cc": 1,
+        "create": "BranchCondition",
+        "mask": 13,
         "math": "<= 0",
         "operator": "<= 0",
         "opposite": "JP",
@@ -309,6 +366,8 @@
         "binary": "has some data",
         "bit": "is ON",
         "check_cc": 1,
+        "create": "BranchCondition",
+        "mask": 7,
         "math": "is not 0",
         "operator": "== 1",
         "opposite": "JZ",
@@ -317,6 +376,8 @@
     "JO": {
         "bit": "is ON",
         "check_cc": 1,
+        "create": "BranchCondition",
+        "mask": 1,
         "math": "overflow",
         "operator": "== 1",
         "opposite": "JNO",
@@ -324,6 +385,8 @@
     },
     "JP": {
         "check_cc": 1,
+        "create": "BranchCondition",
+        "mask": 2,
         "math": "> 0",
         "operator": "> 0",
         "opposite": "JNP",
@@ -333,6 +396,8 @@
         "binary": "has no data",
         "bit": "is OFF",
         "check_cc": 1,
+        "create": "BranchCondition",
+        "mask": 8,
         "math": "is 0",
         "operator": "== 0",
         "opposite": "JNZ",
@@ -345,6 +410,7 @@
     },
     "LA": {
         "create": "RegisterFieldIndex",
+        "field_len": 0,
         "set_1": 1
     },
     "LHI": {
@@ -388,6 +454,10 @@
         "source": "field & bits",
         "target": "field"
     },
+    "NOP": {
+        "create": "BranchCondition",
+        "mask": 0
+    },
     "OC": {
         "branch_type": "binary",
         "create": "FieldLenField",
@@ -421,7 +491,7 @@
     },
     "SENDA": {
         "create": 1,
-        "exit": 1
+        "no_fall_down": 1
     },
     "SERRC": {
         "create": 1

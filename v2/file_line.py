@@ -90,17 +90,18 @@ class Line:
             if line in yielded_lines:
                 continue
             lines_to_yield.append(line)
-            if line.is_conditional:
+            if line.is_set_cc:
                 try:
                     other_lines = list()
                     for check_line in lines[index + 1:]:
-                        if check_line.is_check_condition:
+                        if check_line.is_check_cc:
                             lines_to_yield.extend(other_lines)
                             lines_to_yield.append(check_line)
-                            break
+                            other_lines = list()
+                        else:
+                            other_lines.append(check_line)
                         if check_line.stop_checking_for_conditions:
                             break
-                        other_lines.append(check_line)
                 except IndexError:
                     pass
             yield lines_to_yield
@@ -112,17 +113,22 @@ class Line:
         return self
 
     @property
-    def is_conditional(self):
+    def is_fall_down(self):
+        return True if not cmd.check(self.command, 'no_fall_down') else False
+
+    @property
+    def is_set_cc(self):
         return True if cmd.check(self.command, 'set_cc') else False
 
     @property
-    def is_check_condition(self):
-        return cmd.check(self.command, 'check_cc')
+    def is_check_cc(self):
+        return True if cmd.check(self.command, 'check_cc') and \
+                       (self.command not in ['BC', 'JC'] or self.operand[:2] not in ['15', '0,']) else False
 
     @property
     def stop_checking_for_conditions(self):
-        return True if cmd.check(self.command, 'set_cc') or cmd.check(self.command, 'exit') or self.label is not None \
-            or not cmd.command_check(self.command) else False
+        return True if self.is_set_cc or not self.is_fall_down or self.label is not None \
+                       or not cmd.command_check(self.command) else False
 
     def __repr__(self):
         return f'{self.label}:{self.command}:{self.operand}'

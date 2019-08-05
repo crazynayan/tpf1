@@ -20,14 +20,14 @@ def download_commands():
     for command_item in command_list:
         command = command_item['command']
         for key, value in command_item.items():
-            if key != 'command' and value:
+            if key != 'command' and value != '':
                 if command not in command_dict:
                     command_dict[command] = dict()
                 command_dict[command][key] = value
     with open(os.path.join(config.ROOT_DIR, 'commands.json'), 'w') as json_file:
         json.dump(command_dict, json_file, ensure_ascii=False, sort_keys=True, indent=4)
     print(command_dict)
-    print('File created')
+    print('File created.')
 
 
 class _Command:
@@ -48,20 +48,30 @@ class _Command:
         """
         return True if command in self._data else False
 
+    def get_commands(self, attribute, attribute_value):
+        """
+        Returns a list of commands with a matching attribute
+        :param attribute: 2nd level key in the json file
+        :param attribute_value: value of the attribute to match
+        :return: a list of commands
+        """
+        return [command for command, attributes in self._data.items()
+                if attribute in attributes and attributes[attribute] == attribute_value]
+
     def check(self, command, attribute):
         """
         Return the attribute value for the command parameter provided.
         :param command: It is the 1st level key in the json file
         :param attribute: It is the 2nd level key in the json file
         :return: The attribute value from the json file for that command.
-                 Return False, if command or attribute not found
+                 Return None, if command or attribute not found
         """
         try:
             return self._data[command][attribute]
         except KeyError:
-            return False
+            return None
         except TypeError:
-            return False
+            return None
 
     def get_text(self, command, condition, opposite=False):
         """

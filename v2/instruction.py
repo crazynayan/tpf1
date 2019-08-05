@@ -10,6 +10,7 @@ class Instruction:
         self.label = label
         self.command = command
         self.fall_down = None
+        self.conditions = list()
 
     def __repr__(self):
         if self.fall_down is None:
@@ -27,7 +28,26 @@ class Instruction:
 
     @property
     def next_labels(self):
-        return set() if self.fall_down is None else {self.fall_down}
+        labels = {condition.branch for condition in self.conditions if condition.is_check_cc and condition.branch}
+        if self.fall_down:
+            labels.add(self.fall_down)
+        return labels
+
+    @property
+    def goes(self):
+        return next((condition.branch for condition in self.conditions if condition.is_check_cc), None)
+
+    @property
+    def on(self):
+        return next((condition.command for condition in self.conditions if condition.is_check_cc), None)
+
+    @property
+    def is_fall_down(self):
+        return True if not self.get_attribute('no_fall_down') else False
+
+    @property
+    def is_check_cc(self):
+        return True if self.get_attribute('check_cc') else False
 
     @staticmethod
     def split_operands(operands):
@@ -36,29 +56,6 @@ class Instruction:
 
     def get_attribute(self, attribute):
         return cmd.check(self.command, attribute)
-
-
-class Conditional(Instruction):
-    def __init__(self, label, command, goes, on):
-        Instruction.__init__(self, label, command)
-        self.goes = goes
-        self.on = on
-        self.before_goes = 0
-
-    def __repr__(self):
-        return f"{super().__repr__()}:on {self.on}:goes to {self.goes}"
-
-    @classmethod
-    def from_operand_condition(cls, label, command, operand, macro, goes, on):
-        instruction = cls(label, command, goes, on)
-        return instruction.set_operand(operand, macro)
-
-    @property
-    def next_labels(self):
-        references = {self.goes}
-        if self.fall_down is not None:
-            references.add(self.fall_down)
-        return references
 
 
 class FieldBits(Instruction):
@@ -77,11 +74,6 @@ class FieldBits(Instruction):
         return self, result
 
 
-class FieldBitsConditional(FieldBits, Conditional):
-    def __init__(self, label, command, goes, on):
-        Conditional.__init__(self, label, command, goes, on)
-
-
 class FieldLenField(Instruction):
     MAX_LEN = 256
 
@@ -98,11 +90,6 @@ class FieldLenField(Instruction):
             self.field = FieldBaseDsp()
             result = self.field.set(operand2, macro, self.field_len.length)
         return self, result
-
-
-class FieldLenFieldConditional(FieldLenField, Conditional):
-    def __init__(self, label, command, goes, on):
-        Conditional.__init__(self, label, command, goes, on)
 
 
 class FieldLenFieldLen(Instruction):
@@ -145,11 +132,6 @@ class FieldData(Instruction):
         return self, result
 
 
-class FieldDataConditional(FieldData, Conditional):
-    def __init__(self, label, command, goes, on):
-        Conditional.__init__(self, label, command, goes, on)
-
-
 class RegisterRegister(Instruction):
     def __init__(self, label, command):
         Instruction.__init__(self, label, command)
@@ -162,11 +144,6 @@ class RegisterRegister(Instruction):
         self.reg2 = Register(operand2)
         result = Error.NO_ERROR if self.reg1.is_valid() and self.reg2.is_valid() else Error.REG_INVALID
         return self, result
-
-
-class RegisterRegisterConditional(RegisterRegister, Conditional):
-    def __init__(self, label, command, goes, on):
-        Conditional.__init__(self, label, command, goes, on)
 
 
 class RegisterFieldIndex(Instruction):
@@ -184,11 +161,6 @@ class RegisterFieldIndex(Instruction):
             self.field = FieldIndex()
             result = self.field.set(operand2, macro, length)
         return self, result
-
-
-class RegisterFieldIndexConditional(RegisterFieldIndex, Conditional):
-    def __init__(self, label, command, goes, on):
-        Conditional.__init__(self, label, command, goes, on)
 
 
 class RegisterData(Instruction):
@@ -216,11 +188,6 @@ class RegisterData(Instruction):
         else:
             result = Error.REG_INVALID
         return self, result
-
-
-class RegisterDataConditional(RegisterData, Conditional):
-    def __init__(self, label, command, goes, on):
-        Conditional.__init__(self, label, command, goes, on)
 
 
 class RegisterRegisterField(Instruction):
@@ -266,6 +233,64 @@ class RegisterDataField(Instruction):
         return self, result
 
 
-class RegisterDataFieldConditional(RegisterDataField, Conditional):
-    def __init__(self, label, command, goes, on):
-        Conditional.__init__(self, label, command, goes, on)
+class Exit(Instruction):
+    pass
+
+
+class BranchCondition(Instruction):
+
+    def __init__(self, label, command):
+        super().__init__(label, command)
+        self.mask = 0
+        self.branch = None
+        self.index = None
+
+    @staticmethod
+    def split_label(operand):
+        label_reg = re.split(r"[()]", operand)
+        if len(label_reg) == 1:
+            return label_reg[0], None
+        else:
+            return label_reg[0], label_reg[1]
+
+    def set_operand(self, operand, macro):
+        mask = self.get_attribute('mask')
+        if mask is not None:
+            # This is commands with mnemonics like BP, JNZ, J, B, NOP
+            self.mask = int(mask)
+            self.branch, self.index = self.split_label(operand)
+            result = Error.NO_ERROR if self.index is None else Error.BC_INDEX
+            if self.mask == 0:
+                self.branch = None
+        else:
+            # This is commands with mask. BC or JC
+            operand1, operand2 = self.split_operands(operand)
+            self.branch, self.index = self.split_label(operand2)
+            self.mask = int(operand1)
+            result = Error.NO_ERROR if self.index is None else Error.BC_INDEX
+            if self.mask == 0:
+                self.branch = None
+            if result == Error.NO_ERROR:
+                command = next(iter(cmd.get_commands('mask', self.mask)), None)
+                if command is None:
+                    result = Error.BC_INVALID_MASK
+                else:
+                    self.command = command
+        return self, result
+
+    @property
+    def next_labels(self):
+        labels = set()
+        if self.fall_down:
+            labels.add(self.fall_down)
+        if self.branch:
+            labels.add(self.branch)
+        return labels
+
+    @property
+    def goes(self):
+        return self.branch
+
+    @property
+    def on(self):
+        return self.command
