@@ -162,7 +162,7 @@ class Operand(CollectionItemMixin):
                 self.type.append(self.FLD)
         else:
             self.type.append(self.FLD)
-            # TODO Ignore Field with base/length/displacement for now
+            # Ignore Field with base/length/displacement for now - Fixed in v2
             self.field = operand.split('(', 1)[0].split('+', 1)[0].split('-', 1)[0]
 
     @property
@@ -301,12 +301,12 @@ class Component(CollectionItemMixin):
         if len(lines) > 1:
             if lines[0].continuation:
                 # Continuing lines, generally executable macros withs key-value pairs.
-                # TODO Does NOT take care of scenario of a single operand divided into multi-line
+                # Does NOT take care of scenario of a single operand divided into multi-line. Will be fixed in v2.
                 for line in lines:
                     self.add_operands(line.operands)
                 self.add_refs_with_key_value(labels)
             else:   # Multi-line with SET_CC and CHECK_CC
-                # TODO Does NOT take care of scenario where there are lines between SET_CC and CHECK_CC
+                # Does NOT take care of scenario where there are lines between SET_CC and CHECK_CC. Fixed in v2
                 self.add_operands(lines[0].operands)
                 line = next((line for line in lines if cmd.check(line.command, 'check_cc')), None)
                 if line and line.operands:

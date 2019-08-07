@@ -1,12 +1,9 @@
 class Error:
     NO_ERROR = 0
     DS_DUP_FACTOR = 'DS - Duplication factor is not a number.'
-    DS_DATA_TYPE = 'DS - Invalid data type.'
     EXP_INVALID_KEY = 'Expression - Field not present in data map.'
     EXP_INVALID_KEY_L = 'Expression - Field not present in data map for length attribute.'
-    EXP_INVALID_KEY_X = 'Expression - Field not present in data map for hex data type.'
-    EXP_DATA_TYPE = 'Expression - Invalid data type.'
-    EXP_NOT_NUMBER = 'Expression - Not a number.'
+    EXP_INVALID_KEY_X = 'Expression - Field not present in data map for data type attributes.'
     EXP_EVAL_FAIL = 'Expression - Function eval failed.'
     EXP_REGEX = 'Expression - Regex cannot parse the expression.'
     FBD_NO_LEN = 'FieldBaseDsp - Operand cannot have length or index.'
@@ -23,7 +20,6 @@ class Error:
     FL_LEN_REQUIRED = 'FieldLen - Length required.'
     FL_INVALID_LEN = 'FieldLen - Invalid length.'
     FD_INVALID_DATA = 'FieldData - Invalid data.'
-    RD_NO_CHAR = 'RegisterData - Immediate Data cannot be character.'
     RD_INVALID_NUMBER = 'RegisterData - Invalid number.'
     RDF_INVALID_DATA = 'RegisterDataField - Invalid data.'
     BC_INDEX = 'BranchCondition - Index is not yet supported in Branch instructions.'

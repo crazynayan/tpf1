@@ -58,6 +58,9 @@ class MacroTest(unittest.TestCase):
         self._common_checks(macro_name)
         self.assertEqual(20, self.macro.data_map['SH0EQT'].length)
         self.assertEqual(14, self.macro.data_map['SH0CON'].dsp)
+        self.assertEqual(0x2a6, self.macro.data_map['SH0SKP'].dsp)
+        self.assertEqual(1, self.macro.data_map['SH0SKP'].length)
+        self.assertEqual(0x2a8, self.macro.data_map['SH0FLD'].dsp)
         self.assertEqual(0x323, self.macro.data_map['SH0EQT'].dsp)
         self.assertEqual(0x337, self.macro.data_map['SH0SMK'].dsp)
         self.assertEqual(16, self.macro.data_map['SH0SMK'].length)
@@ -65,8 +68,8 @@ class MacroTest(unittest.TestCase):
     def test_PR001W(self):
         macro_name = 'PR001W'
         accepted_errors_list = [
-            f"{Error.DS_DATA_TYPE} #PR00_X1_TYP1:DS:X'0001' {macro_name}",
             f"{Error.EXP_INVALID_KEY} #PR001WS:EQU:&SW00WRS {macro_name}",
+            f"{Error.EXP_INVALID_KEY_X} #PR001WI:EQU:C'&SW00WID' {macro_name}",
             f"{Error.EXP_INVALID_KEY_X} #PR001WI:EQU:X'&SW00WID' {macro_name}",
         ]
         self._common_checks(macro_name, accepted_errors_list)
@@ -76,14 +79,18 @@ class MacroTest(unittest.TestCase):
         self.assertEqual(40, self.macro.data_map['#PR00_00_TYP_040'].dsp)
         self.assertEqual(20, self.macro.data_map['PR00E54'].dsp)
         self.assertEqual(20, self.macro.data_map['#PR00L54'].dsp)
-        self.assertEqual('N', self.macro.data_map['#PR00_00_NEWITEM'].dsp)
-        self.assertEqual(' ', self.macro.data_map['#PR00_72_RFIC_NOEMD'].dsp)
-        # self.assertEqual(219, self.macro.data_map['PR00_D4_HPFPT_GRP'].length)
+        self.assertEqual(0xd5, self.macro.data_map['#PR00_00_NEWITEM'].dsp)
+        self.assertEqual(0x40, self.macro.data_map['#PR00_72_RFIC_NOEMD'].dsp)
+        self.assertEqual(0x108 - 0x02d, self.macro.data_map['PR00_D4_HPFPT_GRP'].length)
+        self.assertEqual(2, self.macro.data_map['#PR00_X1_TYP1'].length)
+        self.assertEqual(4, self.macro.data_map['#PR00_X1_TYP1'].dsp)
+        self.assertEqual(6, self.macro.data_map['PR00_X1_PD_EXTDATA'].dsp)
 
     def test_TR1GAA(self):
         macro_name = 'TR1GAA'
         accepted_errors_list = [
             f"{Error.EXP_INVALID_KEY} #TR1GAAS:EQU:&SW00WRS {macro_name}",
+            f"{Error.EXP_INVALID_KEY_X} #TR1GAAI:EQU:C'&SW00WID' {macro_name}",
             f"{Error.EXP_INVALID_KEY_X} #TR1GAAI:EQU:X'&SW00WID' {macro_name}",
         ]
         self._common_checks(macro_name, accepted_errors_list)
@@ -147,7 +154,6 @@ class SegmentTest(unittest.TestCase):
             f"{Error.FBD_INVALID_BASE} None:OI:EBW000(L'EBW001),1 {seg_name}",
             f"{Error.FBD_INVALID_KEY} None:OI:ERROR_FIELD,1 {seg_name}",
             f"{Error.FBD_INVALID_KEY_BASE} None:OI:PD0_C_ITM,1 {seg_name}",
-            f"{Error.FBD_INVALID_DSP} None:OI:C'A'(R2),1 {seg_name}",
             f"{Error.BITS_INVALID_NUMBER} None:OI:EBW000,250+250 {seg_name}",
             f"{Error.BITS_INVALID_BIT} None:OI:EBW000,#PD0_FLDEMP {seg_name}",
             f"{Error.INSTRUCTION_INVALID} None:ERR:EBW000,1 {seg_name}",
@@ -332,7 +338,6 @@ class SegmentTest(unittest.TestCase):
         seg_name = 'TS04'
         accepted_errors_list = [
             f"{Error.FL_INVALID_LEN} None:MVC:23(L'CE1WKA+60,R3),26(R4) {seg_name}",
-            f"{Error.FL_INVALID_LEN} None:XC:CE1WKA(#$BCLASS),CE1WKA {seg_name}",
             f"{Error.FL_LEN_REQUIRED} None:OC:EBW000(,R4),EBW000 {seg_name}",
             f"{Error.FL_INVALID_LEN} None:PACK:CE1DCT,10(17,R15) {seg_name}",
             f"{Error.FD_INVALID_DATA} None:MVI:EBW000,256 {seg_name}",
@@ -396,7 +401,7 @@ class SegmentTest(unittest.TestCase):
         # CLI   EBW000,#$BCLASS with BNE   TS040310
         label = 'TS040300.1'
         self.assertEqual('EBW000', self.seg.nodes[label].field.name)
-        self.assertEqual('B', self.seg.nodes[label].data)
+        self.assertEqual(0xC2, self.seg.nodes[label].data)
         self.assertEqual('BNE', self.seg.nodes[label].on)
         self.assertEqual('TS040310', self.seg.nodes[label].goes)
         # MVI   23(R4),L'CE1WKA
@@ -410,7 +415,6 @@ class SegmentTest(unittest.TestCase):
         seg_name = 'TS05'
         accepted_errors_list = [
             f"{Error.REG_INVALID} None:LHI:RAB,1 {seg_name}",
-            f"{Error.RD_NO_CHAR} None:AHI:R1,#$BCLASS {seg_name}",
             f"{Error.RD_INVALID_NUMBER} None:LHI:R1,X'10000' {seg_name}",
             f"{Error.RD_INVALID_NUMBER} None:LHI:R1,65536 {seg_name}",
             f"{Error.REG_INVALID} None:STM:R14,R16,EBW000 {seg_name}",

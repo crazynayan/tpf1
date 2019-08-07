@@ -177,9 +177,7 @@ class RegisterData(Instruction):
         if self.reg.is_valid():
             self.data, result = macro.get_value(operand2)
             if result == Error.NO_ERROR:
-                if not isinstance(self.data, int):
-                    result = Error.RD_NO_CHAR
-                elif self.data >= 1 << self.DATA_LENGTH:
+                if self.data >= 1 << self.DATA_LENGTH:
                     result = Error.RD_INVALID_NUMBER
                 elif self.data < -1 << self.DATA_LENGTH - 1:
                     result = Error.RD_INVALID_NUMBER

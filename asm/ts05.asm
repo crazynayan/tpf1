@@ -8,7 +8,7 @@ TS050110 DS    0H
          LHI   RG1,32767
 TS05E100 DS    0H               ERROR FOR REG DATA
          LHI   RAB,1
-         AHI   R1,#$BCLASS
+         AHI   R1,#$BCLASS      NO ERROR SINCE C'B' = X'C2'
          LHI   R1,X'10000'
          LHI   R1,65536
 TS050200 DS    0H               VALID FOR REG REG FIELD

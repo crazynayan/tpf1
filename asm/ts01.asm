@@ -13,7 +13,7 @@ TS010010 EQU   *
          OI    EBW000(L'EBW001),1
          OI    ERROR_FIELD,1
          OI    PD0_C_ITM,1
-         OI    C'A'(R2),1
+         OI    C'A'(R2),1              NO ERROR SINCE C'A' IS X'D5'
          OI    EBW000,250+250          CANNOT HAVE GREATER THAN 255
          OI    EBW000,#PD0_FLDEMP
          ERR   EBW000,1

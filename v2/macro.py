@@ -4,18 +4,56 @@ import os
 from config import config
 from v2.errors import Error
 from v2.file_line import File, Line
+from v2.data_type import DataType
 
 
-class DsOperand:
-    DATA_TYPES = {'X': 1, 'C': 1, 'H': 2, 'F': 4, 'D': 8, 'FD': 8, 'B': 1}
-
+class DsDc:
     def __init__(self):
         self.duplication_factor = 1
-        self.data_type = ''
         self.length = 0
+        self.data_type = None
+        self.data = None
+        self.align_to_boundary = True
+
+    @classmethod
+    def from_operand(cls, operand, macro, location_counter=None):
+        dsdc = cls()
+        operands = next(iter(re.findall(
+            r"(^\d*)([CXHFDBZPAY]D?)(?:L(?:\(([^)]*)\))?(?:([\d]+))?)?(['(])?([^')]*)[')]?", operand)))
+        # Duplication Factor
+        dsdc.duplication_factor = int(operands[0]) if operands[0] else 1
+        # Data Type
+        dsdc.data_type = operands[1]
+        if dsdc.data_type not in DataType.DATA_TYPES:
+            raise TypeError
+        # Data
+        length = None
+        if operands[4] == "'":
+            data_type_object = DataType(dsdc.data_type, input=operands[5])
+            dsdc.data = data_type_object.to_bytes()
+            length = data_type_object.length
+        elif operands[4] == "(":
+            number, result = macro.get_value(operands[5], location_counter)
+            if result != Error.NO_ERROR:
+                return dsdc, result
+            dsdc.data = DataType(dsdc.data_type, input=str(number)).to_bytes()
+        else:
+            dsdc.data = None
+        # Length
+        if not operands[2] and not operands[3]:
+            dsdc.length = DataType.DATA_TYPES[dsdc.data_type] if length is None else length
+        elif operands[2]:
+            dsdc.length, result = macro.get_value(operands[2], location_counter)
+            dsdc.align_to_boundary = False
+            if result != Error.NO_ERROR:
+                return dsdc, result
+        else:
+            dsdc.length = int(operands[3])
+            dsdc.align_to_boundary = False
+        return dsdc, Error.NO_ERROR
 
     def __repr__(self):
-        return f'{self.duplication_factor}:{self.data_type}:{self.length}'
+        return f'{self.duplication_factor}:{self.data_type}:{self.length}:{self.data}'
 
 
 class SymbolTable:
@@ -77,17 +115,16 @@ class Macro:
             length = 1
             dsp = -1
             if line.command == 'DS':
-                operand, result = self.get_ds_operand(line.operand, location_counter)
+                ds, result = DsDc.from_operand(line.operand, self, location_counter)
                 if result != Error.NO_ERROR:
-                    if operand.duplication_factor == 0:
+                    if ds.duplication_factor == 0:
                         ds_list.append((line, location_counter))
                     else:
                         self.errors.append(f'{result} {line} {macro}')
                     continue
-                length = operand.length
-                total_length = operand.duplication_factor * length
-                data_type_length = DsOperand.DATA_TYPES[operand.data_type]
-                while location_counter % data_type_length != 0:
+                length = ds.length
+                total_length = ds.duplication_factor * length
+                while location_counter % DataType.DATA_TYPES[ds.data_type] != 0 and ds.align_to_boundary:
                     location_counter += 1
                 dsp = location_counter
             elif line.command == 'EQU':
@@ -119,11 +156,11 @@ class Macro:
             self.data_map[line.label] = symbol_table
         # Add the saved DS which were not added in the first pass
         for line, location_counter in ds_list:
-            operand, result = self.get_ds_operand(line.operand, location_counter)
+            ds, result = DsDc.from_operand(line.operand, self, location_counter)
             if result != Error.NO_ERROR:
                 self.errors.append(f'{result} {line} {macro}')
                 continue
-            length = operand.length
+            length = ds.length
             dsp = location_counter
             symbol_table = SymbolTable(line.label, dsp, length, macro)
             self.data_map[line.label] = symbol_table
@@ -134,41 +171,11 @@ class Macro:
             self.base[str(base)] = macro
         return True
 
-    def get_ds_operand(self, operand, location_counter):
-        ds_operand = DsOperand()
-        # (^\d*)    = Captures a digit at the start if present (duplication_factor)
-        # ([^L]+)   = Captures all characters till L (data_type)
-        # L*        = Ignores L if present
-        # \(*       = Ignores ( if present
-        # ([^)]*)   = Captures everything till ) if present. The length can be any expression. (length)
-        # \)*       = Ignores the trailing  ) if present.
-        duplication_factor, data_type, length = next(iter(re.findall(r"(^\d*)([^L]+)L*\(*([^)]*)\)*", operand)))
-        if duplication_factor:
-            try:
-                ds_operand.duplication_factor = int(duplication_factor)
-            except ValueError:
-                return ds_operand, Error.DS_DUP_FACTOR
-        else:
-            ds_operand.duplication_factor = 1
-        if data_type not in DsOperand.DATA_TYPES:
-            return ds_operand, Error.DS_DATA_TYPE
-        ds_operand.data_type = data_type
-        if length:
-            ds_operand.length, result = self.get_value(length, location_counter)
-            if result != Error.NO_ERROR:
-                return ds_operand, result
-        else:
-            ds_operand.length = DsOperand.DATA_TYPES[ds_operand.data_type]
-        return ds_operand, Error.NO_ERROR
-
     def get_value(self, operand, location_counter=None):
         if operand.isdigit():
             return int(operand), Error.NO_ERROR
         exp_list = re.split(r"([+*()-])", operand)
         exp_list = [expression for expression in exp_list if expression and expression not in '()']
-        if len(exp_list) == 1:
-            value, data_type, result = self.evaluate(exp_list[0], location_counter)
-            return value, result
         eval_list = list()
         for index, expression in enumerate(exp_list):
             if expression == '+' or expression == '-' or (expression == '*' and index % 2 == 1):
@@ -206,22 +213,9 @@ class Macro:
                 return self.data_map[field].length, data_type, Error.NO_ERROR
             except KeyError:
                 return field, data_type, Error.EXP_INVALID_KEY_L
-        if data_type not in DsOperand.DATA_TYPES:
-            return None, data_type, Error.EXP_DATA_TYPE
-        if data_type == 'X':
-            try:
-                return int(field, 16), data_type, Error.NO_ERROR
-            except ValueError:
-                return field, data_type, Error.EXP_INVALID_KEY_X
-        if data_type == 'C':
-            return field, data_type, Error.NO_ERROR
-        if data_type == 'B':
-            return int(field, 2), data_type, Error.NO_ERROR
-        else:
-            try:
-                return int(field), self.INTEGER, Error.NO_ERROR
-            except ValueError:
-                return field, data_type, Error.EXP_NOT_NUMBER
+        if '&' in field:
+            return field, data_type, Error.EXP_INVALID_KEY_X
+        return DataType(data_type, input=field).value, data_type, Error.NO_ERROR
 
     @staticmethod
     def is_location_counter_changed(line):
@@ -239,4 +233,3 @@ class Macro:
             return min(matches, key=lambda label: abs(matches[label].length - length))
         except (KeyError, ValueError):
             return None
-

@@ -2,6 +2,278 @@ import re
 from v2.errors import Error
 
 
+class DataType:
+    DATA_TYPES = {'X': 1, 'C': 1, 'H': 2, 'F': 4, 'D': 8, 'FD': 8, 'B': 1, 'P': 1, 'Z': 1, 'A': 4, 'Y': 2}
+
+    def __init__(self, data_type=None, **kwargs):
+        data_type = 'X' if data_type is None else data_type.upper()
+        if data_type not in self.DATA_TYPES:
+            raise TypeError
+        self.data_type = data_type
+        self.input = kwargs['input'] if 'input' in kwargs else None
+        self.bytes = kwargs['bytes'] if 'bytes' in kwargs else None
+
+    @property
+    def data_type_object(self):
+        if self.input is not None:
+            return eval(f"{self.data_type}DataType(input=self.input)")
+        if self.bytes is not None:
+            return eval(f"{self.data_type}DataType(bytes=self.bytes)")
+        raise ValueError
+
+    @property
+    def default_length(self):
+        return self.DATA_TYPES[self.data_type] if self.bytes is None else len(self.bytes)
+
+    @property
+    def length(self):
+        return self.data_type_object.length
+
+    @property
+    def value(self):
+        return self.data_type_object.value
+
+    def to_bytes(self):
+        return self.data_type_object.to_bytes()
+
+    def from_bytes(self):
+        return self.data_type_object.from_bytes()
+
+
+class CDataType(DataType):
+    def __int__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.data_type = 'C'
+
+    @property
+    def length(self):
+        return len(self.input) if self.input is not None else self.default_length
+
+    @property
+    def value(self):
+        return int.from_bytes(bytes(self.input, encoding='cp037'), 'big', signed=False) \
+            if self.input is not None else self.from_bytes()
+
+    def to_bytes(self):
+        self.bytes = bytes(self.input, encoding='cp037')
+        return self.bytes
+
+    def from_bytes(self):
+        return self.bytes.decode(encoding='cp037')
+
+
+class XDataType(DataType):
+    def __int__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.data_type = 'X'
+
+    @property
+    def length(self):
+        return -(-len(self.input) // 2) if self.input is not None else self.default_length
+
+    @property
+    def value(self):
+        return int(self.input, 16) if self.input is not None else self.from_bytes()
+
+    def to_bytes(self):
+        self.bytes = self.value.to_bytes(self.length, 'big', signed=False)
+        return self.bytes
+
+    def from_bytes(self):
+        return int.from_bytes(self.bytes, 'big', signed=False)
+
+
+class BDataType(DataType):
+    def __int__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.data_type = 'B'
+
+    @property
+    def length(self):
+        return -(-len(self.input) // 8) if self.input is not None else self.default_length
+
+    @property
+    def value(self):
+        return int(self.input, 2) if self.input is not None else self.from_bytes()
+
+    def to_bytes(self):
+        self.bytes = self.value.to_bytes(self.length, 'big', signed=False)
+        return self.bytes
+
+    def from_bytes(self):
+        return int.from_bytes(self.bytes, 'big', signed=False)
+
+
+class PDataType(DataType):
+    def __int__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.data_type = 'P'
+
+    @property
+    def length(self):
+        if self.input is None:
+            return self.default_length
+        length_input = len(self.input) + 1 if self.input[0] not in ['+', '-'] else len(self.input)
+        return -(-length_input // 2)
+
+    @property
+    def value(self):
+        return int(self.input) if self.input is not None else self.from_bytes()
+
+    def to_bytes(self):
+        packed_data = self.input[1:] if self.input[0] in ['+', '-'] else self.input
+        packed_data = packed_data + 'D' if self.input[0] == '-' else packed_data + 'C'
+        self.bytes = int(packed_data, 16).to_bytes(self.length, 'big', signed=False)
+        return self.bytes
+
+    def from_bytes(self):
+        sign = '-' if self.bytes[-1] & 0x0F == 0x0D else '+'
+        number = int.from_bytes(self.bytes, 'big', signed=False)
+        return int(f"{sign}{number >> 4:0x}")
+
+
+class ZDataType(DataType):
+    def __int__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.data_type = 'Z'
+
+    @property
+    def length(self):
+        if self.input is None:
+            return self.default_length
+        return len(self.input) - 1 if self.input[0] in ['+', '-'] else len(self.input)
+
+    @property
+    def value(self):
+        return int(self.input) if self.input is not None else self.from_bytes()
+
+    def to_bytes(self):
+        zoned_data = self.input[1:] if self.input[0] in ['+', '-'] else self.input
+        sign = 0xD0 if self.input[0] == '-' else 0xC0
+        self.bytes = bytearray(zoned_data, 'cp037')
+        self.bytes[-1] = self.bytes[-1] & 0x0F | sign
+        return self.bytes
+
+    def from_bytes(self):
+        sign = '-' if self.bytes[-1] & 0xF0 == 0xD0 else '+'
+        numeric_bytes = self.bytes.copy()
+        numeric_bytes[-1] |= 0xF0
+        return int(f"{sign}{numeric_bytes.decode(encoding='cp037')}")
+
+
+class NumericDataType(DataType):
+    def __int__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    @property
+    def length(self):
+        return self.default_length
+
+    @property
+    def value(self):
+        return int(self.input) if self.input is not None else self.from_bytes()
+
+    def to_bytes(self):
+        self.bytes = self.value.to_bytes(self.length, 'big', signed=False)
+        return self.bytes
+
+    def from_bytes(self):
+        return int.from_bytes(self.bytes, 'big', signed=True)
+
+
+class FDataType(NumericDataType):
+    def __int__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.data_type = 'F'
+
+
+class HDataType(NumericDataType):
+    def __int__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.data_type = 'H'
+
+
+class FDDataType(NumericDataType):
+    def __int__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.data_type = 'FD'
+
+
+class DDataType(NumericDataType):
+    def __int__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.data_type = 'D'
+
+
+class ADataType(NumericDataType):
+    def __int__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.data_type = 'A'
+
+
+class YDataType(NumericDataType):
+    def __int__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.data_type = 'Y'
+
+
+class Bytes:
+
+    def __init__(self):
+        self._data = bytearray()
+
+    def add_to_bytes(self, data_type, data, length=None):
+        data_type = data_type.upper()
+        data = eval(f'to_bytes_{data_type.lower()}({data})')
+        if length is None:
+            self._data.extend(data)
+
+    @staticmethod
+    def to_bytes_x(data):
+        length = -(-len(data) // 2)
+        return int(data, 16).to_bytes(length, 'big')
+
+    @staticmethod
+    def to_bytes_c(data):
+        return bytes(data, 'cp037')
+
+    @staticmethod
+    def to_bytes_h(data):
+        return int(data).to_bytes(2, 'big', signed=True)
+
+    @staticmethod
+    def to_bytes_f(data):
+        return int(data).to_bytes(4, 'big', signed=True)
+
+    @staticmethod
+    def to_bytes_d(data):
+        return int(data).to_bytes(8, 'big', signed=True)
+
+    @staticmethod
+    def to_bytes_fd(data):
+        return int(data).to_bytes(8, 'big', signed=True)
+
+    @staticmethod
+    def to_bytes_b(data):
+        length = -(-len(data) // 8)
+        return int(data, 2).to_bytes(length, 'big')
+
+    @staticmethod
+    def to_bytes_p(data):
+        packed_data = data[1:] if data[0] in ['+', '-'] else data
+        packed_data = packed_data + 'D' if data[0] == '-' else packed_data + 'C'
+        length = -(-len(packed_data) // 2)
+        return int(data, 16).to_bytes(length, 'big')
+
+    @staticmethod
+    def to_bytes_z(data):
+        zoned_data = data[1:] if data[0] in ['+', '-'] else data
+        sign = 0xD if data[0] == '-' else 0xC
+        zoned = bytearray(zoned_data, 'cp037')
+        zoned[-1] = zoned[-1] & 0x0F | sign
+        return zoned
+
+
 class Register:
     INVALID = '??'
     REG = {
