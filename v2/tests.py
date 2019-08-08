@@ -3,7 +3,7 @@ import v2.instruction as ins
 
 from v2.errors import Error
 from v2.macro import Macro
-from v2.segment import Segment
+from v2.segment import Program
 
 
 class MacroTest(unittest.TestCase):
@@ -132,20 +132,22 @@ class SegmentTest(unittest.TestCase):
     NUMBER_OF_FILES = 7
 
     def setUp(self) -> None:
-        self.seg = Segment()
+        self.program = Program()
+        self.seg = None
 
     def _common_checks(self, seg_name, accepted_errors_list=None):
         accepted_errors_list = list() if accepted_errors_list is None else accepted_errors_list
-        self.seg.load(seg_name)
+        self.program.load(seg_name)
+        self.seg = self.program.segments[seg_name]
         self.assertListEqual(accepted_errors_list, self.seg.errors, '\n\n\n' + '\n'.join(list(
             set(self.seg.errors) - set(accepted_errors_list))))
-        self.assertTrue(self.seg.files[seg_name].loaded)
+        self.assertTrue(self.seg.loaded)
 
     def test_files(self):
-        self.assertTrue('ETA5' in self.seg.files)
-        self.assertTrue('TS01' in self.seg.files)
-        self.assertFalse('EB0EB' in self.seg.files)
-        self.assertEqual(self.NUMBER_OF_FILES, len(self.seg.files), 'Update number of files in SegmentTest')
+        self.assertTrue('ETA5' in self.program.segments)
+        self.assertTrue('TS01' in self.program.segments)
+        self.assertFalse('EB0EB' in self.program.segments)
+        self.assertEqual(self.NUMBER_OF_FILES, len(self.program.segments), 'Update number of files in SegmentTest')
 
     def test_field_bits(self):
         seg_name = 'TS01'
@@ -160,8 +162,8 @@ class SegmentTest(unittest.TestCase):
             f"{Error.FBD_INVALID_DSP} None:OI:-1(R2),1 {seg_name}",
             f"{Error.FBD_INVALID_DSP} None:OI:4096(R2),1 {seg_name}",
         ]
-        self.seg.macro.load('PD0WRK')
-        del self.seg.macro.files['PD0WRK']
+        self.program.macro.load('PD0WRK')
+        del self.program.macro.files['PD0WRK']
         self._common_checks(seg_name, accepted_errors_list)
         # Check EBW008-EBW000(2),1
         label = '$$TS01$$.1'
@@ -427,13 +429,13 @@ class SegmentTest(unittest.TestCase):
             f"{Error.RDF_INVALID_DATA} None:STCM:R1,0,EBW000 {seg_name}",
             f"{Error.FBD_INVALID_DSP} None:ICM:R1,7,-1(R9) {seg_name}",
         ]
+        self._common_checks(seg_name, accepted_errors_list)
         self.assertRaises(ValueError, ins.RegisterData.from_operand, None, 'AHI', 'R1,1,3', self.seg.macro)
         self.assertRaises(ValueError, ins.RegisterData.from_operand, None, 'LHI', 'R1', self.seg.macro)
         self.assertRaises(ValueError, ins.RegisterRegisterField.from_operand, None, 'STM', 'R1,R2,B,C', self.seg.macro)
         self.assertRaises(ValueError, ins.RegisterRegisterField.from_operand, None, 'LM', 'R1,R2', self.seg.macro)
         self.assertRaises(ValueError, ins.RegisterDataField.from_operand, None, 'ICM', 'R1,1', self.seg.macro)
         self.assertRaises(ValueError, ins.RegisterDataField.from_operand, None, 'STCM', 'R1', self.seg.macro)
-        self._common_checks(seg_name, accepted_errors_list)
         # Check RegisterData
         # AHI   R15,SUIFF with BP    TS050110
         label = 'TS050100.1'
@@ -502,8 +504,8 @@ class SegmentTest(unittest.TestCase):
             f"{Error.BC_INDEX} None:B:TS06E100(R14) {seg_name}",
             f"{Error.BC_INDEX} None:JC:14,TS06E100(-1) {seg_name}",
         ]
-        self.assertRaises(ValueError, ins.BranchCondition.from_operand, None, 'BC', 'TS060100', self.seg.macro)
-        self.assertRaises(ValueError, ins.BranchCondition.from_operand, None, 'JC', 'A,TS060100', self.seg.macro)
+        self.assertRaises(ValueError, ins.BranchCondition.from_operand, None, 'BC', 'TS060100', self.program.macro)
+        self.assertRaises(ValueError, ins.BranchCondition.from_operand, None, 'JC', 'A,TS060100', self.program.macro)
         self._common_checks(seg_name, accepted_errors_list)
         # Check TS060100
         node = self.seg.nodes['TS060100.1']

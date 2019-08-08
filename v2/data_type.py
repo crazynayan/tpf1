@@ -217,63 +217,6 @@ class YDataType(NumericDataType):
         self.data_type = 'Y'
 
 
-class Bytes:
-
-    def __init__(self):
-        self._data = bytearray()
-
-    def add_to_bytes(self, data_type, data, length=None):
-        data_type = data_type.upper()
-        data = eval(f'to_bytes_{data_type.lower()}({data})')
-        if length is None:
-            self._data.extend(data)
-
-    @staticmethod
-    def to_bytes_x(data):
-        length = -(-len(data) // 2)
-        return int(data, 16).to_bytes(length, 'big')
-
-    @staticmethod
-    def to_bytes_c(data):
-        return bytes(data, 'cp037')
-
-    @staticmethod
-    def to_bytes_h(data):
-        return int(data).to_bytes(2, 'big', signed=True)
-
-    @staticmethod
-    def to_bytes_f(data):
-        return int(data).to_bytes(4, 'big', signed=True)
-
-    @staticmethod
-    def to_bytes_d(data):
-        return int(data).to_bytes(8, 'big', signed=True)
-
-    @staticmethod
-    def to_bytes_fd(data):
-        return int(data).to_bytes(8, 'big', signed=True)
-
-    @staticmethod
-    def to_bytes_b(data):
-        length = -(-len(data) // 8)
-        return int(data, 2).to_bytes(length, 'big')
-
-    @staticmethod
-    def to_bytes_p(data):
-        packed_data = data[1:] if data[0] in ['+', '-'] else data
-        packed_data = packed_data + 'D' if data[0] == '-' else packed_data + 'C'
-        length = -(-len(packed_data) // 2)
-        return int(data, 16).to_bytes(length, 'big')
-
-    @staticmethod
-    def to_bytes_z(data):
-        zoned_data = data[1:] if data[0] in ['+', '-'] else data
-        sign = 0xD if data[0] == '-' else 0xC
-        zoned = bytearray(zoned_data, 'cp037')
-        zoned[-1] = zoned[-1] & 0x0F | sign
-        return zoned
-
-
 class Register:
     INVALID = '??'
     REG = {

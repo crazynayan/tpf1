@@ -1,8 +1,64 @@
 import re
 
-from v2.data_type import FieldBaseDsp, Bits, Register, FieldIndex, FieldLen
+from v2.data_type import DataType, FieldBaseDsp, Bits, Register, FieldIndex, FieldLen
 from v2.errors import Error
 from v2.command import cmd
+
+
+class DsDc:
+    def __init__(self):
+        self.duplication_factor = 1
+        self.length = 0
+        self.data_type = None
+        self.data = None
+        self.align_to_boundary = True
+
+    @classmethod
+    def from_operand(cls, operand, macro, location_counter=None):
+        dsdc = cls()
+        # (^\d*)([CXHFDBZPAY]D?)(?:L([\d]+))?(?:L[(]([^)]+)[)])?(?:[']([^']+)['])?(?:[(]([^)]+)[)])?
+        operands = next(iter(re.findall(
+            r"(^\d*)"                       # 0 Duplication Factor - A number. (Optional)
+            r"([CXHFDBZPAY]D?)"             # 1 Data Type - Valid Single character Data type. (Note: FD is valid)
+            r"(?:L([\d]+))?"                # 2 Length - L followed by a number. (Optional)
+            r"(?:L[(]([^)]*)[)])?"          # 3 Length - L followed by a expression enclosed in paranthesis. (Optional)
+            r"(?:[']([^']*)['])?"           # 4 Data - Enclosed in quotes. (Optional)
+            r"(?:[(]([^)]*)[)])?",          # 5 Data - Enclosed in parenthesis. (Optional)
+            operand)))
+        # Duplication Factor
+        dsdc.duplication_factor = int(operands[0]) if operands[0] else 1
+        # Data Type
+        dsdc.data_type = operands[1]
+        if dsdc.data_type not in DataType.DATA_TYPES:
+            raise TypeError
+        # Data
+        length = None
+        if operands[4]:
+            data_type_object = DataType(dsdc.data_type, input=operands[4])
+            dsdc.data = data_type_object.to_bytes()
+            length = data_type_object.length
+        elif operands[5]:
+            number, result = macro.get_value(operands[5], location_counter)
+            if result != Error.NO_ERROR:
+                return dsdc, result
+            dsdc.data = DataType(dsdc.data_type, input=str(number)).to_bytes()
+        else:
+            dsdc.data = None
+        # Length
+        if not operands[2] and not operands[3]:
+            dsdc.length = DataType.DATA_TYPES[dsdc.data_type] if length is None else length
+        elif operands[2]:
+            dsdc.length = int(operands[2])
+            dsdc.align_to_boundary = False
+        else:
+            dsdc.length, result = macro.get_value(operands[3], location_counter)
+            dsdc.align_to_boundary = False
+            if result != Error.NO_ERROR:
+                return dsdc, result
+        return dsdc, Error.NO_ERROR
+
+    def __repr__(self):
+        return f'{self.duplication_factor}:{self.data_type}:{self.length}:{self.data}'
 
 
 class Instruction:
