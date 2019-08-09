@@ -129,7 +129,7 @@ class MacroTest(unittest.TestCase):
 
 
 class SegmentTest(unittest.TestCase):
-    NUMBER_OF_FILES = 7
+    NUMBER_OF_FILES = 8
 
     def setUp(self) -> None:
         self.program = Program()
@@ -141,7 +141,7 @@ class SegmentTest(unittest.TestCase):
         self.seg = self.program.segments[seg_name]
         self.assertListEqual(accepted_errors_list, self.seg.errors, '\n\n\n' + '\n'.join(list(
             set(self.seg.errors) - set(accepted_errors_list))))
-        self.assertTrue(self.seg.loaded)
+        self.assertTrue(self.seg.assembled)
 
     def test_files(self):
         self.assertTrue('ETA5' in self.program.segments)
@@ -228,10 +228,13 @@ class SegmentTest(unittest.TestCase):
         self._common_checks(seg_name, accepted_errors_list)
         # Check R02,RDA
         label = 'TS020010'
+        self.assertEqual(0x008, self.seg.macro.data_map[label].dsp)
+        self.assertEqual(2, self.seg.macro.data_map[label].length)
         self.assertEqual('R2', self.seg.nodes[label].reg1.reg)
         self.assertEqual('R14', self.seg.nodes[label].reg2.reg)
         # Check RGA,2 with JNZ TS020010 & it contains a before_goes
         label = 'TS020020'
+        self.assertEqual(0x00a, self.seg.macro.data_map[label].dsp)
         self.assertEqual('R2', self.seg.nodes[label].reg1.reg)
         self.assertEqual('R2', self.seg.nodes[label].reg2.reg)
         self.assertEqual('JNZ', self.seg.nodes[label].on)
@@ -239,11 +242,13 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual(5, len(self.seg.nodes[label].conditions))
         # Check 4,R04
         label = 'TS020030'
+        self.assertEqual(0x018, self.seg.macro.data_map[label].dsp)
         self.assertEqual('R4', self.seg.nodes[label].reg1.reg)
         self.assertEqual('R4', self.seg.nodes[label].reg2.reg)
         self.assertSetEqual({'TS020040'}, self.seg.nodes[label].next_labels)
         # Check DS    0H
         label = 'TS020040'
+        self.assertEqual(0x01a, self.seg.macro.data_map[label].dsp)
         self.assertEqual(label, self.seg.nodes[label].label)
         self.assertEqual('DS', self.seg.nodes[label].command)
         # Check  BCTR  R5,0
@@ -668,3 +673,79 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual(0, node.mask)
         self.assertSetEqual({'TS06E100'}, node.next_labels)
         self.assertEqual('TS06E100', node.fall_down)
+
+    def test_constant(self):
+        seg_name = 'TS07'
+        accepted_errors_list = [
+        ]
+        self._common_checks(seg_name, accepted_errors_list)
+        label = 'TS070010'
+        self.assertEqual(0x008, self.seg.macro.data_map[label].dsp)
+        self.assertEqual(1, self.seg.macro.data_map[label].length)
+        self.assertEqual('TS07', self.seg.macro.data_map[label].name)
+        label = 'TS070020'
+        self.assertEqual(0x018, self.seg.macro.data_map[label].dsp)
+        self.assertEqual(4, self.seg.macro.data_map[label].length)
+        # Constant
+        self.assertEqual(0x018, self.seg.constant.start)
+        # C'CLASS'
+        label = 'NAME'
+        self.assertEqual(0x018, self.seg.macro.data_map[label].dsp)
+        self.assertEqual(5, self.seg.macro.data_map[label].length)
+        class_name = bytearray([0xC3, 0xD3, 0xC1, 0xE2, 0xE2])
+        at = 0x018 - self.seg.constant.start
+        self.assertEqual(class_name, self.seg.constant.data[at: at+5])
+        self.assertEqual(class_name, self.seg.get_constant_bytes(label))
+        # 2C'NAM'
+        label = 'EXAM'
+        self.assertEqual(0x01d, self.seg.macro.data_map[label].dsp)
+        self.assertEqual(3, self.seg.macro.data_map[label].length)
+        exam_name = bytearray([0xD5, 0xC1, 0xD4, 0xD5, 0xC1, 0xD4])
+        self.assertEqual(exam_name, self.seg.get_constant_bytes(label, len(exam_name)))
+        # A(NAME)
+        label = 'ADR1'
+        self.assertEqual(0x024, self.seg.macro.data_map[label].dsp)
+        self.assertEqual(4, self.seg.macro.data_map[label].length)
+        self.assertEqual(bytearray(int(24).to_bytes(4, 'big')), self.seg.get_constant_bytes(label))
+        self.assertEqual(bytearray(int(24).to_bytes(5, 'big')), self.seg.constant.data[0x00B: 0x010])
+        # Y(EXAM-NAME)
+        label = 'ADR2'
+        self.assertEqual(0x028, self.seg.macro.data_map[label].dsp)
+        self.assertEqual(2, self.seg.macro.data_map[label].length)
+        self.assertEqual(bytearray(int(5).to_bytes(2, 'big')), self.seg.get_constant_bytes(label))
+        # CHAR1    DC    C'ASDC'
+        self.assertEqual(bytearray([0xC1, 0xE2, 0xC4, 0xC3]), self.seg.get_constant_bytes('CHAR1'))
+        # CHAR2    DC    CL6'ASDC'
+        self.assertEqual(bytearray([0xC1, 0xE2, 0xC4, 0xC3, 0x40, 0x40]), self.seg.get_constant_bytes('CHAR2'))
+        # CHAR3    DC    CL2'ASDC'
+        self.assertEqual(bytearray([0xC1, 0xE2]), self.seg.get_constant_bytes('CHAR3'))
+        # HEX1     DC    X'E'
+        self.assertEqual(bytearray([0x0E]), self.seg.get_constant_bytes('HEX1'))
+        # HEX2     DC    XL4'FACE'
+        self.assertEqual(bytearray([0x00, 0x00, 0xFA, 0xCE]), self.seg.get_constant_bytes('HEX2'))
+        # HEX3     DC    XL1'4243'
+        self.assertEqual(bytearray([0x43]), self.seg.get_constant_bytes('HEX3'))
+        # BIN1     DC    BL5'0100'
+        self.assertEqual(bytearray([0x00, 0x00, 0x00, 0x00, 0x04]), self.seg.get_constant_bytes('BIN1'))
+        # BIN2     DC    BL1'101010'
+        self.assertEqual(bytearray([0x2A]), self.seg.get_constant_bytes('BIN2'))
+        # ZON1     DC    Z'6940'
+        self.assertEqual(bytearray([0xF6, 0xF9, 0xF4, 0xC0]), self.seg.get_constant_bytes('ZON1'))
+        # ZON2     DC    ZL3'-555'
+        self.assertEqual(bytearray([0xF5, 0xF5, 0xD5]), self.seg.get_constant_bytes('ZON2'))
+        # ZON3     DC    ZL3'555'
+        self.assertEqual(bytearray([0xF5, 0xF5, 0xC5]), self.seg.get_constant_bytes('ZON3'))
+        # PCK1     DC    P'1234'
+        self.assertEqual(bytearray([0x01, 0x23, 0x4C]), self.seg.get_constant_bytes('PCK1'))
+        # PCK2     DC    PL2'-12345678'
+        self.assertEqual(bytearray([0x67, 0x8D]), self.seg.get_constant_bytes('PCK2'))
+        # FULL1    DC    F'2000'
+        self.assertEqual(bytearray([0x00, 0x00, 0x07, 0xD0]), self.seg.get_constant_bytes('FULL1'))
+        self.assertEqual(bytearray([0x8D, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07]), self.seg.constant.data[56: 63])
+        # FULL2    DC    FL2'100.7'
+        self.assertEqual(bytearray([0x00, 0x65]), self.seg.get_constant_bytes('FULL2'))
+        # HALF1    DC    H'2000'
+        self.assertEqual(bytearray([0x07, 0xD0]), self.seg.get_constant_bytes('HALF1'))
+        # HALF2    DC    H'-2'
+        self.assertEqual(bytearray([0xFF, 0xFE]), self.seg.get_constant_bytes('HALF2'))
+        self.assertEqual(bytearray([0xFF, 0xFE]), self.seg.constant.data[68: 70])

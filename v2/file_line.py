@@ -130,5 +130,10 @@ class Line:
         return True if self.is_set_cc or not self.is_fall_down or self.label is not None \
                        or not cmd.command_check(self.command) else False
 
+    @property
+    def length(self):
+        length = cmd.check(self.command, 'len')
+        return 0 if length is None else length
+
     def __repr__(self):
         return f'{self.label}:{self.command}:{self.operand}'

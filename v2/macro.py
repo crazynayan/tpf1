@@ -9,14 +9,14 @@ from v2.instruction import DsDc
 
 
 class SymbolTable:
-    def __init__(self, label, dsp, length, macro):
+    def __init__(self, label, dsp, length, name):
         self.label = label
         self.dsp = dsp
         self.length = length
-        self.macro = macro
+        self.name = name        # Macro name or Segment name
 
     def __repr__(self):
-        return f'{self.label}:{self.dsp}:{self.length}:{self.macro}'
+        return f'{self.label}:{self.dsp}:{self.length}:{self.name}'
 
 
 class MacroFile:
@@ -62,9 +62,8 @@ class Macro:
         ds_list = list()
         location_counter = 0
         for line in lines:
-            total_length = 0
             length = 1
-            dsp = -1
+            dsp = 0
             if line.command == 'DS':
                 ds, result = DsDc.from_operand(line.operand, self, location_counter)
                 if result != Error.NO_ERROR:
@@ -73,18 +72,18 @@ class Macro:
                     else:
                         self.errors.append(f'{result} {line} {macro_name}')
                     continue
-                length = ds.length
-                total_length = ds.duplication_factor * length
-                while location_counter % DataType.DATA_TYPES[ds.data_type] != 0 and ds.align_to_boundary:
+                while ds.align_to_boundary and location_counter % DataType(ds.data_type).default_length != 0:
                     location_counter += 1
                 dsp = location_counter
+                location_counter += ds.duplication_factor * ds.length
+                length = ds.length
             elif line.command == 'EQU':
                 dsp, result = self.get_value(line.operand, location_counter)
                 if result != Error.NO_ERROR:
                     equate_list.append((line, location_counter))
                     continue
             elif line.command == 'DSECT':
-                dsp = 0
+                location_counter = 0
                 length = 0
             if line.label:
                 self.data_map[line.label] = SymbolTable(line.label, dsp, length, macro_name)
@@ -94,8 +93,6 @@ class Macro:
                     self.errors.append(f'{result} {line} {macro_name}')
                     continue
                 location_counter = dsp
-            else:
-                location_counter += total_length
         # Add the saved equates which were not added in the first pass
         for line, location_counter in equate_list:
             dsp, result = self.get_value(line.operand, location_counter)
@@ -177,7 +174,7 @@ class Macro:
         try:
             macro_name = self.get_macro_name(base)
             matches = {label: symbol_table for label, symbol_table in self.data_map.items()
-                       if symbol_table.dsp == dsp and symbol_table.macro == macro_name}
+                       if symbol_table.dsp == dsp and symbol_table.name == macro_name}
             return min(matches, key=lambda label: abs(matches[label].length - length))
         except (StopIteration, ValueError):
             return None

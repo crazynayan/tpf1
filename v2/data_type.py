@@ -2,47 +2,29 @@ import re
 from v2.errors import Error
 
 
-class DataType:
+class DataTypeGeneric:
     DATA_TYPES = {'X': 1, 'C': 1, 'H': 2, 'F': 4, 'D': 8, 'FD': 8, 'B': 1, 'P': 1, 'Z': 1, 'A': 4, 'Y': 2}
-
-    def __init__(self, data_type=None, **kwargs):
-        data_type = 'X' if data_type is None else data_type.upper()
-        if data_type not in self.DATA_TYPES:
-            raise TypeError
-        self.data_type = data_type
-        self.input = kwargs['input'] if 'input' in kwargs else None
-        self.bytes = kwargs['bytes'] if 'bytes' in kwargs else None
-
-    @property
-    def data_type_object(self):
-        if self.input is not None:
-            return eval(f"{self.data_type}DataType(input=self.input)")
-        if self.bytes is not None:
-            return eval(f"{self.data_type}DataType(bytes=self.bytes)")
-        raise ValueError
+    ALIGN_TO_BOUNDARY = {'X': 0, 'C': 0, 'H': 1, 'F': 1, 'D': 1, 'FD': 1, 'B': 0, 'P': 0, 'Z': 0, 'A': 1, 'Y': 1}
+    
+    def __init__(self):
+        self.data_type = None
+        self.input = None
+        self.bytes = None
 
     @property
     def default_length(self):
         return self.DATA_TYPES[self.data_type] if self.bytes is None else len(self.bytes)
 
     @property
-    def length(self):
-        return self.data_type_object.length
-
-    @property
-    def value(self):
-        return self.data_type_object.value
-
-    def to_bytes(self):
-        return self.data_type_object.to_bytes()
-
-    def from_bytes(self):
-        return self.data_type_object.from_bytes()
+    def align_to_boundary(self):
+        return True if self.ALIGN_TO_BOUNDARY[self.data_type] == 1 else False
 
 
-class CDataType(DataType):
-    def __int__(self, **kwargs):
-        super().__init__(**kwargs)
+class CDataType(DataTypeGeneric):
+    PADDING = 0x40
+
+    def __init__(self):
+        super().__init__()
         self.data_type = 'C'
 
     @property
@@ -54,17 +36,22 @@ class CDataType(DataType):
         return int.from_bytes(bytes(self.input, encoding='cp037'), 'big', signed=False) \
             if self.input is not None else self.from_bytes()
 
-    def to_bytes(self):
-        self.bytes = bytes(self.input, encoding='cp037')
-        return self.bytes
+    def to_bytes(self, length=None):
+        char_data = bytearray(self.input, encoding='cp037')
+        if length is None or length == self.length:
+            return char_data
+        if self.length > length:
+            return char_data[:length]  # Truncation
+        char_data.extend(bytearray([self.PADDING] * (length - self.length)))
+        return char_data               # Padding
 
     def from_bytes(self):
         return self.bytes.decode(encoding='cp037')
 
 
-class XDataType(DataType):
-    def __int__(self, **kwargs):
-        super().__init__(**kwargs)
+class XDataType(DataTypeGeneric):
+    def __init__(self):
+        super().__init__()
         self.data_type = 'X'
 
     @property
@@ -75,17 +62,20 @@ class XDataType(DataType):
     def value(self):
         return int(self.input, 16) if self.input is not None else self.from_bytes()
 
-    def to_bytes(self):
-        self.bytes = self.value.to_bytes(self.length, 'big', signed=False)
-        return self.bytes
+    def to_bytes(self, length=None):
+        length = length or self.length
+        try:
+            return self.value.to_bytes(length, 'big', signed=False)
+        except OverflowError:
+            return self.value.to_bytes(self.length, 'big', signed=False)[(self.length - length):]
 
     def from_bytes(self):
         return int.from_bytes(self.bytes, 'big', signed=False)
 
 
-class BDataType(DataType):
-    def __int__(self, **kwargs):
-        super().__init__(**kwargs)
+class BDataType(DataTypeGeneric):
+    def __init__(self):
+        super().__init__()
         self.data_type = 'B'
 
     @property
@@ -96,17 +86,20 @@ class BDataType(DataType):
     def value(self):
         return int(self.input, 2) if self.input is not None else self.from_bytes()
 
-    def to_bytes(self):
-        self.bytes = self.value.to_bytes(self.length, 'big', signed=False)
-        return self.bytes
+    def to_bytes(self, length=None):
+        length = length or self.length
+        try:
+            return self.value.to_bytes(length, 'big', signed=False)
+        except OverflowError:
+            return self.value.to_bytes(self.length, 'big', signed=False)[(self.length - length):]
 
     def from_bytes(self):
         return int.from_bytes(self.bytes, 'big', signed=False)
 
 
-class PDataType(DataType):
-    def __int__(self, **kwargs):
-        super().__init__(**kwargs)
+class PDataType(DataTypeGeneric):
+    def __init__(self):
+        super().__init__()
         self.data_type = 'P'
 
     @property
@@ -120,11 +113,14 @@ class PDataType(DataType):
     def value(self):
         return int(self.input) if self.input is not None else self.from_bytes()
 
-    def to_bytes(self):
+    def to_bytes(self, length=None):
         packed_data = self.input[1:] if self.input[0] in ['+', '-'] else self.input
         packed_data = packed_data + 'D' if self.input[0] == '-' else packed_data + 'C'
-        self.bytes = int(packed_data, 16).to_bytes(self.length, 'big', signed=False)
-        return self.bytes
+        length = length or self.length
+        try:
+            return int(packed_data, 16).to_bytes(length, 'big', signed=False)
+        except OverflowError:
+            return int(packed_data, 16).to_bytes(self.length, 'big', signed=False)[(self.length - length):]
 
     def from_bytes(self):
         sign = '-' if self.bytes[-1] & 0x0F == 0x0D else '+'
@@ -132,9 +128,11 @@ class PDataType(DataType):
         return int(f"{sign}{number >> 4:0x}")
 
 
-class ZDataType(DataType):
-    def __int__(self, **kwargs):
-        super().__init__(**kwargs)
+class ZDataType(DataTypeGeneric):
+    PADDING = 0xF0
+
+    def __init__(self):
+        super().__init__()
         self.data_type = 'Z'
 
     @property
@@ -147,12 +145,18 @@ class ZDataType(DataType):
     def value(self):
         return int(self.input) if self.input is not None else self.from_bytes()
 
-    def to_bytes(self):
+    def to_bytes(self, length=None):
         zoned_data = self.input[1:] if self.input[0] in ['+', '-'] else self.input
         sign = 0xD0 if self.input[0] == '-' else 0xC0
-        self.bytes = bytearray(zoned_data, 'cp037')
-        self.bytes[-1] = self.bytes[-1] & 0x0F | sign
-        return self.bytes
+        zoned_data = bytearray(zoned_data, 'cp037')
+        zoned_data[-1] = zoned_data[-1] & 0x0F | sign
+        if length is None or length == self.length:
+            return zoned_data
+        if self.length > length:
+            return zoned_data[(self.length - length):]  # Truncation
+        pad_data = bytearray([self.PADDING] * (length - self.length))
+        pad_data.extend(zoned_data)
+        return pad_data                                # Padding
 
     def from_bytes(self):
         sign = '-' if self.bytes[-1] & 0xF0 == 0xD0 else '+'
@@ -161,60 +165,103 @@ class ZDataType(DataType):
         return int(f"{sign}{numeric_bytes.decode(encoding='cp037')}")
 
 
-class NumericDataType(DataType):
-    def __int__(self, **kwargs):
-        super().__init__(**kwargs)
-
+class NumericDataType(DataTypeGeneric):
     @property
     def length(self):
         return self.default_length
 
     @property
     def value(self):
-        return int(self.input) if self.input is not None else self.from_bytes()
+        return round(float(self.input)) if self.input is not None else self.from_bytes()
 
-    def to_bytes(self):
-        self.bytes = self.value.to_bytes(self.length, 'big', signed=False)
-        return self.bytes
+    def to_bytes(self, length=None):
+        length = length or self.length
+        try:
+            return self.value.to_bytes(length, 'big', signed=True)
+        except OverflowError:
+            return self.value.to_bytes(self.length, 'big', signed=True)[(self.length - length):]
 
     def from_bytes(self):
         return int.from_bytes(self.bytes, 'big', signed=True)
 
 
 class FDataType(NumericDataType):
-    def __int__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self):
+        super().__init__()
         self.data_type = 'F'
 
 
 class HDataType(NumericDataType):
-    def __int__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self):
+        super().__init__()
         self.data_type = 'H'
 
 
 class FDDataType(NumericDataType):
-    def __int__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self):
+        super().__init__()
         self.data_type = 'FD'
 
 
 class DDataType(NumericDataType):
-    def __int__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self):
+        super().__init__()
         self.data_type = 'D'
 
 
 class ADataType(NumericDataType):
-    def __int__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self):
+        super().__init__()
         self.data_type = 'A'
 
 
 class YDataType(NumericDataType):
-    def __int__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self):
+        super().__init__()
         self.data_type = 'Y'
+
+
+class DataType:
+    OBJECT = {'X': XDataType(),
+              'C': CDataType(),
+              'H': HDataType(),
+              'F': FDataType(),
+              'D': DDataType(),
+              'FD': FDDataType(),
+              'B': BDataType(),
+              'P': PDataType(),
+              'Z': ZDataType(),
+              'A': ADataType(),
+              'Y': YDataType()}
+
+    def __init__(self, data_type, **kwargs):
+        if data_type not in self.OBJECT:
+            raise TypeError
+        self.data_type_object = self.OBJECT[data_type]
+        self.data_type_object.input = kwargs['input'] if 'input' in kwargs else None
+        self.data_type_object.bytes = kwargs['bytes'] if 'bytes' in kwargs and 'input' not in kwargs else None
+
+    @property
+    def default_length(self):
+        return self.data_type_object.default_length
+
+    @property
+    def align_to_boundary(self):
+        return self.data_type_object.align_to_boundary
+
+    @property
+    def length(self):
+        return self.data_type_object.length
+
+    @property
+    def value(self):
+        return self.data_type_object.value
+
+    def to_bytes(self, length=None):
+        return self.data_type_object.to_bytes(length)
+
+    def from_bytes(self):
+        return self.data_type_object.from_bytes()
 
 
 class Register:
@@ -278,7 +325,7 @@ class Field:
                 return length, Error.FBD_INVALID_KEY
             length = macro.data_map[name].length
             try:
-                base = macro.files[macro.data_map[name].macro].base
+                base = macro.files[macro.data_map[name].name].base
             except KeyError:
                 return length, Error.FBD_INVALID_KEY_BASE
         self.name = name

@@ -11,7 +11,7 @@ class DsDc:
         self.length = 0
         self.data_type = None
         self.data = None
-        self.align_to_boundary = True
+        self.align_to_boundary = False
 
     @classmethod
     def from_operand(cls, operand, macro, location_counter=None):
@@ -29,36 +29,42 @@ class DsDc:
         dsdc.duplication_factor = int(operands[0]) if operands[0] else 1
         # Data Type
         dsdc.data_type = operands[1]
-        if dsdc.data_type not in DataType.DATA_TYPES:
-            raise TypeError
-        # Data
-        length = None
-        if operands[4]:
-            data_type_object = DataType(dsdc.data_type, input=operands[4])
-            dsdc.data = data_type_object.to_bytes()
-            length = data_type_object.length
-        elif operands[5]:
-            number, result = macro.get_value(operands[5], location_counter)
-            if result != Error.NO_ERROR:
-                return dsdc, result
-            dsdc.data = DataType(dsdc.data_type, input=str(number)).to_bytes()
-        else:
-            dsdc.data = None
+        # Align to boundary
+        dsdc.align_to_boundary = DataType(dsdc.data_type).align_to_boundary
         # Length
-        if not operands[2] and not operands[3]:
-            dsdc.length = DataType.DATA_TYPES[dsdc.data_type] if length is None else length
-        elif operands[2]:
+        if operands[2]:
             dsdc.length = int(operands[2])
             dsdc.align_to_boundary = False
-        else:
+        elif operands[3]:
             dsdc.length, result = macro.get_value(operands[3], location_counter)
             dsdc.align_to_boundary = False
             if result != Error.NO_ERROR:
                 return dsdc, result
+        else:
+            dsdc.length = None
+        # Data
+        if operands[4]:
+            data_type_object = DataType(dsdc.data_type, input=operands[4])
+            dsdc.length = dsdc.length or data_type_object.length
+            dsdc.data = data_type_object.to_bytes(dsdc.length)
+        elif operands[5]:
+            number, result = macro.get_value(operands[5], location_counter)
+            if result != Error.NO_ERROR:
+                return dsdc, result
+            data_type_object = DataType(dsdc.data_type, input=str(number))
+            dsdc.length = dsdc.length or data_type_object.default_length
+            dsdc.data = data_type_object.to_bytes(dsdc.length)
+        else:
+            dsdc.data = None
+            dsdc.length = dsdc.length or DataType(dsdc.data_type).default_length
         return dsdc, Error.NO_ERROR
 
     def __repr__(self):
         return f'{self.duplication_factor}:{self.data_type}:{self.length}:{self.data}'
+
+    @staticmethod
+    def split_operands(operands):
+        return Instruction.split_operands(operands)
 
 
 class Instruction:
