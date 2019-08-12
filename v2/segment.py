@@ -3,11 +3,10 @@ import v2.instruction as ins
 
 from copy import copy
 from config import config
-from v2.file_line import File, Line
-from v2.macro import Macro, SymbolTable
+from v2.file_line import File, Line, SymbolTable
+from v2.macro import Macro
 from v2.errors import Error
 from v2.command import cmd
-from v2.data_type import DataType
 
 
 class Label:
@@ -33,6 +32,7 @@ class Segment:
         self.file_name = file_name
         self.name = name
         self.macro = macro
+        self.seg_macro = Macro()
         self.nodes = dict()     # Dictionary of Instruction. Label is the key.
         self.errors = list()
         self.assembled = False
@@ -44,7 +44,7 @@ class Segment:
 
     def get_constant_bytes(self, label, length=None):
         try:
-            symbol_table = self.macro.data_map[label]
+            symbol_table = self.seg_macro.data_map[label]
         except KeyError:
             return None
         if symbol_table.name != self.name:
@@ -73,28 +73,16 @@ class Segment:
         for line in lines:
             length = line.length if line.length else 1
             dsp = location_counter
-            if line.command in ['DC', 'DS']:
-                operands = ins.Instruction.split_operands(line.operand)
-                length = 0
-                for operand in operands:
-                    dc, result = ins.DsDc.from_operand(operand, self.macro, location_counter)
-                    if result != Error.NO_ERROR:
-                        self.errors.append(f'{result} {line} {self.name}')
-                        break
-                    while dc.align_to_boundary and location_counter % DataType(dc.data_type).default_length != 0:
-                        dsp = dsp + 1 if operand == operands[0] else dsp
-                        location_counter += 1
-                        if line.command == 'DC':
-                            self.constant.data.extend([0x00])
-                    self.constant.start = self.constant.start or location_counter
-                    length = length or dc.length
-                    location_counter += dc.duplication_factor * dc.length
-                    if line.command == 'DC':
-                        self.constant.data.extend(dc.data * dc.duplication_factor)
-            else:
+            if line.is_second_pass:
                 location_counter += line.length
-            if line.label:
-                self.macro.data_map[line.label] = SymbolTable(line.label, dsp, length, self.name)
+                if line.label:
+                    self.seg_macro.data_map[line.label] = SymbolTable(line.label, dsp, length, self.name)
+            else:
+                instruction_class = line.instruction_class
+                location_counter, result = eval(
+                    f"ins.{instruction_class}.update(line, self.seg_macro, location_counter, self.name, self.constant)")
+                if result != Error.NO_ERROR:
+                    self.errors.append(f'{result} {line} {self.name}')
 
     def _assemble_instructions(self, lines):
         prior_label = Label(self.root_label)
@@ -119,30 +107,22 @@ class Segment:
 
     def _create_node(self, line, other_lines, current_label, seg_name):
         # Create and empty instruction for a label with no instruction (EQU * or DS 0H)
-        if current_label == line.label and not self.macro.is_location_counter_changed(line):
+        if not line.is_second_pass:
             node = ins.Instruction(line.label, line.command)
             self.nodes[current_label] = node
             return
         # Get the instruction class based on the command and create the dynamic instruction object
-        instruction_class = cmd.check(line.command, 'create')
-        if instruction_class == 'Skip':
-            return
-        if not instruction_class:
-            self.errors.append(f'{Error.INSTRUCTION_INVALID} {line} {seg_name}')
-            return
+        instruction_class = line.instruction_class
         parameters = 'current_label, line.command, line.operand, self.macro'
         node, result = eval(f"ins.{instruction_class}.from_operand({parameters})")
         if result != Error.NO_ERROR:
             self.errors.append(f'{result} {line} {seg_name}')
             return
-        # Other lines contain one or more conditions (like BNE, JL) and instruction that do change cc.
+        # Other lines contain one or more conditions (like BNE, JL) and instruction that don't change cc.
         for line in other_lines:
+            if not line.is_second_pass:
+                continue
             instruction_class = cmd.check(line.command, 'create')
-            if not instruction_class:
-                self.errors.append(f'{Error.INSTRUCTION_INVALID} {line} {seg_name}')
-                return
-            if instruction_class == 'Skip':
-                return
             condition, result = eval(f"ins.{instruction_class}.from_operand({parameters})")
             if result != Error.NO_ERROR:
                 self.errors.append(f'{result} {line} {seg_name}')

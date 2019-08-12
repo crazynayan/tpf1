@@ -3,6 +3,7 @@ import re
 from v2.data_type import DataType, FieldBaseDsp, Bits, Register, FieldIndex, FieldLen
 from v2.errors import Error
 from v2.command import cmd
+from v2.file_line import SymbolTable
 
 
 class DsDc:
@@ -12,6 +13,9 @@ class DsDc:
         self.data_type = None
         self.data = None
         self.align_to_boundary = False
+
+    def __repr__(self):
+        return f'{self.duplication_factor}:{self.data_type}:{self.length}:{self.data}'
 
     @classmethod
     def from_operand(cls, operand, macro, location_counter=None):
@@ -59,12 +63,108 @@ class DsDc:
             dsdc.length = dsdc.length or DataType(dsdc.data_type).default_length
         return dsdc, Error.NO_ERROR
 
-    def __repr__(self):
-        return f'{self.duplication_factor}:{self.data_type}:{self.length}:{self.data}'
 
+class Ds:
     @staticmethod
-    def split_operands(operands):
-        return Instruction.split_operands(operands)
+    def update(line, macro, location_counter, name, constant=None):
+        operands = Instruction.split_operands(line.operand)
+        dsp = location_counter
+        length = 0
+        for operand in operands:
+            dc, result = DsDc.from_operand(operand, macro, location_counter)
+            if result != Error.NO_ERROR:
+                return location_counter, result
+            while dc.align_to_boundary and location_counter % DataType(dc.data_type).default_length != 0:
+                dsp = dsp + 1 if operand == operands[0] else dsp
+                location_counter += 1
+            length = length or dc.length
+            location_counter += dc.duplication_factor * dc.length
+        if line.label:
+            macro.data_map[line.label] = SymbolTable(line.label, dsp, length, name)
+        return location_counter, Error.NO_ERROR
+
+    @classmethod
+    def update_from_lines(cls, ds_list, macro, name, errors):
+        for line, location_counter in ds_list:
+            if line.command != 'DS':
+                continue
+            _, result = cls.update(line, macro, location_counter, name)
+            if result != Error.NO_ERROR:
+                errors.append(f'{result} {line} {name}')
+
+
+class Dc:
+    @staticmethod
+    def update(line, macro, location_counter, name, constant):
+        operands = Instruction.split_operands(line.operand)
+        dsp = location_counter
+        length = 0
+        for operand in operands:
+            dc, result = DsDc.from_operand(operand, macro, location_counter)
+            if result != Error.NO_ERROR:
+                return location_counter, result
+            while dc.align_to_boundary and location_counter % DataType(dc.data_type).default_length != 0:
+                dsp = dsp + 1 if operand == operands[0] else dsp
+                location_counter += 1
+                constant.data.extend([0x00])
+            constant.start = constant.start or location_counter
+            length = length or dc.length
+            location_counter += dc.duplication_factor * dc.length
+            constant.data.extend(dc.data * dc.duplication_factor)
+        if line.label:
+            macro.data_map[line.label] = SymbolTable(line.label, dsp, length, name)
+        return location_counter, Error.NO_ERROR
+
+
+class Equ:
+    @staticmethod
+    def update(line, macro, location_counter, name, constant=None):
+        if line.label is None:
+            return location_counter, Error.EQU_LABEL_REQUIRED
+        operands = Instruction.split_operands(line.operand)
+        dsp_operand = operands[0]
+        length = 1
+        if dsp_operand == '*' or not set("+-*").intersection(dsp_operand):
+            dsp, data_type, result = macro.evaluate(dsp_operand, location_counter)
+            if result != Error.NO_ERROR:
+                return location_counter, result
+            if data_type == macro.FIELD_LOOKUP:
+                dsp_operand = next(iter(dsp_operand.split('&')))
+                length = macro.data_map[dsp_operand].length
+        else:
+            dsp, result = macro.get_value(dsp_operand, location_counter)
+            if result != Error.NO_ERROR:
+                return location_counter, result
+        if len(operands) > 1:
+            length, result = macro.get_value(operands[1])
+            if result != Error.NO_ERROR:
+                return location_counter, result
+        macro.data_map[line.label] = SymbolTable(line.label, dsp, length, name)
+        return location_counter, Error.NO_ERROR
+
+    @classmethod
+    def update_from_lines(cls, equate_list, macro, name, errors):
+        for line, location_counter in equate_list:
+            if line.command != 'EQU':
+                continue
+            _, result = cls.update(line, macro, location_counter, name)
+            if result != Error.NO_ERROR:
+                errors.append(f'{result} {line} {name}')
+
+
+class Dsect:
+    @staticmethod
+    def update(line, macro, location_counter, name=None, constant=None):
+        name = line.label
+        macro.dsect_stack.append(location_counter)
+        macro.data_map[name] = SymbolTable(name, 0, 0, name)
+        return 0, Error.NO_ERROR
+
+
+class Org:
+    @staticmethod
+    def update(line, macro, location_counter, name=None, constant=None):
+        return macro.get_value(line.operand, location_counter)
 
 
 class Instruction:

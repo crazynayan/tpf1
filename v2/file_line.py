@@ -121,6 +121,10 @@ class Line:
         return True if cmd.check(self.command, 'set_cc') else False
 
     @property
+    def is_second_pass(self):
+        return True if cmd.check(self.command, 'second_pass') else False
+
+    @property
     def is_check_cc(self):
         return True if cmd.check(self.command, 'check_cc') and \
                        (self.command not in ['BC', 'JC'] or self.operand[:2] not in ['15', '0,']) else False
@@ -131,9 +135,26 @@ class Line:
                        or not cmd.command_check(self.command) else False
 
     @property
+    def instruction_class(self):
+        return cmd.check(self.command, 'create')
+
+    @property
     def length(self):
         length = cmd.check(self.command, 'len')
         return 0 if length is None else length
 
     def __repr__(self):
         return f'{self.label}:{self.command}:{self.operand}'
+
+
+class SymbolTable:
+    def __init__(self, label, dsp, length, name):
+        self.label = label
+        self.dsp = dsp
+        self.length = length
+        self.name = name        # Macro name or Segment name
+
+    def __repr__(self):
+        return f'{self.label}:{self.dsp}:{self.length}:{self.name}'
+
+

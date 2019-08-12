@@ -14,7 +14,6 @@ class Error:
     FX_INVALID_INDEX = 'FieldIndex - Invalid index register specified.'
     BITS_INVALID_NUMBER = 'Bits - Invalid number.'
     BITS_INVALID_BIT = 'Bits - Invalid bit value.'
-    INSTRUCTION_INVALID = 'Instruction - Invalid Class.'
     REG_INVALID = 'Register - Invalid.'
     RFX_INVALID_REG = 'RegisterFieldIndex - Invalid register specified'
     FL_LEN_REQUIRED = 'FieldLen - Length required.'
@@ -24,3 +23,4 @@ class Error:
     RDF_INVALID_DATA = 'RegisterDataField - Invalid data.'
     BC_INDEX = 'BranchCondition - Index is not yet supported in Branch instructions.'
     BC_INVALID_MASK = 'BranchCondition - Mask value not present in the command file.'
+    EQU_LABEL_REQUIRED = 'Equ - Label required.'

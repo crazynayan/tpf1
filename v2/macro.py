@@ -1,22 +1,11 @@
 import re
 import os
+import v2.instruction as ins
 
 from config import config
 from v2.errors import Error
 from v2.file_line import File, Line
 from v2.data_type import DataType
-from v2.instruction import DsDc
-
-
-class SymbolTable:
-    def __init__(self, label, dsp, length, name):
-        self.label = label
-        self.dsp = dsp
-        self.length = length
-        self.name = name        # Macro name or Segment name
-
-    def __repr__(self):
-        return f'{self.label}:{self.dsp}:{self.length}:{self.name}'
 
 
 class MacroFile:
@@ -40,6 +29,7 @@ class Macro:
         self.data_map = dict()  # Dictionary of SymbolTable. Field name is the key.
         self.files = dict()     # Dictionary of MacroFile. Marco name is the key.
         self.errors = list()
+        self.dsect_stack = list()
         for file_name in os.listdir(self.FOLDER_NAME):
             if len(file_name) < 6 or file_name[-4:] not in self.EXT:
                 continue
@@ -58,55 +48,19 @@ class Macro:
         # Remove suffix like &CG1 from label and only keep the accepted commands.
         lines = [line.remove_suffix() for line in lines if line.command in self.ACCEPTED_COMMANDS]
         # Create SymbolTable for each label and add it to data_map.
-        equate_list = list()
-        ds_list = list()
+        second_list = list()
         location_counter = 0
         for line in lines:
-            length = 1
-            dsp = 0
-            if line.command == 'DS':
-                ds, result = DsDc.from_operand(line.operand, self, location_counter)
-                if result != Error.NO_ERROR:
-                    if ds.duplication_factor == 0:
-                        ds_list.append((line, location_counter))
-                    else:
-                        self.errors.append(f'{result} {line} {macro_name}')
-                    continue
-                while ds.align_to_boundary and location_counter % DataType(ds.data_type).default_length != 0:
-                    location_counter += 1
-                dsp = location_counter
-                location_counter += ds.duplication_factor * ds.length
-                length = ds.length
-            elif line.command == 'EQU':
-                dsp, result = self.get_value(line.operand, location_counter)
-                if result != Error.NO_ERROR:
-                    equate_list.append((line, location_counter))
-                    continue
-            elif line.command == 'DSECT':
-                location_counter = 0
-                length = 0
-            if line.label:
-                self.data_map[line.label] = SymbolTable(line.label, dsp, length, macro_name)
-            if line.command == 'ORG':
-                dsp, result = self.get_value(line.operand, location_counter)
-                if result != Error.NO_ERROR:
-                    self.errors.append(f'{result} {line} {macro_name}')
-                    continue
-                location_counter = dsp
+            if line.is_second_pass:
+                continue
+            instruction_class = line.instruction_class
+            location_counter, result = eval(f"ins.{instruction_class}.update(line, self, location_counter, macro_name)")
+            if result != Error.NO_ERROR:
+                second_list.append((line, location_counter))
         # Add the saved equates which were not added in the first pass
-        for line, location_counter in equate_list:
-            dsp, result = self.get_value(line.operand, location_counter)
-            if result != Error.NO_ERROR:
-                self.errors.append(f'{result} {line} {macro_name}')
-                continue
-            self.data_map[line.label] = SymbolTable(line.label, dsp, 1, macro_name)
+        ins.Equ.update_from_lines(second_list, self, macro_name, self.errors)
         # Add the saved DS which were not added in the first pass
-        for line, location_counter in ds_list:
-            ds, result = DsDc.from_operand(line.operand, self, location_counter)
-            if result != Error.NO_ERROR:
-                self.errors.append(f'{result} {line} {macro_name}')
-                continue
-            self.data_map[line.label] = SymbolTable(line.label, location_counter, ds.length, macro_name)
+        ins.Ds.update_from_lines(second_list, self, macro_name, self.errors)
         # Indicate data is mapped for that macro
         self.files[macro_name].data_mapped = True
         if base is not None and base.is_valid():
@@ -132,7 +86,7 @@ class Macro:
         except (SyntaxError, NameError, TypeError, ValueError):
             return None, Error.EXP_EVAL_FAIL
 
-    def evaluate(self, expression, location_counter=-1):
+    def evaluate(self, expression, location_counter=None):
         if expression.isdigit():
             return int(expression), self.INTEGER, Error.NO_ERROR
         if expression == '*':
@@ -158,14 +112,6 @@ class Macro:
         if '&' in field:
             return field, data_type, Error.EXP_INVALID_KEY_X
         return DataType(data_type, input=field).value, data_type, Error.NO_ERROR
-
-    @staticmethod
-    def is_location_counter_changed(line):
-        if line.command == 'EQU' and line.operand == '*':
-            return False
-        if line.command == 'DS' and line.operand[0] == '0':
-            return False
-        return True
 
     def get_macro_name(self, base):
         return next(macro_name for macro_name, file in self.files.items() if file.base and file.base.reg == base.reg)

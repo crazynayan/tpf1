@@ -1,10 +1,12 @@
 {
     "AAGET": {
-        "create": 1
+        "create": 1,
+        "second_pass": 1
     },
     "AHI": {
         "create": "RegisterData",
         "len": 4,
+        "second_pass": 1,
         "set_cc": 1
     },
     "AR": {
@@ -12,33 +14,42 @@
         "create": "RegisterRegister",
         "len": 2,
         "math": "+",
+        "second_pass": 1,
         "set_1": 1,
         "set_cc": 1
+    },
+    "ATTAC": {
+        "second_pass": 1
     },
     "B": {
         "create": "BranchCondition",
         "len": 4,
         "mask": 15,
-        "no_fall_down": 1
+        "no_fall_down": 1,
+        "second_pass": 1
     },
     "BACKC": {
         "create": "Exit",
         "no_fall_down": 1,
-        "no_operand": 1
+        "no_operand": 1,
+        "second_pass": 1
     },
     "BAS": {
-        "create": 1
+        "create": 1,
+        "second_pass": 1
     },
     "BC": {
         "check_cc": 1,
         "create": "BranchCondition",
         "len": 4,
-        "opposite": "BC"
+        "opposite": "BC",
+        "second_pass": 1
     },
     "BCTR": {
         "create": "RegisterRegister",
         "len": 2,
         "math": "-",
+        "second_pass": 1,
         "set_1": 1
     },
     "BE": {
@@ -49,6 +60,7 @@
         "mask": 8,
         "operator": "==",
         "opposite": "BNE",
+        "second_pass": 1,
         "text": "="
     },
     "BH": {
@@ -59,6 +71,7 @@
         "mask": 2,
         "operator": ">",
         "opposite": "BNH",
+        "second_pass": 1,
         "text": ">"
     },
     "BL": {
@@ -69,6 +82,7 @@
         "mask": 4,
         "operator": "<",
         "opposite": "BNL",
+        "second_pass": 1,
         "text": "<"
     },
     "BM": {
@@ -80,6 +94,7 @@
         "math": "< 0",
         "operator": "< 0",
         "opposite": "BNM",
+        "second_pass": 1,
         "text": "< 0"
     },
     "BNE": {
@@ -90,6 +105,7 @@
         "mask": 7,
         "operator": "!=",
         "opposite": "BE",
+        "second_pass": 1,
         "text": "!="
     },
     "BNH": {
@@ -100,6 +116,7 @@
         "mask": 13,
         "operator": "<=",
         "opposite": "BH",
+        "second_pass": 1,
         "text": "<="
     },
     "BNL": {
@@ -110,6 +127,7 @@
         "mask": 11,
         "operator": ">=",
         "opposite": "BL",
+        "second_pass": 1,
         "text": ">="
     },
     "BNM": {
@@ -121,6 +139,7 @@
         "math": ">= 0",
         "operator": ">= 0",
         "opposite": "BM",
+        "second_pass": 1,
         "text": ">= 0"
     },
     "BNO": {
@@ -132,6 +151,7 @@
         "math": "not overflow",
         "operator": "== 0",
         "opposite": "BO",
+        "second_pass": 1,
         "text": "OFF"
     },
     "BNP": {
@@ -142,6 +162,7 @@
         "math": "<= 0",
         "operator": "<= 0",
         "opposite": "BP",
+        "second_pass": 1,
         "text": "<= 0"
     },
     "BNZ": {
@@ -154,6 +175,7 @@
         "math": "is not 0",
         "operator": "!= 0",
         "opposite": "BZ",
+        "second_pass": 1,
         "text": "ON"
     },
     "BO": {
@@ -165,6 +187,7 @@
         "math": "overflow",
         "operator": "!= 0",
         "opposite": "BNO",
+        "second_pass": 1,
         "text": "ON"
     },
     "BP": {
@@ -175,12 +198,14 @@
         "math": "> 0",
         "operator": "> 0",
         "opposite": "BNP",
+        "second_pass": 1,
         "text": "> 0"
     },
     "BR": {
         "create": 1,
         "len": 1,
-        "no_fall_down": 1
+        "no_fall_down": 1,
+        "second_pass": 1
     },
     "BZ": {
         "binary": "has no data",
@@ -192,111 +217,149 @@
         "math": "is 0",
         "operator": "== 0",
         "opposite": "BNZ",
+        "second_pass": 1,
         "text": "OFF"
     },
     "CFCMA": {
         "create": 1,
-        "key_text": "SREF"
+        "key_text": "SREF",
+        "second_pass": 1
     },
     "CH": {
         "branch_type": "compare",
         "create": "RegisterFieldIndex",
         "field_len": 2,
         "len": 4,
+        "second_pass": 1,
         "set_cc": 1
     },
     "CLC": {
         "branch_type": "compare",
         "create": "FieldLenField",
         "len": 6,
+        "second_pass": 1,
         "set_cc": 1
     },
     "CLI": {
         "branch_type": "compare",
         "create": "FieldData",
         "len": 4,
+        "second_pass": 1,
         "set_cc": 1
+    },
+    "CRUSA": {
+        "second_pass": 1
+    },
+    "CSECT": {
+        "create": "Csect"
     },
     "CVB": {
         "create": "RegisterFieldIndex",
         "field_len": 8,
         "len": 4,
+        "second_pass": 1,
         "set_1": 1
     },
     "CVD": {
         "create": "RegisterFieldIndex",
         "field_len": 8,
         "len": 4,
+        "second_pass": 1,
         "set_2": 1
     },
     "DBCLS": {
-        "create": 1
+        "create": 1,
+        "second_pass": 1
     },
     "DBIFB": {
         "create": 1,
-        "key_text": "REF"
+        "key_text": "REF",
+        "second_pass": 1
+    },
+    "DBOPN": {
+        "second_pass": 1
     },
     "DBRED": {
         "create": 1,
-        "key_text": "REF"
+        "key_text": "REF",
+        "second_pass": 1
     },
     "DC": {
-        "create": "Skip"
+        "create": "Dc"
+    },
+    "DETAC": {
+        "second_pass": 1
     },
     "DS": {
-        "create": "Skip"
+        "create": "Ds"
     },
     "DSECT": {
-        "create": "Skip"
+        "create": "Dsect"
     },
     "ENTDC": {
         "create": 1,
-        "no_fall_down": 1
+        "no_fall_down": 1,
+        "second_pass": 1
     },
     "ENTNC": {
         "create": 1,
-        "no_fall_down": 1
+        "no_fall_down": 1,
+        "second_pass": 1
     },
     "ENTRC": {
-        "create": 1
+        "create": 1,
+        "second_pass": 1
     },
     "EQU": {
-        "create": "Skip"
+        "create": "Equ"
     },
     "EX": {
         "branch_type": "depends",
-        "create": 1
+        "create": 1,
+        "second_pass": 1
     },
     "EXITC": {
         "create": "Exit",
         "no_fall_down": 1,
-        "no_operand": 1
+        "no_operand": 1,
+        "second_pass": 1
+    },
+    "GETCC": {
+        "second_pass": 1
+    },
+    "GLOBZ": {
+        "second_pass": 1
     },
     "IC": {
         "create": "RegisterFieldIndex",
         "field_len": 1,
         "len": 4,
+        "second_pass": 1,
         "set_1": 1
     },
     "ICM": {
         "create": "RegisterDataField",
         "len": 4,
+        "second_pass": 1,
         "set_1": 1
     },
     "J": {
         "create": "BranchCondition",
         "len": 4,
         "mask": 15,
-        "no_fall_down": 1
+        "no_fall_down": 1,
+        "second_pass": 1
     },
     "JAS": {
-        "create": 1
+        "create": 1,
+        "second_pass": 1
     },
     "JC": {
         "check_cc": 1,
         "create": "BranchCondition",
         "len": 4,
-        "opposite": "JC"
+        "opposite": "JC",
+        "second_pass": 1
     },
     "JE": {
         "check_cc": 1,
@@ -306,6 +369,7 @@
         "mask": 8,
         "operator": "==",
         "opposite": "JNE",
+        "second_pass": 1,
         "text": "="
     },
     "JH": {
@@ -316,6 +380,7 @@
         "mask": 2,
         "operator": ">",
         "opposite": "JNH",
+        "second_pass": 1,
         "text": ">"
     },
     "JL": {
@@ -326,6 +391,7 @@
         "mask": 4,
         "operator": "<",
         "opposite": "JNL",
+        "second_pass": 1,
         "text": "<"
     },
     "JM": {
@@ -337,6 +403,7 @@
         "math": "< 0",
         "operator": "< 0",
         "opposite": "JNM",
+        "second_pass": 1,
         "text": "< 0"
     },
     "JNE": {
@@ -347,6 +414,7 @@
         "mask": 7,
         "operator": "!=",
         "opposite": "JE",
+        "second_pass": 1,
         "text": "!="
     },
     "JNH": {
@@ -357,6 +425,7 @@
         "mask": 13,
         "operator": "<=",
         "opposite": "JH",
+        "second_pass": 1,
         "text": "<="
     },
     "JNL": {
@@ -367,6 +436,7 @@
         "mask": 11,
         "operator": ">=",
         "opposite": "JL",
+        "second_pass": 1,
         "text": ">="
     },
     "JNM": {
@@ -378,6 +448,7 @@
         "math": ">= 0",
         "operator": ">= 0",
         "opposite": "JM",
+        "second_pass": 1,
         "text": ">= 0"
     },
     "JNO": {
@@ -389,12 +460,14 @@
         "math": "not overflow",
         "operator": "== 0",
         "opposite": "JO",
+        "second_pass": 1,
         "text": "OFF"
     },
     "JNOP": {
         "create": "BranchCondition",
         "len": 4,
-        "mask": 0
+        "mask": 0,
+        "second_pass": 1
     },
     "JNP": {
         "check_cc": 1,
@@ -404,6 +477,7 @@
         "math": "<= 0",
         "operator": "<= 0",
         "opposite": "JP",
+        "second_pass": 1,
         "text": "<= 0"
     },
     "JNZ": {
@@ -416,6 +490,7 @@
         "math": "is not 0",
         "operator": "== 1",
         "opposite": "JZ",
+        "second_pass": 1,
         "text": "ON"
     },
     "JO": {
@@ -427,6 +502,7 @@
         "math": "overflow",
         "operator": "== 1",
         "opposite": "JNO",
+        "second_pass": 1,
         "text": "ON"
     },
     "JP": {
@@ -437,6 +513,7 @@
         "math": "> 0",
         "operator": "> 0",
         "opposite": "JNP",
+        "second_pass": 1,
         "text": "> 0"
     },
     "JZ": {
@@ -449,48 +526,60 @@
         "math": "is 0",
         "operator": "== 0",
         "opposite": "JNZ",
+        "second_pass": 1,
         "text": "OFF"
     },
     "L": {
         "create": "RegisterFieldIndex",
         "field_len": 4,
         "len": 4,
+        "second_pass": 1,
         "set_1": 1
     },
     "LA": {
         "create": "RegisterFieldIndex",
         "field_len": 0,
         "len": 4,
+        "second_pass": 1,
         "set_1": 1
     },
     "LHI": {
         "create": "RegisterData",
         "len": 4,
+        "second_pass": 1,
         "set_1": 1
     },
     "LM": {
         "create": "RegisterRegisterField",
-        "len": 4
+        "len": 4,
+        "second_pass": 1
     },
     "LR": {
         "create": "RegisterRegister",
         "len": 2,
+        "second_pass": 1,
         "set_1": 1
     },
     "LTR": {
         "branch_type": "binary",
         "create": "RegisterRegister",
         "len": 2,
+        "second_pass": 1,
         "set_cc": 1
+    },
+    "MODEC": {
+        "second_pass": 1
     },
     "MVC": {
         "create": "FieldLenField",
         "len": 6,
+        "second_pass": 1,
         "set_1": 1
     },
     "MVI": {
         "create": "FieldData",
         "len": 4,
+        "second_pass": 1,
         "set_1": 1
     },
     "N": {
@@ -499,6 +588,7 @@
         "field_len": 4,
         "len": 4,
         "math": "&",
+        "second_pass": 1,
         "set_1": 1,
         "set_cc": 1
     },
@@ -507,6 +597,7 @@
         "create": "FieldBits",
         "len": 4,
         "math": "&",
+        "second_pass": 1,
         "set_1": 1,
         "set_cc": 1,
         "source": "field & bits",
@@ -515,12 +606,14 @@
     "NOP": {
         "create": "BranchCondition",
         "len": 4,
-        "mask": 0
+        "mask": 0,
+        "second_pass": 1
     },
     "OC": {
         "branch_type": "binary",
         "create": "FieldLenField",
         "len": 6,
+        "second_pass": 1,
         "set_cc": 1
     },
     "OI": {
@@ -528,50 +621,65 @@
         "create": "FieldBits",
         "len": 4,
         "math": "|",
+        "second_pass": 1,
         "set_1": 1,
         "set_cc": 1,
         "source": "field | bits",
         "target": "field"
     },
     "ORG": {
-        "create": "Skip"
+        "create": "Org"
     },
     "PACK": {
         "create": "FieldLenFieldLen",
         "len": 6,
+        "second_pass": 1,
         "set_1": 1
     },
     "PDCLS": {
-        "create": 1
+        "create": 1,
+        "second_pass": 1
     },
     "PDRED": {
         "create": 1,
-        "key_text": "FIELD"
+        "key_text": "FIELD",
+        "second_pass": 1
+    },
+    "PGMID": {
+        "create": "Pgmid"
     },
     "PNRCC": {
-        "create": 1
+        "create": 1,
+        "second_pass": 1
     },
     "PNRCM": {
-        "create": 1
+        "create": 1,
+        "second_pass": 1
     },
     "POP": {
-        "create": "Skip"
+        "create": "Pop"
     },
     "PUSH": {
-        "create": "Skip"
+        "create": "Push"
+    },
+    "RELCC": {
+        "second_pass": 1
     },
     "SENDA": {
         "create": 1,
-        "no_fall_down": 1
+        "no_fall_down": 1,
+        "second_pass": 1
     },
     "SERRC": {
-        "create": 1
+        "create": 1,
+        "second_pass": 1
     },
     "SR": {
         "branch_type": "math",
         "create": "RegisterRegister",
         "len": 2,
         "math": "-",
+        "second_pass": 1,
         "set_1": 1,
         "set_cc": 1
     },
@@ -579,50 +687,59 @@
         "create": "RegisterFieldIndex",
         "field_len": 4,
         "len": 4,
+        "second_pass": 1,
         "set_2": 1
     },
     "STC": {
         "create": "RegisterFieldIndex",
         "field_len": 1,
         "len": 4,
+        "second_pass": 1,
         "set_2": 1
     },
     "STCM": {
         "create": "RegisterDataField",
-        "len": 4
+        "len": 4,
+        "second_pass": 1
     },
     "STH": {
         "create": "RegisterFieldIndex",
         "field_len": 2,
         "len": 4,
+        "second_pass": 1,
         "set_2": 1
     },
     "STM": {
         "create": "RegisterRegisterField",
-        "len": 4
+        "len": 4,
+        "second_pass": 1
     },
     "SYSRA": {
-        "create": 1
+        "create": 1,
+        "second_pass": 1
     },
     "TM": {
         "branch_type": "bit",
         "condition": "field & bits on",
         "create": "FieldBits",
         "len": 4,
+        "second_pass": 1,
         "set_cc": 1
     },
     "UNPK": {
         "create": "FieldLenFieldLen",
         "len": 6,
+        "second_pass": 1,
         "set_1": 1
     },
     "USING": {
-        "create": "Skip"
+        "create": "Using"
     },
     "XC": {
         "branch_type": "binary",
         "create": "FieldLenField",
         "len": 6,
+        "second_pass": 1,
         "set_1": 1,
         "set_cc": 1
     }
