@@ -5,23 +5,22 @@ import v2.instruction as ins
 from config import config
 from v2.errors import Error
 from v2.file_line import File, Line
-from v2.data_type import DataType
+from v2.data_type import DataType, Register
 
 
 class MacroFile:
     def __init__(self, file_name):
         self.file_name = file_name
         self.data_mapped = False
-        self.base = None
 
     def __repr__(self):
-        return f'{self.file_name}:{self.data_mapped}:{self.base}'
+        return f'{self.file_name}:{self.data_mapped}'
 
 
 class Macro:
     EXT = {'.mac', '.txt'}
     FOLDER_NAME = os.path.join(config.ROOT_DIR, 'macro')
-    ACCEPTED_COMMANDS = {'DS', 'EQU', 'ORG', 'DSECT'}
+    ACCEPTED_COMMANDS = {'DS', 'EQU', 'ORG', 'DSECT', 'DC'}
     FIELD_LOOKUP = '$FIELD_LOOKUP$'
     INTEGER = '$INTEGER$'
 
@@ -29,12 +28,13 @@ class Macro:
         self.data_map = dict()  # Dictionary of SymbolTable. Field name is the key.
         self.files = dict()     # Dictionary of MacroFile. Marco name is the key.
         self.errors = list()
-        self.dsect_stack = list()
+        self.dsect = None
         for file_name in os.listdir(self.FOLDER_NAME):
             if len(file_name) < 6 or file_name[-4:] not in self.EXT:
                 continue
             macro_file = MacroFile(os.path.join(self.FOLDER_NAME, file_name))
             self.files[file_name[:-4].upper()] = macro_file
+        self.using = dict()
 
     def load(self, macro_name, base=None):
         if macro_name not in self.files:
@@ -54,7 +54,8 @@ class Macro:
             if line.is_second_pass:
                 continue
             instruction_class = line.instruction_class
-            location_counter, result = eval(f"ins.{instruction_class}.update(line, self, location_counter, macro_name)")
+            location_counter, result = eval(
+                f"ins.{instruction_class}.update(line, self, {location_counter}, macro_name)")
             if result != Error.NO_ERROR:
                 second_list.append((line, location_counter))
         # Add the saved equates which were not added in the first pass
@@ -63,8 +64,8 @@ class Macro:
         ins.Ds.update_from_lines(second_list, self, macro_name, self.errors)
         # Indicate data is mapped for that macro
         self.files[macro_name].data_mapped = True
-        if base is not None and base.is_valid():
-            self.files[macro_name].base = base
+        if base is not None and Register(base).is_valid():
+            self.using[base] = macro_name
         return True
 
     def get_value(self, operand, location_counter=None):
@@ -114,7 +115,12 @@ class Macro:
         return DataType(data_type, input=field).value, data_type, Error.NO_ERROR
 
     def get_macro_name(self, base):
-        return next(macro_name for macro_name, file in self.files.items() if file.base and file.base.reg == base.reg)
+        # Will raise a KeyError exception if the base register is not present.
+        return self.using[base.reg]
+
+    def get_base(self, macro_name):
+        # Will raise a StopIteration exception if the macro_name is not present.
+        return next(reg for reg, name in self.using.items() if name == macro_name)
 
     def get_field_name(self, base, dsp, length):
         try:
@@ -122,5 +128,5 @@ class Macro:
             matches = {label: symbol_table for label, symbol_table in self.data_map.items()
                        if symbol_table.dsp == dsp and symbol_table.name == macro_name}
             return min(matches, key=lambda label: abs(matches[label].length - length))
-        except (StopIteration, ValueError):
+        except (KeyError, ValueError):
             return None

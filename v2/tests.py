@@ -129,7 +129,7 @@ class MacroTest(unittest.TestCase):
 
 
 class SegmentTest(unittest.TestCase):
-    NUMBER_OF_FILES = 8
+    NUMBER_OF_FILES = 9
 
     def setUp(self) -> None:
         self.program = Program()
@@ -158,7 +158,6 @@ class SegmentTest(unittest.TestCase):
             f"{Error.FBD_INVALID_KEY_BASE} None:OI:PD0_C_ITM,1 {seg_name}",
             f"{Error.BITS_INVALID_NUMBER} None:OI:EBW000,250+250 {seg_name}",
             f"{Error.BITS_INVALID_BIT} None:OI:EBW000,#PD0_FLDEMP {seg_name}",
-            # f"{Error.INSTRUCTION_INVALID} None:ERR:EBW000,1 {seg_name}",
             f"{Error.FBD_INVALID_DSP} None:OI:-1(R2),1 {seg_name}",
             f"{Error.FBD_INVALID_DSP} None:OI:4096(R2),1 {seg_name}",
         ]
@@ -763,3 +762,29 @@ class SegmentTest(unittest.TestCase):
         # FLU      DC    C'-29'
         self.assertEqual(bytearray([0x60, 0xF2, 0xF9]), self.seg.get_constant_bytes('FLU'))
 
+    def test_dsect(self):
+        seg_name = 'TS08'
+        accepted_errors_list = [
+        ]
+        self._common_checks(seg_name, accepted_errors_list)
+        self.assertEqual(48, self.seg.seg_macro.data_map['TS08IND'].dsp)
+        self.assertEqual('TS08BLK', self.seg.seg_macro.data_map['TS08IND'].name)
+        self.assertEqual(0x80, self.seg.seg_macro.data_map['#ELIGIND'].dsp)
+        self.assertEqual(56, self.seg.seg_macro.data_map['TS08FQ'].dsp)
+        self.assertEqual(256, self.seg.seg_macro.data_map['TS08REC'].length)
+        self.assertEqual(64, self.seg.seg_macro.data_map['TS08REC'].dsp)
+        self.assertEqual(64, self.seg.seg_macro.data_map['TS08ITM'].dsp)
+        self.assertEqual(64, self.seg.seg_macro.data_map['TS08AAC'].dsp)
+        self.assertEqual(0, self.seg.seg_macro.data_map['TS08PGR'].dsp)
+        self.assertEqual('TS08AWD', self.seg.seg_macro.data_map['TS08PGR'].name)
+        self.assertEqual(30, self.seg.seg_macro.data_map['TS080010'].dsp)
+        self.assertEqual('R9', self.seg.nodes['$IS$.1'].field.base.reg)
+        self.assertEqual('R1', self.seg.nodes['$IS$.3'].field.base.reg)
+        self.assertEqual('WA0ET4', self.seg.nodes['$IS$.3'].field.name)
+        self.assertEqual(0x10, self.seg.nodes['$IS$.3'].bits.value)
+        self.assertTrue(self.seg.nodes['$IS$.3'].bits.bit_by_name('#WA0TTY').on)
+        self.assertEqual('R14', self.seg.nodes['$IS$.4'].field_len.base.reg)
+        self.assertEqual(2, self.seg.nodes['$IS$.4'].field_len.length)
+        self.assertEqual('R8', self.seg.nodes['$IS$.4'].field.base.reg)
+        self.assertEqual(0, self.seg.nodes['$IS$.4'].field.dsp - self.seg.constant.start)
+        self.assertEqual(bytearray([0xC1, 0xC1]), self.seg.get_constant_bytes('$C_AA'))

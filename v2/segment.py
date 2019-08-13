@@ -62,6 +62,10 @@ class Segment:
         lines = Line.from_file(file_lines)
         # First pass - Build Symbol Table and generate constants.
         self._build_symbol_table(lines)
+        # Merge into seg_macro
+        self.seg_macro.data_map = {**self.seg_macro.data_map, **self.macro.data_map}
+        self.seg_macro.using = self.macro.using.copy()
+        self.seg_macro.using['R8'] = self.name
         # Second pass - Assemble instructions and populates nodes.
         self._assemble_instructions(lines)
         # Indicate segment assembled
@@ -77,10 +81,15 @@ class Segment:
                 location_counter += line.length
                 if line.label:
                     self.seg_macro.data_map[line.label] = SymbolTable(line.label, dsp, length, self.name)
+            elif line.command in self.macro.files:
+                reg = line.operand[4:]
+                self.macro.load(line.command, reg)
             else:
                 instruction_class = line.instruction_class
+                # noinspection PyUnusedLocal
+                name = self.name if self.seg_macro.dsect is None else self.seg_macro.dsect[1]
                 location_counter, result = eval(
-                    f"ins.{instruction_class}.update(line, self.seg_macro, location_counter, self.name, self.constant)")
+                    f"ins.{instruction_class}.update(line, self.seg_macro, location_counter, name, self.constant)")
                 if result != Error.NO_ERROR:
                     self.errors.append(f'{result} {line} {self.name}')
 
@@ -88,7 +97,20 @@ class Segment:
         prior_label = Label(self.root_label)
         for ins_line in Line.yield_lines(lines):
             line = ins_line[0]
+            # Ignore Assembler directives and statements in DSECT
+            if not line.is_second_pass:
+                if line.label:
+                    try:
+                        if self.name != self.seg_macro.data_map[line.label].name:
+                            continue
+                    except KeyError:
+                        pass
+                else:
+                    continue
+            # Set the current label
             if not line.label:
+                if not line.is_second_pass:
+                    continue
                 current_label = copy(prior_label)
                 current_label.index += 1
             else:
@@ -107,13 +129,12 @@ class Segment:
 
     def _create_node(self, line, other_lines, current_label, seg_name):
         # Create and empty instruction for a label with no instruction (EQU * or DS 0H)
-        if not line.is_second_pass:
-            node = ins.Instruction(line.label, line.command)
-            self.nodes[current_label] = node
+        if not line.is_second_pass and line.label:
+            self.nodes[current_label] = ins.Instruction(line.label, line.command)
             return
         # Get the instruction class based on the command and create the dynamic instruction object
         instruction_class = line.instruction_class
-        parameters = 'current_label, line.command, line.operand, self.macro'
+        parameters = 'current_label, line.command, line.operand, self.seg_macro'
         node, result = eval(f"ins.{instruction_class}.from_operand({parameters})")
         if result != Error.NO_ERROR:
             self.errors.append(f'{result} {line} {seg_name}')
@@ -139,7 +160,7 @@ class Program:
     def __init__(self):
         self.segments = dict()     # Dictionary of Segment. Segment name is the key.
         self.macro = Macro()
-        self.macro.load('EB0EB', ins.Register('R9'))
+        self.macro.load('EB0EB', 'R9')
         for file_name in os.listdir(self.FOLDER_NAME):
             if len(file_name) < 6 or file_name[-4:].lower() not in self.EXT:
                 continue

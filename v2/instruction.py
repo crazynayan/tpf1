@@ -65,6 +65,7 @@ class DsDc:
 
 
 class Ds:
+    # noinspection PyUnusedLocal
     @staticmethod
     def update(line, macro, location_counter, name, constant=None):
         operands = Instruction.split_operands(line.operand)
@@ -117,6 +118,7 @@ class Dc:
 
 
 class Equ:
+    # noinspection PyUnusedLocal
     @staticmethod
     def update(line, macro, location_counter, name, constant=None):
         if line.label is None:
@@ -153,18 +155,37 @@ class Equ:
 
 
 class Dsect:
+    # noinspection PyUnusedLocal,PyUnusedLocal
     @staticmethod
-    def update(line, macro, location_counter, name=None, constant=None):
+    def update(line, macro, location_counter, name, constant=None):
         name = line.label
-        macro.dsect_stack.append(location_counter)
+        seg_location_counter, _ = macro.dsect if macro.dsect is not None else (location_counter, None)
+        macro.dsect = seg_location_counter, name
         macro.data_map[name] = SymbolTable(name, 0, 0, name)
         return 0, Error.NO_ERROR
 
 
+class Csect:
+    # noinspection PyUnusedLocal,PyUnusedLocal
+    @staticmethod
+    def update(line, macro, location_counter, name, constant=None):
+        location_counter, name = macro.dsect
+        macro.dsect = None
+        return location_counter, Error.NO_ERROR
+
+
 class Org:
+    # noinspection PyUnusedLocal,PyUnusedLocal
     @staticmethod
     def update(line, macro, location_counter, name=None, constant=None):
         return macro.get_value(line.operand, location_counter)
+
+
+class Pgmid:
+    # noinspection PyUnusedLocal,PyUnusedLocal
+    @staticmethod
+    def update(line, macro, location_counter, name, constant=None):
+        return 8, Error.NO_ERROR
 
 
 class Instruction:

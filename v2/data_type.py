@@ -325,8 +325,8 @@ class Field:
                 return length, Error.FBD_INVALID_KEY
             length = macro.data_map[name].length
             try:
-                base = macro.files[macro.data_map[name].name].base
-            except KeyError:
+                base = Register(macro.get_base(macro.data_map[name].name))
+            except (KeyError, StopIteration):
                 return length, Error.FBD_INVALID_KEY_BASE
         self.name = name
         self.dsp = dsp

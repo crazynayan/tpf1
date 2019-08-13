@@ -54,7 +54,7 @@ class Line:
             line.continuation = True
             file_line = file_line[:71]
         # Split the line in words. Keep words within single quotes together. Note: L' has only one quote.
-        words = re.findall(r"(?:[^L]'.*?'|\S)+", file_line)
+        words = re.findall(r"(?:'.*?'|\S)+", file_line)
         if file_line[0] == ' ':
             # The label is None for lines with first character space (No label)
             words.insert(0, None)
