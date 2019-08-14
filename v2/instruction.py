@@ -1,6 +1,6 @@
 import re
 
-from v2.data_type import DataType, FieldBaseDsp, Bits, Register, FieldIndex, FieldLen
+from v2.data_type import DataType, FieldBaseDsp, Bits, FieldIndex, FieldLen, Register
 from v2.errors import Error
 from v2.command import cmd
 from v2.file_line import SymbolTable
@@ -169,9 +169,10 @@ class Csect:
     # noinspection PyUnusedLocal,PyUnusedLocal
     @staticmethod
     def update(line, macro, location_counter, name, constant=None):
-        location_counter, name = macro.dsect
+        dsect_location_counter, name = macro.dsect
         macro.dsect = None
-        return location_counter, Error.NO_ERROR
+        macro.data_map[line.label] = SymbolTable(line.label, location_counter, 0, name)
+        return dsect_location_counter, Error.NO_ERROR
 
 
 class Org:
@@ -186,6 +187,19 @@ class Pgmid:
     @staticmethod
     def update(line, macro, location_counter, name, constant=None):
         return 8, Error.NO_ERROR
+
+
+class Using:
+    # noinspection PyUnusedLocal,PyUnusedLocal
+    @staticmethod
+    def update(line, macro, location_counter, name, constant=None):
+        operands = Instruction.split_operands(line.operand)
+        if len(operands) == 2 and Register(operands[1]).is_valid():
+            dsect = name if operands[0] == '*' else operands[0]
+            macro.set_using(dsect, operands[1])
+            return location_counter, Error.NO_ERROR
+        else:
+            raise TypeError
 
 
 class Instruction:

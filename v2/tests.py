@@ -2,7 +2,7 @@ import unittest
 import v2.instruction as ins
 
 from v2.errors import Error
-from v2.macro import Macro
+from v2.macro import GlobalMacro, SegmentMacro
 from v2.segment import Program
 
 
@@ -10,20 +10,21 @@ class MacroTest(unittest.TestCase):
     NUMBER_OF_FILES = 12
 
     def setUp(self) -> None:
-        self.macro = Macro()
+        self.macro = SegmentMacro(GlobalMacro())
 
     def test_files(self):
-        self.assertTrue('WA0AA' in self.macro.files)
-        self.assertTrue('EB0EB' in self.macro.files)
-        self.assertFalse('eta5' in self.macro.files)
-        self.assertEqual(self.NUMBER_OF_FILES, len(self.macro.files), 'Update number of files in MacroTest')
+        self.assertTrue(self.macro.is_present('WA0AA'))
+        self.assertTrue(self.macro.is_present('EB0EB'))
+        self.assertFalse(self.macro.is_present('ETA5'))
+        self.assertEqual(self.NUMBER_OF_FILES, len(self.macro.global_macro.files),
+                         'Update number of files in MacroTest')
 
     def _common_checks(self, macro_name, accepted_errors_list=None):
         accepted_errors_list = list() if accepted_errors_list is None else accepted_errors_list
         self.macro.load(macro_name)
         self.assertListEqual(accepted_errors_list, self.macro.errors, '\n\n\n' + '\n'.join(list(
             set(self.macro.errors) - set(accepted_errors_list))))
-        self.assertTrue(self.macro.files[macro_name].data_mapped)
+        self.assertTrue(self.macro.is_loaded(macro_name))
 
     def test_WA0AA(self):
         macro_name = 'WA0AA'
@@ -227,13 +228,13 @@ class SegmentTest(unittest.TestCase):
         self._common_checks(seg_name, accepted_errors_list)
         # Check R02,RDA
         label = 'TS020010'
-        self.assertEqual(0x008, self.seg.seg_macro.data_map[label].dsp)
-        self.assertEqual(2, self.seg.seg_macro.data_map[label].length)
+        self.assertEqual(0x008, self.seg.macro.data_map[label].dsp)
+        self.assertEqual(2, self.seg.macro.data_map[label].length)
         self.assertEqual('R2', self.seg.nodes[label].reg1.reg)
         self.assertEqual('R14', self.seg.nodes[label].reg2.reg)
         # Check RGA,2 with JNZ TS020010 & it contains a before_goes
         label = 'TS020020'
-        self.assertEqual(0x00a, self.seg.seg_macro.data_map[label].dsp)
+        self.assertEqual(0x00a, self.seg.macro.data_map[label].dsp)
         self.assertEqual('R2', self.seg.nodes[label].reg1.reg)
         self.assertEqual('R2', self.seg.nodes[label].reg2.reg)
         self.assertEqual('JNZ', self.seg.nodes[label].on)
@@ -241,13 +242,13 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual(5, len(self.seg.nodes[label].conditions))
         # Check 4,R04
         label = 'TS020030'
-        self.assertEqual(0x018, self.seg.seg_macro.data_map[label].dsp)
+        self.assertEqual(0x018, self.seg.macro.data_map[label].dsp)
         self.assertEqual('R4', self.seg.nodes[label].reg1.reg)
         self.assertEqual('R4', self.seg.nodes[label].reg2.reg)
         self.assertSetEqual({'TS020040'}, self.seg.nodes[label].next_labels)
         # Check DS    0H
         label = 'TS020040'
-        self.assertEqual(0x01a, self.seg.seg_macro.data_map[label].dsp)
+        self.assertEqual(0x01a, self.seg.macro.data_map[label].dsp)
         self.assertEqual(label, self.seg.nodes[label].label)
         self.assertEqual('DS', self.seg.nodes[label].command)
         # Check  BCTR  R5,0
@@ -680,38 +681,38 @@ class SegmentTest(unittest.TestCase):
         ]
         self._common_checks(seg_name, accepted_errors_list)
         label = 'TS070010'
-        self.assertEqual(0x008, self.seg.seg_macro.data_map[label].dsp)
-        self.assertEqual(1, self.seg.seg_macro.data_map[label].length)
-        self.assertEqual('TS07', self.seg.seg_macro.data_map[label].name)
+        self.assertEqual(0x008, self.seg.macro.data_map[label].dsp)
+        self.assertEqual(1, self.seg.macro.data_map[label].length)
+        self.assertEqual('TS07', self.seg.macro.data_map[label].name)
         label = 'TS070020'
-        self.assertEqual(0x018, self.seg.seg_macro.data_map[label].dsp)
-        self.assertEqual(4, self.seg.seg_macro.data_map[label].length)
+        self.assertEqual(0x018, self.seg.macro.data_map[label].dsp)
+        self.assertEqual(4, self.seg.macro.data_map[label].length)
         # Constant
         self.assertEqual(0x018, self.seg.constant.start)
         # C'CLASS'
         label = 'NAME'
-        self.assertEqual(0x018, self.seg.seg_macro.data_map[label].dsp)
-        self.assertEqual(5, self.seg.seg_macro.data_map[label].length)
+        self.assertEqual(0x018, self.seg.macro.data_map[label].dsp)
+        self.assertEqual(5, self.seg.macro.data_map[label].length)
         class_name = bytearray([0xC3, 0xD3, 0xC1, 0xE2, 0xE2])
         at = 0x018 - self.seg.constant.start
         self.assertEqual(class_name, self.seg.constant.data[at: at+5])
         self.assertEqual(class_name, self.seg.get_constant_bytes(label))
         # 2C'NAM'
         label = 'EXAM'
-        self.assertEqual(0x01d, self.seg.seg_macro.data_map[label].dsp)
-        self.assertEqual(3, self.seg.seg_macro.data_map[label].length)
+        self.assertEqual(0x01d, self.seg.macro.data_map[label].dsp)
+        self.assertEqual(3, self.seg.macro.data_map[label].length)
         exam_name = bytearray([0xD5, 0xC1, 0xD4, 0xD5, 0xC1, 0xD4])
         self.assertEqual(exam_name, self.seg.get_constant_bytes(label, len(exam_name)))
         # A(NAME)
         label = 'ADR1'
-        self.assertEqual(0x024, self.seg.seg_macro.data_map[label].dsp)
-        self.assertEqual(4, self.seg.seg_macro.data_map[label].length)
+        self.assertEqual(0x024, self.seg.macro.data_map[label].dsp)
+        self.assertEqual(4, self.seg.macro.data_map[label].length)
         self.assertEqual(bytearray(int(24).to_bytes(4, 'big')), self.seg.get_constant_bytes(label))
         self.assertEqual(bytearray(int(24).to_bytes(5, 'big')), self.seg.constant.data[0x00B: 0x010])
         # Y(EXAM-NAME)
         label = 'ADR2'
-        self.assertEqual(0x028, self.seg.seg_macro.data_map[label].dsp)
-        self.assertEqual(2, self.seg.seg_macro.data_map[label].length)
+        self.assertEqual(0x028, self.seg.macro.data_map[label].dsp)
+        self.assertEqual(2, self.seg.macro.data_map[label].length)
         self.assertEqual(bytearray(int(5).to_bytes(2, 'big')), self.seg.get_constant_bytes(label))
         # CHAR1    DC    C'ASDC'
         self.assertEqual(bytearray([0xC1, 0xE2, 0xC4, 0xC3]), self.seg.get_constant_bytes('CHAR1'))
@@ -767,24 +768,32 @@ class SegmentTest(unittest.TestCase):
         accepted_errors_list = [
         ]
         self._common_checks(seg_name, accepted_errors_list)
-        self.assertEqual(48, self.seg.seg_macro.data_map['TS08IND'].dsp)
-        self.assertEqual('TS08BLK', self.seg.seg_macro.data_map['TS08IND'].name)
-        self.assertEqual(0x80, self.seg.seg_macro.data_map['#ELIGIND'].dsp)
-        self.assertEqual(56, self.seg.seg_macro.data_map['TS08FQ'].dsp)
-        self.assertEqual(256, self.seg.seg_macro.data_map['TS08REC'].length)
-        self.assertEqual(64, self.seg.seg_macro.data_map['TS08REC'].dsp)
-        self.assertEqual(64, self.seg.seg_macro.data_map['TS08ITM'].dsp)
-        self.assertEqual(64, self.seg.seg_macro.data_map['TS08AAC'].dsp)
-        self.assertEqual(0, self.seg.seg_macro.data_map['TS08PGR'].dsp)
-        self.assertEqual('TS08AWD', self.seg.seg_macro.data_map['TS08PGR'].name)
-        self.assertEqual(30, self.seg.seg_macro.data_map['TS080010'].dsp)
-        self.assertEqual('R9', self.seg.nodes['$IS$.1'].field.base.reg)
-        self.assertEqual('R1', self.seg.nodes['$IS$.3'].field.base.reg)
-        self.assertEqual('WA0ET4', self.seg.nodes['$IS$.3'].field.name)
-        self.assertEqual(0x10, self.seg.nodes['$IS$.3'].bits.value)
-        self.assertTrue(self.seg.nodes['$IS$.3'].bits.bit_by_name('#WA0TTY').on)
-        self.assertEqual('R14', self.seg.nodes['$IS$.4'].field_len.base.reg)
-        self.assertEqual(2, self.seg.nodes['$IS$.4'].field_len.length)
-        self.assertEqual('R8', self.seg.nodes['$IS$.4'].field.base.reg)
-        self.assertEqual(0, self.seg.nodes['$IS$.4'].field.dsp - self.seg.constant.start)
+        self.assertEqual(48, self.seg.macro.data_map['TS08IND'].dsp)
+        self.assertEqual('TS08BLK', self.seg.macro.data_map['TS08IND'].name)
+        self.assertEqual(0x80, self.seg.macro.data_map['#ELIGIND'].dsp)
+        self.assertEqual(56, self.seg.macro.data_map['TS08FQ'].dsp)
+        self.assertEqual(256, self.seg.macro.data_map['TS08REC'].length)
+        self.assertEqual(64, self.seg.macro.data_map['TS08REC'].dsp)
+        self.assertEqual(64, self.seg.macro.data_map['TS08ITM'].dsp)
+        self.assertEqual(64, self.seg.macro.data_map['TS08AAC'].dsp)
+        self.assertEqual(0, self.seg.macro.data_map['TS08PGR'].dsp)
+        self.assertEqual('TS08AWD', self.seg.macro.data_map['TS08PGR'].name)
+        self.assertEqual(30, self.seg.macro.data_map['TS080010'].dsp)
+        self.assertEqual('R9', self.seg.nodes['$$TS08$$.1'].field.base.reg)
+        self.assertEqual('R1', self.seg.nodes['$$TS08$$.3'].field.base.reg)
+        self.assertEqual('WA0ET4', self.seg.nodes['$$TS08$$.3'].field.name)
+        self.assertEqual(0x10, self.seg.nodes['$$TS08$$.3'].bits.value)
+        self.assertTrue(self.seg.nodes['$$TS08$$.3'].bits.bit_by_name('#WA0TTY').on)
+        self.assertEqual('R14', self.seg.nodes['$$TS08$$.4'].field_len.base.reg)
+        self.assertEqual(2, self.seg.nodes['$$TS08$$.4'].field_len.length)
+        self.assertEqual('R8', self.seg.nodes['$$TS08$$.4'].field.base.reg)
+        self.assertEqual(0, self.seg.nodes['$$TS08$$.4'].field.dsp - self.seg.constant.start)
         self.assertEqual(bytearray([0xC1, 0xC1]), self.seg.get_constant_bytes('$C_AA'))
+        self.assertEqual('TS08AAC', self.seg.nodes['TS080010.1'].field_len.name)
+        self.assertEqual('R14', self.seg.nodes['TS080010.1'].field_len.base.reg)
+        self.assertEqual(2, self.seg.nodes['TS080010.1'].field_len.length)
+        self.assertEqual('R1', self.seg.nodes['TS080010.1'].field.base.reg)
+        self.assertEqual('R14', self.seg.nodes['TS080010.2'].field_len.base.reg)
+        self.assertEqual(256, self.seg.nodes['TS080010.2'].field_len.length)
+        self.assertEqual('R8', self.seg.nodes['TS080010.2'].field.base.reg)
+        self.assertEqual(bytearray([0x00]*256), self.seg.get_constant_bytes('$X_00'))

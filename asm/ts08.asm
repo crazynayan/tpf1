@@ -23,5 +23,11 @@ $IS$     CSECT
          WI0BS REG=R14
          MVC   WI0ARC,$C_AA
 TS080010 DS    0H
+         USING TS08BLK,R14
+         USING TS08AWD,R1
+         MVC   TS08AAC-TS08REGS(L'TS08AAC,R14),TS08PGR
+         MVC   TS08REC,$X_00
          BACKC
 $C_AA    DC    C'AA'
+$X_00    DS    0XL256
+         DC    256X'0'

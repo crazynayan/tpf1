@@ -121,8 +121,22 @@ class Line:
         return True if cmd.check(self.command, 'set_cc') else False
 
     @property
-    def is_second_pass(self):
-        return True if cmd.check(self.command, 'second_pass') else False
+    def is_first_pass(self):
+        return True if cmd.check(self.command, 'first_pass') else False
+
+    @property
+    def is_assembler_directive(self):
+        return True if cmd.check(self.command, 'directive') else False
+
+    @property
+    def is_node_label(self):
+        if not self.label:
+            return False
+        if self.command == 'EQU' and self.operand == '*':
+            return True
+        if self.command == 'DS' and self.operand == '0H':
+            return True
+        return False
 
     @property
     def is_check_cc(self):

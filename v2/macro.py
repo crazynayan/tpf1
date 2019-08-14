@@ -17,56 +17,77 @@ class MacroFile:
         return f'{self.file_name}:{self.data_mapped}'
 
 
-class Macro:
+class GlobalMacro:
     EXT = {'.mac', '.txt'}
     FOLDER_NAME = os.path.join(config.ROOT_DIR, 'macro')
     ACCEPTED_COMMANDS = {'DS', 'EQU', 'ORG', 'DSECT', 'DC'}
-    FIELD_LOOKUP = '$FIELD_LOOKUP$'
-    INTEGER = '$INTEGER$'
 
     def __init__(self):
-        self.data_map = dict()  # Dictionary of SymbolTable. Field name is the key.
+        self.global_map = dict()  # Dictionary of SymbolTable. Field name is the key.
         self.files = dict()     # Dictionary of MacroFile. Marco name is the key.
         self.errors = list()
-        self.dsect = None
         for file_name in os.listdir(self.FOLDER_NAME):
             if len(file_name) < 6 or file_name[-4:] not in self.EXT:
                 continue
             macro_file = MacroFile(os.path.join(self.FOLDER_NAME, file_name))
             self.files[file_name[:-4].upper()] = macro_file
-        self.using = dict()
 
-    def load(self, macro_name, base=None):
-        if macro_name not in self.files:
-            return False
-        if self.files[macro_name].data_mapped:
-            return True
+    def is_loaded(self, macro_name):
+        return self.files[macro_name].data_mapped
+
+    def load(self, macro_name):
         # Get the data from line after removing CVS and empty lines.
         file_lines = File.open(self.files[macro_name].file_name)
         # Create a list of Line objects
         lines = Line.from_file(file_lines)
         # Remove suffix like &CG1 from label and only keep the accepted commands.
         lines = [line.remove_suffix() for line in lines if line.command in self.ACCEPTED_COMMANDS]
-        # Create SymbolTable for each label and add it to data_map.
+        # Create SymbolTable for each label and add it to dummy macro data_map.
         second_list = list()
         location_counter = 0
+        macro = SegmentMacro()
         for line in lines:
-            if line.is_second_pass:
+            if not line.is_first_pass:
                 continue
             instruction_class = line.instruction_class
             location_counter, result = eval(
-                f"ins.{instruction_class}.update(line, self, {location_counter}, macro_name)")
+                f"ins.{instruction_class}.update(line, macro, {location_counter}, macro_name)")
             if result != Error.NO_ERROR:
                 second_list.append((line, location_counter))
         # Add the saved equates which were not added in the first pass
-        ins.Equ.update_from_lines(second_list, self, macro_name, self.errors)
+        ins.Equ.update_from_lines(second_list, macro, macro_name, self.errors)
         # Add the saved DS which were not added in the first pass
-        ins.Ds.update_from_lines(second_list, self, macro_name, self.errors)
+        ins.Ds.update_from_lines(second_list, macro, macro_name, self.errors)
+        # Move the data_map into global_map
+        self.global_map = {**self.global_map, **macro.data_map}
         # Indicate data is mapped for that macro
         self.files[macro_name].data_mapped = True
+        return macro.data_map
+
+
+class SegmentMacro:
+    FIELD_LOOKUP = '$FIELD_LOOKUP$'
+    INTEGER = '$INTEGER$'
+
+    def __init__(self, global_macro=None):
+        self.global_macro = global_macro
+        self.data_map = dict()  # Dictionary of SymbolTable. Field name is the key.
+        self.dsect = None
+        self.using = dict()
+
+    @property
+    def errors(self):
+        return self.global_macro.errors
+
+    def load(self, macro_name, base=None):
+        if not self.global_macro.is_loaded(macro_name):
+            filtered_data_map = self.global_macro.load(macro_name)
+        else:
+            filtered_data_map = {label: symbol_table for label, symbol_table in self.global_macro.global_map.items()
+                                 if symbol_table.name == macro_name}
+        self.data_map = {**self.data_map, **filtered_data_map}
         if base is not None and Register(base).is_valid():
-            self.using[base] = macro_name
-        return True
+            self.set_using(macro_name, base)
 
     def get_value(self, operand, location_counter=None):
         if operand.isdigit():
@@ -86,6 +107,18 @@ class Macro:
             return eval(''.join(eval_list)), Error.NO_ERROR
         except (SyntaxError, NameError, TypeError, ValueError):
             return None, Error.EXP_EVAL_FAIL
+
+    def set_using(self, dsect, reg):
+        self.using[reg] = dsect
+
+    def is_present(self, macro_name):
+        return macro_name in self.global_macro.files
+
+    def is_loaded(self, macro_name):
+        return self.global_macro.is_loaded(macro_name)
+
+    def copy_from_global(self):
+        self.data_map = self.global_macro.global_map.copy()
 
     def evaluate(self, expression, location_counter=None):
         if expression.isdigit():
