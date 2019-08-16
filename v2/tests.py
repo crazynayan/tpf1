@@ -797,3 +797,6 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual(256, self.seg.nodes['TS080010.2'].field_len.length)
         self.assertEqual('R8', self.seg.nodes['TS080010.2'].field.base.reg)
         self.assertEqual(bytearray([0x00]*256), self.seg.get_constant_bytes('$X_00'))
+        self.assertEqual('R2', self.seg.nodes['TS080010.3'].field.base.reg)
+        self.assertEqual('R1', self.seg.nodes['TS080010.4'].field.base.reg)
+        self.assertEqual('R14', self.seg.nodes['TS080010.5'].field.base.reg)

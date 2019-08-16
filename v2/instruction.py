@@ -189,6 +189,22 @@ class Pgmid:
         return 8, Error.NO_ERROR
 
 
+class Push:
+    # noinspection PyUnusedLocal,PyUnusedLocal
+    @staticmethod
+    def update(line, macro, location_counter, name, constant=None):
+        macro.using_stack.append(macro.using.copy())
+        return location_counter, Error.NO_ERROR
+
+
+class Pop:
+    # noinspection PyUnusedLocal,PyUnusedLocal
+    @staticmethod
+    def update(line, macro, location_counter, name, constant=None):
+        macro.using = macro.using_stack.pop()
+        return location_counter, Error.NO_ERROR
+
+
 class Using:
     # noinspection PyUnusedLocal,PyUnusedLocal
     @staticmethod

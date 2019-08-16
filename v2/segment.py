@@ -143,8 +143,8 @@ class Segment:
         if line.is_first_pass:
             return True
         if self.macro.is_present(line.command):
-            reg = line.operand[4:]  # TODO To improve when KeyValue DataType is developed
-            self.macro.load(line.command, reg)
+            base = ins.Register(line.operand[4:])  # TODO To improve when KeyValue DataType is developed
+            self.macro.load(line.command, base.reg)
             return True
         if not line.is_assembler_directive:
             return False

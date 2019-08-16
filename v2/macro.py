@@ -74,6 +74,7 @@ class SegmentMacro:
         self.data_map = dict()  # Dictionary of SymbolTable. Field name is the key.
         self.dsect = None
         self.using = dict()
+        self.using_stack = list()
 
     @property
     def errors(self):
