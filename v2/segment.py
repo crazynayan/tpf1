@@ -1,12 +1,13 @@
 import os
-import v2.instruction as ins
-
 from copy import copy
+
+import v2.instruction as ins
+from v2.directive import AssemblerDirective
 from config import config
+from v2.command import cmd
+from v2.errors import Error
 from v2.file_line import File, Line, SymbolTable
 from v2.macro import GlobalMacro, SegmentMacro
-from v2.errors import Error
-from v2.command import cmd
 
 
 class Label:
@@ -73,11 +74,11 @@ class Segment:
             length = line.length if line.length else 1
             dsp = location_counter
             if line.is_first_pass:
-                instruction_class = line.instruction_class
-                # noinspection PyUnusedLocal
                 name = self.name if self.macro.dsect is None else self.macro.dsect[1]
-                location_counter, result = eval(
-                    f"ins.{instruction_class}.update(line, self.macro, location_counter, name, self.constant)")
+                asm_dir = AssemblerDirective(line.command)
+                location_counter, result = asm_dir.update(line=line, macro=self.macro,  constant=self.constant,
+                                                          location_counter=location_counter, name=name)
+
                 if result != Error.NO_ERROR:
                     self.errors.append(f'{result} {line} {self.name}')
             else:
@@ -149,8 +150,8 @@ class Segment:
         if not line.is_assembler_directive:
             return False
         # Second pass assembler directive like USING, PUSH, POP
-        instruction_class = line.instruction_class
-        _, result = eval(f"ins.{instruction_class}.update(line, self.macro, 0, self.name)")
+        asm_dir = AssemblerDirective(line.command)
+        _, result = asm_dir.update(line=line, macro=self.macro, location_counter=0, name=self.name)
         if result != Error.NO_ERROR:
             self.errors.append(f'{result} {line} {self.name}')
         return True
@@ -168,11 +169,11 @@ class Program:
             if len(file_name) < 6 or file_name[-4:].lower() not in self.EXT:
                 continue
             seg_name = file_name[:-4].upper()
-            macro = SegmentMacro(self.macro)
-            macro.set_using('EB0EB', 'R9')
-            macro.set_using(seg_name, 'R8')
-            self.segments[seg_name] = Segment(os.path.join(self.FOLDER_NAME, file_name), seg_name, macro)
+            seg_macro = SegmentMacro(self.macro)
+            self.segments[seg_name] = Segment(os.path.join(self.FOLDER_NAME, file_name), seg_name, seg_macro)
 
     def load(self, seg_name):
         self.segments[seg_name].macro.copy_from_global()
+        self.segments[seg_name].macro.set_using(seg_name, 'R8')
+        self.segments[seg_name].macro.set_using('EB0EB', 'R9')
         self.segments[seg_name].load()

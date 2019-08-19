@@ -157,6 +157,10 @@ class Line:
         length = cmd.check(self.command, 'len')
         return 0 if length is None else length
 
+    def split_operands(self):
+        # Split operands separated by commas. Ignore commas enclosed in parenthesis.
+        return re.split(r",(?![^()]*\))", self.operand)
+
     def __repr__(self):
         return f'{self.label}:{self.command}:{self.operand}'
 

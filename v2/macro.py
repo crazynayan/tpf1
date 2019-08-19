@@ -1,11 +1,11 @@
 import re
 import os
-import v2.instruction as ins
 
 from config import config
 from v2.errors import Error
 from v2.file_line import File, Line
 from v2.data_type import DataType, Register
+from v2.directive import AssemblerDirective
 
 
 class MacroFile:
@@ -49,15 +49,17 @@ class GlobalMacro:
         for line in lines:
             if not line.is_first_pass:
                 continue
-            instruction_class = line.instruction_class
-            location_counter, result = eval(
-                f"ins.{instruction_class}.update(line, macro, {location_counter}, macro_name)")
+            assembler_directive = AssemblerDirective(line.command)
+            location_counter, result = assembler_directive.update(line=line, macro=macro,
+                                                                  location_counter=location_counter, name=macro_name)
             if result != Error.NO_ERROR:
                 second_list.append((line, location_counter))
         # Add the saved equates which were not added in the first pass
-        ins.Equ.update_from_lines(second_list, macro, macro_name, self.errors)
+        assembler_directive = AssemblerDirective('EQU')
+        assembler_directive.second_pass(second_list, macro, macro_name, self.errors)
         # Add the saved DS which were not added in the first pass
-        ins.Ds.update_from_lines(second_list, macro, macro_name, self.errors)
+        assembler_directive = AssemblerDirective('DS')
+        assembler_directive.second_pass(second_list, macro, macro_name, self.errors)
         # Move the data_map into global_map
         self.global_map = {**self.global_map, **macro.data_map}
         # Indicate data is mapped for that macro

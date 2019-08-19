@@ -1,221 +1,8 @@
 import re
 
-from v2.data_type import DataType, FieldBaseDsp, Bits, FieldIndex, FieldLen, Register
+from v2.data_type import FieldBaseDsp, Bits, FieldIndex, FieldLen, Register
 from v2.errors import Error
 from v2.command import cmd
-from v2.file_line import SymbolTable
-
-
-class DsDc:
-    def __init__(self):
-        self.duplication_factor = 1
-        self.length = 0
-        self.data_type = None
-        self.data = None
-        self.align_to_boundary = False
-
-    def __repr__(self):
-        return f'{self.duplication_factor}:{self.data_type}:{self.length}:{self.data}'
-
-    @classmethod
-    def from_operand(cls, operand, macro, location_counter=None):
-        dsdc = cls()
-        # (^\d*)([CXHFDBZPAY]D?)(?:L([\d]+))?(?:L[(]([^)]+)[)])?(?:[']([^']+)['])?(?:[(]([^)]+)[)])?
-        operands = next(iter(re.findall(
-            r"(^\d*)"                       # 0 Duplication Factor - A number. (Optional)
-            r"([CXHFDBZPAY]D?)"             # 1 Data Type - Valid Single character Data type. (Note: FD is valid)
-            r"(?:L([\d]+))?"                # 2 Length - L followed by a number. (Optional)
-            r"(?:L[(]([^)]*)[)])?"          # 3 Length - L followed by a expression enclosed in paranthesis. (Optional)
-            r"(?:[']([^']*)['])?"           # 4 Data - Enclosed in quotes. (Optional)
-            r"(?:[(]([^)]*)[)])?",          # 5 Data - Enclosed in parenthesis. (Optional)
-            operand)))
-        # Duplication Factor
-        dsdc.duplication_factor = int(operands[0]) if operands[0] else 1
-        # Data Type
-        dsdc.data_type = operands[1]
-        # Align to boundary
-        dsdc.align_to_boundary = DataType(dsdc.data_type).align_to_boundary
-        # Length
-        if operands[2]:
-            dsdc.length = int(operands[2])
-            dsdc.align_to_boundary = False
-        elif operands[3]:
-            dsdc.length, result = macro.get_value(operands[3], location_counter)
-            dsdc.align_to_boundary = False
-            if result != Error.NO_ERROR:
-                return dsdc, result
-        else:
-            dsdc.length = None
-        # Data
-        if operands[4]:
-            data_type_object = DataType(dsdc.data_type, input=operands[4])
-            dsdc.length = dsdc.length or data_type_object.length
-            dsdc.data = data_type_object.to_bytes(dsdc.length)
-        elif operands[5]:
-            number, result = macro.get_value(operands[5], location_counter)
-            if result != Error.NO_ERROR:
-                return dsdc, result
-            data_type_object = DataType(dsdc.data_type, input=str(number))
-            dsdc.length = dsdc.length or data_type_object.default_length
-            dsdc.data = data_type_object.to_bytes(dsdc.length)
-        else:
-            dsdc.data = None
-            dsdc.length = dsdc.length or DataType(dsdc.data_type).default_length
-        return dsdc, Error.NO_ERROR
-
-
-class Ds:
-    # noinspection PyUnusedLocal
-    @staticmethod
-    def update(line, macro, location_counter, name, constant=None):
-        operands = Instruction.split_operands(line.operand)
-        dsp = location_counter
-        length = 0
-        for operand in operands:
-            dc, result = DsDc.from_operand(operand, macro, location_counter)
-            if result != Error.NO_ERROR:
-                return location_counter, result
-            while dc.align_to_boundary and location_counter % DataType(dc.data_type).default_length != 0:
-                dsp = dsp + 1 if operand == operands[0] else dsp
-                location_counter += 1
-            length = length or dc.length
-            location_counter += dc.duplication_factor * dc.length
-        if line.label:
-            macro.data_map[line.label] = SymbolTable(line.label, dsp, length, name)
-        return location_counter, Error.NO_ERROR
-
-    @classmethod
-    def update_from_lines(cls, ds_list, macro, name, errors):
-        for line, location_counter in ds_list:
-            if line.command != 'DS':
-                continue
-            _, result = cls.update(line, macro, location_counter, name)
-            if result != Error.NO_ERROR:
-                errors.append(f'{result} {line} {name}')
-
-
-class Dc:
-    @staticmethod
-    def update(line, macro, location_counter, name, constant):
-        operands = Instruction.split_operands(line.operand)
-        dsp = location_counter
-        length = 0
-        for operand in operands:
-            dc, result = DsDc.from_operand(operand, macro, location_counter)
-            if result != Error.NO_ERROR:
-                return location_counter, result
-            while dc.align_to_boundary and location_counter % DataType(dc.data_type).default_length != 0:
-                dsp = dsp + 1 if operand == operands[0] else dsp
-                location_counter += 1
-                constant.data.extend([0x00])
-            constant.start = constant.start or location_counter
-            length = length or dc.length
-            location_counter += dc.duplication_factor * dc.length
-            constant.data.extend(dc.data * dc.duplication_factor)
-        if line.label:
-            macro.data_map[line.label] = SymbolTable(line.label, dsp, length, name)
-        return location_counter, Error.NO_ERROR
-
-
-class Equ:
-    # noinspection PyUnusedLocal
-    @staticmethod
-    def update(line, macro, location_counter, name, constant=None):
-        if line.label is None:
-            return location_counter, Error.EQU_LABEL_REQUIRED
-        operands = Instruction.split_operands(line.operand)
-        dsp_operand = operands[0]
-        length = 1
-        if dsp_operand == '*' or not set("+-*").intersection(dsp_operand):
-            dsp, data_type, result = macro.evaluate(dsp_operand, location_counter)
-            if result != Error.NO_ERROR:
-                return location_counter, result
-            if data_type == macro.FIELD_LOOKUP:
-                dsp_operand = next(iter(dsp_operand.split('&')))
-                length = macro.data_map[dsp_operand].length
-        else:
-            dsp, result = macro.get_value(dsp_operand, location_counter)
-            if result != Error.NO_ERROR:
-                return location_counter, result
-        if len(operands) > 1:
-            length, result = macro.get_value(operands[1])
-            if result != Error.NO_ERROR:
-                return location_counter, result
-        macro.data_map[line.label] = SymbolTable(line.label, dsp, length, name)
-        return location_counter, Error.NO_ERROR
-
-    @classmethod
-    def update_from_lines(cls, equate_list, macro, name, errors):
-        for line, location_counter in equate_list:
-            if line.command != 'EQU':
-                continue
-            _, result = cls.update(line, macro, location_counter, name)
-            if result != Error.NO_ERROR:
-                errors.append(f'{result} {line} {name}')
-
-
-class Dsect:
-    # noinspection PyUnusedLocal,PyUnusedLocal
-    @staticmethod
-    def update(line, macro, location_counter, name, constant=None):
-        name = line.label
-        seg_location_counter, _ = macro.dsect if macro.dsect is not None else (location_counter, None)
-        macro.dsect = seg_location_counter, name
-        macro.data_map[name] = SymbolTable(name, 0, 0, name)
-        return 0, Error.NO_ERROR
-
-
-class Csect:
-    # noinspection PyUnusedLocal,PyUnusedLocal
-    @staticmethod
-    def update(line, macro, location_counter, name, constant=None):
-        dsect_location_counter, name = macro.dsect
-        macro.dsect = None
-        macro.data_map[line.label] = SymbolTable(line.label, location_counter, 0, name)
-        return dsect_location_counter, Error.NO_ERROR
-
-
-class Org:
-    # noinspection PyUnusedLocal,PyUnusedLocal
-    @staticmethod
-    def update(line, macro, location_counter, name=None, constant=None):
-        return macro.get_value(line.operand, location_counter)
-
-
-class Pgmid:
-    # noinspection PyUnusedLocal,PyUnusedLocal
-    @staticmethod
-    def update(line, macro, location_counter, name, constant=None):
-        return 8, Error.NO_ERROR
-
-
-class Push:
-    # noinspection PyUnusedLocal,PyUnusedLocal
-    @staticmethod
-    def update(line, macro, location_counter, name, constant=None):
-        macro.using_stack.append(macro.using.copy())
-        return location_counter, Error.NO_ERROR
-
-
-class Pop:
-    # noinspection PyUnusedLocal,PyUnusedLocal
-    @staticmethod
-    def update(line, macro, location_counter, name, constant=None):
-        macro.using = macro.using_stack.pop()
-        return location_counter, Error.NO_ERROR
-
-
-class Using:
-    # noinspection PyUnusedLocal,PyUnusedLocal
-    @staticmethod
-    def update(line, macro, location_counter, name, constant=None):
-        operands = Instruction.split_operands(line.operand)
-        if len(operands) == 2 and Register(operands[1]).is_valid():
-            dsect = name if operands[0] == '*' else operands[0]
-            macro.set_using(dsect, operands[1])
-            return location_counter, Error.NO_ERROR
-        else:
-            raise TypeError
 
 
 class Instruction:
@@ -241,14 +28,14 @@ class Instruction:
 
     @property
     def next_labels(self):
-        labels = {condition.branch for condition in self.conditions if condition.is_check_cc and condition.branch}
+        labels = {condition.branch.name for condition in self.conditions if condition.is_check_cc and condition.branch}
         if self.fall_down:
             labels.add(self.fall_down)
         return labels
 
     @property
     def goes(self):
-        return next((condition.branch for condition in self.conditions if condition.is_check_cc), None)
+        return next((condition.goes for condition in self.conditions if condition.goes), None)
 
     @property
     def on(self):
@@ -448,46 +235,20 @@ class Exit(Instruction):
     pass
 
 
-class BranchCondition(Instruction):
-
+class BranchGeneric(Instruction):
     def __init__(self, label, command):
         super().__init__(label, command)
-        self.mask = 0
         self.branch = None
-        self.index = None
 
-    @staticmethod
-    def split_label(operand):
-        label_reg = re.split(r"[()]", operand)
-        if len(label_reg) == 1:
-            return label_reg[0], None
-        else:
-            return label_reg[0], label_reg[1]
-
-    def set_operand(self, operand, macro):
-        mask = self.get_attribute('mask')
-        if mask is not None:
-            # This is commands with mnemonics like BP, JNZ, J, B, NOP
-            self.mask = int(mask)
-            self.branch, self.index = self.split_label(operand)
-            result = Error.NO_ERROR if self.index is None else Error.BC_INDEX
-            if self.mask == 0:
-                self.branch = None
-        else:
-            # This is commands with mask. BC or JC
-            operand1, operand2 = self.split_operands(operand)
-            self.branch, self.index = self.split_label(operand2)
-            self.mask = int(operand1)
-            result = Error.NO_ERROR if self.index is None else Error.BC_INDEX
-            if self.mask == 0:
-                self.branch = None
-            if result == Error.NO_ERROR:
-                command = next(iter(cmd.get_commands('mask', self.mask)), None)
-                if command is None:
-                    result = Error.BC_INVALID_MASK
-                else:
-                    self.command = command
-        return self, result
+    def set_branch(self, branch, macro):
+        self.branch = FieldIndex()
+        result = self.branch.set(branch, macro, length=1)
+        if result == Error.NO_ERROR:
+            if self.branch.name not in macro.data_map:
+                result = Error.BC_INVALID_BRANCH
+            elif self.branch.index is not None:
+                result = Error.BC_INDEX
+        return result
 
     @property
     def next_labels(self):
@@ -495,13 +256,81 @@ class BranchCondition(Instruction):
         if self.fall_down:
             labels.add(self.fall_down)
         if self.branch:
-            labels.add(self.branch)
+            labels.add(self.branch.name)
         return labels
 
     @property
     def goes(self):
-        return self.branch
+        return self.branch.name if self.branch is not None else None
 
     @property
     def on(self):
         return self.command
+
+
+class ConditionGeneric(Instruction):
+    def __init__(self, label, command):
+        super().__init__(label, command)
+        self.mask = None
+
+    def set_mask(self, operand):
+        mask = self.get_attribute('mask')
+        result = Error.NO_ERROR
+        if mask is not None:
+            # This is commands with mnemonics like BP, JNZ, J, B, NOP, BR, BMR
+            self.mask = int(mask)
+        else:
+            # This is commands with mask. BC or JC or BCR
+            mask, operand = self.split_operands(operand)
+            self.mask = int(mask)
+            commands = cmd.get_commands('mask', self.mask)
+            command = next((command for command in commands
+                            if cmd.check(self.command, 'len') == cmd.check(command, 'len')), None)
+            if command is None:
+                result = Error.BC_INVALID_MASK
+            else:
+                self.command = command
+        return operand, result
+
+
+class BranchCondition(BranchGeneric, ConditionGeneric):
+    def __init__(self, label, command):
+        super().__init__(label, command)
+
+    def set_operand(self, operand, macro):
+        branch, result = self.set_mask(operand)
+        if result == Error.NO_ERROR:
+            result = self.set_branch(branch, macro)
+            if self.mask == 0:
+                # This is required to ensure that while creating paths, 0 mask branches are ignored
+                self.branch = None
+        return self, result
+
+
+class BranchConditionRegister(BranchCondition):
+    def __init__(self, label, command):
+        super().__init__(label, command)
+        self.reg = None
+
+    def set_operand(self, operand, macro):
+        reg, result = self.set_mask(operand)
+        if result == Error.NO_ERROR:
+            self.reg = Register(reg)
+            if not self.reg.is_valid():
+                result = Error.REG_INVALID
+        return self, result
+
+
+class BranchSave(BranchGeneric):
+    def __init__(self, label, command):
+        super().__init__(label, command)
+        self.reg = None
+
+    def set_operand(self, operand, macro):
+        operand1, operand2 = self.split_operands(operand)
+        result = self.set_branch(operand2, macro)
+        if result == Error.NO_ERROR:
+            self.reg = Register(operand1)
+            if not self.reg.is_valid():
+                result = Error.REG_INVALID
+        return self, result

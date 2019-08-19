@@ -373,12 +373,25 @@ class FieldIndex(Field):
     def set(self, operand, macro, length):
         operand1, operand2, operand3 = self.split_operand(operand)
         if not operand2 and not operand3:
-            _, result = self.set_base_dsp_by_name(operand1, macro)
+            # Single label like EBW000
+            _, result = self.set_base_dsp_by_name(name=operand1, macro=macro)
         elif not operand3:
-            result = self.set_base_dsp_by_operands(operand2, operand1, macro, length)
+            # Note: In TPF these types are with no base but with index register set.
+            # In our tool we have flipped this. So there would be no index but the base would be present.
+            if operand1.isdigit() or set("+-*").intersection(operand1):
+                # Base_dsp 34(R5) or expression with base EBW008-EBW000(R9)
+                result = self.set_base_dsp_by_operands(base=operand2, dsp=operand1, macro=macro, length=length)
+            else:
+                # Label with index EBW000(R14) or EBW000(R14,)
+                _, result = self.set_base_dsp_by_name(name=operand1, macro=macro)
+                if result == Error.NO_ERROR:
+                    self.index = Register(operand2)
+                    result = Error.NO_ERROR if self.index.is_valid() else Error.FX_INVALID_INDEX
         elif not operand2:
+            # Base_dsp with no index 10(,R5)
             result = self.set_base_dsp_by_operands(operand3, operand1, macro, length)
         else:
+            # Base_dsp with index 10(R3,R5)
             result = self.set_base_dsp_by_operands(operand3, operand1, macro, length)
             if result == Error.NO_ERROR:
                 self.index = Register(operand2)

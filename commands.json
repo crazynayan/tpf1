@@ -15,6 +15,9 @@
         "set_1": 1,
         "set_cc": 1
     },
+    "ATTAC": {
+        "create": 1
+    },
     "B": {
         "create": "BranchCondition",
         "len": 4,
@@ -27,13 +30,19 @@
         "no_operand": 1
     },
     "BAS": {
-        "create": 1
+        "create": "BranchSave",
+        "mask": 15
     },
     "BC": {
         "check_cc": 1,
         "create": "BranchCondition",
         "len": 4,
         "opposite": "BC"
+    },
+    "BCR": {
+        "check_cc": 1,
+        "create": "BranchConditionRegister",
+        "len": 2
     },
     "BCTR": {
         "create": "RegisterRegister",
@@ -51,6 +60,12 @@
         "opposite": "BNE",
         "text": "="
     },
+    "BER": {
+        "check_cc": 1,
+        "create": "BranchConditionRegister",
+        "len": 2,
+        "mask": 8
+    },
     "BH": {
         "check_cc": 1,
         "compare": ">",
@@ -61,6 +76,12 @@
         "opposite": "BNH",
         "text": ">"
     },
+    "BHR": {
+        "check_cc": 1,
+        "create": "BranchConditionRegister",
+        "len": 2,
+        "mask": 2
+    },
     "BL": {
         "check_cc": 1,
         "compare": "<",
@@ -70,6 +91,12 @@
         "operator": "<",
         "opposite": "BNL",
         "text": "<"
+    },
+    "BLR": {
+        "check_cc": 1,
+        "create": "BranchConditionRegister",
+        "len": 2,
+        "mask": 4
     },
     "BM": {
         "bit": "anyone ON",
@@ -82,6 +109,12 @@
         "opposite": "BNM",
         "text": "< 0"
     },
+    "BMR": {
+        "check_cc": 1,
+        "create": "BranchConditionRegister",
+        "len": 2,
+        "mask": 4
+    },
     "BNE": {
         "check_cc": 1,
         "compare": "is not",
@@ -91,6 +124,12 @@
         "operator": "!=",
         "opposite": "BE",
         "text": "!="
+    },
+    "BNER": {
+        "check_cc": 1,
+        "create": "BranchConditionRegister",
+        "len": 2,
+        "mask": 7
     },
     "BNH": {
         "check_cc": 1,
@@ -102,6 +141,12 @@
         "opposite": "BH",
         "text": "<="
     },
+    "BNHR": {
+        "check_cc": 1,
+        "create": "BranchConditionRegister",
+        "len": 2,
+        "mask": 13
+    },
     "BNL": {
         "check_cc": 1,
         "compare": ">=",
@@ -111,6 +156,12 @@
         "operator": ">=",
         "opposite": "BL",
         "text": ">="
+    },
+    "BNLR": {
+        "check_cc": 1,
+        "create": "BranchConditionRegister",
+        "len": 2,
+        "mask": 11
     },
     "BNM": {
         "bit": "anyone OFF",
@@ -123,6 +174,12 @@
         "opposite": "BM",
         "text": ">= 0"
     },
+    "BNMR": {
+        "check_cc": 1,
+        "create": "BranchConditionRegister",
+        "len": 2,
+        "mask": 11
+    },
     "BNO": {
         "bit": "is OFF",
         "check_cc": 1,
@@ -134,6 +191,12 @@
         "opposite": "BO",
         "text": "OFF"
     },
+    "BNOR": {
+        "check_cc": 1,
+        "create": "BranchConditionRegister",
+        "len": 2,
+        "mask": 14
+    },
     "BNP": {
         "check_cc": 1,
         "create": "BranchCondition",
@@ -143,6 +206,12 @@
         "operator": "<= 0",
         "opposite": "BP",
         "text": "<= 0"
+    },
+    "BNPR": {
+        "check_cc": 1,
+        "create": "BranchConditionRegister",
+        "len": 2,
+        "mask": 13
     },
     "BNZ": {
         "binary": "has some data",
@@ -156,6 +225,12 @@
         "opposite": "BZ",
         "text": "ON"
     },
+    "BNZR": {
+        "check_cc": 1,
+        "create": "BranchConditionRegister",
+        "len": 2,
+        "mask": 7
+    },
     "BO": {
         "bit": "is ON",
         "check_cc": 1,
@@ -167,6 +242,12 @@
         "opposite": "BNO",
         "text": "ON"
     },
+    "BOR": {
+        "check_cc": 1,
+        "create": "BranchConditionRegister",
+        "len": 2,
+        "mask": 1
+    },
     "BP": {
         "check_cc": 1,
         "create": "BranchCondition",
@@ -177,9 +258,16 @@
         "opposite": "BNP",
         "text": "> 0"
     },
+    "BPR": {
+        "check_cc": 1,
+        "create": "BranchConditionRegister",
+        "len": 2,
+        "mask": 2
+    },
     "BR": {
-        "create": 1,
-        "len": 1,
+        "create": "BranchConditionRegister",
+        "len": 2,
+        "mask": 15,
         "no_fall_down": 1
     },
     "BZ": {
@@ -193,6 +281,12 @@
         "operator": "== 0",
         "opposite": "BNZ",
         "text": "OFF"
+    },
+    "BZR": {
+        "check_cc": 1,
+        "create": "BranchConditionRegister",
+        "len": 2,
+        "mask": 8
     },
     "CFCMA": {
         "create": 1,
@@ -216,6 +310,9 @@
         "create": "FieldData",
         "len": 4,
         "set_cc": 1
+    },
+    "CRUSA": {
+        "create": 1
     },
     "CSECT": {
         "create": "Csect",
@@ -241,6 +338,9 @@
         "create": 1,
         "key_text": "REF"
     },
+    "DBOPN": {
+        "create": 1
+    },
     "DBRED": {
         "create": 1,
         "key_text": "REF"
@@ -249,6 +349,9 @@
         "create": "Dc",
         "directive": 1,
         "first_pass": 1
+    },
+    "DETAC": {
+        "create": 1
     },
     "DS": {
         "create": "Ds",
@@ -285,6 +388,12 @@
         "no_fall_down": 1,
         "no_operand": 1
     },
+    "GETCC": {
+        "create": 1
+    },
+    "GLOBZ": {
+        "create": 1
+    },
     "IC": {
         "create": "RegisterFieldIndex",
         "field_len": 1,
@@ -303,7 +412,8 @@
         "no_fall_down": 1
     },
     "JAS": {
-        "create": 1
+        "create": "BranchSave",
+        "mask": 15
     },
     "JC": {
         "check_cc": 1,
@@ -496,6 +606,9 @@
         "len": 2,
         "set_cc": 1
     },
+    "MODEC": {
+        "create": 1
+    },
     "MVC": {
         "create": "FieldLenField",
         "len": 6,
@@ -528,6 +641,11 @@
     "NOP": {
         "create": "BranchCondition",
         "len": 4,
+        "mask": 0
+    },
+    "NOPR": {
+        "create": "BranchConditionRegister",
+        "len": 2,
         "mask": 0
     },
     "OC": {
@@ -581,6 +699,9 @@
     "PUSH": {
         "create": "Push",
         "directive": 1
+    },
+    "RELCC": {
+        "create": 1
     },
     "SENDA": {
         "create": 1,

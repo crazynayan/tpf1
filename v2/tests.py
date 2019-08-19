@@ -130,7 +130,7 @@ class MacroTest(unittest.TestCase):
 
 
 class SegmentTest(unittest.TestCase):
-    NUMBER_OF_FILES = 9
+    NUMBER_OF_FILES = 10
 
     def setUp(self) -> None:
         self.program = Program()
@@ -340,6 +340,13 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('R15', self.seg.nodes[label].field.base.reg)
         self.assertEqual(4, self.seg.nodes[label].field.dsp)
         self.assertIsNone(self.seg.nodes[label].field.index)
+        # L     R1,CE1CR1(R3)
+        label = '$$TS03$$.11'
+        self.assertEqual('R1', self.seg.nodes[label].reg.reg)
+        self.assertEqual('CE1CR1', self.seg.nodes[label].field.name)
+        self.assertEqual('R9', self.seg.nodes[label].field.base.reg)
+        self.assertEqual(0x170, self.seg.nodes[label].field.dsp)
+        self.assertEqual('R3', self.seg.nodes[label].field.index.reg)
 
     def test_field_variants(self):
         seg_name = 'TS04'
@@ -507,7 +514,9 @@ class SegmentTest(unittest.TestCase):
             f"{Error.BC_INVALID_MASK} None:JC:-1,TS06E100 {seg_name}",
             f"{Error.BC_INVALID_MASK} None:BC:12,TS06E100 {seg_name}",
             f"{Error.BC_INDEX} None:B:TS06E100(R14) {seg_name}",
-            f"{Error.BC_INDEX} None:JC:14,TS06E100(-1) {seg_name}",
+            f"{Error.FX_INVALID_INDEX} None:JC:14,TS06E100(-1) {seg_name}",
+            f"{Error.BC_INVALID_BRANCH} None:BNZ:0(R8) {seg_name}",
+            f"{Error.FBD_INVALID_KEY} None:JE:TS061000 {seg_name}",
         ]
         self.assertRaises(ValueError, ins.BranchCondition.from_operand, None, 'BC', 'TS060100', self.program.macro)
         self.assertRaises(ValueError, ins.BranchCondition.from_operand, None, 'JC', 'A,TS060100', self.program.macro)
@@ -528,15 +537,15 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('R3', node.conditions[0].reg2.reg)
         # JNZ   TS060120
         self.assertEqual('JNZ', node.conditions[1].command)
-        self.assertEqual('TS060120', node.conditions[1].branch)
+        self.assertEqual('TS060120', node.conditions[1].branch.name)
         self.assertEqual(7, node.conditions[1].mask)
-        self.assertIsNone(node.conditions[1].index)
+        self.assertIsNone(node.conditions[1].branch.index)
         # LR    R3,R4
         self.assertEqual('R3', node.conditions[2].reg1.reg)
         self.assertEqual('R4', node.conditions[2].reg2.reg)
         # JP    TS060130
         self.assertEqual('JP', node.conditions[3].command)
-        self.assertEqual('TS060130', node.conditions[3].branch)
+        self.assertEqual('TS060130', node.conditions[3].branch.name)
         self.assertEqual(2, node.conditions[3].mask)
         node = self.seg.nodes['TS060100.2']
         # LR    R5,R6
@@ -555,7 +564,7 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('R3', node.conditions[0].reg2.reg)
         # JC    7,TS060130
         self.assertEqual('BNE', node.conditions[1].command)
-        self.assertEqual('TS060130', node.conditions[1].branch)
+        self.assertEqual('TS060130', node.conditions[1].branch.name)
         self.assertEqual(7, node.conditions[1].mask)
         # LR    R3,R4
         node = self.seg.nodes['TS060110.2']
@@ -564,7 +573,7 @@ class SegmentTest(unittest.TestCase):
         # J     TS060100
         node = self.seg.nodes['TS060110.3']
         self.assertEqual('J', node.command)
-        self.assertEqual('TS060100', node.branch)
+        self.assertEqual('TS060100', node.branch.name)
         self.assertEqual(15, node.mask)
         self.assertSetEqual({'TS060100'}, node.next_labels)
         self.assertIsNone(node.fall_down)
@@ -580,7 +589,7 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('TS060110', node.goes)
         # BC    8,TS060110
         self.assertEqual('BE', node.conditions[0].command)
-        self.assertEqual('TS060110', node.conditions[0].branch)
+        self.assertEqual('TS060110', node.conditions[0].branch.name)
         self.assertEqual(8, node.conditions[0].mask)
         # AR    R5,R2 with a single goes
         node = self.seg.nodes['TS060120.2']
@@ -594,7 +603,7 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('R4', node.conditions[0].reg2.reg)
         # BC    2,TS060120
         self.assertEqual('BH', node.conditions[1].command)
-        self.assertEqual('TS060120', node.conditions[1].branch)
+        self.assertEqual('TS060120', node.conditions[1].branch.name)
         self.assertEqual(2, node.conditions[1].mask)
         # Check TS060130
         node = self.seg.nodes['TS060130.1']
@@ -606,12 +615,12 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('TS060100', node.goes)
         # BNO   TS060100
         self.assertEqual('BNO', node.conditions[0].command)
-        self.assertEqual('TS060100', node.conditions[0].branch)
+        self.assertEqual('TS060100', node.conditions[0].branch.name)
         self.assertEqual(14, node.conditions[0].mask)
         # JC    15,TS060120
         node = self.seg.nodes['TS060130.2']
         self.assertEqual('B', node.command)
-        self.assertEqual('TS060120', node.branch)
+        self.assertEqual('TS060120', node.branch.name)
         self.assertEqual(15, node.mask)
         self.assertSetEqual({'TS060120'}, node.next_labels)
         self.assertIsNone(node.fall_down)
@@ -620,7 +629,7 @@ class SegmentTest(unittest.TestCase):
         # BC    15,TS060120
         node = self.seg.nodes['TS060130.4']
         self.assertEqual('B', node.command)
-        self.assertEqual('TS060120', node.branch)
+        self.assertEqual('TS060120', node.branch.name)
         self.assertEqual(15, node.mask)
         self.assertSetEqual({'TS060120'}, node.next_labels)
         self.assertIsNone(node.fall_down)
@@ -636,14 +645,14 @@ class SegmentTest(unittest.TestCase):
         # B     TS060100
         node = self.seg.nodes['TS060130.7']
         self.assertEqual('B', node.command)
-        self.assertEqual('TS060100', node.branch)
+        self.assertEqual('TS060100', node.branch.name)
         self.assertEqual(15, node.mask)
         self.assertSetEqual({'TS060100'}, node.next_labels)
         self.assertIsNone(node.fall_down)
         self.assertEqual('B', node.on)
         self.assertEqual('TS060100', node.goes)
         # Check TS060140
-        # BC    0,*
+        # BC    0,TS060130
         node = self.seg.nodes['TS060140.2']
         self.assertEqual('JNOP', node.command)
         self.assertIsNone(node.branch)
@@ -652,21 +661,21 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('TS060140.3', node.fall_down)
         self.assertIsNone(node.goes)
         self.assertEqual('JNOP', node.on)
-        # NOP   *
+        # NOP   TS060130
         node = self.seg.nodes['TS060140.4']
         self.assertEqual('NOP', node.command)
         self.assertIsNone(node.branch)
         self.assertEqual(0, node.mask)
         self.assertSetEqual({'TS060140.5'}, node.next_labels)
         self.assertEqual('TS060140.5', node.fall_down)
-        # JC    0,ABC
+        # JC    0,TS060130
         node = self.seg.nodes['TS060140.6']
         self.assertEqual('JNOP', node.command)
         self.assertIsNone(node.branch)
         self.assertEqual(0, node.mask)
         self.assertSetEqual({'TS060140.7'}, node.next_labels)
         self.assertEqual('TS060140.7', node.fall_down)
-        # JNOP  XYZ
+        # JNOP  TS060130
         node = self.seg.nodes['TS060140.8']
         self.assertEqual('JNOP', node.command)
         self.assertIsNone(node.branch)
@@ -800,3 +809,75 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('R2', self.seg.nodes['TS080010.3'].field.base.reg)
         self.assertEqual('R1', self.seg.nodes['TS080010.4'].field.base.reg)
         self.assertEqual('R14', self.seg.nodes['TS080010.5'].field.base.reg)
+
+    def test_subroutine(self):
+        seg_name = 'TS09'
+        accepted_errors_list = [
+            f"{Error.REG_INVALID} None:BAS:R16,TS09S100 {seg_name}",
+            f"{Error.REG_INVALID} None:BR:-1 {seg_name}",
+        ]
+        self._common_checks(seg_name, accepted_errors_list)
+        # BAS   R4,TS09S100
+        node = self.seg.nodes['TS090010.1']
+        self.assertEqual('R4', node.reg.reg)
+        self.assertEqual('TS09S100', node.branch.name)
+        self.assertEqual('R8', node.branch.base.reg)
+        # JAS   R2,TS09S100
+        node = self.seg.nodes['TS090010.2']
+        self.assertEqual('R2', node.reg.reg)
+        self.assertEqual('TS09S200', node.branch.name)
+        self.assertEqual('R8', node.branch.base.reg)
+        # LTR   R1,R1 with BZR   R4
+        node = self.seg.nodes['TS09S100.1']
+        self.assertIsNone(node.goes)
+        self.assertEqual({'TS09S100.2'}, node.next_labels)
+        self.assertEqual('BZR', node.conditions[0].on)
+        self.assertEqual('R4', node.conditions[0].reg.reg)
+        self.assertEqual(8, node.conditions[0].mask)
+        self.assertIsNone(node.conditions[0].goes)
+        # AHI   R2,1
+        self.assertEqual('AHI', self.seg.nodes['TS09S100.2'].command)
+        # LTR   R1,R1
+        self.assertEqual('LTR', self.seg.nodes['TS09S100.3'].command)
+        # NOPR  0
+        node = self.seg.nodes['TS09S100.4']
+        self.assertEqual('NOPR', node.command)
+        self.assertIsNone(node.goes)
+        self.assertEqual({'TS09S100.5'}, node.next_labels)
+        self.assertEqual('NOPR', node.on)
+        self.assertEqual('R0', node.reg.reg)
+        self.assertEqual(0, node.mask)
+        # AHI   R2,1
+        self.assertEqual('AHI', self.seg.nodes['TS09S100.5'].command)
+        # BR    R4
+        node = self.seg.nodes['TS09S100.6']
+        self.assertEqual('BR', node.command)
+        self.assertIsNone(node.goes)
+        self.assertEqual(set(), node.next_labels)
+        self.assertEqual('BR', node.on)
+        self.assertEqual('R4', node.reg.reg)
+        self.assertEqual(15, node.mask)
+        # BCR   0,R2
+        node = self.seg.nodes['TS09S200.1']
+        self.assertEqual('NOPR', node.command)
+        self.assertIsNone(node.goes)
+        self.assertEqual({'TS09S200.2'}, node.next_labels)
+        self.assertEqual('NOPR', node.on)
+        self.assertEqual('R2', node.reg.reg)
+        self.assertEqual(0, node.mask)
+        # BCR   15,R2
+        node = self.seg.nodes['TS09S200.2']
+        self.assertEqual('BR', node.command)
+        self.assertIsNone(node.goes)
+        self.assertEqual(set(), node.next_labels)
+        self.assertEqual('R2', node.reg.reg)
+        self.assertEqual(15, node.mask)
+        # BCR   8,R2
+        node = self.seg.nodes['TS09S200.3']
+        self.assertIsNone(node.goes)
+        self.assertEqual({'TS09S200.4'}, node.next_labels)
+        self.assertEqual('R2', node.reg.reg)
+        self.assertEqual('BER', node.on)
+        self.assertEqual(8, node.mask)
+
+

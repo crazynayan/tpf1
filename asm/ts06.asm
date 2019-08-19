@@ -30,18 +30,20 @@ TS060130 DS    0H
 TS060140 DS    0H               ERROR PATHS
          LTR   R4,R4
          BNO   TS060100
-         BC    0,*
+         BC    0,TS060130
          LTR   R4,R4
          BNO   TS060100
-         NOP   *
+         NOP   TS060130
          LTR   R4,R4
          BNO   TS060100
-         JC    0,ABC
+         JC    0,TS060130
          LTR   R4,R4
          BNO   TS060100
-         JNOP  XYZ
+         JNOP  TS060130
 TS06E100 DS    0H               ERROR PATHS
          JC    -1,TS06E100
          BC    12,TS06E100
          B     TS06E100(R14)
          JC    14,TS06E100(-1)
+         BNZ   0(R8)
+         JE    TS061000
