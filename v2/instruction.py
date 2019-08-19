@@ -1,14 +1,12 @@
-import re
-
 from v2.data_type import FieldBaseDsp, Bits, FieldIndex, FieldLen, Register
 from v2.errors import Error
 from v2.command import cmd
 
 
 class Instruction:
-    def __init__(self, label, command):
-        self.label = label
-        self.command = command
+    def __init__(self, line=None):
+        self.label = line.label if line is not None else None
+        self.command = line.command if line is not None else None
         self.fall_down = None
         self.conditions = list()
 
@@ -18,12 +16,7 @@ class Instruction:
         else:
             return f"{self.label}:{self.command}:falls to {self.fall_down}"
 
-    @classmethod
-    def from_operand(cls, label, command, operand, macro):
-        instruction = cls(label, command)
-        return instruction.set_operand(operand, macro)
-
-    def set_operand(self, operand, macro):
+    def set_operand(self, line, macro):
         return self, Error.NO_ERROR
 
     @property
@@ -49,23 +42,18 @@ class Instruction:
     def is_check_cc(self):
         return True if self.get_attribute('check_cc') else False
 
-    @staticmethod
-    def split_operands(operands):
-        # Split operands separated by commas. Ignore commas enclosed in parenthesis.
-        return re.split(r",(?![^()]*\))", operands)
-
     def get_attribute(self, attribute):
         return cmd.check(self.command, attribute)
 
 
 class FieldBits(Instruction):
-    def __init__(self, label, command):
-        Instruction.__init__(self, label, command)
+    def __init__(self):
+        super().__init__()
         self.field = None
         self.bits = None
 
-    def set_operand(self, operand, macro):
-        operand1, operand2 = self.split_operands(operand)
+    def set_operand(self, line, macro):
+        operand1, operand2 = line.split_operands()
         self.field = FieldBaseDsp()
         result = self.field.set(operand1, macro)
         if result == Error.NO_ERROR:
@@ -77,13 +65,13 @@ class FieldBits(Instruction):
 class FieldLenField(Instruction):
     MAX_LEN = 256
 
-    def __init__(self, label, command):
-        Instruction.__init__(self, label, command)
+    def __init__(self):
+        super().__init__()
         self.field_len = None
         self.field = None
 
-    def set_operand(self, operand, macro):
-        operand1, operand2 = self.split_operands(operand)
+    def set_operand(self, line, macro):
+        operand1, operand2 = line.split_operands()
         self.field_len = FieldLen()
         result = self.field_len.set(operand1, macro, self.MAX_LEN)
         if result == Error.NO_ERROR:
@@ -95,13 +83,13 @@ class FieldLenField(Instruction):
 class FieldLenFieldLen(Instruction):
     MAX_LEN = 16
 
-    def __init__(self, label, command):
-        Instruction.__init__(self, label, command)
+    def __init__(self):
+        super().__init__()
         self.field_len1 = None
         self.field_len2 = None
 
-    def set_operand(self, operand, macro):
-        operand1, operand2 = self.split_operands(operand)
+    def set_operand(self, line, macro):
+        operand1, operand2 = line.split_operands()
         self.field_len1 = FieldLen()
         result = self.field_len1.set(operand1, macro, self.MAX_LEN)
         if result == Error.NO_ERROR:
@@ -113,13 +101,13 @@ class FieldLenFieldLen(Instruction):
 class FieldData(Instruction):
     DATA_LENGTH = 1     # 1 Byte
 
-    def __init__(self, label, command):
-        Instruction.__init__(self, label, command)
+    def __init__(self):
+        super().__init__()
         self.field = None
         self.data = None
 
-    def set_operand(self, operand, macro):
-        operand1, operand2 = self.split_operands(operand)
+    def set_operand(self, line, macro):
+        operand1, operand2 = line.split_operands()
         self.field = FieldBaseDsp()
         result = self.field.set(operand1, macro)
         if result == Error.NO_ERROR:
@@ -133,13 +121,13 @@ class FieldData(Instruction):
 
 
 class RegisterRegister(Instruction):
-    def __init__(self, label, command):
-        Instruction.__init__(self, label, command)
+    def __init__(self):
+        super().__init__()
         self.reg1 = None
         self.reg2 = None
 
-    def set_operand(self, operand, macro):
-        operand1, operand2 = self.split_operands(operand)
+    def set_operand(self, line, macro):
+        operand1, operand2 = line.split_operands()
         self.reg1 = Register(operand1)
         self.reg2 = Register(operand2)
         result = Error.NO_ERROR if self.reg1.is_valid() and self.reg2.is_valid() else Error.REG_INVALID
@@ -147,14 +135,14 @@ class RegisterRegister(Instruction):
 
 
 class RegisterFieldIndex(Instruction):
-    def __init__(self, label, command):
-        Instruction.__init__(self, label, command)
+    def __init__(self):
+        super().__init__()
         self.field = None
         self.reg = None
 
-    def set_operand(self, operand, macro):
+    def set_operand(self, line, macro):
         length = int(self.get_attribute('field_len'))
-        operand1, operand2 = self.split_operands(operand)
+        operand1, operand2 = line.split_operands()
         self.reg = Register(operand1)
         result = Error.NO_ERROR if self.reg.is_valid() else Error.RFX_INVALID_REG
         if result == Error.NO_ERROR:
@@ -166,13 +154,13 @@ class RegisterFieldIndex(Instruction):
 class RegisterData(Instruction):
     DATA_LENGTH = 16    # 16 bits
 
-    def __init__(self, label, command):
-        super().__init__(label, command)
+    def __init__(self):
+        super().__init__()
         self.reg = None
         self.data = None
 
-    def set_operand(self, operand, macro):
-        operand1, operand2 = self.split_operands(operand)
+    def set_operand(self, line, macro):
+        operand1, operand2 = line.split_operands()
         self.reg = Register(operand1)
         if self.reg.is_valid():
             self.data, result = macro.get_value(operand2)
@@ -189,14 +177,14 @@ class RegisterData(Instruction):
 
 
 class RegisterRegisterField(Instruction):
-    def __init__(self, label, command):
-        super().__init__(label, command)
+    def __init__(self):
+        super().__init__()
         self.reg1 = None
         self.reg2 = None
         self.field = None
 
-    def set_operand(self, operand, macro):
-        operand1, operand2, operand3 = self.split_operands(operand)
+    def set_operand(self, line, macro):
+        operand1, operand2, operand3 = line.split_operands()
         self.reg1 = Register(operand1)
         self.reg2 = Register(operand2)
         result = Error.NO_ERROR if self.reg1.is_valid() and self.reg2.is_valid() else Error.REG_INVALID
@@ -209,14 +197,14 @@ class RegisterRegisterField(Instruction):
 class RegisterDataField(Instruction):
     MAX_DATA = (1 << 4) - 1
 
-    def __init__(self, label, command):
-        super().__init__(label, command)
+    def __init__(self):
+        super().__init__()
         self.reg = None
         self.data = None
         self.field = None
 
-    def set_operand(self, operand, macro):
-        operand1, operand2, operand3 = self.split_operands(operand)
+    def set_operand(self, line, macro):
+        operand1, operand2, operand3 = line.split_operands()
         self.reg = Register(operand1)
         if self.reg.is_valid():
             self.data, result = macro.get_value(operand2)
@@ -236,8 +224,8 @@ class Exit(Instruction):
 
 
 class BranchGeneric(Instruction):
-    def __init__(self, label, command):
-        super().__init__(label, command)
+    def __init__(self):
+        super().__init__()
         self.branch = None
 
     def set_branch(self, branch, macro):
@@ -269,19 +257,20 @@ class BranchGeneric(Instruction):
 
 
 class ConditionGeneric(Instruction):
-    def __init__(self, label, command):
-        super().__init__(label, command)
+    def __init__(self):
+        super().__init__()
         self.mask = None
 
-    def set_mask(self, operand):
+    def set_mask(self, line):
         mask = self.get_attribute('mask')
         result = Error.NO_ERROR
         if mask is not None:
             # This is commands with mnemonics like BP, JNZ, J, B, NOP, BR, BMR
             self.mask = int(mask)
+            operand = line.operand
         else:
             # This is commands with mask. BC or JC or BCR
-            mask, operand = self.split_operands(operand)
+            mask, operand = line.split_operands()
             self.mask = int(mask)
             commands = cmd.get_commands('mask', self.mask)
             command = next((command for command in commands
@@ -294,11 +283,11 @@ class ConditionGeneric(Instruction):
 
 
 class BranchCondition(BranchGeneric, ConditionGeneric):
-    def __init__(self, label, command):
-        super().__init__(label, command)
+    def __init__(self):
+        super().__init__()
 
-    def set_operand(self, operand, macro):
-        branch, result = self.set_mask(operand)
+    def set_operand(self, line, macro):
+        branch, result = self.set_mask(line)
         if result == Error.NO_ERROR:
             result = self.set_branch(branch, macro)
             if self.mask == 0:
@@ -308,12 +297,12 @@ class BranchCondition(BranchGeneric, ConditionGeneric):
 
 
 class BranchConditionRegister(BranchCondition):
-    def __init__(self, label, command):
-        super().__init__(label, command)
+    def __init__(self):
+        super().__init__()
         self.reg = None
 
-    def set_operand(self, operand, macro):
-        reg, result = self.set_mask(operand)
+    def set_operand(self, line, macro):
+        reg, result = self.set_mask(line)
         if result == Error.NO_ERROR:
             self.reg = Register(reg)
             if not self.reg.is_valid():
@@ -322,15 +311,117 @@ class BranchConditionRegister(BranchCondition):
 
 
 class BranchSave(BranchGeneric):
-    def __init__(self, label, command):
-        super().__init__(label, command)
+    def __init__(self):
+        super().__init__()
         self.reg = None
 
-    def set_operand(self, operand, macro):
-        operand1, operand2 = self.split_operands(operand)
+    def set_operand(self, line, macro):
+        operand1, operand2 = line.split_operands()
         result = self.set_branch(operand2, macro)
         if result == Error.NO_ERROR:
             self.reg = Register(operand1)
             if not self.reg.is_valid():
                 result = Error.REG_INVALID
         return self, result
+
+
+class InstructionType:
+    INS = {
+        'NI': FieldBits,
+        'TM': FieldBits,
+        'OI': FieldBits,
+        'MVC': FieldLenField,
+        'OC': FieldLenField,
+        'CLC': FieldLenField,
+        'XC': FieldLenField,
+        'UNPK': FieldLenFieldLen,
+        'PACK': FieldLenFieldLen,
+        'CLI': FieldData,
+        'MVI': FieldData,
+        'BCTR': RegisterRegister,
+        'LR': RegisterRegister,
+        'LTR': RegisterRegister,
+        'AR': RegisterRegister,
+        'SR': RegisterRegister,
+        'CVB': RegisterFieldIndex,
+        'STH': RegisterFieldIndex,
+        'L': RegisterFieldIndex,
+        'IC': RegisterFieldIndex,
+        'STC': RegisterFieldIndex,
+        'N': RegisterFieldIndex,
+        'LA': RegisterFieldIndex,
+        'CH': RegisterFieldIndex,
+        'ST': RegisterFieldIndex,
+        'CVD': RegisterFieldIndex,
+        'LHI': RegisterData,
+        'AHI': RegisterData,
+        'LM': RegisterRegisterField,
+        'STM': RegisterRegisterField,
+        'ICM': RegisterDataField,
+        'STCM': RegisterDataField,
+        'EXITC': Exit,
+        'BACKC': Exit,
+        'B': BranchCondition,
+        'J': BranchCondition,
+        'BE': BranchCondition,
+        'BNE': BranchCondition,
+        'BH': BranchCondition,
+        'BNH': BranchCondition,
+        'BL': BranchCondition,
+        'BNL': BranchCondition,
+        'BM': BranchCondition,
+        'BNM': BranchCondition,
+        'BP': BranchCondition,
+        'BNP': BranchCondition,
+        'BC': BranchCondition,
+        'BO': BranchCondition,
+        'BNO': BranchCondition,
+        'BZ': BranchCondition,
+        'BNZ': BranchCondition,
+        'JE': BranchCondition,
+        'JNE': BranchCondition,
+        'JH': BranchCondition,
+        'JNH': BranchCondition,
+        'JL': BranchCondition,
+        'JNL': BranchCondition,
+        'JM': BranchCondition,
+        'JNM': BranchCondition,
+        'JP': BranchCondition,
+        'JNP': BranchCondition,
+        'JC': BranchCondition,
+        'JO': BranchCondition,
+        'JNO': BranchCondition,
+        'JZ': BranchCondition,
+        'JNZ': BranchCondition,
+        'NOP': BranchCondition,
+        'JNOP': BranchCondition,
+        'BR': BranchConditionRegister,
+        'BER': BranchConditionRegister,
+        'BNER': BranchConditionRegister,
+        'BHR': BranchConditionRegister,
+        'BNHR': BranchConditionRegister,
+        'BLR': BranchConditionRegister,
+        'BNLR': BranchConditionRegister,
+        'BMR': BranchConditionRegister,
+        'BNMR': BranchConditionRegister,
+        'BPR': BranchConditionRegister,
+        'BNPR': BranchConditionRegister,
+        'BCR': BranchConditionRegister,
+        'BOR': BranchConditionRegister,
+        'BNOR': BranchConditionRegister,
+        'BZR': BranchConditionRegister,
+        'BNZR': BranchConditionRegister,
+        'NOPR': BranchConditionRegister,
+        'BAS': BranchSave,
+        'JAS': BranchSave,
+    }
+
+    def __init__(self, ins_type):
+        if ins_type not in self.INS:
+            raise KeyError
+        self.instruction_object = self.INS[ins_type]()
+
+    def create(self, line, macro):
+        self.instruction_object.label = line.label
+        self.instruction_object.command = line.command
+        return self.instruction_object.set_operand(line, macro)

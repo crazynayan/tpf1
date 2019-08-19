@@ -11,7 +11,9 @@ class DsDc:
         self.length = 0
         self.data_type = None
         self.data = None
-        self.align_to_boundary = False
+        self.align_to_boundary = 0
+        self.start = -1
+        self.end = -1
 
     def __repr__(self):
         return f'{self.duplication_factor}:{self.data_type}:{self.length}:{self.data}'
@@ -33,14 +35,16 @@ class DsDc:
         # Data Type
         dsdc.data_type = operands[1]
         # Align to boundary
-        dsdc.align_to_boundary = DataType(dsdc.data_type).align_to_boundary
+        boundary = DataType(dsdc.data_type).align_to_boundary
+        if boundary > 0 and location_counter % boundary > 0:
+            dsdc.align_to_boundary = boundary - location_counter % boundary
         # Length
         if operands[2]:
             dsdc.length = int(operands[2])
-            dsdc.align_to_boundary = False
+            dsdc.align_to_boundary = 0
         elif operands[3]:
             dsdc.length, result = macro.get_value(operands[3], location_counter)
-            dsdc.align_to_boundary = False
+            dsdc.align_to_boundary = 0
             if result != Error.NO_ERROR:
                 return dsdc, result
         else:
@@ -60,30 +64,28 @@ class DsDc:
         else:
             dsdc.data = None
             dsdc.length = dsdc.length or DataType(dsdc.data_type).default_length
+        # Start (after boundary alignment) and End (After duplication factor)
+        dsdc.start = location_counter + dsdc.align_to_boundary
+        dsdc.end = dsdc.start + dsdc.duplication_factor * dsdc.length
         return dsdc, Error.NO_ERROR
 
 
 class Ds:
     @staticmethod
-    def update(**kwargs):
-        line = kwargs['line']
-        macro = kwargs['macro']
-        location_counter = kwargs['location_counter']
-        name = kwargs['name']
+    def update(line, macro, location_counter, name, **_):
         operands = line.split_operands()
-        dsp = location_counter
-        length = 0
-        for operand in operands:
-            dc, result = DsDc.from_operand(operand, macro, location_counter)
-            if result != Error.NO_ERROR:
-                return location_counter, result
-            while dc.align_to_boundary and location_counter % DataType(dc.data_type).default_length != 0:
-                dsp = dsp + 1 if operand == operands[0] else dsp
-                location_counter += 1
-            length = length or dc.length
-            location_counter += dc.duplication_factor * dc.length
+        dc, result = DsDc.from_operand(operands[0], macro, location_counter)
+        if result != Error.NO_ERROR:
+            return location_counter, result
         if line.label:
-            macro.data_map[line.label] = SymbolTable(line.label, dsp, length, name)
+            macro.data_map[line.label] = SymbolTable(line.label, dc.start, dc.length, name)
+        location_counter = dc.end
+        if len(operands) > 1:
+            for operand in operands[1:]:
+                dc, result = DsDc.from_operand(operand, macro, location_counter)
+                if result != Error.NO_ERROR:
+                    return location_counter, result
+                location_counter = dc.end
         return location_counter, Error.NO_ERROR
 
 
@@ -91,29 +93,29 @@ class Dc:
     @staticmethod
     def update(line, macro, location_counter, name, constant):
         operands = line.split_operands()
-        dsp = location_counter
-        length = 0
-        for operand in operands:
-            dc, result = DsDc.from_operand(operand, macro, location_counter)
-            if result != Error.NO_ERROR:
-                return location_counter, result
-            while dc.align_to_boundary and location_counter % DataType(dc.data_type).default_length != 0:
-                dsp = dsp + 1 if operand == operands[0] else dsp
-                location_counter += 1
-                constant.data.extend([0x00])
-            constant.start = constant.start or location_counter
-            length = length or dc.length
-            location_counter += dc.duplication_factor * dc.length
-            constant.data.extend(dc.data * dc.duplication_factor)
+        dc, result = DsDc.from_operand(operands[0], macro, location_counter)
+        if result != Error.NO_ERROR:
+            return location_counter, result
+        constant.start = constant.start or dc.start
         if line.label:
-            macro.data_map[line.label] = SymbolTable(line.label, dsp, length, name)
+            macro.data_map[line.label] = SymbolTable(line.label, dc.start, dc.length, name)
+        location_counter = dc.end
+        constant.data.extend([0x00] * dc.align_to_boundary)
+        constant.data.extend(dc.data * dc.duplication_factor)
+        if len(operands) > 1:
+            for operand in operands[1:]:
+                dc, result = DsDc.from_operand(operand, macro, location_counter)
+                if result != Error.NO_ERROR:
+                    return location_counter, result
+                location_counter = dc.end
+                constant.data.extend([0x00] * dc.align_to_boundary)
+                constant.data.extend(dc.data * dc.duplication_factor)
         return location_counter, Error.NO_ERROR
 
 
 class Equ:
-    # noinspection PyUnusedLocal
     @staticmethod
-    def update(line, macro, location_counter, name, constant=None):
+    def update(line, macro, location_counter, name, **_):
         if line.label is None:
             return location_counter, Error.EQU_LABEL_REQUIRED
         operands = line.split_operands()
@@ -139,9 +141,8 @@ class Equ:
 
 
 class Dsect:
-    # noinspection PyUnusedLocal,PyUnusedLocal
     @staticmethod
-    def update(line, macro, location_counter, name, constant=None):
+    def update(line, macro, location_counter, **_):
         name = line.label
         seg_location_counter, _ = macro.dsect if macro.dsect is not None else (location_counter, None)
         macro.dsect = seg_location_counter, name
@@ -150,9 +151,8 @@ class Dsect:
 
 
 class Csect:
-    # noinspection PyUnusedLocal,PyUnusedLocal
     @staticmethod
-    def update(line, macro, location_counter, name, constant=None):
+    def update(line, macro, location_counter, **_):
         dsect_location_counter, name = macro.dsect
         macro.dsect = None
         macro.data_map[line.label] = SymbolTable(line.label, location_counter, 0, name)
@@ -160,39 +160,34 @@ class Csect:
 
 
 class Org:
-    # noinspection PyUnusedLocal,PyUnusedLocal
     @staticmethod
-    def update(line, macro, location_counter, name=None, constant=None):
+    def update(line, macro, location_counter, **_):
         return macro.get_value(line.operand, location_counter)
 
 
 class Pgmid:
-    # noinspection PyUnusedLocal,PyUnusedLocal
     @staticmethod
-    def update(line, macro, location_counter, name, constant=None):
+    def update(**_):
         return 8, Error.NO_ERROR
 
 
 class Push:
-    # noinspection PyUnusedLocal,PyUnusedLocal
     @staticmethod
-    def update(line, macro, location_counter, name, constant=None):
+    def update(macro, location_counter, **_):
         macro.using_stack.append(macro.using.copy())
         return location_counter, Error.NO_ERROR
 
 
 class Pop:
-    # noinspection PyUnusedLocal,PyUnusedLocal
     @staticmethod
-    def update(line, macro, location_counter, name, constant=None):
+    def update(macro, location_counter, **_):
         macro.using = macro.using_stack.pop()
         return location_counter, Error.NO_ERROR
 
 
 class Using:
-    # noinspection PyUnusedLocal,PyUnusedLocal
     @staticmethod
-    def update(line, macro, location_counter, name, constant=None):
+    def update(line, macro, location_counter, name, **_):
         operands = line.split_operands()
         if len(operands) == 2 and Register(operands[1]).is_valid():
             dsect = name if operands[0] == '*' else operands[0]

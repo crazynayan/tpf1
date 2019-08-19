@@ -4,8 +4,7 @@ from v2.errors import Error
 
 class DataTypeGeneric:
     DATA_TYPES = {'X': 1, 'C': 1, 'H': 2, 'F': 4, 'D': 8, 'FD': 8, 'B': 1, 'P': 1, 'Z': 1, 'A': 4, 'Y': 2}
-    ALIGN_TO_BOUNDARY = {'X': 0, 'C': 0, 'H': 1, 'F': 1, 'D': 1, 'FD': 1, 'B': 0, 'P': 0, 'Z': 0, 'A': 1, 'Y': 1}
-    
+
     def __init__(self):
         self.data_type = None
         self.input = None
@@ -17,7 +16,7 @@ class DataTypeGeneric:
 
     @property
     def align_to_boundary(self):
-        return True if self.ALIGN_TO_BOUNDARY[self.data_type] == 1 else False
+        return 0 if self.DATA_TYPES[self.data_type] == 1 else self.DATA_TYPES[self.data_type]
 
 
 class CDataType(DataTypeGeneric):
@@ -222,22 +221,23 @@ class YDataType(NumericDataType):
 
 
 class DataType:
-    OBJECT = {'X': XDataType(),
-              'C': CDataType(),
-              'H': HDataType(),
-              'F': FDataType(),
-              'D': DDataType(),
-              'FD': FDDataType(),
-              'B': BDataType(),
-              'P': PDataType(),
-              'Z': ZDataType(),
-              'A': ADataType(),
-              'Y': YDataType()}
+    DT = {'X': XDataType,
+          'C': CDataType,
+          'H': HDataType,
+          'F': FDataType,
+          'D': DDataType,
+          'FD': FDDataType,
+          'B': BDataType,
+          'P': PDataType,
+          'Z': ZDataType,
+          'A': ADataType,
+          'Y': YDataType,
+          }
 
     def __init__(self, data_type, **kwargs):
-        if data_type not in self.OBJECT:
-            raise TypeError
-        self.data_type_object = self.OBJECT[data_type]
+        if data_type not in self.DT:
+            raise KeyError
+        self.data_type_object = self.DT[data_type]()
         self.data_type_object.input = kwargs['input'] if 'input' in kwargs else None
         self.data_type_object.bytes = kwargs['bytes'] if 'bytes' in kwargs and 'input' not in kwargs else None
 

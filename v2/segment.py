@@ -1,13 +1,13 @@
 import os
 from copy import copy
 
-import v2.instruction as ins
 from v2.directive import AssemblerDirective
 from config import config
-from v2.command import cmd
 from v2.errors import Error
 from v2.file_line import File, Line, SymbolTable
 from v2.macro import GlobalMacro, SegmentMacro
+from v2.data_type import Register
+from v2.instruction import InstructionType, Instruction
 
 
 class Label:
@@ -107,33 +107,32 @@ class Segment:
             except KeyError:    # Will only fail the first time
                 pass
             prior_label = current_label
-            current_label = str(current_label)
+            line.label = str(current_label)
             other_lines = ins_line[1:] if len(ins_line) > 1 else list()
-            self._create_node(ins_line[0], other_lines, current_label)
+            self._create_node(ins_line[0], other_lines)
 
-    def _create_node(self, line, other_lines, current_label):
+    def _create_node(self, line, other_lines):
         # Create and empty instruction for a label with no instruction (EQU * or DS 0H)
         if line.is_node_label:
-            self.nodes[current_label] = ins.Instruction(current_label, line.command)
+            self.nodes[line.label] = Instruction(line)
             return
         # Get the instruction class based on the command and create the dynamic instruction object
-        instruction_class = line.instruction_class
-        parameters = 'current_label, line.command, line.operand, self.macro'
-        node, result = eval(f"ins.{instruction_class}.from_operand({parameters})")
+        instruction_object = InstructionType(line.command)
+        node, result = instruction_object.create(line, self.macro)
         if result != Error.NO_ERROR:
             self.errors.append(f'{result} {line} {self.name}')
             return
         # Other lines contain one or more conditions (like BNE, JL) and instruction that don't change cc.
-        for line in other_lines:
-            if line.is_assembler_directive:
+        for other_line in other_lines:
+            if other_line.is_assembler_directive:
                 continue
-            instruction_class = cmd.check(line.command, 'create')
-            condition, result = eval(f"ins.{instruction_class}.from_operand({parameters})")
+            instruction_object = InstructionType(other_line.command)
+            condition, result = instruction_object.create(other_line, self.macro)
             if result != Error.NO_ERROR:
-                self.errors.append(f'{result} {line} {self.name}')
+                self.errors.append(f'{result} {other_line} {self.name}')
                 return
             node.conditions.append(condition)
-        self.nodes[current_label] = node
+        self.nodes[line.label] = node
         return
 
     def _process_assembler_directive(self, line):
@@ -144,7 +143,7 @@ class Segment:
         if line.is_first_pass:
             return True
         if self.macro.is_present(line.command):
-            base = ins.Register(line.operand[4:])  # TODO To improve when KeyValue DataType is developed
+            base = Register(line.operand[4:])  # TODO To improve when KeyValue DataType is developed
             self.macro.load(line.command, base.reg)
             return True
         if not line.is_assembler_directive:

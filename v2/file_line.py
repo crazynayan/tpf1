@@ -130,8 +130,8 @@ class Line:
 
     @property
     def is_node_label(self):
-        if not self.label:
-            return False
+        # if not self.label:
+        #     return False
         if self.command == 'EQU' and self.operand == '*':
             return True
         if self.command == 'DS' and self.operand == '0H':
@@ -147,10 +147,6 @@ class Line:
     def stop_checking_for_conditions(self):
         return True if self.is_set_cc or not self.is_fall_down or self.label is not None \
                        or not cmd.command_check(self.command) else False
-
-    @property
-    def instruction_class(self):
-        return cmd.check(self.command, 'create')
 
     @property
     def length(self):
@@ -174,5 +170,3 @@ class SymbolTable:
 
     def __repr__(self):
         return f'{self.label}:{self.dsp}:{self.length}:{self.name}'
-
-
