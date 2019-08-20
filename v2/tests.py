@@ -1,6 +1,8 @@
 import unittest
 
 from v2.errors import Error
+from v2.file_line import Line
+from v2.instruction import InstructionType
 from v2.macro import GlobalMacro, SegmentMacro
 from v2.segment import Program
 
@@ -129,7 +131,7 @@ class MacroTest(unittest.TestCase):
 
 
 class SegmentTest(unittest.TestCase):
-    NUMBER_OF_FILES = 10
+    NUMBER_OF_FILES = 11
 
     def setUp(self) -> None:
         self.program = Program()
@@ -441,12 +443,12 @@ class SegmentTest(unittest.TestCase):
             f"{Error.FBD_INVALID_DSP} TS05E300.5:ICM:R1,7,-1(R9) {seg_name}",
         ]
         self._common_checks(seg_name, accepted_errors_list)
-        # self.assertRaises(ValueError, ins.RegisterData.from_operand, None, 'AHI', 'R1,1,3', self.seg.macro)
-        # self.assertRaises(ValueError, ins.RegisterData.from_operand, None, 'LHI', 'R1', self.seg.macro)
-        # self.assertRaises(ValueError, ins.RegisterRegisterField.from_operand, 'STM', 'R1,R2,B,C', self.seg.macro)
-        # self.assertRaises(ValueError, ins.RegisterRegisterField.from_operand, None, 'LM', 'R1,R2', self.seg.macro)
-        # self.assertRaises(ValueError, ins.RegisterDataField.from_operand, None, 'ICM', 'R1,1', self.seg.macro)
-        # self.assertRaises(ValueError, ins.RegisterDataField.from_operand, None, 'STCM', 'R1', self.seg.macro)
+        self.assertRaises(ValueError, InstructionType.from_line, Line.from_line(" AHI R1,1,3"), self.seg.macro)
+        self.assertRaises(ValueError, InstructionType.from_line, Line.from_line(" LHI R1"), self.seg.macro)
+        self.assertRaises(ValueError, InstructionType.from_line, Line.from_line(" STM R1,R2,B,C"), self.seg.macro)
+        self.assertRaises(ValueError, InstructionType.from_line, Line.from_line(" LM R1,R2"), self.seg.macro)
+        self.assertRaises(ValueError, InstructionType.from_line, Line.from_line(" ICM R1,1"), self.seg.macro)
+        self.assertRaises(ValueError, InstructionType.from_line, Line.from_line(" STCM R1"), self.seg.macro)
         # Check RegisterData
         # AHI   R15,SUIFF with BP    TS050110
         label = 'TS050100.1'
@@ -878,3 +880,40 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('R2', node.reg.reg)
         self.assertEqual('BER', node.on)
         self.assertEqual(8, node.mask)
+
+    def test_seg_calls(self):
+        seg_name = 'TS10'
+        accepted_errors_list = [
+            f"{Error.SC_INVALID_SEGMENT} TS10E100.1:ENTRC:A000 {seg_name}",
+        ]
+        self._common_checks(seg_name, accepted_errors_list)
+        # ENTRC TS01
+        node = self.seg.nodes['$$TS10$$.1']
+        seg = self.program.segments[node.seg_name]
+        self.assertEqual('ENTRC', node.command)
+        self.assertEqual('TS01', node.seg_name)
+        self.assertEqual('$$TS01$$', node.branch.name)
+        self.assertIn('$$TS01$$', seg.macro.data_map)
+        self.assertIn('OI', seg.nodes['$$TS01$$.1'].command)
+        self.assertEqual('$$TS01$$', node.goes)
+        self.assertSetEqual({'$$TS01$$', '$$TS10$$.2'}, node.next_labels)
+        # ENTNC TS02
+        node = self.seg.nodes['$$TS10$$.2']
+        seg = self.program.segments[node.seg_name]
+        self.assertEqual('ENTNC', node.command)
+        self.assertEqual('TS02', node.seg_name)
+        self.assertEqual('$$TS02$$', node.branch.name)
+        self.assertIn('$$TS02$$', seg.macro.data_map)
+        self.assertIn('SR', seg.nodes['TS020010'].command)
+        self.assertEqual('$$TS02$$', node.goes)
+        self.assertSetEqual({'$$TS02$$'}, node.next_labels)
+        # ENTDC TS03
+        node = self.seg.nodes['$$TS10$$.3']
+        seg = self.program.segments[node.seg_name]
+        self.assertEqual('ENTDC', node.command)
+        self.assertEqual('TS03', node.seg_name)
+        self.assertEqual('$$TS03$$', node.branch.name)
+        self.assertIn('$$TS03$$', seg.macro.data_map)
+        self.assertIn('L', seg.nodes['$$TS03$$.1'].command)
+        self.assertEqual('$$TS03$$', node.goes)
+        self.assertSetEqual({'$$TS03$$'}, node.next_labels)

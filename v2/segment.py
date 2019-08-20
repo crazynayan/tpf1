@@ -7,7 +7,7 @@ from v2.errors import Error
 from v2.file_line import File, Line, SymbolTable
 from v2.macro import GlobalMacro, SegmentMacro
 from v2.data_type import Register
-from v2.instruction import InstructionType, Instruction
+from v2.instruction import InstructionType
 
 
 class Label:
@@ -38,9 +38,16 @@ class Segment:
         self.assembled = False
         self.constant = Constant()
 
+    def __repr__(self):
+        return f"{self.name}:{self.assembled}:{len(self.nodes)}"
+
     @property
     def root_label(self):
         return '$$' + self.name + '$$'
+
+    @property
+    def root_line(self):
+        return Line.from_line(f"{self.root_label} EQU *")
 
     def get_constant_bytes(self, label, length=None):
         try:
@@ -56,6 +63,10 @@ class Segment:
     def load(self):
         if self.assembled:
             return True
+        # Init Macro
+        self.macro.copy_from_global()
+        self.macro.set_using(self.name, 'R8')
+        self.macro.set_using('EB0EB', 'R9')
         # Get the data from line after removing CVS and empty lines.
         file_lines = File.open(self.file_name)
         # Create a list of Line objects
@@ -70,24 +81,25 @@ class Segment:
 
     def _build_symbol_table(self, lines):
         location_counter = 8
+        AssemblerDirective.from_line(line=self.root_line, macro=self.macro, name=self.name,
+                                     location_counter=location_counter)
         for line in lines:
             length = line.length if line.length else 1
-            dsp = location_counter
             if line.is_first_pass:
                 name = self.name if self.macro.dsect is None else self.macro.dsect[1]
-                asm_dir = AssemblerDirective(line.command)
-                location_counter, result = asm_dir.update(line=line, macro=self.macro,  constant=self.constant,
-                                                          location_counter=location_counter, name=name)
-
+                location_counter, result = AssemblerDirective.from_line(line=line, macro=self.macro, name=name,
+                                                                        constant=self.constant,
+                                                                        location_counter=location_counter)
                 if result != Error.NO_ERROR:
                     self.errors.append(f'{result} {line} {self.name}')
             else:
-                location_counter += line.length
                 if line.label:
-                    self.macro.data_map[line.label] = SymbolTable(line.label, dsp, length, self.name)
+                    self.macro.data_map[line.label] = SymbolTable(line.label, location_counter, length, self.name)
+                location_counter += line.length
 
     def _assemble_instructions(self, lines):
         prior_label = Label(self.root_label)
+        self.nodes[str(prior_label)], _ = InstructionType.from_line(self.root_line, self.macro)
         for ins_line in Line.yield_lines(lines):
             line = ins_line[0]
             # Process assembler directive like USING and
@@ -100,44 +112,29 @@ class Segment:
             else:
                 current_label = Label(line.label)
             # Update the prior label with fall down
-            try:
-                prior_node = self.nodes[str(prior_label)]
-                if prior_node.is_fall_down:
-                    prior_node.fall_down = str(current_label)
-            except KeyError:    # Will only fail the first time
-                pass
+            prior_node = self.nodes[str(prior_label)]
+            if prior_node.is_fall_down:
+                prior_node.fall_down = str(current_label)
+            # Update labels
             prior_label = current_label
             line.label = str(current_label)
-            other_lines = ins_line[1:] if len(ins_line) > 1 else list()
-            self._create_node(ins_line[0], other_lines)
-
-    def _create_node(self, line, other_lines):
-        # Create and empty instruction for a label with no instruction (EQU * or DS 0H)
-        if line.is_node_label:
-            self.nodes[line.label] = Instruction(line)
-            return
-        # Get the instruction class based on the command and create the dynamic instruction object
-        instruction_object = InstructionType(line.command)
-        node, result = instruction_object.create(line, self.macro)
-        if result != Error.NO_ERROR:
-            self.errors.append(f'{result} {line} {self.name}')
-            return
-        # Other lines contain one or more conditions (like BNE, JL) and instruction that don't change cc.
-        for other_line in other_lines:
-            if other_line.is_assembler_directive:
-                continue
-            instruction_object = InstructionType(other_line.command)
-            condition, result = instruction_object.create(other_line, self.macro)
+            # Create the node based on type of instruction
+            self.nodes[line.label], result = InstructionType.from_line(line, self.macro)
             if result != Error.NO_ERROR:
-                self.errors.append(f'{result} {other_line} {self.name}')
-                return
-            node.conditions.append(condition)
-        self.nodes[line.label] = node
-        return
+                self.errors.append(f'{result} {line} {self.name}')
+            # Other lines contain one or more conditions (like BNE, JL) and instruction that don't change cc.
+            other_lines = ins_line[1:] if len(ins_line) > 1 else list()
+            for other_line in other_lines:
+                if other_line.is_assembler_directive:
+                    continue
+                condition, result = InstructionType.from_line(other_line, self.macro)
+                if result != Error.NO_ERROR:
+                    self.errors.append(f'{result} {other_line} {self.name}')
+                self.nodes[line.label].conditions.append(condition)
 
     def _process_assembler_directive(self, line):
-        # return True means that skip creating node.
-        # return False means further checks are required before deciding creation of node.
+        # return True -> skip creating node.
+        # return False -> continue creating the node.
         if line.is_node_label and self.name == self.macro.data_map[line.label].name:
             return False
         if line.is_first_pass:
@@ -149,8 +146,7 @@ class Segment:
         if not line.is_assembler_directive:
             return False
         # Second pass assembler directive like USING, PUSH, POP
-        asm_dir = AssemblerDirective(line.command)
-        _, result = asm_dir.update(line=line, macro=self.macro, location_counter=0, name=self.name)
+        _, result = AssemblerDirective.from_line(line=line, macro=self.macro, location_counter=0, name=self.name)
         if result != Error.NO_ERROR:
             self.errors.append(f'{result} {line} {self.name}')
         return True
@@ -168,11 +164,11 @@ class Program:
             if len(file_name) < 6 or file_name[-4:].lower() not in self.EXT:
                 continue
             seg_name = file_name[:-4].upper()
-            seg_macro = SegmentMacro(self.macro)
+            seg_macro = SegmentMacro(self.macro, self)
             self.segments[seg_name] = Segment(os.path.join(self.FOLDER_NAME, file_name), seg_name, seg_macro)
 
+    def __repr__(self):
+        return f"Program:{len(self.segments)}"
+
     def load(self, seg_name):
-        self.segments[seg_name].macro.copy_from_global()
-        self.segments[seg_name].macro.set_using(seg_name, 'R8')
-        self.segments[seg_name].macro.set_using('EB0EB', 'R9')
         self.segments[seg_name].load()

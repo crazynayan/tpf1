@@ -325,8 +325,26 @@ class BranchSave(BranchGeneric):
         return self, result
 
 
+class SegmentCall(BranchGeneric):
+    def __init__(self):
+        super().__init__()
+        self.seg_name = None
+
+    def set_operand(self, line, macro):
+        self.seg_name = next(iter(line.split_operands()))
+        try:
+            called_seg = macro.global_program.segments[self.seg_name]
+            called_seg.load()
+            result = self.set_branch(called_seg.root_label, called_seg.macro)
+        except KeyError:
+            result = Error.SC_INVALID_SEGMENT
+        return self, result
+
+
 class InstructionType:
     INS = {
+        'EQU': Instruction,
+        'DS': Instruction,
         'NI': FieldBits,
         'TM': FieldBits,
         'OI': FieldBits,
@@ -414,6 +432,9 @@ class InstructionType:
         'NOPR': BranchConditionRegister,
         'BAS': BranchSave,
         'JAS': BranchSave,
+        'ENTRC': SegmentCall,
+        'ENTNC': SegmentCall,
+        'ENTDC': SegmentCall,
     }
 
     def __init__(self, ins_type):
@@ -425,3 +446,8 @@ class InstructionType:
         self.instruction_object.label = line.label
         self.instruction_object.command = line.command
         return self.instruction_object.set_operand(line, macro)
+
+    @classmethod
+    def from_line(cls, line, macro):
+        instruction_object = cls(line.command)
+        return instruction_object.create(line, macro)

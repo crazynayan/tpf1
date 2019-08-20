@@ -25,3 +25,4 @@ class Error:
     BC_INVALID_MASK = 'ConditionGeneric - Mask value not present in the command file.'
     BC_INVALID_BRANCH = 'BranchGeneric - Invalid Branch Label'
     EQU_LABEL_REQUIRED = 'Equ - Label required.'
+    SC_INVALID_SEGMENT = 'SegmentCall - Invalid Segment.'

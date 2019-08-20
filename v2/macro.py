@@ -32,6 +32,9 @@ class GlobalMacro:
             macro_file = MacroFile(os.path.join(self.FOLDER_NAME, file_name))
             self.files[file_name[:-4].upper()] = macro_file
 
+    def __repr__(self):
+        return f"GlobalMacro:{len(self.files)}:{len(self.global_map)}"
+
     def is_loaded(self, macro_name):
         return self.files[macro_name].data_mapped
 
@@ -71,12 +74,16 @@ class SegmentMacro:
     FIELD_LOOKUP = '$FIELD_LOOKUP$'
     INTEGER = '$INTEGER$'
 
-    def __init__(self, global_macro=None):
+    def __init__(self, global_macro=None, program=None):
         self.global_macro = global_macro
         self.data_map = dict()  # Dictionary of SymbolTable. Field name is the key.
         self.dsect = None
         self.using = dict()
         self.using_stack = list()
+        self.global_program = program
+
+    def __repr__(self):
+        return f"SegmentMacro:{len(self.data_map)}"
 
     @property
     def errors(self):

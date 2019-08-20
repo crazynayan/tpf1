@@ -217,3 +217,9 @@ class AssemblerDirective:
                                                      name=name)
             if result != Error.NO_ERROR:
                 errors.append(f'{result} {line} {name}')
+
+    @classmethod
+    def from_line(cls, line, **kwargs):
+        assembler_directive_object = cls(line.command)
+        kwargs['line'] = line
+        return assembler_directive_object.update(**kwargs)

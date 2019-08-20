@@ -130,8 +130,6 @@ class Line:
 
     @property
     def is_node_label(self):
-        # if not self.label:
-        #     return False
         if self.command == 'EQU' and self.operand == '*':
             return True
         if self.command == 'DS' and self.operand == '0H':
