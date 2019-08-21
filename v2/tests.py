@@ -3,7 +3,7 @@ import unittest
 from v2.errors import Error
 from v2.file_line import Line
 from v2.instruction import InstructionType
-from v2.macro import GlobalMacro, SegmentMacro
+from v2.macro import SegmentMacro
 from v2.segment import Program
 
 
@@ -11,13 +11,14 @@ class MacroTest(unittest.TestCase):
     NUMBER_OF_FILES = 12
 
     def setUp(self) -> None:
-        self.macro = SegmentMacro(GlobalMacro())
+        self.program = Program()
+        self.macro = SegmentMacro(self.program)
 
     def test_files(self):
         self.assertTrue(self.macro.is_present('WA0AA'))
         self.assertTrue(self.macro.is_present('EB0EB'))
         self.assertFalse(self.macro.is_present('ETA5'))
-        self.assertEqual(self.NUMBER_OF_FILES, len(self.macro.global_macro.files),
+        self.assertEqual(self.NUMBER_OF_FILES, len(self.macro.global_program.macro.files),
                          'Update number of files in MacroTest')
 
     def _common_checks(self, macro_name, accepted_errors_list=None):

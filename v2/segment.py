@@ -102,7 +102,7 @@ class Segment:
         self.nodes[str(prior_label)], _ = InstructionType.from_line(self.root_line, self.macro)
         for ins_line in Line.yield_lines(lines):
             line = ins_line[0]
-            # Process assembler directive like USING and
+            # Process data macro declarations and second pass assembler directives like USING, PUSH, POP
             if self._process_assembler_directive(line):
                 continue
             # Set the current label
@@ -135,7 +135,7 @@ class Segment:
     def _process_assembler_directive(self, line):
         # return True -> skip creating node.
         # return False -> continue creating the node.
-        if line.is_node_label and self.name == self.macro.data_map[line.label].name:
+        if line.is_branch_label and self.macro.is_branch_or_constant(line.label):
             return False
         if line.is_first_pass:
             return True
@@ -157,14 +157,14 @@ class Program:
     FOLDER_NAME = os.path.join(config.ROOT_DIR, 'asm')
 
     def __init__(self):
-        self.segments = dict()     # Dictionary of Segment. Segment name is the key.
-        self.macro = GlobalMacro()
+        self.macro = GlobalMacro()      # Instance of global macro.
+        self.segments = dict()          # Dictionary of Segment. Segment name is the key.
         self.macro.load('EB0EB')
         for file_name in os.listdir(self.FOLDER_NAME):
             if len(file_name) < 6 or file_name[-4:].lower() not in self.EXT:
                 continue
             seg_name = file_name[:-4].upper()
-            seg_macro = SegmentMacro(self.macro, self)
+            seg_macro = SegmentMacro(self, seg_name)
             self.segments[seg_name] = Segment(os.path.join(self.FOLDER_NAME, file_name), seg_name, seg_macro)
 
     def __repr__(self):

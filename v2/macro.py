@@ -74,27 +74,30 @@ class SegmentMacro:
     FIELD_LOOKUP = '$FIELD_LOOKUP$'
     INTEGER = '$INTEGER$'
 
-    def __init__(self, global_macro=None, program=None):
-        self.global_macro = global_macro
-        self.data_map = dict()  # Dictionary of SymbolTable. Field name is the key.
+    def __init__(self, program=None, name=None):
+        self.seg_name = name                # Segment name for which this instance is created.
+        self.global_program = program       # Reference to the program instance.
+        self.data_map = dict()              # Dictionary of SymbolTable. Field name is the key.
         self.dsect = None
         self.using = dict()
         self.using_stack = list()
-        self.global_program = program
 
     def __repr__(self):
-        return f"SegmentMacro:{len(self.data_map)}"
+        return f"Macro:{self.seg_name}:{len(self.data_map)}"
 
     @property
     def errors(self):
-        return self.global_macro.errors
+        return self.global_program.macro.errors
+
+    def is_branch_or_constant(self, label):
+        return True if self.seg_name == self.data_map[label].name else False
 
     def load(self, macro_name, base=None):
-        if not self.global_macro.is_loaded(macro_name):
-            filtered_data_map = self.global_macro.load(macro_name)
+        if not self.global_program.macro.is_loaded(macro_name):
+            filtered_data_map = self.global_program.macro.load(macro_name)
         else:
-            filtered_data_map = {label: symbol_table for label, symbol_table in self.global_macro.global_map.items()
-                                 if symbol_table.name == macro_name}
+            filtered_data_map = {label: symbol_table for label, symbol_table in
+                                 self.global_program.macro.global_map.items() if symbol_table.name == macro_name}
         self.data_map = {**self.data_map, **filtered_data_map}
         if base is not None and Register(base).is_valid():
             self.set_using(macro_name, base)
@@ -122,13 +125,13 @@ class SegmentMacro:
         self.using[reg] = dsect
 
     def is_present(self, macro_name):
-        return macro_name in self.global_macro.files
+        return macro_name in self.global_program.macro.files
 
     def is_loaded(self, macro_name):
-        return self.global_macro.is_loaded(macro_name)
+        return self.global_program.macro.is_loaded(macro_name)
 
     def copy_from_global(self):
-        self.data_map = self.global_macro.global_map.copy()
+        self.data_map = self.global_program.macro.global_map.copy()
 
     def evaluate(self, expression, location_counter=None):
         if expression.isdigit():
@@ -162,7 +165,7 @@ class SegmentMacro:
         return self.using[base.reg]
 
     def get_base(self, macro_name):
-        # Will raise a StopIteration exception if the macro_name is not present.
+        # Will raise a StopIteration exception if the macro name is not present.
         return next(reg for reg, name in self.using.items() if name == macro_name)
 
     def get_field_name(self, base, dsp, length):

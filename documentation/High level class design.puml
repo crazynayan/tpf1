@@ -1,0 +1,78 @@
+@startuml
+
+!define primary_key(x) <b><u>x</u></b>
+!define foreign_key(x) <color:blue>x</color>
+
+class Program <<Singleton>> {
+    foreign_key(segments)
+    foreign_key(macro)
+}
+
+class GlobalMacro <<Singleton>> {
+    foreign_key(global_map)
+    foreign_key(files)
+    .. list ..
+    errors
+}
+
+class SymbolTable {
+    primary_key(label)
+    dsp
+    length
+    name
+}
+note right
+    name can be of a macro, segment or a dsect
+end note
+
+class Segment {
+    primary_key(name)
+    file_name
+    assembled
+    foreign_key(macro)
+    foreign_key(nodes)
+    foreign_key(constant)
+    .. list ..
+    errors
+}
+
+class SegmentMacro {
+    primary_key(seg_name)
+    foreign_key(global_program)
+    foreign_key(data_map)
+    dsect
+    using
+    using_stack
+}
+
+class MacroFile {
+    primary_key(file_name)
+    data_mapped
+}
+
+class Constant {
+    start
+    .. bytearray ..
+    data
+}
+
+class Instruction {
+    primary_key(label)
+    command
+    fall_down
+    .. list ..
+    conditions
+    .. variable types..
+    <<operand>>
+}
+Program::macro "1" --> "1" GlobalMacro : has
+GlobalMacro::global_map "1" --> "Many" SymbolTable : contains
+Program::segments "1" --> "Many" Segment : contains
+Segment::macro "1" --> "1" SegmentMacro : has
+SegmentMacro::global_program --> Program : refers to
+SegmentMacro::data_map "1" --> "Many" SymbolTable : contains
+GlobalMacro::files "1" --> "Many" MacroFile : contains
+Segment::constant --> "1" Constant : has
+Segment::nodes --> "Many" Instruction : contains
+
+@enduml

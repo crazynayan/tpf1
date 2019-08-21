@@ -129,10 +129,10 @@ class Line:
         return True if cmd.check(self.command, 'directive') else False
 
     @property
-    def is_node_label(self):
+    def is_branch_label(self):
         if self.command == 'EQU' and self.operand == '*':
             return True
-        if self.command == 'DS' and self.operand == '0H':
+        if self.command == 'DS' and self.operand.startswith('0'):
             return True
         return False
 
