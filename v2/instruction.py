@@ -1,3 +1,6 @@
+import re
+
+
 from v2.data_type import FieldBaseDsp, Bits, FieldIndex, FieldLen, Register
 from v2.errors import Error
 from v2.command import cmd
@@ -341,6 +344,70 @@ class SegmentCall(BranchGeneric):
         return self, result
 
 
+class KeyValue(Instruction):
+    def __init__(self):
+        super().__init__()
+        self.operands = dict()
+        self.branches = list()
+
+    def set_operand(self, line, macro):
+        operands = line.split_operands()
+        for operand in operands:
+            key_value = re.split(r"=(?![^()]*[)])", operand)
+            if len(key_value) > 1 and key_value[1].startswith('(') and key_value[1].endswith(')'):
+                sub_operands = key_value[1][1:-1]
+                self.operands[key_value[0]] = dict()
+                for sub_operand in sub_operands.split(','):
+                    sub_key_value = sub_operand.split('=')
+                    self.operands[key_value[0]][sub_key_value[0]] = sub_key_value[1] if len(sub_key_value) > 1 else None
+                    if len(sub_key_value) > 1 and macro.is_branch(sub_key_value[1]):
+                        self.branches.append(sub_key_value[1])
+            else:
+                self.operands[key_value[0]] = key_value[1] if len(key_value) > 1 else None
+                if len(key_value) > 1 and macro.is_branch(key_value[1]):
+                    self.branches.append(key_value[1])
+        return self, Error.NO_ERROR
+
+    def is_key(self, key):
+        return True if key in self.operands else False
+
+    def is_sub_key(self, key):
+        return True if key in self.operands and not isinstance(self.operands[key], str) else False
+
+    def get_value(self, key):
+        return self.operands[key]
+
+    def get_key_from_value(self, value):
+        return list(key for key, data in self.operands.items() if value == data)
+
+    @property
+    def key_only(self):
+        return list(key for key, value in self.operands.items() if value is None)
+
+    @property
+    def keys(self):
+        return set(self.operands)
+
+    @property
+    def sub_keys(self):
+        return {key for key, value in self.operands.items() if isinstance(value, dict)}
+
+    @property
+    def items(self):
+        return self.operands
+
+    @property
+    def next_labels(self):
+        labels = set(self.branches)
+        if self.fall_down:
+            labels.add(self.fall_down)
+        return labels
+
+    @property
+    def goes(self):
+        return next(iter(self.branches), None)
+
+
 class InstructionType:
     INS = {
         'EQU': Instruction,
@@ -435,6 +502,26 @@ class InstructionType:
         'ENTRC': SegmentCall,
         'ENTNC': SegmentCall,
         'ENTDC': SegmentCall,
+        'AAGET': KeyValue,
+        'GETCC': KeyValue,
+        'PNRCC': KeyValue,
+        'MODEC': KeyValue,
+        'DETAC': KeyValue,
+        'DBOPN': KeyValue,
+        'PDCLS': KeyValue,
+        'ATTAC': KeyValue,
+        'RELCC': KeyValue,
+        'CRUSA': KeyValue,
+        'PNRCM': KeyValue,
+        'GLOBZ': KeyValue,
+        'SYSRA': KeyValue,
+        'DBRED': KeyValue,
+        'SENDA': KeyValue,
+        'CFCMA': KeyValue,
+        'SERRC': KeyValue,
+        'DBCLS': KeyValue,
+        'DBIFB': KeyValue,
+        'PDRED': KeyValue,
     }
 
     def __init__(self, ins_type):

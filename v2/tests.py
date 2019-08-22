@@ -132,7 +132,7 @@ class MacroTest(unittest.TestCase):
 
 
 class SegmentTest(unittest.TestCase):
-    NUMBER_OF_FILES = 11
+    NUMBER_OF_FILES = 12
 
     def setUp(self) -> None:
         self.program = Program()
@@ -918,3 +918,119 @@ class SegmentTest(unittest.TestCase):
         self.assertIn('L', seg.nodes['$$TS03$$.1'].command)
         self.assertEqual('$$TS03$$', node.goes)
         self.assertSetEqual({'$$TS03$$'}, node.next_labels)
+
+    def test_key_value(self):
+        seg_name = 'TS11'
+        accepted_errors_list = [
+        ]
+        self._common_checks(seg_name, accepted_errors_list)
+        # AAGET BASEREG=R1,GET=CORE,INIT=YES,FILE=NO
+        node = self.seg.nodes['TS110010.1']
+        self.assertEqual('AAGET', node.command)
+        self.assertTrue(node.is_key('BASEREG'))
+        self.assertEqual('YES', node.get_value('INIT'))
+        self.assertEqual('BASEREG', node.get_key_from_value('R1')[0])
+        self.assertSetEqual({'BASEREG', 'GET', 'INIT', 'FILE'}, node.keys)
+        self.assertDictEqual({'BASEREG': 'R1', 'GET': 'CORE', 'INIT': 'YES', 'FILE': 'NO'}, node.items)
+        self.assertSetEqual({'TS110010.2'}, node.next_labels)
+        self.assertIsNone(node.goes)
+        # GETCC D5,L4,FILL=00
+        node = self.seg.nodes['TS110010.2']
+        self.assertEqual('GETCC', node.command)
+        self.assertTrue(node.is_key('L4'))
+        self.assertIsNone(node.get_value('L4'))
+        self.assertListEqual(['FILL'], node.get_key_from_value('00'))
+        self.assertSetEqual({'D5', 'L4', 'FILL'}, node.keys)
+        self.assertDictEqual({'D5': None, 'L4': None, 'FILL': '00'}, node.items)
+        self.assertSetEqual({'TS110010.3'}, node.next_labels)
+        self.assertIsNone(node.goes)
+        # PNRCC ACTION=CRLON,REG=R4
+        node = self.seg.nodes['TS110010.3']
+        self.assertEqual('PNRCC', node.command)
+        self.assertTrue(node.is_key('REG'))
+        self.assertEqual('CRLON', node.get_value('ACTION'))
+        self.assertEqual('REG', node.get_key_from_value('R4')[0])
+        self.assertSetEqual({'ACTION', 'REG'}, node.keys)
+        self.assertEqual(2, len(node.items))
+        # MODEC REG=R14,MODE=31
+        node = self.seg.nodes['TS110020.1']
+        self.assertEqual('MODEC', node.command)
+        self.assertTrue(node.is_key('REG'))
+        self.assertEqual('31', node.get_value('MODE'))
+        self.assertEqual('REG', node.get_key_from_value('R14')[0])
+        self.assertSetEqual({'TS110020.2'}, node.next_labels)
+        # GLOBZ REGR=R15
+        node = self.seg.nodes['TS110020.2']
+        self.assertEqual('R15', node.get_value('REGR'))
+        # DETAC D8,CHECK=NO
+        node = self.seg.nodes['TS110020.3']
+        self.assertListEqual(['D8'], node.key_only)
+        # DBOPN REF=TR1GAA,REG=R4
+        node = self.seg.nodes['TS110030.1']
+        self.assertTrue(node.is_key('REF'))
+        # DBRED REF=TR1GAA,REG=R4,BEGIN,KEY1=(PKY=#TR1GK40), ... several more options
+        node = self.seg.nodes['TS110030.2']
+        self.assertEqual('DBRED', node.command)
+        self.assertTrue(node.is_key('KEY5'))
+        self.assertDictEqual({'PKY': '#TR1GK40'}, node.get_value('KEY1'))
+        self.assertEqual('ERRORA', node.get_key_from_value('TS110020')[0])
+        self.assertSetEqual({'KEY1', 'KEY2', 'KEY3', 'KEY4', 'KEY5'}, node.sub_keys)
+        self.assertEqual('TR1G_40_ACSTIERCODE', node.items['KEY3']['R'])
+        self.assertEqual('$C_AA', node.items['KEY2']['S'])
+        self.assertEqual('LE', node.items['KEY4']['C'])
+        self.assertSetEqual({'TS110030.3', 'TS110020'}, node.next_labels)
+        self.assertEqual('TS110020', node.goes)
+        # PDCLS WORKAREA=(LEV,5)
+        node = self.seg.nodes['TS110030.3']
+        self.assertSetEqual({'WORKAREA'}, node.sub_keys)
+        self.assertIsNone(node.items['WORKAREA']['LEV'])
+        self.assertDictEqual({'LEV': None, '5': None}, node.items['WORKAREA'])
+        self.assertEqual('WORKAREA', node.get_key_from_value({'LEV': None, '5': None})[0])
+        # ATTAC DA
+        self.assertTrue(self.seg.nodes['TS110040.1'].is_key('DA'))
+        # RELCC D5
+        self.assertSetEqual({'D5'}, self.seg.nodes['TS110040.2'].keys)
+        # CRUSA S0=5,S1=E
+        self.assertSetEqual({'S0', 'S1'}, self.seg.nodes['TS110040.3'].keys)
+        self.assertEqual('E', self.seg.nodes['TS110040.3'].items['S1'])
+        # PDRED FIELD=NAME,WORKAREA=(LEV,5),NOTFOUND=TS110060,ERROR=TS110070,FORMATOUT=UNPACKED,SEARCH1=ACT
+        node = self.seg.nodes['TS110050.1']
+        self.assertSetEqual({'FIELD', 'WORKAREA', 'NOTFOUND', 'ERROR', 'FORMATOUT', 'SEARCH1'}, node.keys)
+        self.assertSetEqual({'WORKAREA'}, node.sub_keys)
+        self.assertTrue(node.is_sub_key('WORKAREA'))
+        self.assertFalse(node.is_sub_key('FIELD'))
+        self.assertFalse(node.is_sub_key('INVALID_KEY'))
+        self.assertIsNone(node.items['WORKAREA']['5'])
+        self.assertSetEqual({'TS110050.2', 'TS110060', 'TS110070'}, node.next_labels)
+        self.assertEqual('TS110060', node.goes)
+        # SYSRA P1=R,P2=021014
+        self.assertDictEqual({'P1': 'R', 'P2': '021014'}, self.seg.nodes['TS110050.2'].items)
+        # SENDA MSG='MAXIMUM NUMBER OF NAMES PER PNR IS 99 - CREATE NEW PNR'
+        self.assertEqual("'MAXIMUM NUMBER OF NAMES PER PNR IS 99 - CREATE NEW PNR'",
+                         self.seg.nodes['TS110060'].items['MSG'])
+        self.assertSetEqual(set(), self.seg.nodes['TS110060'].next_labels)
+        # CFCMA ALLOCATE,SREF=TS11PDWK,REG=R4,SIZE=4096,FILL=00,ERROR=TS110050
+        node = self.seg.nodes['TS110060.1']
+        self.assertEqual('CFCMA', node.command)
+        self.assertTrue(node.is_key('ALLOCATE'))
+        self.assertEqual('TS11PDWK', node.get_value('SREF'))
+        self.assertEqual('SIZE', node.get_key_from_value('4096')[0])
+        self.assertSetEqual({'ALLOCATE', 'SREF', 'REG', 'SIZE', 'FILL', 'ERROR'}, node.keys)
+        self.assertEqual(6, len(node.items))
+        self.assertSetEqual({'TS110050', 'TS110060.2'}, node.next_labels)
+        self.assertEqual('TS110050', node.goes)
+        # SERRC R,19000
+        self.assertListEqual(['R', '19000'], self.seg.nodes['TS110060.2'].key_only)
+        self.assertListEqual(list(), self.seg.nodes['TS110060.2'].get_key_from_value('Invalid value'))
+        # DBCLS REF=PD0_DF_REFX,FILE=PR001W
+        self.assertEqual('PR001W', self.seg.nodes['TS110070.1'].items['FILE'])
+        # DBIFB REF=PD0_DF_REF,NEWREF=WPSGPNRF,FILE=PR001W,ERRORA=TS110060
+        node = self.seg.nodes['TS110070.2']
+        self.assertEqual('DBIFB', node.command)
+        self.assertTrue(node.is_key('NEWREF'))
+        self.assertEqual('PD0_DF_REF', node.get_value('REF'))
+        self.assertEqual(list(), node.key_only)
+        self.assertSetEqual({'REF', 'NEWREF', 'FILE', 'ERRORA', }, node.keys)
+        self.assertEqual(4, len(node.items))
+        self.assertSetEqual({'TS110060'}, node.next_labels)
+        self.assertEqual('TS110060', node.goes)

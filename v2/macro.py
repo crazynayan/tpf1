@@ -89,8 +89,8 @@ class SegmentMacro:
     def errors(self):
         return self.global_program.macro.errors
 
-    def is_branch_or_constant(self, label):
-        return True if self.seg_name == self.data_map[label].name else False
+    def is_branch(self, label):
+        return self.data_map[label].branch if label in self.data_map else False
 
     def load(self, macro_name, base=None):
         if not self.global_program.macro.is_loaded(macro_name):

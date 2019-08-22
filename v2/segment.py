@@ -1,13 +1,13 @@
 import os
 from copy import copy
 
-from v2.directive import AssemblerDirective
 from config import config
 from v2.errors import Error
 from v2.file_line import File, Line, SymbolTable
-from v2.macro import GlobalMacro, SegmentMacro
 from v2.data_type import Register
+from v2.directive import AssemblerDirective
 from v2.instruction import InstructionType
+from v2.macro import GlobalMacro, SegmentMacro
 
 
 class Label:
@@ -94,7 +94,7 @@ class Segment:
                     self.errors.append(f'{result} {line} {self.name}')
             else:
                 if line.label:
-                    self.macro.data_map[line.label] = SymbolTable(line.label, location_counter, length, self.name)
+                    self.macro.data_map[line.label] = SymbolTable(line.label, location_counter, length, self.name, True)
                 location_counter += line.length
 
     def _assemble_instructions(self, lines):
@@ -135,7 +135,7 @@ class Segment:
     def _process_assembler_directive(self, line):
         # return True -> skip creating node.
         # return False -> continue creating the node.
-        if line.is_branch_label and self.macro.is_branch_or_constant(line.label):
+        if line.label and self.macro.is_branch(line.label):
             return False
         if line.is_first_pass:
             return True

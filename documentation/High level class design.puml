@@ -20,6 +20,7 @@ class SymbolTable {
     dsp
     length
     name
+    branch
 }
 note right
     name can be of a macro, segment or a dsect
@@ -62,17 +63,17 @@ class Instruction {
     fall_down
     .. list ..
     conditions
-    .. variable types..
+    .. different types..
     <<operand>>
 }
-Program::macro "1" --> "1" GlobalMacro : has
-GlobalMacro::global_map "1" --> "Many" SymbolTable : contains
-Program::segments "1" --> "Many" Segment : contains
-Segment::macro "1" --> "1" SegmentMacro : has
+Program::macro  -->  GlobalMacro : has
+Program::segments  --> "Many" Segment : contains
+GlobalMacro::global_map --> "Many" SymbolTable : contains
+Segment::macro  -->  SegmentMacro : has
 SegmentMacro::global_program --> Program : refers to
-SegmentMacro::data_map "1" --> "Many" SymbolTable : contains
-GlobalMacro::files "1" --> "Many" MacroFile : contains
-Segment::constant --> "1" Constant : has
+SegmentMacro::data_map  --> "Many" SymbolTable : contains
+GlobalMacro::files  --> "Many" MacroFile : contains
+Segment::constant --> Constant : has
 Segment::nodes --> "Many" Instruction : contains
 
 @enduml

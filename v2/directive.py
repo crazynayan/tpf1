@@ -78,7 +78,8 @@ class Ds:
         if result != Error.NO_ERROR:
             return location_counter, result
         if line.label:
-            macro.data_map[line.label] = SymbolTable(line.label, dc.start, dc.length, name)
+            branch = True if dc.duplication_factor == 0 and name == macro.seg_name else False
+            macro.data_map[line.label] = SymbolTable(line.label, dc.start, dc.length, name, branch)
         location_counter = dc.end
         if len(operands) > 1:
             for operand in operands[1:]:
@@ -136,7 +137,8 @@ class Equ:
             length, result = macro.get_value(operands[1])
             if result != Error.NO_ERROR:
                 return location_counter, result
-        macro.data_map[line.label] = SymbolTable(line.label, dsp, length, name)
+        branch = True if location_counter == dsp and name == macro.seg_name else False
+        macro.data_map[line.label] = SymbolTable(line.label, dsp, length, name, branch)
         return location_counter, Error.NO_ERROR
 
 

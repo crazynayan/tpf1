@@ -53,8 +53,14 @@ class Line:
         if len(file_line) > 71 and file_line[71] != ' ':
             line.continuation = True
             file_line = file_line[:71]
-        # Split the line in words. Keep words within single quotes together. Note: L' has only one quote.
-        words = re.findall(r"(?:'.*?'|\S)+", file_line)
+        if line.continuation and "='" in file_line and file_line.count("'") % 2 != 0:
+            # This is the case where 2 quotes are in separate lines for e.g. MSG='.... X and in next line ...'
+            file_line = file_line + "'"
+            words = re.findall(r"(?:'.*?'|\S)+", file_line)
+            words[-1] = words[-1][:-1]
+        else:
+            # Split the line in words. Keep words within single quotes together.
+            words = re.findall(r"(?:'.*?'|\S)+", file_line)
         if file_line[0] == ' ':
             # The label is None for lines with first character space (No label)
             words.insert(0, None)
@@ -129,14 +135,6 @@ class Line:
         return True if cmd.check(self.command, 'directive') else False
 
     @property
-    def is_branch_label(self):
-        if self.command == 'EQU' and self.operand == '*':
-            return True
-        if self.command == 'DS' and self.operand.startswith('0'):
-            return True
-        return False
-
-    @property
     def is_check_cc(self):
         return True if cmd.check(self.command, 'check_cc') and \
                        (self.command not in ['BC', 'JC'] or self.operand[:2] not in ['15', '0,']) else False
@@ -160,11 +158,12 @@ class Line:
 
 
 class SymbolTable:
-    def __init__(self, label, dsp, length, name):
+    def __init__(self, label, dsp, length, name, branch=False):
         self.label = label
         self.dsp = dsp
         self.length = length
-        self.name = name        # Macro name or Segment name
+        self.name = name        # Macro name or Segment name or Dsect name
+        self.branch = branch    # True = This label is a branch label i.e. code branches to this label.
 
     def __repr__(self):
-        return f'{self.label}:{self.dsp}:{self.length}:{self.name}'
+        return f'{self.label}:{self.dsp}:{self.length}:{self.name}:{self.branch}'
