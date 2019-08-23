@@ -132,7 +132,7 @@ class MacroTest(unittest.TestCase):
 
 
 class SegmentTest(unittest.TestCase):
-    NUMBER_OF_FILES = 12
+    NUMBER_OF_FILES = 11
 
     def setUp(self) -> None:
         self.program = Program()
@@ -147,7 +147,7 @@ class SegmentTest(unittest.TestCase):
         self.assertTrue(self.seg.assembled)
 
     def test_files(self):
-        self.assertTrue('ETA5' in self.program.segments)
+        self.assertTrue('TS02' in self.program.segments)
         self.assertTrue('TS01' in self.program.segments)
         self.assertFalse('EB0EB' in self.program.segments)
         self.assertEqual(self.NUMBER_OF_FILES, len(self.program.segments), 'Update number of files in SegmentTest')
