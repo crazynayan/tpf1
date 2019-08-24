@@ -349,6 +349,14 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('R9', self.seg.nodes[label].field.base.reg)
         self.assertEqual(0x170, self.seg.nodes[label].field.dsp)
         self.assertEqual('R3', self.seg.nodes[label].field.index.reg)
+        # L     R1,12
+        label = '$$TS03$$.12'
+        self.assertEqual('R1', self.seg.nodes[label].reg.reg)
+        self.assertEqual('R0_AREA', self.seg.nodes[label].field.name)
+        self.assertEqual('R0', self.seg.nodes[label].field.base.reg)
+        self.assertEqual(12, self.seg.nodes[label].field.dsp)
+        self.assertIsNone(self.seg.nodes[label].field.index)
+
 
     def test_field_variants(self):
         seg_name = 'TS04'

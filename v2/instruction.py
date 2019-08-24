@@ -313,7 +313,7 @@ class BranchConditionRegister(BranchCondition):
         return self, result
 
 
-class BranchSave(BranchGeneric):
+class RegisterBranch(BranchGeneric):
     def __init__(self):
         super().__init__()
         self.reg = None
@@ -497,8 +497,8 @@ class InstructionType:
         'BZR': BranchConditionRegister,
         'BNZR': BranchConditionRegister,
         'NOPR': BranchConditionRegister,
-        'BAS': BranchSave,
-        'JAS': BranchSave,
+        'BAS': RegisterBranch,
+        'JAS': RegisterBranch,
         'ENTRC': SegmentCall,
         'ENTNC': SegmentCall,
         'ENTDC': SegmentCall,

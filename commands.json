@@ -1,22 +1,49 @@
 {
+    "A": {
+        "create": "RegisterFieldIndex",
+        "field_len": 4,
+        "len": 4,
+        "set_cc": 1
+    },
     "AAGET": {
-        "create": 1
+        "create": "KeyValue",
+        "len": 4
+    },
+    "AH": {
+        "create": "RegisterFieldIndex",
+        "field_len": 2,
+        "len": 4,
+        "set_cc": 1
     },
     "AHI": {
         "create": "RegisterData",
         "len": 4,
         "set_cc": 1
     },
-    "AR": {
-        "branch_type": "math",
+    "AL": {
+        "create": "RegisterFieldIndex",
+        "field_len": 4,
+        "len": 4,
+        "set_cc": 1
+    },
+    "ALR": {
         "create": "RegisterRegister",
         "len": 2,
-        "math": "+",
-        "set_1": 1,
+        "set_cc": 1
+    },
+    "AP": {
+        "create": "FieldLenFieldLen",
+        "len": 6,
+        "set_cc": 1
+    },
+    "AR": {
+        "create": "RegisterRegister",
+        "len": 2,
         "set_cc": 1
     },
     "ATTAC": {
-        "create": 1
+        "create": "KeyValue",
+        "len": 4
     },
     "B": {
         "create": "BranchCondition",
@@ -26,39 +53,39 @@
     },
     "BACKC": {
         "create": "Exit",
-        "no_fall_down": 1,
-        "no_operand": 1
+        "no_fall_down": 1
     },
     "BAS": {
-        "create": "BranchSave",
+        "create": "RegisterBranch",
         "mask": 15
+    },
+    "BASR": {
+        "create": "RegisterRegister",
+        "len": 2
     },
     "BC": {
         "check_cc": 1,
         "create": "BranchCondition",
-        "len": 4,
-        "opposite": "BC"
+        "len": 4
     },
     "BCR": {
         "check_cc": 1,
         "create": "BranchConditionRegister",
         "len": 2
     },
+    "BCT": {
+        "create": "RegisterBranch",
+        "len": 4
+    },
     "BCTR": {
         "create": "RegisterRegister",
-        "len": 2,
-        "math": "-",
-        "set_1": 1
+        "len": 2
     },
     "BE": {
         "check_cc": 1,
-        "compare": "is",
         "create": "BranchCondition",
         "len": 4,
-        "mask": 8,
-        "operator": "==",
-        "opposite": "BNE",
-        "text": "="
+        "mask": 8
     },
     "BER": {
         "check_cc": 1,
@@ -68,13 +95,9 @@
     },
     "BH": {
         "check_cc": 1,
-        "compare": ">",
         "create": "BranchCondition",
         "len": 4,
-        "mask": 2,
-        "operator": ">",
-        "opposite": "BNH",
-        "text": ">"
+        "mask": 2
     },
     "BHR": {
         "check_cc": 1,
@@ -84,13 +107,9 @@
     },
     "BL": {
         "check_cc": 1,
-        "compare": "<",
         "create": "BranchCondition",
         "len": 4,
-        "mask": 4,
-        "operator": "<",
-        "opposite": "BNL",
-        "text": "<"
+        "mask": 4
     },
     "BLR": {
         "check_cc": 1,
@@ -99,15 +118,10 @@
         "mask": 4
     },
     "BM": {
-        "bit": "anyone ON",
         "check_cc": 1,
         "create": "BranchCondition",
         "len": 4,
-        "mask": 4,
-        "math": "< 0",
-        "operator": "< 0",
-        "opposite": "BNM",
-        "text": "< 0"
+        "mask": 4
     },
     "BMR": {
         "check_cc": 1,
@@ -117,13 +131,9 @@
     },
     "BNE": {
         "check_cc": 1,
-        "compare": "is not",
         "create": "BranchCondition",
         "len": 4,
-        "mask": 7,
-        "operator": "!=",
-        "opposite": "BE",
-        "text": "!="
+        "mask": 7
     },
     "BNER": {
         "check_cc": 1,
@@ -133,13 +143,9 @@
     },
     "BNH": {
         "check_cc": 1,
-        "compare": "<=",
         "create": "BranchCondition",
         "len": 4,
-        "mask": 13,
-        "operator": "<=",
-        "opposite": "BH",
-        "text": "<="
+        "mask": 13
     },
     "BNHR": {
         "check_cc": 1,
@@ -149,13 +155,9 @@
     },
     "BNL": {
         "check_cc": 1,
-        "compare": ">=",
         "create": "BranchCondition",
         "len": 4,
-        "mask": 11,
-        "operator": ">=",
-        "opposite": "BL",
-        "text": ">="
+        "mask": 11
     },
     "BNLR": {
         "check_cc": 1,
@@ -164,15 +166,10 @@
         "mask": 11
     },
     "BNM": {
-        "bit": "anyone OFF",
         "check_cc": 1,
         "create": "BranchCondition",
         "len": 4,
-        "mask": 11,
-        "math": ">= 0",
-        "operator": ">= 0",
-        "opposite": "BM",
-        "text": ">= 0"
+        "mask": 11
     },
     "BNMR": {
         "check_cc": 1,
@@ -181,15 +178,10 @@
         "mask": 11
     },
     "BNO": {
-        "bit": "is OFF",
         "check_cc": 1,
         "create": "BranchCondition",
         "len": 4,
-        "mask": 14,
-        "math": "not overflow",
-        "operator": "== 0",
-        "opposite": "BO",
-        "text": "OFF"
+        "mask": 14
     },
     "BNOR": {
         "check_cc": 1,
@@ -201,11 +193,7 @@
         "check_cc": 1,
         "create": "BranchCondition",
         "len": 4,
-        "mask": 13,
-        "math": "<= 0",
-        "operator": "<= 0",
-        "opposite": "BP",
-        "text": "<= 0"
+        "mask": 13
     },
     "BNPR": {
         "check_cc": 1,
@@ -214,16 +202,10 @@
         "mask": 13
     },
     "BNZ": {
-        "binary": "has some data",
-        "bit": "is ON",
         "check_cc": 1,
         "create": "BranchCondition",
         "len": 4,
-        "mask": 7,
-        "math": "is not 0",
-        "operator": "!= 0",
-        "opposite": "BZ",
-        "text": "ON"
+        "mask": 7
     },
     "BNZR": {
         "check_cc": 1,
@@ -232,15 +214,10 @@
         "mask": 7
     },
     "BO": {
-        "bit": "is ON",
         "check_cc": 1,
         "create": "BranchCondition",
         "len": 4,
-        "mask": 1,
-        "math": "overflow",
-        "operator": "!= 0",
-        "opposite": "BNO",
-        "text": "ON"
+        "mask": 1
     },
     "BOR": {
         "check_cc": 1,
@@ -252,11 +229,7 @@
         "check_cc": 1,
         "create": "BranchCondition",
         "len": 4,
-        "mask": 2,
-        "math": "> 0",
-        "operator": "> 0",
-        "opposite": "BNP",
-        "text": "> 0"
+        "mask": 2
     },
     "BPR": {
         "check_cc": 1,
@@ -270,17 +243,19 @@
         "mask": 15,
         "no_fall_down": 1
     },
+    "BXH": {
+        "create": "RegisterRegisterBranch",
+        "len": 4
+    },
+    "BXLE": {
+        "create": "RegisterRegisterBranch",
+        "len": 4
+    },
     "BZ": {
-        "binary": "has no data",
-        "bit": "is OFF",
         "check_cc": 1,
         "create": "BranchCondition",
         "len": 4,
-        "mask": 8,
-        "math": "is 0",
-        "operator": "== 0",
-        "opposite": "BNZ",
-        "text": "OFF"
+        "mask": 8
     },
     "BZR": {
         "check_cc": 1,
@@ -288,31 +263,70 @@
         "len": 2,
         "mask": 8
     },
+    "C": {
+        "create": "RegisterFieldIndex",
+        "field_len": 4,
+        "len": 4,
+        "set_cc": 1
+    },
     "CFCMA": {
-        "create": 1,
-        "key_text": "SREF"
+        "create": "KeyValue",
+        "len": 4
     },
     "CH": {
-        "branch_type": "compare",
         "create": "RegisterFieldIndex",
         "field_len": 2,
         "len": 4,
         "set_cc": 1
     },
+    "CHI": {
+        "create": "RegisterData",
+        "len": 4,
+        "set_cc": 1
+    },
+    "CL": {
+        "create": "RegisterFieldIndex",
+        "len": 4,
+        "set_cc": 1
+    },
     "CLC": {
-        "branch_type": "compare",
         "create": "FieldLenField",
         "len": 6,
         "set_cc": 1
     },
+    "CLCL": {
+        "create": "RegisterRegister",
+        "len": 2,
+        "set_cc": 1
+    },
     "CLI": {
-        "branch_type": "compare",
         "create": "FieldData",
         "len": 4,
         "set_cc": 1
     },
+    "CLM": {
+        "create": "RegisterRegisterField",
+        "len": 4,
+        "set_cc": 1
+    },
+    "CLR": {
+        "create": "RegisterRegister",
+        "len": 2,
+        "set_cc": 1
+    },
+    "CP": {
+        "create": "FieldLenFieldLen",
+        "len": 6,
+        "set_cc": 1
+    },
+    "CR": {
+        "create": "RegisterRegister",
+        "len": 2,
+        "set_cc": 1
+    },
     "CRUSA": {
-        "create": 1
+        "create": "KeyValue",
+        "len": 4
     },
     "CSECT": {
         "create": "Csect",
@@ -322,28 +336,33 @@
     "CVB": {
         "create": "RegisterFieldIndex",
         "field_len": 8,
-        "len": 4,
-        "set_1": 1
+        "len": 4
     },
     "CVD": {
         "create": "RegisterFieldIndex",
         "field_len": 8,
-        "len": 4,
-        "set_2": 1
+        "len": 4
+    },
+    "D": {
+        "create": "RegisterFieldIndex",
+        "field_len": 4,
+        "len": 4
     },
     "DBCLS": {
-        "create": 1
+        "create": "KeyValue",
+        "len": 4
     },
     "DBIFB": {
-        "create": 1,
-        "key_text": "REF"
+        "create": "KeyValue",
+        "len": 4
     },
     "DBOPN": {
-        "create": 1
+        "create": "KeyValue",
+        "len": 4
     },
     "DBRED": {
-        "create": 1,
-        "key_text": "REF"
+        "create": "KeyValue",
+        "len": 4
     },
     "DC": {
         "create": "Dc",
@@ -351,7 +370,17 @@
         "first_pass": 1
     },
     "DETAC": {
-        "create": 1
+        "create": "KeyValue",
+        "len": 4
+    },
+    "DP": {
+        "create": "FieldLenFieldLen",
+        "len": 6,
+        "set_cc": 1
+    },
+    "DR": {
+        "create": "RegisterRegister",
+        "len": 2
     },
     "DS": {
         "create": "Ds",
@@ -363,16 +392,27 @@
         "directive": 1,
         "first_pass": 1
     },
+    "ED": {
+        "create": "FieldLenField",
+        "len": 6,
+        "set_cc": 1
+    },
+    "EDMK": {
+        "create": "FieldLenField",
+        "len": 6,
+        "set_cc": 1
+    },
     "ENTDC": {
-        "create": 1,
+        "create": "SegmentCall",
+        "len": 4,
         "no_fall_down": 1
     },
     "ENTNC": {
-        "create": 1,
+        "create": "SegmentCall",
         "no_fall_down": 1
     },
     "ENTRC": {
-        "create": 1
+        "create": "SegmentCall"
     },
     "EQU": {
         "create": "Equ",
@@ -380,30 +420,30 @@
         "first_pass": 1
     },
     "EX": {
-        "branch_type": "depends",
-        "create": 1
+        "create": "KeyValue",
+        "len": 4
     },
     "EXITC": {
         "create": "Exit",
-        "no_fall_down": 1,
-        "no_operand": 1
+        "no_fall_down": 1
     },
     "GETCC": {
-        "create": 1
+        "create": "KeyValue",
+        "len": 4
     },
     "GLOBZ": {
-        "create": 1
+        "create": "KeyValue",
+        "len": 4
     },
     "IC": {
         "create": "RegisterFieldIndex",
         "field_len": 1,
-        "len": 4,
-        "set_1": 1
+        "len": 4
     },
     "ICM": {
         "create": "RegisterDataField",
         "len": 4,
-        "set_1": 1
+        "set_cc": 1
     },
     "J": {
         "create": "BranchCondition",
@@ -412,107 +452,67 @@
         "no_fall_down": 1
     },
     "JAS": {
-        "create": "BranchSave",
+        "create": "RegisterBranch",
         "mask": 15
     },
     "JC": {
         "check_cc": 1,
         "create": "BranchCondition",
-        "len": 4,
-        "opposite": "JC"
+        "len": 4
     },
     "JE": {
         "check_cc": 1,
-        "compare": "is",
         "create": "BranchCondition",
         "len": 4,
-        "mask": 8,
-        "operator": "==",
-        "opposite": "JNE",
-        "text": "="
+        "mask": 8
     },
     "JH": {
         "check_cc": 1,
-        "compare": ">",
         "create": "BranchCondition",
         "len": 4,
-        "mask": 2,
-        "operator": ">",
-        "opposite": "JNH",
-        "text": ">"
+        "mask": 2
     },
     "JL": {
         "check_cc": 1,
-        "compare": "<",
         "create": "BranchCondition",
         "len": 4,
-        "mask": 4,
-        "operator": "<",
-        "opposite": "JNL",
-        "text": "<"
+        "mask": 4
     },
     "JM": {
-        "bit": "anyone ON",
         "check_cc": 1,
         "create": "BranchCondition",
         "len": 4,
-        "mask": 4,
-        "math": "< 0",
-        "operator": "< 0",
-        "opposite": "JNM",
-        "text": "< 0"
+        "mask": 4
     },
     "JNE": {
         "check_cc": 1,
-        "compare": "is not",
         "create": "BranchCondition",
         "len": 4,
-        "mask": 7,
-        "operator": "!=",
-        "opposite": "JE",
-        "text": "!="
+        "mask": 7
     },
     "JNH": {
         "check_cc": 1,
-        "compare": "<=",
         "create": "BranchCondition",
         "len": 4,
-        "mask": 13,
-        "operator": "<=",
-        "opposite": "JH",
-        "text": "<="
+        "mask": 13
     },
     "JNL": {
         "check_cc": 1,
-        "compare": ">=",
         "create": "BranchCondition",
         "len": 4,
-        "mask": 11,
-        "operator": ">=",
-        "opposite": "JL",
-        "text": ">="
+        "mask": 11
     },
     "JNM": {
-        "bit": "anyone OFF",
         "check_cc": 1,
         "create": "BranchCondition",
         "len": 4,
-        "mask": 11,
-        "math": ">= 0",
-        "operator": ">= 0",
-        "opposite": "JM",
-        "text": ">= 0"
+        "mask": 11
     },
     "JNO": {
-        "bit": "is OFF",
         "check_cc": 1,
         "create": "BranchCondition",
         "len": 4,
-        "mask": 14,
-        "math": "not overflow",
-        "operator": "== 0",
-        "opposite": "JO",
-        "text": "OFF"
+        "mask": 14
     },
     "JNOP": {
         "create": "BranchCondition",
@@ -523,120 +523,145 @@
         "check_cc": 1,
         "create": "BranchCondition",
         "len": 4,
-        "mask": 13,
-        "math": "<= 0",
-        "operator": "<= 0",
-        "opposite": "JP",
-        "text": "<= 0"
+        "mask": 13
     },
     "JNZ": {
-        "binary": "has some data",
-        "bit": "is ON",
         "check_cc": 1,
         "create": "BranchCondition",
         "len": 4,
-        "mask": 7,
-        "math": "is not 0",
-        "operator": "== 1",
-        "opposite": "JZ",
-        "text": "ON"
+        "mask": 7
     },
     "JO": {
-        "bit": "is ON",
         "check_cc": 1,
         "create": "BranchCondition",
         "len": 4,
-        "mask": 1,
-        "math": "overflow",
-        "operator": "== 1",
-        "opposite": "JNO",
-        "text": "ON"
+        "mask": 1
     },
     "JP": {
         "check_cc": 1,
         "create": "BranchCondition",
         "len": 4,
-        "mask": 2,
-        "math": "> 0",
-        "operator": "> 0",
-        "opposite": "JNP",
-        "text": "> 0"
+        "mask": 2
     },
     "JZ": {
-        "binary": "has no data",
-        "bit": "is OFF",
         "check_cc": 1,
         "create": "BranchCondition",
         "len": 4,
-        "mask": 8,
-        "math": "is 0",
-        "operator": "== 0",
-        "opposite": "JNZ",
-        "text": "OFF"
+        "mask": 8
     },
     "L": {
         "create": "RegisterFieldIndex",
         "field_len": 4,
-        "len": 4,
-        "set_1": 1
+        "len": 4
     },
     "LA": {
         "create": "RegisterFieldIndex",
         "field_len": 0,
-        "len": 4,
-        "set_1": 1
+        "len": 4
+    },
+    "LCR": {
+        "create": "RegisterRegister",
+        "len": 2,
+        "set_cc": 1
+    },
+    "LH": {
+        "create": "RegisterFieldIndex",
+        "field_len": 2,
+        "len": 4
     },
     "LHI": {
         "create": "RegisterData",
-        "len": 4,
-        "set_1": 1
+        "len": 4
     },
     "LM": {
         "create": "RegisterRegisterField",
         "len": 4
     },
-    "LR": {
-        "create": "RegisterRegister",
-        "len": 2,
-        "set_1": 1
-    },
-    "LTR": {
-        "branch_type": "binary",
+    "LNR": {
         "create": "RegisterRegister",
         "len": 2,
         "set_cc": 1
     },
+    "LPR": {
+        "create": "RegisterRegister",
+        "len": 2,
+        "set_cc": 1
+    },
+    "LR": {
+        "create": "RegisterRegister",
+        "len": 2
+    },
+    "LTR": {
+        "create": "RegisterRegister",
+        "len": 2,
+        "set_cc": 1
+    },
+    "M": {
+        "create": "RegisterFieldIndex",
+        "field_len": 4,
+        "len": 4
+    },
+    "MH": {
+        "create": "RegisterFieldIndex",
+        "field_len": 2,
+        "len": 4
+    },
+    "MHI": {
+        "create": "RegisterData",
+        "len": 4
+    },
     "MODEC": {
-        "create": 1
+        "create": "KeyValue",
+        "len": 4
+    },
+    "MP": {
+        "create": "FieldLenFieldLen",
+        "len": 6,
+        "set_cc": 1
+    },
+    "MR": {
+        "create": "RegisterRegister",
+        "len": 2
     },
     "MVC": {
         "create": "FieldLenField",
-        "len": 6,
-        "set_1": 1
+        "len": 6
+    },
+    "MVCL": {
+        "create": "RegisterRegister",
+        "len": 2
     },
     "MVI": {
         "create": "FieldData",
-        "len": 4,
-        "set_1": 1
+        "len": 4
+    },
+    "MVN": {
+        "create": "FieldLenField",
+        "len": 6
+    },
+    "MVO": {
+        "create": "FieldLenFieldLen",
+        "len": 6
+    },
+    "MVZ": {
+        "create": "FieldLenField",
+        "len": 6
     },
     "N": {
-        "branch_type": "bit",
         "create": "RegisterFieldIndex",
         "field_len": 4,
         "len": 4,
-        "math": "&",
-        "set_1": 1,
+        "set_cc": 1
+    },
+    "NC": {
+        "create": "FieldLenField",
+        "len": 6,
         "set_cc": 1
     },
     "NI": {
-        "branch_type": "bit",
         "create": "FieldBits",
         "len": 4,
-        "math": "&",
-        "set_1": 1,
-        "set_cc": 1,
-        "source": "field & bits",
-        "target": "field"
+        "set_cc": 1
     },
     "NOP": {
         "create": "BranchCondition",
@@ -648,21 +673,30 @@
         "len": 2,
         "mask": 0
     },
+    "NR": {
+        "create": "RegisterRegister",
+        "len": 2,
+        "set_cc": 1
+    },
+    "O": {
+        "create": "RegisterFieldIndex",
+        "len": 4,
+        "set_cc": 1
+    },
     "OC": {
-        "branch_type": "binary",
         "create": "FieldLenField",
         "len": 6,
         "set_cc": 1
     },
     "OI": {
-        "branch_type": "bit",
         "create": "FieldBits",
         "len": 4,
-        "math": "|",
-        "set_1": 1,
-        "set_cc": 1,
-        "source": "field | bits",
-        "target": "field"
+        "set_cc": 1
+    },
+    "OR": {
+        "create": "RegisterRegister",
+        "len": 2,
+        "set_cc": 1
     },
     "ORG": {
         "create": "Org",
@@ -671,15 +705,15 @@
     },
     "PACK": {
         "create": "FieldLenFieldLen",
-        "len": 6,
-        "set_1": 1
+        "len": 6
     },
     "PDCLS": {
-        "create": 1
+        "create": "KeyValue",
+        "len": 4
     },
     "PDRED": {
-        "create": 1,
-        "key_text": "FIELD"
+        "create": "KeyValue",
+        "len": 4
     },
     "PGMID": {
         "create": "Pgmid",
@@ -687,10 +721,12 @@
         "first_pass": 1
     },
     "PNRCC": {
-        "create": 1
+        "create": "KeyValue",
+        "len": 4
     },
     "PNRCM": {
-        "create": 1
+        "create": "KeyValue",
+        "len": 4
     },
     "POP": {
         "create": "Pop",
@@ -701,34 +737,105 @@
         "directive": 1
     },
     "RELCC": {
-        "create": 1
+        "create": "KeyValue",
+        "len": 4
+    },
+    "S": {
+        "create": "RegisterFieldIndex",
+        "field_len": 4,
+        "len": 4,
+        "set_cc": 1
     },
     "SENDA": {
-        "create": 1,
+        "create": "KeyValue",
+        "len": 4,
         "no_fall_down": 1
     },
     "SERRC": {
-        "create": 1
+        "create": "KeyValue",
+        "len": 4
     },
-    "SR": {
-        "branch_type": "math",
+    "SH": {
+        "create": "RegisterFieldIndex",
+        "field_len": 2,
+        "len": 4,
+        "set_cc": 1
+    },
+    "SL": {
+        "create": "RegisterFieldIndex",
+        "field_len": 4,
+        "len": 4,
+        "set_cc": 1
+    },
+    "SLA": {
+        "create": "RegisterField",
+        "len": 4,
+        "set_cc": 1
+    },
+    "SLDA": {
+        "create": "RegisterField",
+        "len": 4,
+        "set_cc": 1
+    },
+    "SLDL": {
+        "create": "RegisterField",
+        "len": 4,
+        "set_cc": 1
+    },
+    "SLL": {
+        "create": "RegisterField",
+        "len": 4,
+        "set_cc": 1
+    },
+    "SLR": {
         "create": "RegisterRegister",
         "len": 2,
-        "math": "-",
-        "set_1": 1,
+        "set_cc": 1
+    },
+    "SP": {
+        "create": "FieldLenFieldLen",
+        "len": 6,
+        "set_cc": 1
+    },
+    "SR": {
+        "create": "RegisterRegister",
+        "len": 2,
+        "set_cc": 1
+    },
+    "SRA": {
+        "create": "RegisterField",
+        "len": 4,
+        "set_cc": 1
+    },
+    "SRDA": {
+        "create": "RegisterField",
+        "len": 4,
+        "set_cc": 1
+    },
+    "SRDL": {
+        "create": "RegisterField",
+        "len": 4,
+        "set_cc": 1
+    },
+    "SRL": {
+        "create": "RegisterField",
+        "len": 4,
+        "set_cc": 1
+    },
+    "SRP": {
+        "create": "FieldLenField",
+        "len": 6,
         "set_cc": 1
     },
     "ST": {
         "create": "RegisterFieldIndex",
         "field_len": 4,
-        "len": 4,
-        "set_2": 1
+        "len": 4
     },
     "STC": {
         "create": "RegisterFieldIndex",
         "field_len": 1,
-        "len": 4,
-        "set_2": 1
+        "len": 4
     },
     "STCM": {
         "create": "RegisterDataField",
@@ -737,37 +844,66 @@
     "STH": {
         "create": "RegisterFieldIndex",
         "field_len": 2,
-        "len": 4,
-        "set_2": 1
+        "len": 4
     },
     "STM": {
         "create": "RegisterRegisterField",
         "len": 4
     },
     "SYSRA": {
-        "create": 1
+        "create": "KeyValue",
+        "len": 4
     },
     "TM": {
-        "branch_type": "bit",
-        "condition": "field & bits on",
         "create": "FieldBits",
         "len": 4,
         "set_cc": 1
     },
+    "TP": {
+        "create": "FieldSingle",
+        "len": 6,
+        "set_cc": 1
+    },
+    "TR": {
+        "create": "FieldLenField",
+        "len": 6
+    },
+    "TRT": {
+        "create": "FieldLenField",
+        "len": 6,
+        "set_cc": 1
+    },
     "UNPK": {
         "create": "FieldLenFieldLen",
-        "len": 6,
-        "set_1": 1
+        "len": 6
     },
     "USING": {
         "create": "Using",
         "directive": 1
     },
+    "X": {
+        "create": "RegisterFieldIndex",
+        "len": 4,
+        "set_cc": 1
+    },
     "XC": {
-        "branch_type": "binary",
         "create": "FieldLenField",
         "len": 6,
-        "set_1": 1,
+        "set_cc": 1
+    },
+    "XI": {
+        "create": "FieldBits",
+        "len": 4,
+        "set_cc": 1
+    },
+    "XR": {
+        "create": "RegisterRegister",
+        "len": 2,
+        "set_cc": 1
+    },
+    "ZAP": {
+        "create": "FieldLenFieldLen",
+        "len": 6,
         "set_cc": 1
     }
 }
