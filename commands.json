@@ -73,6 +73,12 @@
         "create": "BranchConditionRegister",
         "len": 2
     },
+    "BCRY": {
+        "check_cc": 1,
+        "create": "BranchCondition",
+        "len": 4,
+        "mask": 3
+    },
     "BCT": {
         "create": "RegisterBranch",
         "len": 4
@@ -305,7 +311,7 @@
         "set_cc": 1
     },
     "CLM": {
-        "create": "RegisterRegisterField",
+        "create": "RegisterDataField",
         "len": 4,
         "set_cc": 1
     },
@@ -768,22 +774,22 @@
         "set_cc": 1
     },
     "SLA": {
-        "create": "RegisterField",
+        "create": "RegisterFieldIndex",
         "len": 4,
         "set_cc": 1
     },
     "SLDA": {
-        "create": "RegisterField",
+        "create": "RegisterFieldIndex",
         "len": 4,
         "set_cc": 1
     },
     "SLDL": {
-        "create": "RegisterField",
+        "create": "RegisterFieldIndex",
         "len": 4,
         "set_cc": 1
     },
     "SLL": {
-        "create": "RegisterField",
+        "create": "RegisterFieldIndex",
         "len": 4,
         "set_cc": 1
     },
@@ -803,27 +809,27 @@
         "set_cc": 1
     },
     "SRA": {
-        "create": "RegisterField",
+        "create": "RegisterFieldIndex",
         "len": 4,
         "set_cc": 1
     },
     "SRDA": {
-        "create": "RegisterField",
+        "create": "RegisterFieldIndex",
         "len": 4,
         "set_cc": 1
     },
     "SRDL": {
-        "create": "RegisterField",
+        "create": "RegisterFieldIndex",
         "len": 4,
         "set_cc": 1
     },
     "SRL": {
-        "create": "RegisterField",
+        "create": "RegisterFieldIndex",
         "len": 4,
         "set_cc": 1
     },
     "SRP": {
-        "create": "FieldLenField",
+        "create": "FieldLenFieldLen",
         "len": 6,
         "set_cc": 1
     },

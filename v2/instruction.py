@@ -101,6 +101,30 @@ class FieldLenFieldLen(Instruction):
         return self, result
 
 
+class FieldLenFieldData(Instruction):
+    MAX_LEN = 16
+    MAX_DATA = (1 << 4) - 1
+
+    def __init__(self):
+        super().__init__()
+        self.field_len = None
+        self.field = None
+        self.data = None
+
+    def set_operand(self, line, macro):
+        operand1, operand2, operand3 = line.split_operands()
+        self.field_len = FieldLen()
+        result = self.field_len.set(operand1, macro, self.MAX_LEN)
+        if result == Error.NO_ERROR:
+            self.field = FieldBaseDsp()
+            result = self.field.set(operand2, macro)
+            if result == Error.NO_ERROR:
+                self.data, result = macro.get_value(operand3)
+                if result == Error.NO_ERROR and not 0 <= self.data <= 9:
+                    result = Error.FLFD_INVALID_DATA
+        return self, result
+
+
 class FieldData(Instruction):
     DATA_LENGTH = 1     # 1 Byte
 
@@ -120,6 +144,19 @@ class FieldData(Instruction):
                     result = Error.FD_INVALID_DATA
                 elif isinstance(self.data, str) and len(self.data) > self.DATA_LENGTH:
                     result = Error.FD_INVALID_DATA
+        return self, result
+
+
+class FieldSingle(Instruction):
+    MAX_LEN = 16
+
+    def __init__(self):
+        super().__init__()
+        self.field = None
+
+    def set_operand(self, line, macro):
+        self.field = FieldLen()
+        result = self.field.set(line.operand, macro, self.MAX_LEN)
         return self, result
 
 
@@ -144,7 +181,7 @@ class RegisterFieldIndex(Instruction):
         self.reg = None
 
     def set_operand(self, line, macro):
-        length = int(self.get_attribute('field_len'))
+        length = int(self.get_attribute('field_len') or 0)
         operand1, operand2 = line.split_operands()
         self.reg = Register(operand1)
         result = Error.NO_ERROR if self.reg.is_valid() else Error.RFX_INVALID_REG
@@ -235,7 +272,7 @@ class BranchGeneric(Instruction):
         self.branch = FieldIndex()
         result = self.branch.set(branch, macro, length=1)
         if result == Error.NO_ERROR:
-            if self.branch.name not in macro.data_map:
+            if not macro.is_branch(self.branch.name):
                 result = Error.BC_INVALID_BRANCH
             elif self.branch.index is not None:
                 result = Error.BC_INDEX
@@ -328,6 +365,23 @@ class RegisterBranch(BranchGeneric):
         return self, result
 
 
+class RegisterRegisterBranch(BranchGeneric):
+    def __init__(self):
+        super().__init__()
+        self.reg1 = None
+        self.reg2 = None
+
+    def set_operand(self, line, macro):
+        operand1, operand2, operand3 = line.split_operands()
+        result = self.set_branch(operand3, macro)
+        if result == Error.NO_ERROR:
+            self.reg1 = Register(operand1)
+            self.reg2 = Register(operand2)
+            if not self.reg1.is_valid() or not self.reg2.is_valid():
+                result = Error.REG_INVALID
+        return self, result
+
+
 class SegmentCall(BranchGeneric):
     def __init__(self):
         super().__init__()
@@ -415,21 +469,75 @@ class InstructionType:
         'NI': FieldBits,
         'TM': FieldBits,
         'OI': FieldBits,
+        'XI': FieldBits,
         'MVC': FieldLenField,
         'OC': FieldLenField,
         'CLC': FieldLenField,
         'XC': FieldLenField,
+        'MVZ': FieldLenField,
+        'MVN': FieldLenField,
+        'TR': FieldLenField,
+        'TRT': FieldLenField,
+        'ED': FieldLenField,
+        'EDMK': FieldLenField,
+        'NC': FieldLenField,
         'UNPK': FieldLenFieldLen,
         'PACK': FieldLenFieldLen,
+        'ZAP': FieldLenFieldLen,
+        'AP': FieldLenFieldLen,
+        'SP': FieldLenFieldLen,
+        'MP': FieldLenFieldLen,
+        'DP': FieldLenFieldLen,
+        'CP': FieldLenFieldLen,
+        'MVO': FieldLenFieldLen,
+        'SRP': FieldLenFieldData,
         'CLI': FieldData,
         'MVI': FieldData,
+        'TP': FieldSingle,
         'BCTR': RegisterRegister,
         'LR': RegisterRegister,
         'LTR': RegisterRegister,
         'AR': RegisterRegister,
         'SR': RegisterRegister,
+        'LPR': RegisterRegister,
+        'LNR': RegisterRegister,
+        'LCR': RegisterRegister,
+        'MR': RegisterRegister,
+        'DR': RegisterRegister,
+        'MVCL': RegisterRegister,
+        'BASR': RegisterRegister,
+        'CR': RegisterRegister,
+        'CLR': RegisterRegister,
+        'NR': RegisterRegister,
+        'OR': RegisterRegister,
+        'XR': RegisterRegister,
+        'CLCL': RegisterRegister,
+        'ALR': RegisterRegister,
+        'SLR': RegisterRegister,
         'CVB': RegisterFieldIndex,
         'STH': RegisterFieldIndex,
+        'LH': RegisterFieldIndex,
+        'A': RegisterFieldIndex,
+        'AH': RegisterFieldIndex,
+        'S': RegisterFieldIndex,
+        'SH': RegisterFieldIndex,
+        'MH': RegisterFieldIndex,
+        'M': RegisterFieldIndex,
+        'D': RegisterFieldIndex,
+        'SLA': RegisterFieldIndex,
+        'SRA': RegisterFieldIndex,
+        'SLDA': RegisterFieldIndex,
+        'SRDA': RegisterFieldIndex,
+        'SLL': RegisterFieldIndex,
+        'SRL': RegisterFieldIndex,
+        'SLDL': RegisterFieldIndex,
+        'SRDL': RegisterFieldIndex,
+        'C': RegisterFieldIndex,
+        'CL': RegisterFieldIndex,
+        'AL': RegisterFieldIndex,
+        'SL': RegisterFieldIndex,
+        'O': RegisterFieldIndex,
+        'X': RegisterFieldIndex,
         'L': RegisterFieldIndex,
         'IC': RegisterFieldIndex,
         'STC': RegisterFieldIndex,
@@ -440,10 +548,18 @@ class InstructionType:
         'CVD': RegisterFieldIndex,
         'LHI': RegisterData,
         'AHI': RegisterData,
+        'MHI': RegisterData,
+        'CHI': RegisterData,
         'LM': RegisterRegisterField,
         'STM': RegisterRegisterField,
+        'CLM': RegisterDataField,
         'ICM': RegisterDataField,
         'STCM': RegisterDataField,
+        'BAS': RegisterBranch,
+        'JAS': RegisterBranch,
+        'BCT': RegisterBranch,
+        'BXH': RegisterRegisterBranch,
+        'BXLE': RegisterRegisterBranch,
         'EXITC': Exit,
         'BACKC': Exit,
         'B': BranchCondition,
@@ -459,6 +575,7 @@ class InstructionType:
         'BP': BranchCondition,
         'BNP': BranchCondition,
         'BC': BranchCondition,
+        'BCRY': BranchCondition,
         'BO': BranchCondition,
         'BNO': BranchCondition,
         'BZ': BranchCondition,
@@ -497,8 +614,6 @@ class InstructionType:
         'BZR': BranchConditionRegister,
         'BNZR': BranchConditionRegister,
         'NOPR': BranchConditionRegister,
-        'BAS': RegisterBranch,
-        'JAS': RegisterBranch,
         'ENTRC': SegmentCall,
         'ENTNC': SegmentCall,
         'ENTDC': SegmentCall,

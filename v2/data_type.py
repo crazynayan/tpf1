@@ -316,8 +316,14 @@ class Field:
             dsp, result = macro.get_value(name)
             if result != Error.NO_ERROR:
                 return length, result
-            base = Register('R0')
-            name = 'R0_AREA'
+            possible_name = next(iter(re.split(r"['+-]", name)))
+            if not name.isdigit() and possible_name in macro.data_map:
+                # Field type of NAME+L'NAME
+                base = Register(macro.get_base(macro.data_map[possible_name].name))
+                name = possible_name
+            else:
+                base = Register('R0')
+                name = 'R0_AREA'
         else:
             try:
                 dsp = macro.data_map[name].dsp

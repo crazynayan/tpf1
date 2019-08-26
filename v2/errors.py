@@ -26,3 +26,4 @@ class Error:
     BC_INVALID_BRANCH = 'BranchGeneric - Invalid Branch Label'
     EQU_LABEL_REQUIRED = 'Equ - Label required.'
     SC_INVALID_SEGMENT = 'SegmentCall - Invalid Segment.'
+    FLFD_INVALID_DATA = 'FieldLenFieldData - Invalid data.'

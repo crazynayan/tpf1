@@ -1,4 +1,5 @@
 import os
+import re
 from copy import copy
 
 from config import config
@@ -50,6 +51,11 @@ class Segment:
         return Line.from_line(f"{self.root_label} EQU *")
 
     def get_constant_bytes(self, label, length=None):
+        if set("+-").intersection(set(label)):
+            dsp, result = self.macro.get_value(label)
+            label = next(iter(re.split(r"[+-]", label)))
+        else:
+            dsp = 0
         try:
             symbol_table = self.macro.data_map[label]
         except KeyError:
@@ -57,7 +63,8 @@ class Segment:
         if symbol_table.name != self.name:
             return None
         length = length or symbol_table.length
-        at = symbol_table.dsp - self.constant.start
+        dsp = dsp or symbol_table.dsp
+        at = dsp - self.constant.start
         return self.constant.data[at: at + length]
 
     def load(self):

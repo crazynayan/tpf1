@@ -122,7 +122,10 @@ class SegmentMacro:
             return None, Error.EXP_EVAL_FAIL
 
     def set_using(self, dsect, reg):
-        self.using[reg] = dsect
+        using_name = next((name for name, using_reg in self.using.items() if using_reg == reg), None)
+        if using_name is not None:
+            del self.using[using_name]
+        self.using[dsect] = reg
 
     def is_present(self, macro_name):
         return macro_name in self.global_program.macro.files
@@ -161,12 +164,12 @@ class SegmentMacro:
         return DataType(data_type, input=field).value, data_type, Error.NO_ERROR
 
     def get_macro_name(self, base):
-        # Will raise a KeyError exception if the base register is not present.
-        return self.using[base.reg]
+        # Will raise a StopIteration exception if the base register is not present.
+        return next(name for name, reg in self.using.items() if reg == base.reg)
 
     def get_base(self, macro_name):
-        # Will raise a StopIteration exception if the macro name is not present.
-        return next(reg for reg, name in self.using.items() if name == macro_name)
+        # Will raise a KeyError exception if the macro name is not present.
+        return self.using[macro_name]
 
     def get_field_name(self, base, dsp, length):
         try:
@@ -174,5 +177,5 @@ class SegmentMacro:
             matches = {label: symbol_table for label, symbol_table in self.data_map.items()
                        if symbol_table.dsp == dsp and symbol_table.name == macro_name}
             return min(matches, key=lambda label: abs(matches[label].length - length))
-        except (KeyError, ValueError):
+        except (StopIteration, ValueError):
             return None

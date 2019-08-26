@@ -1,3 +1,6 @@
+**********************************************************************
+*        KEY VALUE (REALTIME AND USER DEFINED EXECUTABLE MACROS)
+**********************************************************************
 TS110010 EQU   *
          WA0AA REG=R1
          AAGET BASEREG=R1,GET=CORE,INIT=YES,FILE=NO
