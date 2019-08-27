@@ -167,3 +167,15 @@ class SymbolTable:
 
     def __repr__(self):
         return f'{self.label}:{self.dsp}:{self.length}:{self.name}:{self.branch}'
+
+
+class Label:
+    SEPARATOR = '.'
+
+    def __init__(self, name, separator=None):
+        self.name = name
+        self.index = 0
+        self.separator = self.SEPARATOR if separator is None else separator
+
+    def __repr__(self):
+        return self.name if self.index == 0 else f"{self.name}{self.separator}{self.index}"

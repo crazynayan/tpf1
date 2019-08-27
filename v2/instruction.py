@@ -2,6 +2,7 @@ import re
 
 
 from v2.data_type import FieldBaseDsp, Bits, FieldIndex, FieldLen, Register
+from v2.file_line import Label
 from v2.errors import Error
 from v2.command import cmd
 
@@ -356,12 +357,45 @@ class RegisterBranch(BranchGeneric):
         self.reg = None
 
     def set_operand(self, line, macro):
-        operand1, operand2 = line.split_operands()
-        result = self.set_branch(operand2, macro)
+        reg, branch = line.split_operands()
+        result = self.set_branch(branch, macro)
         if result == Error.NO_ERROR:
-            self.reg = Register(operand1)
+            self.reg = Register(reg)
             if not self.reg.is_valid():
                 result = Error.REG_INVALID
+        return self, result
+
+
+class RegisterLabel(Instruction):
+    def __init__(self):
+        super().__init__()
+        self.reg = None
+        self.label = None
+
+    def set_operand(self, line, macro):
+        reg, label = line.split_operands()
+        self.reg = Register(reg)
+        if not self.reg.is_valid():
+            result = Error.REG_INVALID
+        else:
+            if macro.is_branch(label):
+                if macro.data_map[label].length < 2:
+                    self.label = label + Label.SEPARATOR + '1'
+                else:
+                    self.label = label
+                result = Error.NO_ERROR
+            else:
+                if label.startswith('*-'):
+                    nodes = macro.global_program.segments[macro.seg_name].nodes
+                    prior_ins = next(node for _, node in nodes.items() if node.fall_down == line.label)
+                    prior_ins_len, _ = macro.get_value(label[2:])
+                    if prior_ins.get_attribute('len') == prior_ins_len:
+                        self.label = prior_ins.label
+                        result = Error.NO_ERROR
+                    else:
+                        result = Error.RL_INVALID_LEN
+                else:
+                    result = Error.RL_INVALID_LABEL
         return self, result
 
 
@@ -462,6 +496,16 @@ class KeyValue(Instruction):
         return next(iter(self.branches), None)
 
 
+class DataMacroDeclaration:
+    def __init__(self, line, macro):
+        data_macro, result = KeyValue().set_operand(line, macro)
+        base = Register(data_macro.get_value('REG'))
+        if result == Error.NO_ERROR and base.is_valid():
+            macro.load(line.command, base.reg)
+        else:
+            raise TypeError
+
+
 class InstructionType:
     INS = {
         'EQU': Instruction,
@@ -558,6 +602,7 @@ class InstructionType:
         'BAS': RegisterBranch,
         'JAS': RegisterBranch,
         'BCT': RegisterBranch,
+        'EX': RegisterLabel,
         'BXH': RegisterRegisterBranch,
         'BXLE': RegisterRegisterBranch,
         'EXITC': Exit,

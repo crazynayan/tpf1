@@ -312,7 +312,7 @@ class Field:
 
     def set_base_dsp_by_name(self, name, macro):
         length = 0
-        if name.isdigit() or len(re.split(r"['+-]", name)) > 1:
+        if name.isdigit() or set("'+-").intersection(set(name)):
             dsp, result = macro.get_value(name)
             if result != Error.NO_ERROR:
                 return length, result

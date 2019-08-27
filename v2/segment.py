@@ -4,23 +4,10 @@ from copy import copy
 
 from config import config
 from v2.errors import Error
-from v2.file_line import File, Line, SymbolTable
-from v2.data_type import Register
+from v2.file_line import File, Line, SymbolTable, Label
 from v2.directive import AssemblerDirective
-from v2.instruction import InstructionType
+from v2.instruction import InstructionType, DataMacroDeclaration
 from v2.macro import GlobalMacro, SegmentMacro
-
-
-class Label:
-    SEPARATOR = '.'
-
-    def __init__(self, name, separator=None):
-        self.name = name
-        self.index = 0
-        self.separator = self.SEPARATOR if separator is None else separator
-
-    def __repr__(self):
-        return self.name if self.index == 0 else f"{self.name}{self.separator}{self.index}"
 
 
 class Constant:
@@ -147,8 +134,7 @@ class Segment:
         if line.is_first_pass:
             return True
         if self.macro.is_present(line.command):
-            base = Register(line.operand[4:])  # TODO To improve when KeyValue DataType is developed
-            self.macro.load(line.command, base.reg)
+            DataMacroDeclaration(line, self.macro)
             return True
         if not line.is_assembler_directive:
             return False

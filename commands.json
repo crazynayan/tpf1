@@ -427,7 +427,8 @@
     },
     "EX": {
         "create": "KeyValue",
-        "len": 4
+        "len": 4,
+        "set_cc": 1
     },
     "EXITC": {
         "create": "Exit",
