@@ -2,7 +2,7 @@ import re
 
 from v2.data_type import DataType, Register
 from v2.errors import Error
-from v2.file_line import SymbolTable
+from v2.file_line import SymbolTable, Label
 
 
 class DsDc:
@@ -72,14 +72,19 @@ class DsDc:
 
 class Ds:
     @staticmethod
-    def update(line, macro, location_counter, name, **_):
+    def update(line, macro, location_counter, name, data):
         operands = line.split_operands()
         dc, result = DsDc.from_operand(operands[0], macro, location_counter)
         if result != Error.NO_ERROR:
             return location_counter, result
         if line.label:
-            branch = True if dc.duplication_factor == 0 and name == macro.seg_name else False
-            macro.data_map[line.label] = SymbolTable(line.label, dc.start, dc.length, name, branch)
+            if dc.duplication_factor == 0 and name == macro.seg_name:
+                dsp = data.next_constant if data else dc.start
+                label_type = {SymbolTable.BRANCH, SymbolTable.CONSTANT}
+            else:
+                dsp = dc.start
+                label_type = None
+            macro.data_map[line.label] = SymbolTable(line.label, dsp, dc.length, name, label_type)
         location_counter = dc.end
         if len(operands) > 1:
             for operand in operands[1:]:
@@ -92,25 +97,25 @@ class Ds:
 
 class Dc:
     @staticmethod
-    def update(line, macro, location_counter, name, constant):
+    def update(line, macro, location_counter, name, data):
         operands = line.split_operands()
         dc, result = DsDc.from_operand(operands[0], macro, location_counter)
         if result != Error.NO_ERROR:
             return location_counter, result
-        constant.start = constant.start or dc.start
+        data.extend_constant([0x00] * dc.align_to_boundary)
         if line.label:
-            macro.data_map[line.label] = SymbolTable(line.label, dc.start, dc.length, name)
+            macro.data_map[line.label] = SymbolTable(line.label, data.next_constant, dc.length, name,
+                                                     {SymbolTable.CONSTANT})
         location_counter = dc.end
-        constant.data.extend([0x00] * dc.align_to_boundary)
-        constant.data.extend(dc.data * dc.duplication_factor)
+        data.extend_constant(dc.data * dc.duplication_factor)
         if len(operands) > 1:
             for operand in operands[1:]:
                 dc, result = DsDc.from_operand(operand, macro, location_counter)
                 if result != Error.NO_ERROR:
                     return location_counter, result
                 location_counter = dc.end
-                constant.data.extend([0x00] * dc.align_to_boundary)
-                constant.data.extend(dc.data * dc.duplication_factor)
+                data.extend_constant([0x00] * dc.align_to_boundary)
+                data.extend_constant(dc.data * dc.duplication_factor)
         return location_counter, Error.NO_ERROR
 
 
@@ -137,8 +142,8 @@ class Equ:
             length, result = macro.get_value(operands[1])
             if result != Error.NO_ERROR:
                 return location_counter, result
-        branch = True if location_counter == dsp and name == macro.seg_name else False
-        macro.data_map[line.label] = SymbolTable(line.label, dsp, length, name, branch)
+        label_type = {SymbolTable.BRANCH} if location_counter == dsp and name == macro.seg_name else None
+        macro.data_map[line.label] = SymbolTable(line.label, dsp, length, name, label_type)
         return location_counter, Error.NO_ERROR
 
 
@@ -199,6 +204,22 @@ class Using:
             raise TypeError
 
 
+class Literal:
+    @staticmethod
+    def update(literal, macro):
+        if not literal.startswith('='):
+            return literal
+        literal, result = DsDc.from_operand(literal[1:], macro, 0)
+        if result != Error.NO_ERROR:
+            raise AttributeError
+        data = macro.global_program.segments[macro.seg_name].data
+        dsp = data.next_literal
+        data.extend_literal(literal.data * literal.duplication_factor)
+        label = f"L{Label.SEPARATOR * 2}{dsp:05d}"
+        macro.data_map[label] = SymbolTable(label, dsp, literal.length, macro.seg_name, {SymbolTable.LITERAL})
+        return label
+
+
 class AssemblerDirective:
     AD = {'DS': Ds, 'DC': Dc, 'EQU': Equ, 'DSECT': Dsect, 'CSECT': Csect, 'ORG': Org, 'PGMID': Pgmid,
           'PUSH': Push, 'POP': Pop, 'USING': Using}
@@ -216,7 +237,7 @@ class AssemblerDirective:
             if line.command != self.ad_type:
                 continue
             _, result = self.AD[self.ad_type].update(line=line, macro=macro, location_counter=location_counter,
-                                                     name=name)
+                                                     name=name, data=None)
             if result != Error.NO_ERROR:
                 errors.append(f'{result} {line} {name}')
 

@@ -10,10 +10,32 @@ from v2.instruction import InstructionType, DataMacroDeclaration
 from v2.macro import GlobalMacro, SegmentMacro
 
 
-class Constant:
+class Data:
     def __init__(self):
-        self.data = bytearray()
-        self.start = 0
+        self.constant = bytearray()
+        self.literal = bytearray()
+
+    @property
+    def next_constant(self):
+        return len(self.constant)
+
+    @property
+    def next_literal(self):
+        return len(self.literal)
+
+    def extend_constant(self, data):
+        self.constant.extend(data)
+
+    def extend_literal(self, data):
+        self.literal.extend(data)
+
+    def get_constant(self, start, end=None):
+        end = start + 1 if end is None else end
+        return self.constant[start: end]
+
+    def get_literal(self, start, end=None):
+        end = start + 1 if end is None else end
+        return self.literal[start: end]
 
 
 class Segment:
@@ -24,7 +46,7 @@ class Segment:
         self.nodes = dict()     # Dictionary of Instruction. Label is the key.
         self.errors = list()
         self.assembled = False
-        self.constant = Constant()
+        self.data = Data()
 
     def __repr__(self):
         return f"{self.name}:{self.assembled}:{len(self.nodes)}"
@@ -47,12 +69,14 @@ class Segment:
             symbol_table = self.macro.data_map[label]
         except KeyError:
             return None
-        if symbol_table.name != self.name:
-            return None
         length = length or symbol_table.length
         dsp = dsp or symbol_table.dsp
-        at = dsp - self.constant.start
-        return self.constant.data[at: at + length]
+        if symbol_table.is_constant:
+            return self.data.get_constant(dsp, dsp + length)
+        elif symbol_table.is_literal:
+            return self.data.get_literal(dsp, dsp + length)
+        else:
+            return None
 
     def load(self):
         if self.assembled:
@@ -82,13 +106,14 @@ class Segment:
             if line.is_first_pass:
                 name = self.name if self.macro.dsect is None else self.macro.dsect[1]
                 location_counter, result = AssemblerDirective.from_line(line=line, macro=self.macro, name=name,
-                                                                        constant=self.constant,
+                                                                        data=self.data,
                                                                         location_counter=location_counter)
                 if result != Error.NO_ERROR:
                     self.errors.append(f'{result} {line} {self.name}')
             else:
                 if line.label:
-                    self.macro.data_map[line.label] = SymbolTable(line.label, location_counter, length, self.name, True)
+                    self.macro.data_map[line.label] = SymbolTable(line.label, location_counter, length, self.name,
+                                                                  SymbolTable.BRANCH)
                 location_counter += line.length
 
     def _assemble_instructions(self, lines):

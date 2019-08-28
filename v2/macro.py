@@ -53,7 +53,7 @@ class GlobalMacro:
             if not line.is_first_pass:
                 continue
             assembler_directive = AssemblerDirective(line.command)
-            location_counter, result = assembler_directive.update(line=line, macro=macro,
+            location_counter, result = assembler_directive.update(line=line, macro=macro, data=None,
                                                                   location_counter=location_counter, name=macro_name)
             if result != Error.NO_ERROR:
                 second_list.append((line, location_counter))
@@ -90,7 +90,7 @@ class SegmentMacro:
         return self.global_program.macro.errors
 
     def is_branch(self, label):
-        return self.data_map[label].branch if label in self.data_map else False
+        return self.data_map[label].is_branch if label in self.data_map else False
 
     def load(self, macro_name, base=None):
         if not self.global_program.macro.is_loaded(macro_name):
@@ -121,21 +121,6 @@ class SegmentMacro:
         except (SyntaxError, NameError, TypeError, ValueError):
             return None, Error.EXP_EVAL_FAIL
 
-    def set_using(self, dsect, reg):
-        using_name = next((name for name, using_reg in self.using.items() if using_reg == reg), None)
-        if using_name is not None:
-            del self.using[using_name]
-        self.using[dsect] = reg
-
-    def is_present(self, macro_name):
-        return macro_name in self.global_program.macro.files
-
-    def is_loaded(self, macro_name):
-        return self.global_program.macro.is_loaded(macro_name)
-
-    def copy_from_global(self):
-        self.data_map = self.global_program.macro.global_map.copy()
-
     def evaluate(self, expression, location_counter=None):
         if expression.isdigit():
             return int(expression), self.INTEGER, Error.NO_ERROR
@@ -162,6 +147,21 @@ class SegmentMacro:
         if '&' in field:
             return field, data_type, Error.EXP_INVALID_KEY_X
         return DataType(data_type, input=field).value, data_type, Error.NO_ERROR
+
+    def set_using(self, dsect, reg):
+        using_name = next((name for name, using_reg in self.using.items() if using_reg == reg), None)
+        if using_name is not None:
+            del self.using[using_name]
+        self.using[dsect] = reg
+
+    def is_present(self, macro_name):
+        return macro_name in self.global_program.macro.files
+
+    def is_loaded(self, macro_name):
+        return self.global_program.macro.is_loaded(macro_name)
+
+    def copy_from_global(self):
+        self.data_map = self.global_program.macro.global_map.copy()
 
     def get_macro_name(self, base):
         # Will raise a StopIteration exception if the base register is not present.

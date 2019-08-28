@@ -5,6 +5,7 @@ from v2.data_type import FieldBaseDsp, Bits, FieldIndex, FieldLen, Register
 from v2.file_line import Label
 from v2.errors import Error
 from v2.command import cmd
+from v2.directive import Literal
 
 
 class Instruction:
@@ -77,9 +78,11 @@ class FieldLenField(Instruction):
     def set_operand(self, line, macro):
         operand1, operand2 = line.split_operands()
         self.field_len = FieldLen()
+        operand1 = Literal.update(literal=operand1, macro=macro)
         result = self.field_len.set(operand1, macro, self.MAX_LEN)
         if result == Error.NO_ERROR:
             self.field = FieldBaseDsp()
+            operand2 = Literal.update(literal=operand2, macro=macro)
             result = self.field.set(operand2, macro, self.field_len.length)
         return self, result
 
@@ -95,9 +98,11 @@ class FieldLenFieldLen(Instruction):
     def set_operand(self, line, macro):
         operand1, operand2 = line.split_operands()
         self.field_len1 = FieldLen()
+        operand1 = Literal.update(literal=operand1, macro=macro)
         result = self.field_len1.set(operand1, macro, self.MAX_LEN)
         if result == Error.NO_ERROR:
             self.field_len2 = FieldLen()
+            operand2 = Literal.update(literal=operand2, macro=macro)
             result = self.field_len2.set(operand2, macro, self.MAX_LEN)
         return self, result
 
@@ -188,6 +193,7 @@ class RegisterFieldIndex(Instruction):
         result = Error.NO_ERROR if self.reg.is_valid() else Error.RFX_INVALID_REG
         if result == Error.NO_ERROR:
             self.field = FieldIndex()
+            operand2 = Literal.update(literal=operand2, macro=macro)
             result = self.field.set(operand2, macro, length)
         return self, result
 
@@ -252,6 +258,7 @@ class RegisterDataField(Instruction):
             if result == Error.NO_ERROR:
                 if isinstance(self.data, int) and 1 <= self.data <= self.MAX_DATA:
                     self.field = FieldBaseDsp()
+                    operand3 = Literal.update(literal=operand3, macro=macro)
                     result = self.field.set(operand3, macro, bin(self.data).count('1'))
                 else:
                     result = Error.RDF_INVALID_DATA

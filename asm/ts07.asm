@@ -6,11 +6,11 @@ TS070010 EQU   *
          BNE   TS070020
          LHI   R14,1
 TS070020 DS    0F
-NAME     DC    C'CLASS'
-EXAM     DC    2C'NAM'
-ADR1     DC    A(NAME)
-ADR2     DC    Y(EXAM-NAME)
-CHAR1    DC    C'ASDC'
+NAME     DC    C'CLASS'             000
+EXAM     DC    2C'NAM'              005
+ADR1     DC    A(EXAM)              00c
+ADR2     DC    Y(ADR1-EXAM)         010
+CHAR1    DC    C'ASDC'              012
 CHAR2    DC    CL6'ASDC'
 CHAR3    DC    CL2'ASDC'
 HEX1     DC    X'E'

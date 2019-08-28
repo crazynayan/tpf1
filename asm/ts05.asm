@@ -23,9 +23,9 @@ TS05E200 DS    0H               ERROR FOR REG REG FIELD
          LM    R0,R1,PD0_C_ITM
          STM   R3,R4,4096(R7)
 TS050300 DS    0H               VALID FOR REG DATA FIELD
-         ICM   R3,B'0001',EBW000
+         ICM   R3,B'1001',EBW000
          STCM  R3,B'1111',10(R9)
-         ICM   R3,3,EBW000
+         ICM   R3,3,=H'-3'
          STCM  R3,B'1000',EBW000
 TS05E300 DS    0H               ERROR FOR REG DATA FIELD
          ICM   R16,1,EBW000

@@ -48,5 +48,5 @@ TS06E100 DS    0H               ERROR PATHS
          BC    12,TS06E100
          B     TS06E100(R14)
          JC    14,TS06E100(-1)
-         BNZ   0(R8)
+         BNZ   1000(R8)
          JE    TS061000

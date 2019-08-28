@@ -20,10 +20,11 @@ class SymbolTable {
     dsp
     length
     name
-    branch
+    type
 }
 note right
     name can be of a macro, segment or a dsect
+    type can be any combination of BRANCH, CONSTANT, LITERAL
 end note
 
 class Segment {
@@ -32,7 +33,7 @@ class Segment {
     assembled
     foreign_key(macro)
     foreign_key(nodes)
-    foreign_key(constant)
+    foreign_key(data)
     .. list ..
     errors
 }
@@ -51,10 +52,10 @@ class MacroFile {
     data_mapped
 }
 
-class Constant {
-    start
+class Data {
     .. bytearray ..
-    data
+    constant
+    literal
 }
 
 class Instruction {
@@ -73,7 +74,7 @@ Segment::macro  -->  SegmentMacro : has
 SegmentMacro::global_program --> Program : refers to
 SegmentMacro::data_map  --> "Many" SymbolTable : contains
 GlobalMacro::files  --> "Many" MacroFile : contains
-Segment::constant --> Constant : has
+Segment::data --> Data : has
 Segment::nodes --> "Many" Instruction : contains
 
 @enduml

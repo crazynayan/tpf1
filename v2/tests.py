@@ -250,7 +250,7 @@ class SegmentTest(unittest.TestCase):
         self.assertSetEqual({'TS020040'}, self.seg.nodes[label].next_labels)
         # Check DS    0H
         label = 'TS020040'
-        self.assertEqual(0x01a, self.seg.macro.data_map[label].dsp)
+        self.assertEqual(0x000, self.seg.macro.data_map[label].dsp)
         self.assertEqual(label, self.seg.nodes[label].label)
         self.assertEqual('DS', self.seg.nodes[label].command)
         # Check  BCTR  R5,0
@@ -356,6 +356,20 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('R0', self.seg.nodes[label].field.base.reg)
         self.assertEqual(12, self.seg.nodes[label].field.dsp)
         self.assertIsNone(self.seg.nodes[label].field.index)
+        # CH    R15,=H'99'
+        label = '$$TS03$$.13'
+        self.assertEqual('R15', self.seg.nodes[label].reg.reg)
+        self.assertEqual('R8', self.seg.nodes[label].field.base.reg)
+        literal = self.seg.nodes[label].field.name
+        self.assertTrue(self.seg.macro.data_map[literal].is_literal)
+        self.assertEqual(bytearray([0x00, 0x63]), self.seg.get_constant_bytes(literal))
+        # N     R0,=A(X'1F')
+        label = '$$TS03$$.14'
+        self.assertEqual('R0', self.seg.nodes[label].reg.reg)
+        self.assertEqual('R8', self.seg.nodes[label].field.base.reg)
+        literal = self.seg.nodes[label].field.name
+        self.assertTrue(self.seg.macro.data_map[literal].is_literal)
+        self.assertEqual(bytearray([0x00, 0x00, 0x00, 0x1F]), self.seg.get_constant_bytes(literal))
 
     def test_field_variants(self):
         seg_name = 'TS04'
@@ -392,7 +406,31 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual(211, self.seg.nodes[label].field_len.length)
         self.assertEqual('EBW001', self.seg.nodes[label].field.name)
         self.assertEqual(0x9, self.seg.nodes[label].field.dsp)
-        self.assertEqual('TS040110', self.seg.nodes[label].fall_down)
+        self.assertEqual('TS040100.4', self.seg.nodes[label].fall_down)
+        # CLC   2(2,R2),=C'I/' with BE    TS040110
+        label = 'TS040100.4'
+        self.assertEqual('R2_AREA', self.seg.nodes[label].field_len.name)
+        self.assertEqual('R2', self.seg.nodes[label].field_len.base.reg)
+        self.assertEqual(2, self.seg.nodes[label].field_len.dsp)
+        self.assertEqual(2, self.seg.nodes[label].field_len.length)
+        self.assertEqual('R8', self.seg.nodes[label].field.base.reg)
+        literal = self.seg.nodes[label].field.name
+        self.assertTrue(self.seg.macro.data_map[literal].is_literal)
+        self.assertEqual('I/', self.seg.get_constant_bytes(literal).decode(encoding='cp037'))
+        self.assertEqual('TS040110', self.seg.nodes[label].goes)
+        self.assertEqual('BE', self.seg.nodes[label].on)
+        # CLC   =C'C/',2(R2) with BL    TS040110
+        label = 'TS040100.5'
+        self.assertEqual('R2_AREA', self.seg.nodes[label].field.name)
+        self.assertEqual('R2', self.seg.nodes[label].field.base.reg)
+        self.assertEqual(2, self.seg.nodes[label].field.dsp)
+        self.assertEqual('R8', self.seg.nodes[label].field_len.base.reg)
+        self.assertEqual(2, self.seg.nodes[label].field_len.length)
+        literal = self.seg.nodes[label].field_len.name
+        self.assertTrue(self.seg.macro.data_map[literal].is_literal)
+        self.assertEqual('C/', self.seg.get_constant_bytes(literal).decode(encoding='cp037'))
+        self.assertEqual('TS040110', self.seg.nodes[label].goes)
+        self.assertEqual('BL', self.seg.nodes[label].on)
         # MVC   23(L'CE1WKA,R3),26(R4)
         label = 'TS040110.1'
         self.assertEqual('R3_AREA', self.seg.nodes[label].field_len.name)
@@ -497,10 +535,10 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual(0x290, self.seg.nodes[label].field.dsp)
         self.assertEqual('CE1DSTMP', self.seg.nodes[label].field.name)
         # Check RegisterDataField
-        # ICM   R3,B'0001',EBW000
+        # ICM   R3,B'1001',EBW000
         label = 'TS050300.1'
         self.assertEqual('R3', self.seg.nodes[label].reg.reg)
-        self.assertEqual(1, self.seg.nodes[label].data)
+        self.assertEqual(9, self.seg.nodes[label].data)
         self.assertEqual('EBW000', self.seg.nodes[label].field.name)
         self.assertEqual('R9', self.seg.nodes[label].field.base.reg)
         self.assertEqual(8, self.seg.nodes[label].field.dsp)
@@ -510,9 +548,13 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('EBW002', self.seg.nodes[label].field.name)
         self.assertEqual('R9', self.seg.nodes[label].field.base.reg)
         self.assertEqual(10, self.seg.nodes[label].field.dsp)
-        # ICM   R3,3,EBW000
+        # ICM   R3,3,=H'-3'
         label = 'TS050300.3'
         self.assertEqual(3, self.seg.nodes[label].data)
+        self.assertEqual('R8', self.seg.nodes[label].field.base.reg)
+        literal = self.seg.nodes[label].field.name
+        self.assertTrue(self.seg.macro.data_map[literal].is_literal)
+        self.assertEqual(bytearray([0xFF, 0xFD]), self.seg.get_constant_bytes(literal))
         # STCM  R3,B'1000',EBW000
         label = 'TS050300.4'
         self.assertEqual(8, self.seg.nodes[label].data)
@@ -524,11 +566,11 @@ class SegmentTest(unittest.TestCase):
             f"{Error.BC_INVALID_MASK} TS06E100.2:BC:12,TS06E100 {seg_name}",
             f"{Error.BC_INDEX} TS06E100.3:B:TS06E100(R14) {seg_name}",
             f"{Error.FX_INVALID_INDEX} TS06E100.4:JC:14,TS06E100(-1) {seg_name}",
-            f"{Error.BC_INVALID_BRANCH} TS06E100.5:BNZ:0(R8) {seg_name}",
+            f"{Error.BC_INVALID_BRANCH} TS06E100.5:BNZ:1000(R8) {seg_name}",
             f"{Error.FBD_INVALID_KEY} TS06E100.6:JE:TS061000 {seg_name}",
         ]
-        # self.assertRaises(ValueError, ins.BranchCondition.from_operand, None, 'BC', 'TS060100', self.program.macro)
-        # self.assertRaises(ValueError, ins.BranchCondition.from_operand, None, 'JC', 'A,TS060100', self.program.macro)
+        self.assertRaises(ValueError, InstructionType.from_line, Line.from_line(" BC TS060100"), self.program.macro)
+        self.assertRaises(ValueError, InstructionType.from_line, Line.from_line(" JC A,TS060100"), self.program.macro)
         self._common_checks(seg_name, accepted_errors_list)
         # Check TS060100
         node = self.seg.nodes['TS060100.1']
@@ -703,35 +745,33 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual(1, self.seg.macro.data_map[label].length)
         self.assertEqual('TS07', self.seg.macro.data_map[label].name)
         label = 'TS070020'
-        self.assertEqual(0x018, self.seg.macro.data_map[label].dsp)
+        self.assertEqual(0x000, self.seg.macro.data_map[label].dsp)
         self.assertEqual(4, self.seg.macro.data_map[label].length)
-        # Constant
-        self.assertEqual(0x018, self.seg.constant.start)
         # C'CLASS'
         label = 'NAME'
-        self.assertEqual(0x018, self.seg.macro.data_map[label].dsp)
+        self.assertEqual(0x000, self.seg.macro.data_map[label].dsp)
         self.assertEqual(5, self.seg.macro.data_map[label].length)
         class_name = bytearray([0xC3, 0xD3, 0xC1, 0xE2, 0xE2])
-        at = 0x018 - self.seg.constant.start
-        self.assertEqual(class_name, self.seg.constant.data[at: at+5])
+        at = 0x000
+        self.assertEqual(class_name, self.seg.data.get_constant(at, at+5))
         self.assertEqual(class_name, self.seg.get_constant_bytes(label))
         # 2C'NAM'
         label = 'EXAM'
-        self.assertEqual(0x01d, self.seg.macro.data_map[label].dsp)
+        self.assertEqual(0x005, self.seg.macro.data_map[label].dsp)
         self.assertEqual(3, self.seg.macro.data_map[label].length)
         exam_name = bytearray([0xD5, 0xC1, 0xD4, 0xD5, 0xC1, 0xD4])
         self.assertEqual(exam_name, self.seg.get_constant_bytes(label, len(exam_name)))
-        # A(NAME)
+        # A(EXAM)
         label = 'ADR1'
-        self.assertEqual(0x024, self.seg.macro.data_map[label].dsp)
+        self.assertEqual(0x00c, self.seg.macro.data_map[label].dsp)
         self.assertEqual(4, self.seg.macro.data_map[label].length)
-        self.assertEqual(bytearray(int(24).to_bytes(4, 'big')), self.seg.get_constant_bytes(label))
-        self.assertEqual(bytearray(int(24).to_bytes(5, 'big')), self.seg.constant.data[0x00B: 0x010])
-        # Y(EXAM-NAME)
+        self.assertEqual(bytearray(int(5).to_bytes(4, 'big')), self.seg.get_constant_bytes(label))
+        self.assertEqual(bytearray(int(5).to_bytes(5, 'big')), self.seg.data.get_constant(0x00B, 0x010))
+        # Y(ADR1-EXAM)
         label = 'ADR2'
-        self.assertEqual(0x028, self.seg.macro.data_map[label].dsp)
+        self.assertEqual(0x010, self.seg.macro.data_map[label].dsp)
         self.assertEqual(2, self.seg.macro.data_map[label].length)
-        self.assertEqual(bytearray(int(5).to_bytes(2, 'big')), self.seg.get_constant_bytes(label))
+        self.assertEqual(bytearray(int(7).to_bytes(2, 'big')), self.seg.get_constant_bytes(label))
         # CHAR1    DC    C'ASDC'
         self.assertEqual(bytearray([0xC1, 0xE2, 0xC4, 0xC3]), self.seg.get_constant_bytes('CHAR1'))
         # CHAR2    DC    CL6'ASDC'
@@ -760,14 +800,14 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual(bytearray([0x67, 0x8D]), self.seg.get_constant_bytes('PCK2'))
         # FULL1    DC    F'2000'
         self.assertEqual(bytearray([0x00, 0x00, 0x07, 0xD0]), self.seg.get_constant_bytes('FULL1'))
-        self.assertEqual(bytearray([0x8D, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07]), self.seg.constant.data[56: 63])
+        self.assertEqual(bytearray([0x8D, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07]), self.seg.data.get_constant(56, 63))
         # FULL2    DC    FL2'100.7'
         self.assertEqual(bytearray([0x00, 0x65]), self.seg.get_constant_bytes('FULL2'))
         # HALF1    DC    H'2000'
         self.assertEqual(bytearray([0x07, 0xD0]), self.seg.get_constant_bytes('HALF1'))
         # HALF2    DC    H'-2'
         self.assertEqual(bytearray([0xFF, 0xFE]), self.seg.get_constant_bytes('HALF2'))
-        self.assertEqual(bytearray([0xFF, 0xFE]), self.seg.constant.data[68: 70])
+        self.assertEqual(bytearray([0xFF, 0xFE]), self.seg.data.get_constant(68, 70))
         # FLV      DC    PL2'-29'
         self.assertEqual(bytearray([0x02, 0x9D]), self.seg.get_constant_bytes('FLV'))
         # FLW      DC    Z'246'
@@ -796,7 +836,7 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual(64, self.seg.macro.data_map['TS08AAC'].dsp)
         self.assertEqual(0, self.seg.macro.data_map['TS08PGR'].dsp)
         self.assertEqual('TS08AWD', self.seg.macro.data_map['TS08PGR'].name)
-        self.assertEqual(30, self.seg.macro.data_map['TS080010'].dsp)
+        self.assertEqual(0, self.seg.macro.data_map['TS080010'].dsp)
         self.assertEqual('R9', self.seg.nodes['$$TS08$$.1'].field.base.reg)
         self.assertEqual('R1', self.seg.nodes['$$TS08$$.3'].field.base.reg)
         self.assertEqual('WA0ET4', self.seg.nodes['$$TS08$$.3'].field.name)
@@ -805,7 +845,7 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('R14', self.seg.nodes['$$TS08$$.4'].field_len.base.reg)
         self.assertEqual(2, self.seg.nodes['$$TS08$$.4'].field_len.length)
         self.assertEqual('R8', self.seg.nodes['$$TS08$$.4'].field.base.reg)
-        self.assertEqual(0, self.seg.nodes['$$TS08$$.4'].field.dsp - self.seg.constant.start)
+        self.assertEqual(0, self.seg.nodes['$$TS08$$.4'].field.dsp)
         self.assertEqual(bytearray([0xC1, 0xC1]), self.seg.get_constant_bytes('$C_AA'))
         self.assertEqual('TS08AAC', self.seg.nodes['TS080010.1'].field_len.name)
         self.assertEqual('R14', self.seg.nodes['TS080010.1'].field_len.base.reg)
@@ -1078,7 +1118,7 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('FWDA', node.field.name)
         self.assertIsNone(node.field.index)
         self.assertEqual('R8', node.field.base.reg)
-        self.assertEqual(0x008, node.field.dsp)
+        self.assertEqual(0x000, node.field.dsp)
         self.assertEqual(4, self.seg.macro.data_map['FWDA'].length)
         # AH    R1,HWD
         node = self.seg.nodes['TS120200.2']
@@ -1105,7 +1145,7 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('HWDA', node.field.name)
         self.assertIsNone(node.field.index)
         self.assertEqual('R8', node.field.base.reg)
-        self.assertEqual(0x00c, node.field.dsp)
+        self.assertEqual(0x004, node.field.dsp)
         self.assertEqual(4, self.seg.macro.data_map['HWDA'].length)
         # MH    R5,HWDA
         node = self.seg.nodes['TS120200.5']
@@ -1120,10 +1160,9 @@ class SegmentTest(unittest.TestCase):
         node = self.seg.nodes['TS120200.7']
         self.assertEqual('M', node.command)
         self.assertEqual('R4', node.reg.reg)
-        self.assertEqual('ONE', node.field.name)
-        self.assertIsNone(node.field.index)
         self.assertEqual('R8', node.field.base.reg)
-        self.assertEqual(0x010, node.field.dsp)
+        self.assertTrue(self.seg.macro.data_map[node.field.name].is_literal)
+        self.assertEqual(bytearray([0x00, 0x00, 0x00, 0x01]), self.seg.get_constant_bytes(node.field.name))
         # MR    R4,R15
         node = self.seg.nodes['TS120200.8']
         self.assertEqual('MR', node.command)
@@ -1140,7 +1179,7 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('R4', node.reg.reg)
         self.assertEqual('NUM', node.field.name)
         self.assertEqual('R8', node.field.base.reg)
-        self.assertEqual(0x014, node.field.dsp)
+        self.assertEqual(0x00c, node.field.dsp)
         # SLA   R1,1(R2)
         node = self.seg.nodes['TS120200.11']
         self.assertEqual('SLA', node.command)
@@ -1179,9 +1218,9 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('R4', node.field_len.base.reg)
         self.assertEqual(0x500, node.field_len.dsp)
         self.assertEqual(5, node.field_len.length)
-        self.assertEqual('FLD2', node.field.name)
-        self.assertEqual('R4', node.field.base.reg)
-        self.assertEqual(0x505, node.field.dsp)
+        self.assertEqual('R8', node.field.base.reg)
+        self.assertTrue(self.seg.macro.data_map[node.field.name].is_literal)
+        self.assertEqual(bytearray([0xC1, 0xC2, 0xC3, 0x40, 0x40]), self.seg.get_constant_bytes(node.field.name))
         # MVN   FLD1,FLD1+3
         node = self.seg.nodes['TS120300.3']
         self.assertEqual('MVN', node.command)
@@ -1197,11 +1236,11 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('MVO', node.command)
         self.assertEqual('FIELDB', node.field_len1.name)
         self.assertEqual('R8', node.field_len1.base.reg)
-        self.assertEqual(0x01b, node.field_len1.dsp)
+        self.assertEqual(0x013, node.field_len1.dsp)
         self.assertEqual(4, node.field_len1.length)
         self.assertEqual('FIELDA', node.field_len2.name)
         self.assertEqual('R8', node.field_len2.base.reg)
-        self.assertEqual(0x018, node.field_len2.dsp)
+        self.assertEqual(0x010, node.field_len2.dsp)
         self.assertEqual(3, node.field_len2.length)
         # BCT   R3,TS120300
         node = self.seg.nodes['TS120300.5']
@@ -1251,7 +1290,7 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('R3', node.reg.reg)
         self.assertEqual('FWDA', node.field.name)
         self.assertEqual('R8', node.field.base.reg)
-        self.assertEqual(0x008, node.field.dsp)
+        self.assertEqual(0x000, node.field.dsp)
         # CHI   R3,-1
         node = self.seg.nodes['TS120400.3']
         self.assertEqual('CHI', node.command)
@@ -1263,7 +1302,7 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('R3', node.reg.reg)
         self.assertEqual('NUM', node.field.name)
         self.assertEqual('R8', node.field.base.reg)
-        self.assertEqual(0x014, node.field.dsp)
+        self.assertEqual(0x00c, node.field.dsp)
         # CLR   R3,R4
         node = self.seg.nodes['TS120400.5']
         self.assertEqual('CLR', node.command)
@@ -1317,7 +1356,7 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('R5', node.reg.reg)
         self.assertEqual('ONE', node.field.name)
         self.assertEqual('R8', node.field.base.reg)
-        self.assertEqual(0x010, node.field.dsp)
+        self.assertEqual(0x008, node.field.dsp)
         # SLR   R1,R3
         # BC    4,TS120400
         node = self.seg.nodes['TS120400.14']
@@ -1332,7 +1371,7 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('R5', node.reg.reg)
         self.assertEqual('ZERO', node.field.name)
         self.assertEqual('R8', node.field.base.reg)
-        self.assertEqual(0x020, node.field.dsp)
+        self.assertEqual(0x018, node.field.dsp)
         # NC    FLD1,FLD1
         node = self.seg.nodes['TS120500.1']
         self.assertEqual('NC', node.command)
@@ -1399,7 +1438,7 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual(4, node.field_len1.length)
         self.assertEqual('PACKED', node.field_len2.name)
         self.assertEqual('R8', node.field_len2.base.reg)
-        self.assertEqual(0x027, node.field_len2.dsp)
+        self.assertEqual(0x01f, node.field_len2.dsp)
         self.assertEqual(2, node.field_len2.length)
         # SP    WORK,PACKED
         node = self.seg.nodes['TS120600.3']
@@ -1407,7 +1446,7 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('WORK', node.field_len1.name)
         self.assertEqual('PACKED', node.field_len2.name)
         self.assertEqual('R8', node.field_len2.base.reg)
-        self.assertEqual(0x027, node.field_len2.dsp)
+        self.assertEqual(0x01f, node.field_len2.dsp)
         self.assertEqual(2, node.field_len2.length)
         # MP    WORK,P2
         node = self.seg.nodes['TS120600.4']
@@ -1415,23 +1454,25 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('WORK', node.field_len1.name)
         self.assertEqual('P2', node.field_len2.name)
         self.assertEqual('R8', node.field_len2.base.reg)
-        self.assertEqual(0x029, node.field_len2.dsp)
+        self.assertEqual(0x021, node.field_len2.dsp)
         self.assertEqual(2, node.field_len2.length)
         # DP    WORK,P2
         node = self.seg.nodes['TS120600.5']
         self.assertEqual('DP', node.command)
         self.assertEqual('WORK', node.field_len1.name)
-        self.assertEqual('P2', node.field_len2.name)
         self.assertEqual('R8', node.field_len2.base.reg)
-        self.assertEqual(0x029, node.field_len2.dsp)
         self.assertEqual(2, node.field_len2.length)
-        # CP    FLD1,FLD2
+        literal = node.field_len2.name
+        self.assertTrue(self.seg.macro.data_map[literal].is_literal)
+        self.assertEqual(bytearray([0x03, 0x9D]), self.seg.get_constant_bytes(literal))
+        # CP    =P'0',FLD2
         node = self.seg.nodes['TS120600.6']
         self.assertEqual('CP', node.command)
-        self.assertEqual('FLD1', node.field_len1.name)
-        self.assertEqual('R6', node.field_len1.base.reg)
-        self.assertEqual(0x500, node.field_len1.dsp)
-        self.assertEqual(5, node.field_len1.length)
+        self.assertEqual('R8', node.field_len1.base.reg)
+        self.assertEqual(1, node.field_len1.length)
+        literal = node.field_len1.name
+        self.assertTrue(self.seg.macro.data_map[literal].is_literal)
+        self.assertEqual(bytearray([0x0C]), self.seg.get_constant_bytes(literal))
         self.assertEqual('FLD2', node.field_len2.name)
         self.assertEqual('R6', node.field_len2.base.reg)
         self.assertEqual(0x505, node.field_len2.dsp)
@@ -1441,7 +1482,7 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('TP', node.command)
         self.assertEqual('NUM', node.field.name)
         self.assertEqual('R8', node.field.base.reg)
-        self.assertEqual(0x014, node.field.dsp)
+        self.assertEqual(0x00c, node.field.dsp)
         self.assertEqual(4, node.field.length)
         # SRP   FLD1,4,0
         node = self.seg.nodes['TS120600.8']
@@ -1458,31 +1499,31 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('TR', node.command)
         self.assertEqual('INPT', node.field_len.name)
         self.assertEqual('R8', node.field_len.base.reg)
-        self.assertEqual(0x02b, node.field_len.dsp)
+        self.assertEqual(0x023, node.field_len.dsp)
         self.assertEqual(3, node.field_len.length)
         self.assertEqual('TABLE', node.field.name)
         self.assertEqual('R8', node.field.base.reg)
-        self.assertEqual(0x02e, node.field.dsp)
+        self.assertEqual(0x026, node.field.dsp)
         # TRT   SENT,FULLTBL
         node = self.seg.nodes['TS120600.10']
         self.assertEqual('TRT', node.command)
         self.assertEqual('SENT', node.field_len.name)
         self.assertEqual('R8', node.field_len.base.reg)
-        self.assertEqual(0x38, node.field_len.dsp)
+        self.assertEqual(0x30, node.field_len.dsp)
         self.assertEqual(11, node.field_len.length)
         self.assertEqual('FULLTBL', node.field.name)
         self.assertEqual('R8', node.field.base.reg)
-        self.assertEqual(0x043, node.field.dsp)
+        self.assertEqual(0x03b, node.field.dsp)
         # ED    PATTERN,PCK1
         node = self.seg.nodes['TS120600.11']
         self.assertEqual('ED', node.command)
         self.assertEqual('PATTERN', node.field_len.name)
         self.assertEqual('R8', node.field_len.base.reg)
-        self.assertEqual(0x143, node.field_len.dsp)
+        self.assertEqual(0x13b, node.field_len.dsp)
         self.assertEqual(10, node.field_len.length)
         self.assertEqual('PCK1', node.field.name)
         self.assertEqual('R8', node.field.base.reg)
-        self.assertEqual(0x024, node.field.dsp)
+        self.assertEqual(0x01c, node.field.dsp)
         # EDMK  PATTERN,PCK1
         node = self.seg.nodes['TS120600.12']
         self.assertEqual('PATTERN', node.field_len.name)

@@ -18,21 +18,21 @@ WORK     DS    F
 $IS$     CSECT
 **********************************************************************
 *        CONSTANTS
-FWDA     DC    F'60'            008
-HWDA     DC    X'D0123456'      00C
-ONE      DC    F'1'             010
-NUM      DC    F'-2'            014
-FIELDA   DC    XL3'123456'      018
-FIELDB   DC    XL4'778899AD'    01B
-ZERO     DC    F'0'             020
-PCK1     DC    P'56789'         024
-PACKED   DC    P'-93'           027
-P2       DC    P'-39'           029
-INPT     DC    X'030006'        02B
-TABLE    DC    C'ABCDEFGHIJ'    02E
-SENT     DC    C'HELLO WORLD'   038
-FULLTBL  DC    193X'FF',9X'00',7X'FF',9X'00',8X'FF',8X'00',22X'FF' 043
-PATTERN  DC    X'4020206B20206B202020'                             143
+FWDA     DC    F'60'            000
+HWDA     DC    X'D0123456'      004
+ONE      DC    F'1'             008
+NUM      DC    F'-2'            00c
+FIELDA   DC    XL3'123456'      010
+FIELDB   DC    XL4'778899AD'    013
+ZERO     DC    F'0'             018
+PCK1     DC    P'56789'         01c
+PACKED   DC    P'-93'           01f
+P2       DC    P'-39'           021
+INPT     DC    X'030006'        023
+TABLE    DC    C'ABCDEFGHIJ'    026
+SENT     DC    C'HELLO WORLD'   030
+FULLTBL  DC    193X'FF',9X'00',7X'FF',9X'00',8X'FF',8X'00',22X'FF' 03b
+PATTERN  DC    X'4020206B20206B202020'                             13b
 **********************************************************************
 *        CODE  STARTS FROM HERE
          ORG  8
@@ -50,7 +50,7 @@ TS120200 EQU   *
          SH    R4,HWDA
          MH    R5,HWDA
          MHI   R5,-2
-         M     R4,ONE           TODO CHANGE IT TO LITERAL LATER
+         M     R4,=F'1'
          MR    R4,R15
          DR    R4,R7
          D     R4,NUM
@@ -60,7 +60,7 @@ TS120200 EQU   *
          SRDA  R2,32
 TS120300 EQU   *
          MVCL  R2,R6
-         MVZ   FLD1,FLD2
+         MVZ   FLD1,=CL5'ABC'
          MVN   FLD1,FLD1+3
          MVO   FIELDB,FIELDA
          BCT   R3,TS120300
@@ -99,8 +99,8 @@ TS120600 EQU   *
          AP    WORK,PACKED
          SP    WORK,PACKED
          MP    WORK,P2
-         DP    WORK,P2
-         CP    FLD1,FLD2
+         DP    WORK,=P'-39'
+         CP    =P'0',FLD2
          TP    NUM
          SRP   FLD1,4,0
          TR    INPT,TABLE
