@@ -8,7 +8,7 @@ from v2.segment import Program
 
 
 class MacroTest(unittest.TestCase):
-    NUMBER_OF_FILES = 12
+    NUMBER_OF_FILES = 13
 
     def setUp(self) -> None:
         self.program = Program()
@@ -128,7 +128,13 @@ class MacroTest(unittest.TestCase):
         macro_name = 'UI2PF'
         self._common_checks(macro_name)
         self.assertEqual(98, self.macro.data_map['#UI2098'].dsp)
-        # self.assertEqual(0xF2, self.macro.data_map['#UI2NXT'].dsp)  # TODO Need SYSEQ macro
+        self.assertEqual(0x10, self.macro.data_map['#UI2XUI'].dsp)
+        self.assertEqual(0x08, self.macro.data_map['#UI2CAN'].dsp)
+
+    def test_AASEQ(self):
+        macro_name = 'AASEQ'
+        self._common_checks(macro_name)
+        self.assertEqual(0xF2, self.macro.data_map['#UI2NXT'].dsp)
 
 
 class SegmentTest(unittest.TestCase):
@@ -603,11 +609,11 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('R5', node.reg1.reg)
         self.assertEqual('R6', node.reg2.reg)
         # Check TS060110
-        node = self.seg.nodes['TS060110.1']
+        node = self.seg.nodes['TS060110']
         # LTR  R2, R2 with a single goes
         self.assertEqual('R2', node.reg2.reg)
-        self.assertSetEqual({'TS060110.2', 'TS060130'}, node.next_labels)
-        self.assertEqual('TS060110.2', node.fall_down)
+        self.assertSetEqual({'TS060110.1', 'TS060130'}, node.next_labels)
+        self.assertEqual('TS060110.1', node.fall_down)
         self.assertEqual('BNE', node.on)
         self.assertEqual('TS060130', node.goes)
         # LR    R2,R3
@@ -618,11 +624,11 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('TS060130', node.conditions[1].branch.name)
         self.assertEqual(7, node.conditions[1].mask)
         # LR    R3,R4
-        node = self.seg.nodes['TS060110.2']
+        node = self.seg.nodes['TS060110.1']
         self.assertEqual('R3', node.reg1.reg)
         self.assertEqual('R4', node.reg2.reg)
         # J     TS060100
-        node = self.seg.nodes['TS060110.3']
+        node = self.seg.nodes['TS060110.2']
         self.assertEqual('J', node.command)
         self.assertEqual('TS060100', node.branch.name)
         self.assertEqual(15, node.mask)
@@ -820,6 +826,9 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual(bytearray([0xF2, 0xD9]), self.seg.get_constant_bytes('FLZ'))
         # FLU      DC    C'-29'
         self.assertEqual(bytearray([0x60, 0xF2, 0xF9]), self.seg.get_constant_bytes('FLU'))
+        # BIG      DC    Y(ADR1-EXAM,L'ADR1-L'EXAM),X'23',YL1(EXAM+ADR1,L'ZON3+L'HALF1-EXAM+#UI2NXT)
+        self.assertEqual(bytearray([0x00, 0x07]), self.seg.get_constant_bytes('BIG'))
+        self.assertEqual(bytearray([0x00, 0x07, 0x00, 0x01, 0x23, 0x11, 0xF4]), self.seg.get_constant_bytes('BIG', 7))
 
     def test_dsect(self):
         seg_name = 'TS08'

@@ -10,7 +10,8 @@ TS040100 DS    0H               VALID FOR FIELD LEN
          BE    TS040110
          CLC   =C'C/',2(R2)
          BL    TS040110
-*        MVC   UI2INC(3),=AL1(#UI2XUI+#UI2CAN,#UI2NXT,#UI2NXT) TODO
+         UI2PF REG=R7
+         MVC   UI2INC(3),=AL1(#UI2XUI+#UI2CAN,#UI2NXT,#UI2NXT)
 TS040110 DS    0H
          MVC   23(L'CE1WKA,R3),26(R4)
 TS04E100 DS    0H               ERROR FOR FIELD LEN

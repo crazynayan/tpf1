@@ -55,12 +55,14 @@ class DsDc:
             dsdc.length = dsdc.length or data_type_object.length
             dsdc.data = data_type_object.to_bytes(dsdc.length)
         elif operands[5]:
-            number, result = macro.get_value(operands[5], location_counter)
-            if result != Error.NO_ERROR:
-                return dsdc, result
-            data_type_object = DataType(dsdc.data_type, input=str(number))
-            dsdc.length = dsdc.length or data_type_object.default_length
-            dsdc.data = data_type_object.to_bytes(dsdc.length)
+            dsdc.data = bytearray()
+            for operand in operands[5].split(','):
+                number, result = macro.get_value(operand, location_counter)
+                if result != Error.NO_ERROR:
+                    return dsdc, result
+                data_type_object = DataType(dsdc.data_type, input=str(number))
+                dsdc.length = dsdc.length or data_type_object.default_length
+                dsdc.data.extend(data_type_object.to_bytes(dsdc.length))
         else:
             dsdc.data = None
             dsdc.length = dsdc.length or DataType(dsdc.data_type).default_length
@@ -78,13 +80,11 @@ class Ds:
         if result != Error.NO_ERROR:
             return location_counter, result
         if line.label:
+            dsp = data.next_constant if data and dc.duplication_factor == 0 and name == macro.seg_name else dc.start
+            macro.data_map[line.label] = SymbolTable(line.label, dsp, dc.length, name)
             if dc.duplication_factor == 0 and name == macro.seg_name:
-                dsp = data.next_constant if data else dc.start
-                label_type = {SymbolTable.BRANCH, SymbolTable.CONSTANT}
-            else:
-                dsp = dc.start
-                label_type = None
-            macro.data_map[line.label] = SymbolTable(line.label, dsp, dc.length, name, label_type)
+                macro.data_map[line.label].set_branch()
+                macro.data_map[line.label].set_constant()
         location_counter = dc.end
         if len(operands) > 1:
             for operand in operands[1:]:
@@ -104,8 +104,8 @@ class Dc:
             return location_counter, result
         data.extend_constant([0x00] * dc.align_to_boundary)
         if line.label:
-            macro.data_map[line.label] = SymbolTable(line.label, data.next_constant, dc.length, name,
-                                                     {SymbolTable.CONSTANT})
+            macro.data_map[line.label] = SymbolTable(line.label, data.next_constant, dc.length, name)
+            macro.data_map[line.label].set_constant()
         location_counter = dc.end
         data.extend_constant(dc.data * dc.duplication_factor)
         if len(operands) > 1:
@@ -142,8 +142,9 @@ class Equ:
             length, result = macro.get_value(operands[1])
             if result != Error.NO_ERROR:
                 return location_counter, result
-        label_type = {SymbolTable.BRANCH} if location_counter == dsp and name == macro.seg_name else None
-        macro.data_map[line.label] = SymbolTable(line.label, dsp, length, name, label_type)
+        macro.data_map[line.label] = SymbolTable(line.label, dsp, length, name)
+        if location_counter == dsp and name == macro.seg_name:
+            macro.data_map[line.label].set_branch()
         return location_counter, Error.NO_ERROR
 
 
@@ -216,7 +217,8 @@ class Literal:
         dsp = data.next_literal
         data.extend_literal(literal.data * literal.duplication_factor)
         label = f"L{Label.SEPARATOR * 2}{dsp:05d}"
-        macro.data_map[label] = SymbolTable(label, dsp, literal.length, macro.seg_name, {SymbolTable.LITERAL})
+        macro.data_map[label] = SymbolTable(label, dsp, literal.length, macro.seg_name)
+        macro.data_map[label].set_literal()
         return label
 
 

@@ -112,8 +112,8 @@ class Segment:
                     self.errors.append(f'{result} {line} {self.name}')
             else:
                 if line.label:
-                    self.macro.data_map[line.label] = SymbolTable(line.label, location_counter, length, self.name,
-                                                                  SymbolTable.BRANCH)
+                    self.macro.data_map[line.label] = SymbolTable(line.label, location_counter, length, self.name)
+                    self.macro.data_map[line.label].set_branch()
                 location_counter += line.length
 
     def _assemble_instructions(self, lines):
@@ -178,6 +178,7 @@ class Program:
         self.macro = GlobalMacro()      # Instance of global macro.
         self.segments = dict()          # Dictionary of Segment. Segment name is the key.
         self.macro.load('EB0EB')
+        self.macro.load('AASEQ')
         for file_name in os.listdir(self.FOLDER_NAME):
             if len(file_name) < 6 or file_name[-4:].lower() not in self.EXT:
                 continue

@@ -151,7 +151,7 @@ class Line:
 
     def split_operands(self):
         # Split operands separated by commas. Ignore commas enclosed in parenthesis.
-        return re.split(r",(?![^()]*\))", self.operand)
+        return re.split(r",(?![^()]*\))", self.operand) if self.operand else list()
 
     def __repr__(self):
         return f'{self.label}:{self.command}:{self.operand}'
@@ -162,12 +162,12 @@ class SymbolTable:
     CONSTANT = 'Constant'       # type is constant then it indicates that this label was defined by DC
     LITERAL = 'Literal'         # type is literal then it indicates that was auto generated for an literal
 
-    def __init__(self, label, dsp, length, name, label_type=None):
+    def __init__(self, label, dsp, length, name):
         self.label = label
         self.dsp = dsp
         self.length = length
         self.name = name        # Macro name or Segment name or Dsect name
-        self.type = label_type  # TODO Add setter for label_type
+        self.type = set()
 
     def __repr__(self):
         return f'{self.label}:{self.dsp}:{self.length}:{self.name}:{self.type}'
@@ -183,6 +183,15 @@ class SymbolTable:
     @property
     def is_literal(self):
         return self.LITERAL in self.type if self.type else False
+
+    def set_branch(self):
+        self.type.add(self.BRANCH)
+
+    def set_constant(self):
+        self.type.add(self.CONSTANT)
+
+    def set_literal(self):
+        self.type.add(self.LITERAL)
 
 
 class Label:

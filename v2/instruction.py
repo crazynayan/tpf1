@@ -506,11 +506,14 @@ class KeyValue(Instruction):
 class DataMacroDeclaration:
     def __init__(self, line, macro):
         data_macro, result = KeyValue().set_operand(line, macro)
-        base = Register(data_macro.get_value('REG'))
-        if result == Error.NO_ERROR and base.is_valid():
-            macro.load(line.command, base.reg)
+        if data_macro.is_key('REG'):
+            base = Register(data_macro.get_value('REG'))
+            if result == Error.NO_ERROR and base.is_valid():
+                macro.load(line.command, base.reg)
+            else:
+                raise TypeError
         else:
-            raise TypeError
+            macro.load(line.command)
 
 
 class InstructionType:

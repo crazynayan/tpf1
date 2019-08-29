@@ -33,4 +33,6 @@ FLX      DC    FL5'-1'
 FLY      DC    PL2'4096'
 FLZ      DC    ZL2'-29''
 FLU      DC    C'-29'
+BIG      DC    Y(ADR1-EXAM,L'ADR1-L'EXAM),X'23',YL1(EXAM+ADR1,L'ZON3+L'X
+               HALF1-EXAM+#UI2NXT)
          EQU   23

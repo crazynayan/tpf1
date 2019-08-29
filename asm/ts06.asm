@@ -8,13 +8,12 @@ TS060100 DS    0H
          LR    R3,R4
          JP    TS060130
          LR    R5,R6
-TS060110 DS    0H
-         LTR   R2,R2
+TS060110 LTR   R2,R2
          LR    R2,R3
          JC    7,TS060130
          LR    R3,R4
          J     TS060100
-TS060120 DS    0H
+TS060120 EQU   *
          LTR   R3,R3
          BC    8,TS060110
          AR    R5,R2
