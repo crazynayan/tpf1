@@ -6,15 +6,6 @@ from v2.data_type import DataType, Register
 from v2.directive import AssemblerDirective
 
 
-class MacroFile:
-    def __init__(self, file_name):
-        self.file_name = file_name
-        self.data_mapped = False
-
-    def __repr__(self):
-        return f'{self.file_name}:{self.data_mapped}'
-
-
 class DataMacro:
     ACCEPTED_COMMANDS = {'DS', 'EQU', 'ORG', 'DSECT', 'DC'}
 
@@ -73,7 +64,6 @@ class SegmentMacro:
         self.dsect = None
         self.using = dict()
         self.using_stack = list()
-        self.errors = list()
         self.data_macro = set()
 
     def __repr__(self):

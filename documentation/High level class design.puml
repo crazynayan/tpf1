@@ -5,12 +5,14 @@
 
 class Program <<Singleton>> {
     foreign_key(segments)
-    foreign_key(macro)
+    foreign_key(macros)
 }
 
-class GlobalMacro <<Singleton>> {
-    foreign_key(global_map)
-    foreign_key(files)
+class DataMacro {
+    primary_key(name)
+    file_name
+    loaded
+    foreign_key(symbol_table)
     .. list ..
     errors
 }
@@ -45,12 +47,9 @@ class SegmentMacro {
     dsect
     using
     using_stack
+    data_macro
 }
 
-class MacroFile {
-    primary_key(file_name)
-    data_mapped
-}
 
 class Data {
     .. bytearray ..
@@ -67,13 +66,12 @@ class Instruction {
     .. different types..
     <<operand>>
 }
-Program::macro  -->  GlobalMacro : has
-Program::segments  --> "Many" Segment : contains
-GlobalMacro::global_map --> "Many" SymbolTable : contains
+Program::macros --> "Many" DataMacro : contains
+Program::segments --> "Many" Segment : contains
+DataMacro::symbol_table --> "Many" SymbolTable : contains
 Segment::macro  -->  SegmentMacro : has
 SegmentMacro::global_program --> Program : refers to
 SegmentMacro::data_map  --> "Many" SymbolTable : contains
-GlobalMacro::files  --> "Many" MacroFile : contains
 Segment::data --> Data : has
 Segment::nodes --> "Many" Instruction : contains
 
