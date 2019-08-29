@@ -7,7 +7,7 @@ from v2.errors import Error
 from v2.file_line import File, Line, SymbolTable, Label
 from v2.directive import AssemblerDirective
 from v2.instruction import InstructionType, DataMacroDeclaration
-from v2.macro import GlobalMacro, SegmentMacro
+from v2.macro import SegmentMacro, DataMacro
 
 
 class Data:
@@ -82,7 +82,7 @@ class Segment:
         if self.assembled:
             return True
         # Init Macro
-        self.macro.copy_from_global()
+        self.macro.copy_default_from_global()
         self.macro.set_using(self.name, 'R8')
         self.macro.set_using('EB0EB', 'R9')
         # Get the data from line after removing CVS and empty lines.
@@ -171,23 +171,31 @@ class Segment:
 
 
 class Program:
-    EXT = {'.asm', '.txt'}
-    FOLDER_NAME = os.path.join(config.ROOT_DIR, 'asm')
+    ASM_EXT = {'.asm', '.txt'}
+    ASM_FOLDER_NAME = os.path.join(config.ROOT_DIR, 'asm')
+    MAC_EXT = {'.mac', '.txt'}
+    MAC_FOLDER_NAME = os.path.join(config.ROOT_DIR, 'macro')
 
     def __init__(self):
-        self.macro = GlobalMacro()      # Instance of global macro.
         self.segments = dict()          # Dictionary of Segment. Segment name is the key.
-        self.macro.load('EB0EB')
-        self.macro.load('AASEQ')
-        for file_name in os.listdir(self.FOLDER_NAME):
-            if len(file_name) < 6 or file_name[-4:].lower() not in self.EXT:
+        self.macros = dict()
+        for file_name in os.listdir(self.ASM_FOLDER_NAME):
+            if len(file_name) < 6 or file_name[-4:].lower() not in self.ASM_EXT:
                 continue
             seg_name = file_name[:-4].upper()
             seg_macro = SegmentMacro(self, seg_name)
-            self.segments[seg_name] = Segment(os.path.join(self.FOLDER_NAME, file_name), seg_name, seg_macro)
+            self.segments[seg_name] = Segment(os.path.join(self.ASM_FOLDER_NAME, file_name), seg_name, seg_macro)
+        for file_name in os.listdir(self.MAC_FOLDER_NAME):
+            if len(file_name) < 6 or file_name[-4:].lower() not in self.MAC_EXT:
+                continue
+            macro_name = file_name[:-4].upper()
+            self.macros[macro_name] = DataMacro(macro_name, os.path.join(self.MAC_FOLDER_NAME, file_name))
 
     def __repr__(self):
-        return f"Program:{len(self.segments)}"
+        return f"Program:S={len(self.segments)}:M={len(self.macros)}"
 
     def load(self, seg_name):
         self.segments[seg_name].load()
+
+    def is_macro_present(self, macro_name):
+        return macro_name in self.macros

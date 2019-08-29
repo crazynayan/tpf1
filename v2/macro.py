@@ -1,9 +1,7 @@
 import re
-import os
 
-from config import config
 from v2.errors import Error
-from v2.file_line import File, Line
+from v2.file_line import File, Line, SymbolTable
 from v2.data_type import DataType, Register
 from v2.directive import AssemblerDirective
 
@@ -17,30 +15,24 @@ class MacroFile:
         return f'{self.file_name}:{self.data_mapped}'
 
 
-class GlobalMacro:
-    EXT = {'.mac', '.txt'}
-    FOLDER_NAME = os.path.join(config.ROOT_DIR, 'macro')
+class DataMacro:
     ACCEPTED_COMMANDS = {'DS', 'EQU', 'ORG', 'DSECT', 'DC'}
 
-    def __init__(self):
-        self.global_map = dict()  # Dictionary of SymbolTable. Field name is the key.
-        self.files = dict()     # Dictionary of MacroFile. Marco name is the key.
+    def __init__(self, name, file_name=None):
+        self.name = name
+        self.file_name = file_name
+        self.loaded = False
+        self.symbol_table = dict()
         self.errors = list()
-        for file_name in os.listdir(self.FOLDER_NAME):
-            if len(file_name) < 6 or file_name[-4:] not in self.EXT:
-                continue
-            macro_file = MacroFile(os.path.join(self.FOLDER_NAME, file_name))
-            self.files[file_name[:-4].upper()] = macro_file
 
     def __repr__(self):
-        return f"GlobalMacro:{len(self.files)}:{len(self.global_map)}"
+        return f"{self.name}:{self.loaded}:{len(self.symbol_table)}"
 
-    def is_loaded(self, macro_name):
-        return self.files[macro_name].data_mapped
-
-    def load(self, macro_name):
+    def load(self):
+        if self.loaded:
+            return
         # Get the data from line after removing CVS and empty lines.
-        file_lines = File.open(self.files[macro_name].file_name)
+        file_lines = File.open(self.file_name)
         # Create a list of Line objects
         lines = Line.from_file(file_lines)
         # Remove suffix like &CG1 from label and only keep the accepted commands.
@@ -52,27 +44,27 @@ class GlobalMacro:
         for line in lines:
             if not line.is_first_pass:
                 continue
-            assembler_directive = AssemblerDirective(line.command)
-            location_counter, result = assembler_directive.update(line=line, macro=macro, data=None,
-                                                                  location_counter=location_counter, name=macro_name)
+            location_counter, result = AssemblerDirective.from_line(line=line, macro=macro, data=None,
+                                                                    location_counter=location_counter, name=self.name)
             if result != Error.NO_ERROR:
                 second_list.append((line, location_counter))
         # Add the saved equates which were not added in the first pass
         assembler_directive = AssemblerDirective('EQU')
-        assembler_directive.second_pass(second_list, macro, macro_name, self.errors)
+        assembler_directive.second_pass(second_list, macro, self.name, self.errors)
         # Add the saved DS which were not added in the first pass
         assembler_directive = AssemblerDirective('DS')
-        assembler_directive.second_pass(second_list, macro, macro_name, self.errors)
+        assembler_directive.second_pass(second_list, macro, self.name, self.errors)
         # Move the data_map into global_map
-        self.global_map = {**self.global_map, **macro.data_map}
+        self.symbol_table = macro.data_map
         # Indicate data is mapped for that macro
-        self.files[macro_name].data_mapped = True
-        return macro.data_map
+        self.loaded = True
+        return
 
 
 class SegmentMacro:
     FIELD_LOOKUP = '$FIELD_LOOKUP$'
     INTEGER = '$INTEGER$'
+    DEFAULT_MACRO_LOAD = {'EB0EB', 'AASEQ'}
 
     def __init__(self, program=None, name=None):
         self.seg_name = name                # Segment name for which this instance is created.
@@ -81,26 +73,38 @@ class SegmentMacro:
         self.dsect = None
         self.using = dict()
         self.using_stack = list()
+        self.errors = list()
+        self.data_macro = set()
 
     def __repr__(self):
-        return f"Macro:{self.seg_name}:{len(self.data_map)}"
-
-    @property
-    def errors(self):
-        return self.global_program.macro.errors
+        return f"SegmentMacro:{self.seg_name}:{len(self.data_map)}"
 
     def is_branch(self, label):
         return self.data_map[label].is_branch if label in self.data_map else False
 
-    def load(self, macro_name, base=None):
-        if not self.global_program.macro.is_loaded(macro_name):
-            filtered_data_map = self.global_program.macro.load(macro_name)
-        else:
-            filtered_data_map = {label: symbol_table for label, symbol_table in
-                                 self.global_program.macro.global_map.items() if symbol_table.name == macro_name}
-        self.data_map = {**self.data_map, **filtered_data_map}
-        if base is not None and Register(base).is_valid():
-            self.set_using(macro_name, base)
+    def is_present(self, macro_name):
+        return self.global_program.is_macro_present(macro_name)
+
+    def copy_default_from_global(self):
+        for macro_name in self.DEFAULT_MACRO_LOAD:
+            self.load(macro_name)
+
+    def load(self, macro_name, base=None, suffix=None):
+        self.global_program.macros[macro_name].load()
+        if suffix is not None:
+            original_name = macro_name
+            macro_name = macro_name + suffix
+            new_symbol_table = {label + suffix: SymbolTable(label + suffix, entry.dsp, entry.length, macro_name)
+                                for label, entry in self.global_program.macros[original_name].symbol_table.items()}
+            self.data_map = {**self.data_map, **new_symbol_table}
+        elif macro_name not in self.data_macro:
+            self.data_map = {**self.data_map, **self.global_program.macros[macro_name].symbol_table}
+            self.data_macro.add(macro_name)
+        if base is not None:
+            if Register(base).is_valid():
+                self.set_using(macro_name, base)
+            else:
+                raise TypeError
 
     def get_value(self, operand, location_counter=None):
         if operand.isdigit():
@@ -153,15 +157,6 @@ class SegmentMacro:
         if using_name is not None:
             del self.using[using_name]
         self.using[dsect] = reg
-
-    def is_present(self, macro_name):
-        return macro_name in self.global_program.macro.files
-
-    def is_loaded(self, macro_name):
-        return self.global_program.macro.is_loaded(macro_name)
-
-    def copy_from_global(self):
-        self.data_map = self.global_program.macro.global_map.copy()
 
     def get_macro_name(self, base):
         # Will raise a StopIteration exception if the base register is not present.

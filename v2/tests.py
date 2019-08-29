@@ -3,7 +3,6 @@ import unittest
 from v2.errors import Error
 from v2.file_line import Line
 from v2.instruction import InstructionType
-from v2.macro import SegmentMacro
 from v2.segment import Program
 
 
@@ -12,61 +11,62 @@ class MacroTest(unittest.TestCase):
 
     def setUp(self) -> None:
         self.program = Program()
-        self.macro = SegmentMacro(self.program)
+        self.macro = None
 
     def test_files(self):
-        self.assertTrue(self.macro.is_present('WA0AA'))
-        self.assertTrue(self.macro.is_present('EB0EB'))
-        self.assertFalse(self.macro.is_present('ETA5'))
-        self.assertEqual(self.NUMBER_OF_FILES, len(self.macro.global_program.macro.files),
+        self.assertTrue(self.program.is_macro_present('WA0AA'))
+        self.assertTrue(self.program.is_macro_present('EB0EB'))
+        self.assertFalse(self.program.is_macro_present('ETA5'))
+        self.assertEqual(self.NUMBER_OF_FILES, len(self.program.macros),
                          'Update number of files in MacroTest')
 
     def _common_checks(self, macro_name, accepted_errors_list=None):
         accepted_errors_list = list() if accepted_errors_list is None else accepted_errors_list
-        self.macro.load(macro_name)
+        self.macro = self.program.macros[macro_name]
+        self.macro.load()
         self.assertListEqual(accepted_errors_list, self.macro.errors, '\n\n\n' + '\n'.join(list(
             set(self.macro.errors) - set(accepted_errors_list))))
-        self.assertTrue(self.macro.is_loaded(macro_name))
+        self.assertTrue(self.program.macros[macro_name].loaded)
 
     def test_WA0AA(self):
         macro_name = 'WA0AA'
         self._common_checks(macro_name)
-        self.assertEqual(100, self.macro.data_map['WA0OUT'].length)
-        self.assertEqual(0x60, self.macro.data_map['WA0OUT'].dsp)
-        self.assertEqual(0x2c, self.macro.data_map['WA0TTO'].dsp)
-        self.assertEqual(0x180, self.macro.data_map['WA0ORG'].dsp)
-        self.assertEqual(0x182, self.macro.data_map['WA0ITC'].dsp)
-        self.assertEqual(148, self.macro.data_map['WA0ITS'].length)
-        self.assertEqual(11, self.macro.data_map['WA2TSD'].length)
-        self.assertEqual(0x218, self.macro.data_map['WA2TSD'].dsp)
-        self.assertEqual(0x218, self.macro.data_map['WA2TAG'].dsp)
-        self.assertEqual(0x10, self.macro.data_map['#WA0TTY'].dsp)
-        self.assertEqual(0x3c6, self.macro.data_map['WA2LS3'].dsp)
-        self.assertEqual(0x314, self.macro.data_map['WA2VFD'].dsp)
-        self.assertEqual(178, self.macro.data_map['WA2VFD'].length)
-        self.assertEqual(0x41e, self.macro.data_map['WA0AAZ'].dsp)
-        self.assertEqual(48, self.macro.data_map['WA2AOF'].length)
+        self.assertEqual(100, self.macro.symbol_table['WA0OUT'].length)
+        self.assertEqual(0x60, self.macro.symbol_table['WA0OUT'].dsp)
+        self.assertEqual(0x2c, self.macro.symbol_table['WA0TTO'].dsp)
+        self.assertEqual(0x180, self.macro.symbol_table['WA0ORG'].dsp)
+        self.assertEqual(0x182, self.macro.symbol_table['WA0ITC'].dsp)
+        self.assertEqual(148, self.macro.symbol_table['WA0ITS'].length)
+        self.assertEqual(11, self.macro.symbol_table['WA2TSD'].length)
+        self.assertEqual(0x218, self.macro.symbol_table['WA2TSD'].dsp)
+        self.assertEqual(0x218, self.macro.symbol_table['WA2TAG'].dsp)
+        self.assertEqual(0x10, self.macro.symbol_table['#WA0TTY'].dsp)
+        self.assertEqual(0x3c6, self.macro.symbol_table['WA2LS3'].dsp)
+        self.assertEqual(0x314, self.macro.symbol_table['WA2VFD'].dsp)
+        self.assertEqual(178, self.macro.symbol_table['WA2VFD'].length)
+        self.assertEqual(0x41e, self.macro.symbol_table['WA0AAZ'].dsp)
+        self.assertEqual(48, self.macro.symbol_table['WA2AOF'].length)
 
     def test_EB0EB(self):
         macro_name = 'EB0EB'
         self._common_checks(macro_name)
-        self.assertEqual(8, self.macro.data_map['EBW000'].dsp)
-        self.assertEqual(0x70, self.macro.data_map['EBT000'].dsp)
-        self.assertEqual(0xD4, self.macro.data_map['EBSW01'].dsp)
-        self.assertEqual(8, self.macro.data_map['CE1ERS15'].length)
-        self.assertEqual(0x2c8, self.macro.data_map['CE1SSQ'].dsp)
+        self.assertEqual(8, self.macro.symbol_table['EBW000'].dsp)
+        self.assertEqual(0x70, self.macro.symbol_table['EBT000'].dsp)
+        self.assertEqual(0xD4, self.macro.symbol_table['EBSW01'].dsp)
+        self.assertEqual(8, self.macro.symbol_table['CE1ERS15'].length)
+        self.assertEqual(0x2c8, self.macro.symbol_table['CE1SSQ'].dsp)
 
     def test_SH0HS(self):
         macro_name = 'SH0HS'
         self._common_checks(macro_name)
-        self.assertEqual(20, self.macro.data_map['SH0EQT'].length)
-        self.assertEqual(14, self.macro.data_map['SH0CON'].dsp)
-        self.assertEqual(0x2a6, self.macro.data_map['SH0SKP'].dsp)
-        self.assertEqual(1, self.macro.data_map['SH0SKP'].length)
-        self.assertEqual(0x2a8, self.macro.data_map['SH0FLD'].dsp)
-        self.assertEqual(0x323, self.macro.data_map['SH0EQT'].dsp)
-        self.assertEqual(0x337, self.macro.data_map['SH0SMK'].dsp)
-        self.assertEqual(16, self.macro.data_map['SH0SMK'].length)
+        self.assertEqual(20, self.macro.symbol_table['SH0EQT'].length)
+        self.assertEqual(14, self.macro.symbol_table['SH0CON'].dsp)
+        self.assertEqual(0x2a6, self.macro.symbol_table['SH0SKP'].dsp)
+        self.assertEqual(1, self.macro.symbol_table['SH0SKP'].length)
+        self.assertEqual(0x2a8, self.macro.symbol_table['SH0FLD'].dsp)
+        self.assertEqual(0x323, self.macro.symbol_table['SH0EQT'].dsp)
+        self.assertEqual(0x337, self.macro.symbol_table['SH0SMK'].dsp)
+        self.assertEqual(16, self.macro.symbol_table['SH0SMK'].length)
 
     def test_PR001W(self):
         macro_name = 'PR001W'
@@ -76,18 +76,18 @@ class MacroTest(unittest.TestCase):
             f"{Error.EXP_INVALID_KEY_X} #PR001WI:EQU:X'&SW00WID' {macro_name}",
         ]
         self._common_checks(macro_name, accepted_errors_list)
-        self.assertEqual(0, self.macro.data_map['PR00HDR'].dsp)
-        self.assertEqual(0, self.macro.data_map['PR00REC'].dsp)
-        self.assertEqual(3, self.macro.data_map['PR00ORG'].dsp)
-        self.assertEqual(40, self.macro.data_map['#PR00_00_TYP_040'].dsp)
-        self.assertEqual(20, self.macro.data_map['PR00E54'].dsp)
-        self.assertEqual(20, self.macro.data_map['#PR00L54'].dsp)
-        self.assertEqual(0xd5, self.macro.data_map['#PR00_00_NEWITEM'].dsp)
-        self.assertEqual(0x40, self.macro.data_map['#PR00_72_RFIC_NOEMD'].dsp)
-        self.assertEqual(0x108 - 0x02d, self.macro.data_map['PR00_D4_HPFPT_GRP'].length)
-        self.assertEqual(2, self.macro.data_map['#PR00_X1_TYP1'].length)
-        self.assertEqual(4, self.macro.data_map['#PR00_X1_TYP1'].dsp)
-        self.assertEqual(6, self.macro.data_map['PR00_X1_PD_EXTDATA'].dsp)
+        self.assertEqual(0, self.macro.symbol_table['PR00HDR'].dsp)
+        self.assertEqual(0, self.macro.symbol_table['PR00REC'].dsp)
+        self.assertEqual(3, self.macro.symbol_table['PR00ORG'].dsp)
+        self.assertEqual(40, self.macro.symbol_table['#PR00_00_TYP_040'].dsp)
+        self.assertEqual(20, self.macro.symbol_table['PR00E54'].dsp)
+        self.assertEqual(20, self.macro.symbol_table['#PR00L54'].dsp)
+        self.assertEqual(0xd5, self.macro.symbol_table['#PR00_00_NEWITEM'].dsp)
+        self.assertEqual(0x40, self.macro.symbol_table['#PR00_72_RFIC_NOEMD'].dsp)
+        self.assertEqual(0x108 - 0x02d, self.macro.symbol_table['PR00_D4_HPFPT_GRP'].length)
+        self.assertEqual(2, self.macro.symbol_table['#PR00_X1_TYP1'].length)
+        self.assertEqual(4, self.macro.symbol_table['#PR00_X1_TYP1'].dsp)
+        self.assertEqual(6, self.macro.symbol_table['PR00_X1_PD_EXTDATA'].dsp)
 
     def test_TR1GAA(self):
         macro_name = 'TR1GAA'
@@ -101,40 +101,40 @@ class MacroTest(unittest.TestCase):
     def test_PD0WRK(self):
         macro_name = 'PD0WRK'
         self._common_checks(macro_name)
-        self.assertEqual(256, self.macro.data_map['#PD0_TYP07'].dsp)
-        self.assertEqual(0x8000, self.macro.data_map['#PD0_TYP00'].dsp)
-        self.assertEqual(0xf000, self.macro.data_map['#PD0_AIR'].dsp)
-        self.assertEqual(0xf040, self.macro.data_map['#PD0_AIRO'].dsp)
-        self.assertEqual(0x130, self.macro.data_map['#PD0_HOTEL'].dsp)
-        self.assertEqual(0x706, self.macro.data_map['PD0_IN_KEY'].dsp)
-        self.assertEqual(0x030, self.macro.data_map['PD9_PAR_VD'].dsp)
-        self.assertEqual(0xf9a, self.macro.data_map['PD0_U_W00'].dsp)
-        self.assertEqual(0xe9c, self.macro.data_map['PD0_ADR_PHDR'].dsp)
-        self.assertEqual(0x0b0, self.macro.data_map['PD0_C_ITM'].dsp)
+        self.assertEqual(256, self.macro.symbol_table['#PD0_TYP07'].dsp)
+        self.assertEqual(0x8000, self.macro.symbol_table['#PD0_TYP00'].dsp)
+        self.assertEqual(0xf000, self.macro.symbol_table['#PD0_AIR'].dsp)
+        self.assertEqual(0xf040, self.macro.symbol_table['#PD0_AIRO'].dsp)
+        self.assertEqual(0x130, self.macro.symbol_table['#PD0_HOTEL'].dsp)
+        self.assertEqual(0x706, self.macro.symbol_table['PD0_IN_KEY'].dsp)
+        self.assertEqual(0x030, self.macro.symbol_table['PD9_PAR_VD'].dsp)
+        self.assertEqual(0xf9a, self.macro.symbol_table['PD0_U_W00'].dsp)
+        self.assertEqual(0xe9c, self.macro.symbol_table['PD0_ADR_PHDR'].dsp)
+        self.assertEqual(0x0b0, self.macro.symbol_table['PD0_C_ITM'].dsp)
 
     def test_WI0BS(self):
         macro_name = 'WI0BS'
         self._common_checks(macro_name)
-        self.assertEqual(15, self.macro.data_map['#WI0BSG'].dsp)
+        self.assertEqual(15, self.macro.symbol_table['#WI0BSG'].dsp)
 
     def test_PNRCM(self):
         macro_name = 'PNRCM'
         self._common_checks(macro_name)
-        self.assertEqual(52, self.macro.data_map['PM1WRK'].length)
-        self.assertEqual(0xc, self.macro.data_map['PM1LOC'].dsp)
-        self.assertEqual(18, self.macro.data_map['PM1ERR'].dsp)
+        self.assertEqual(52, self.macro.symbol_table['PM1WRK'].length)
+        self.assertEqual(0xc, self.macro.symbol_table['PM1LOC'].dsp)
+        self.assertEqual(18, self.macro.symbol_table['PM1ERR'].dsp)
 
     def test_UI2PF(self):
         macro_name = 'UI2PF'
         self._common_checks(macro_name)
-        self.assertEqual(98, self.macro.data_map['#UI2098'].dsp)
-        self.assertEqual(0x10, self.macro.data_map['#UI2XUI'].dsp)
-        self.assertEqual(0x08, self.macro.data_map['#UI2CAN'].dsp)
+        self.assertEqual(98, self.macro.symbol_table['#UI2098'].dsp)
+        self.assertEqual(0x10, self.macro.symbol_table['#UI2XUI'].dsp)
+        self.assertEqual(0x08, self.macro.symbol_table['#UI2CAN'].dsp)
 
     def test_AASEQ(self):
         macro_name = 'AASEQ'
         self._common_checks(macro_name)
-        self.assertEqual(0xF2, self.macro.data_map['#UI2NXT'].dsp)
+        self.assertEqual(0xF2, self.macro.symbol_table['#UI2NXT'].dsp)
 
 
 class SegmentTest(unittest.TestCase):
@@ -170,8 +170,6 @@ class SegmentTest(unittest.TestCase):
             f"{Error.FBD_INVALID_DSP} TS010010.9:OI:-1(R2),1 {seg_name}",
             f"{Error.FBD_INVALID_DSP} TS010010.10:OI:4096(R2),1 {seg_name}",
         ]
-        self.program.macro.load('PD0WRK')
-        del self.program.macro.files['PD0WRK']
         self._common_checks(seg_name, accepted_errors_list)
         # Check EBW008-EBW000(2),1
         label = '$$TS01$$.1'
@@ -376,6 +374,20 @@ class SegmentTest(unittest.TestCase):
         literal = self.seg.nodes[label].field.name
         self.assertTrue(self.seg.macro.data_map[literal].is_literal)
         self.assertEqual(bytearray([0x00, 0x00, 0x00, 0x1F]), self.seg.get_constant_bytes(literal))
+        # L     R6,PD0_RT_ADR
+        label = '$$TS03$$.15'
+        self.assertEqual('R4', self.seg.nodes[label].field.base.reg)
+        self.assertEqual(0x078, self.seg.nodes[label].field.dsp)
+        field_name = self.seg.nodes[label].field.name
+        self.assertEqual(4, self.seg.macro.data_map[field_name].length)
+        self.assertEqual('PD0WRK', self.seg.macro.data_map[field_name].name)
+        # L     R6,PD0_RT_ADRX
+        label = '$$TS03$$.16'
+        self.assertEqual('R5', self.seg.nodes[label].field.base.reg)
+        self.assertEqual(0x078, self.seg.nodes[label].field.dsp)
+        field_name = self.seg.nodes[label].field.name
+        self.assertEqual(4, self.seg.macro.data_map[field_name].length)
+        self.assertEqual('PD0WRKX', self.seg.macro.data_map[field_name].name)
 
     def test_field_variants(self):
         seg_name = 'TS04'
@@ -575,9 +587,9 @@ class SegmentTest(unittest.TestCase):
             f"{Error.BC_INVALID_BRANCH} TS06E100.5:BNZ:1000(R8) {seg_name}",
             f"{Error.FBD_INVALID_KEY} TS06E100.6:JE:TS061000 {seg_name}",
         ]
-        self.assertRaises(ValueError, InstructionType.from_line, Line.from_line(" BC TS060100"), self.program.macro)
-        self.assertRaises(ValueError, InstructionType.from_line, Line.from_line(" JC A,TS060100"), self.program.macro)
         self._common_checks(seg_name, accepted_errors_list)
+        self.assertRaises(ValueError, InstructionType.from_line, Line.from_line(" BC TS060100"), self.seg.macro)
+        self.assertRaises(ValueError, InstructionType.from_line, Line.from_line(" JC A,TS060100"), self.seg.macro)
         # Check TS060100
         node = self.seg.nodes['TS060100.1']
         # LTR  R1, R1 with multiple goes

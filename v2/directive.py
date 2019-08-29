@@ -74,7 +74,7 @@ class DsDc:
 
 class Ds:
     @staticmethod
-    def update(line, macro, location_counter, name, data):
+    def update(line, macro, location_counter, name, data, **_):
         operands = line.split_operands()
         dc, result = DsDc.from_operand(operands[0], macro, location_counter)
         if result != Error.NO_ERROR:
@@ -97,7 +97,7 @@ class Ds:
 
 class Dc:
     @staticmethod
-    def update(line, macro, location_counter, name, data):
+    def update(line, macro, location_counter, name, data, **_):
         operands = line.split_operands()
         dc, result = DsDc.from_operand(operands[0], macro, location_counter)
         if result != Error.NO_ERROR:

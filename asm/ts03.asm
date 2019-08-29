@@ -15,6 +15,10 @@
          L     R1,12
          CH    R15,=H'99'
          N     R0,=A(X'1F')
+         PD0WRK REG=R4
+         PD0WRK REG=R5,SUFFIX=X
+         L     R6,PD0_RT_ADR
+         L     R6,PD0_RT_ADRX
 TS03E010 DS    0H                   ERROR PATHS
          L     R16,EBW000
          LA    R1,2(R1,R3,R4)
