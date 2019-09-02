@@ -688,7 +688,7 @@ class InstructionType:
         'RELCC': KeyValue,
         'CRUSA': KeyValue,
         'PNRCM': KeyValue,
-        'GLOBZ': KeyValue,
+        'GLOBZ': KeyValue,  # TODO Create GLOBZ class and macro
         'SYSRA': KeyValue,
         'DBRED': KeyValue,
         'SENDA': KeyValue,
@@ -697,6 +697,9 @@ class InstructionType:
         'DBCLS': KeyValue,
         'DBIFB': KeyValue,
         'PDRED': KeyValue,
+        'LTORG': KeyValue,
+        'FINIS': KeyValue,
+        'END': KeyValue,
     }
 
     def __init__(self, ins_type):

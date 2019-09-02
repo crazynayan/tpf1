@@ -127,13 +127,21 @@ class Equ:
         operands = line.split_operands()
         dsp_operand = operands[0]
         length = 1
-        if dsp_operand == '*' or not set("+-*").intersection(dsp_operand):
-            dsp, data_type, result = macro.evaluate(dsp_operand, location_counter)
-            if result != Error.NO_ERROR:
-                return location_counter, result
-            if data_type == macro.FIELD_LOOKUP:
-                dsp_operand = next(iter(dsp_operand.split('&')))
-                length = macro.data_map[dsp_operand].length
+        if dsp_operand == '*':
+            dsp = location_counter
+        elif not set("+-*").intersection(dsp_operand):
+            if dsp_operand.isdigit():
+                dsp = int(dsp_operand)
+            elif re.match(r"^[CXHFDBZPAY]'[^']+'$", dsp_operand) is not None:
+                if '&' in dsp_operand:
+                    return location_counter, Error.EQU_INVALID_VALUE
+                dsp = DataType(dsp_operand[0], input=dsp_operand[2:-1]).value
+            else:
+                field, result = macro.lookup(dsp_operand)
+                if result != Error.NO_ERROR:
+                    return location_counter, result
+                dsp = field.dsp
+                length = field.length
         else:
             dsp, result = macro.get_value(dsp_operand, location_counter)
             if result != Error.NO_ERROR:
@@ -168,7 +176,7 @@ class Csect:
 
 
 class Org:
-    @staticmethod
+    @staticmethod   # TODO Code for ORG with no operands
     def update(line, macro, location_counter, **_):
         return macro.get_value(line.operand, location_counter)
 

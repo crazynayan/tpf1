@@ -35,7 +35,7 @@ class File:
         if char in cls.TRIM:
             lines = [line[cls.TRIM[char]:] for line in lines]
         # Remove comments
-        lines = [line for line in lines if line[0] not in cls.COMMENT_C1]
+        lines = [line for line in lines if line and line[0] not in cls.COMMENT_C1]
         return lines
 
 
@@ -135,6 +135,10 @@ class Line:
         return True if cmd.check(self.command, 'directive') else False
 
     @property
+    def is_sw00sr(self):
+        return True if cmd.check(self.command, 'sw00sr') else False
+
+    @property
     def is_check_cc(self):
         return True if cmd.check(self.command, 'check_cc') and \
                        (self.command not in ['BC', 'JC'] or self.operand[:2] not in ['15', '0,']) else False
@@ -162,7 +166,7 @@ class SymbolTable:
     CONSTANT = 'Constant'       # type is constant then it indicates that this label was defined by DC
     LITERAL = 'Literal'         # type is literal then it indicates that was auto generated for an literal
 
-    def __init__(self, label, dsp, length, name):
+    def __init__(self, label=None, dsp=None, length=None, name=None):
         self.label = label
         self.dsp = dsp
         self.length = length

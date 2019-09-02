@@ -7,4 +7,4 @@ static/
 .gcloudignore
 tpf1-key.json
 macro/
-eta5.asm
+asm/eta5.asm

@@ -356,19 +356,23 @@
     },
     "DBCLS": {
         "create": "KeyValue",
-        "len": 4
+        "len": 4,
+        "sw00sr": 1
     },
     "DBIFB": {
         "create": "KeyValue",
-        "len": 4
+        "len": 4,
+        "sw00sr": 1
     },
     "DBOPN": {
         "create": "KeyValue",
-        "len": 4
+        "len": 4,
+        "sw00sr": 1
     },
     "DBRED": {
         "create": "KeyValue",
-        "len": 4
+        "len": 4,
+        "sw00sr": 1
     },
     "DC": {
         "create": "Dc",
@@ -426,7 +430,7 @@
         "first_pass": 1
     },
     "EX": {
-        "create": "KeyValue",
+        "create": "RegisterLabel",
         "len": 4,
         "set_cc": 1
     },

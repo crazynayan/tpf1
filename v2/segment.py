@@ -154,6 +154,9 @@ class Segment:
     def _process_assembler_directive(self, line):
         # return True -> skip creating node.
         # return False -> continue creating the node.
+        if line.is_sw00sr:
+            DataMacroDeclaration(Line.from_line(" SW00SR REG=R3"), self.macro)
+            return False
         if line.label and self.macro.is_branch(line.label):
             return False
         if line.is_first_pass:

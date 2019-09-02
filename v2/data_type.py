@@ -511,10 +511,10 @@ class Bits:
                 self.set_from_number(number)
                 # Add the name from the expression
                 for expression in re.split(f"[+-]", operand):
-                    value, data_type, result = macro.evaluate(expression)
-                    if result == Error.NO_ERROR and data_type == macro.FIELD_LOOKUP:
-                        if value in self.VALID_VALUE:
-                            self.set_name(expression, value)
+                    field, lookup_result = macro.lookup(expression)
+                    if lookup_result == Error.NO_ERROR:
+                        if field.dsp in self.VALID_VALUE:
+                            self.set_name(expression, field.dsp)
                         else:
                             result = Error.BITS_INVALID_BIT
         return result

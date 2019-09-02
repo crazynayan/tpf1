@@ -2,9 +2,7 @@ class Error:
     NO_ERROR = 0
     DS_DUP_FACTOR = 'DS - Duplication factor is not a number.'
     EXP_INVALID_KEY = 'Expression - Field not present in data map.'
-    EXP_INVALID_KEY_L = 'Expression - Field not present in data map for length attribute.'
-    EXP_INVALID_KEY_X = 'Expression - Field not present in data map for data type attributes.'
-    EXP_EVAL_FAIL = 'Expression - Function eval failed.'
+    EQU_INVALID_VALUE = 'Equate - Not yet supporting macro variables.'
     EXP_REGEX = 'Expression - Regex cannot parse the expression.'
     FBD_NO_LEN = 'FieldBaseDsp - Operand cannot have length or index.'
     FBD_INVALID_KEY = 'Field - Field not present in data map.'

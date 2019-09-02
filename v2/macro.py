@@ -54,7 +54,6 @@ class DataMacro:
 
 class SegmentMacro:
     FIELD_LOOKUP = '$FIELD_LOOKUP$'
-    INTEGER = '$INTEGER$'
     DEFAULT_MACRO_LOAD = {'EB0EB', 'AASEQ'}
 
     def __init__(self, program=None, name=None):
@@ -64,7 +63,7 @@ class SegmentMacro:
         self.dsect = None
         self.using = dict()
         self.using_stack = list()
-        self.data_macro = set()
+        self.data_macro = set()             # Set of data macro names which are already loaded.
 
     def __repr__(self):
         return f"SegmentMacro:{self.seg_name}:{len(self.data_map)}"
@@ -99,48 +98,50 @@ class SegmentMacro:
     def get_value(self, operand, location_counter=None):
         if operand.isdigit():
             return int(operand), Error.NO_ERROR
+        data_list = re.findall(r"[CXHFDBZPAY]'[^']+'", operand)
+        value_list = list()
+        if data_list:
+            operand = re.sub(r"[CXHFDBZPAY]'[^']+'", "~", operand)
+            for data in data_list:
+                value = DataType(data[0], input=data[2:-1]).value
+                value_list.insert(0, value)
         exp_list = re.split(r"([+*()-])", operand)
+        if len(exp_list) == 1 and data_list:
+            return value_list.pop(), Error.NO_ERROR
         exp_list = [expression for expression in exp_list if expression and expression not in '()']
         eval_list = list()
         for index, expression in enumerate(exp_list):
             if expression == '+' or expression == '-' or (expression == '*' and index % 2 == 1):
                 eval_list.append(expression)
             else:
-                value, data_type, result = self.evaluate(expression, location_counter)
-                if result != Error.NO_ERROR:
-                    return None, result
+                if expression == "~":
+                    value = value_list.pop()
+                elif expression == '*':
+                    value = location_counter
+                else:
+                    value, result = self.evaluate(expression)
+                    if result != Error.NO_ERROR:
+                        return None, result
                 eval_list.append(str(value))
-        try:
-            return eval(''.join(eval_list)), Error.NO_ERROR
-        except (SyntaxError, NameError, TypeError, ValueError):
-            return None, Error.EXP_EVAL_FAIL
+        return eval(''.join(eval_list)), Error.NO_ERROR
 
-    def evaluate(self, expression, location_counter=None):
-        if expression.isdigit():
-            return int(expression), self.INTEGER, Error.NO_ERROR
-        if expression == '*':
-            return location_counter, str(), Error.NO_ERROR
+    def lookup(self, field):
+        field = next(iter(field.split('&')))
         try:
-            data_type, field = next(iter(re.findall(r"^([\w&#$]+)'*([^']*)", expression)))
-        except StopIteration:
-            return str(), str(), Error.EXP_REGEX
-        if not field:
-            field, data_type = data_type, field
-        if not data_type:
-            field = next(iter(field.split('&')))
-            try:
-                return self.data_map[field].dsp, self.FIELD_LOOKUP, Error.NO_ERROR
-            except KeyError:
-                return field, data_type, Error.EXP_INVALID_KEY
-        if data_type == 'L':
-            field = next(iter(field.split('&')))
-            try:
-                return self.data_map[field].length, data_type, Error.NO_ERROR
-            except KeyError:
-                return field, data_type, Error.EXP_INVALID_KEY_L
-        if '&' in field:
-            return field, data_type, Error.EXP_INVALID_KEY_X
-        return DataType(data_type, input=field).value, data_type, Error.NO_ERROR
+            return self.data_map[field], Error.NO_ERROR
+        except KeyError:
+            return SymbolTable(), Error.EXP_INVALID_KEY
+
+    def evaluate(self, expression):
+        if expression.isdigit():
+            return int(expression), Error.NO_ERROR
+        if expression.startswith("L'"):
+            field, result = self.lookup(expression[2:])
+            value = field.length
+        else:
+            field, result = self.lookup(expression)
+            value = field.dsp
+        return value, result
 
     def set_using(self, dsect, reg):
         using_name = next((name for name, using_reg in self.using.items() if using_reg == reg), None)
