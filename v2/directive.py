@@ -92,6 +92,7 @@ class Ds:
                 if result != Error.NO_ERROR:
                     return location_counter, result
                 location_counter = dc.end
+        macro.max_counter = location_counter if location_counter > macro.max_counter else macro.max_counter
         return location_counter, Error.NO_ERROR
 
 
@@ -116,6 +117,7 @@ class Dc:
                 location_counter = dc.end
                 data.extend_constant([0x00] * dc.align_to_boundary)
                 data.extend_constant(dc.data * dc.duplication_factor)
+        macro.max_counter = location_counter if location_counter > macro.max_counter else macro.max_counter
         return location_counter, Error.NO_ERROR
 
 
@@ -162,6 +164,7 @@ class Dsect:
         name = line.label
         seg_location_counter, _ = macro.dsect if macro.dsect is not None else (location_counter, None)
         macro.dsect = seg_location_counter, name
+        macro.max_counter = 0
         macro.data_map[name] = SymbolTable(name, 0, 0, name)
         return 0, Error.NO_ERROR
 
@@ -171,14 +174,18 @@ class Csect:
     def update(line, macro, location_counter, **_):
         dsect_location_counter, name = macro.dsect
         macro.dsect = None
+        macro.max_counter = dsect_location_counter
         macro.data_map[line.label] = SymbolTable(line.label, location_counter, 0, name)
         return dsect_location_counter, Error.NO_ERROR
 
 
 class Org:
-    @staticmethod   # TODO Code for ORG with no operands
+    @staticmethod
     def update(line, macro, location_counter, **_):
-        return macro.get_value(line.operand, location_counter)
+        if line.operand is None:
+            return macro.max_counter, Error.NO_ERROR
+        else:
+            return macro.get_value(line.operand, location_counter)
 
 
 class Pgmid:

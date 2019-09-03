@@ -503,6 +503,27 @@ class KeyValue(Instruction):
         return next(iter(self.branches), None)
 
 
+class Globz(RegisterData):
+    def set_operand(self, line, macro):
+        globz, result = KeyValue().set_operand(line, macro)
+        if result == Error.NO_ERROR:
+            if globz.is_key('REGR'):
+                base = Register(globz.get_value('REGR'))
+            elif globz.is_key('REGS'):
+                base = Register(globz.get_value('REGS'))
+            else:
+                base = None
+                result = Error.REG_INVALID
+            if base and base.is_valid():
+                macro.load('GLOBAL', base=base.reg)
+                self.reg = base
+                self.command = 'LHI'
+                self.data = 4096
+            else:
+                result = Error.REG_INVALID
+        return self, result
+
+
 class DataMacroDeclaration:
     def __init__(self, line, macro):
         data_macro, result = KeyValue().set_operand(line, macro)
@@ -688,7 +709,7 @@ class InstructionType:
         'RELCC': KeyValue,
         'CRUSA': KeyValue,
         'PNRCM': KeyValue,
-        'GLOBZ': KeyValue,  # TODO Create GLOBZ class and macro
+        'GLOBZ': Globz,
         'SYSRA': KeyValue,
         'DBRED': KeyValue,
         'SENDA': KeyValue,

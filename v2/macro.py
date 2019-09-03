@@ -60,10 +60,11 @@ class SegmentMacro:
         self.seg_name = name                # Segment name for which this instance is created.
         self.global_program = program       # Reference to the program instance.
         self.data_map = dict()              # Dictionary of SymbolTable. Field name is the key.
-        self.dsect = None
-        self.using = dict()
-        self.using_stack = list()
+        self.dsect = None                   # Tuple of location counter and name of DSECT
+        self.using = dict()                 # Key is macro name and Value is Reg
+        self.using_stack = list()           # A stack of using dicts
         self.data_macro = set()             # Set of data macro names which are already loaded.
+        self.max_counter = 0                # Used for ORG
 
     def __repr__(self):
         return f"SegmentMacro:{self.seg_name}:{len(self.data_map)}"
