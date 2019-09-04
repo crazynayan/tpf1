@@ -48,6 +48,8 @@ class SegmentMacro {
     using
     using_stack
     data_macro
+    location_counter
+    max_counter
 }
 
 

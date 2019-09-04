@@ -98,23 +98,20 @@ class Segment:
         return True
 
     def _build_symbol_table(self, lines):
-        location_counter = 8
-        AssemblerDirective.from_line(line=self.root_line, macro=self.macro, name=self.name,
-                                     location_counter=location_counter)
+        AssemblerDirective.from_line(self.root_line, self.macro, self.name)
         for line in lines:
             length = line.length if line.length else 1
             if line.is_first_pass:
                 name = self.name if self.macro.dsect is None else self.macro.dsect[1]
-                location_counter, result = AssemblerDirective.from_line(line=line, macro=self.macro, name=name,
-                                                                        data=self.data,
-                                                                        location_counter=location_counter)
+                result = AssemblerDirective.from_line(line, self.macro, name)
                 if result != Error.NO_ERROR:
                     self.errors.append(f'{result} {line} {self.name}')
             else:
                 if line.label:
-                    self.macro.data_map[line.label] = SymbolTable(line.label, location_counter, length, self.name)
+                    self.macro.data_map[line.label] = SymbolTable(line.label, self.macro.location_counter,
+                                                                  length, self.name)
                     self.macro.data_map[line.label].set_branch()
-                location_counter += line.length
+                self.macro.location_counter += line.length
 
     def _assemble_instructions(self, lines):
         prior_label = Label(self.root_label)
@@ -167,7 +164,7 @@ class Segment:
         if not line.is_assembler_directive:
             return False
         # Second pass assembler directive like USING, PUSH, POP
-        _, result = AssemblerDirective.from_line(line=line, macro=self.macro, location_counter=0, name=self.name)
+        result = AssemblerDirective.from_line(line, self.macro, self.name)
         if result != Error.NO_ERROR:
             self.errors.append(f'{result} {line} {self.name}')
         return True

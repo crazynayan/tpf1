@@ -30,15 +30,13 @@ class DataMacro:
         lines = [line.remove_suffix() for line in lines if line.command in self.ACCEPTED_COMMANDS]
         # Create SymbolTable for each label and add it to dummy macro data_map.
         second_list = list()
-        location_counter = 0
         macro = SegmentMacro()
         for line in lines:
             if not line.is_first_pass:
                 continue
-            location_counter, result = AssemblerDirective.from_line(line=line, macro=macro, data=None,
-                                                                    location_counter=location_counter, name=self.name)
+            result = AssemblerDirective.from_line(line, macro, self.name)
             if result != Error.NO_ERROR:
-                second_list.append((line, location_counter))
+                second_list.append((line, macro.location_counter))
         # Add the saved equates which were not added in the first pass
         assembler_directive = AssemblerDirective('EQU')
         assembler_directive.second_pass(second_list, macro, self.name, self.errors)
@@ -64,6 +62,7 @@ class SegmentMacro:
         self.using = dict()                 # Key is macro name and Value is Reg
         self.using_stack = list()           # A stack of using dicts
         self.data_macro = set()             # Set of data macro names which are already loaded.
+        self.location_counter = 0           # Used for calculating dsp (displacement)
         self.max_counter = 0                # Used for ORG
 
     def __repr__(self):
@@ -96,7 +95,7 @@ class SegmentMacro:
             else:
                 raise TypeError
 
-    def get_value(self, operand, location_counter=None):
+    def get_value(self, operand):
         if operand.isdigit():
             return int(operand), Error.NO_ERROR
         data_list = re.findall(r"[CXHFDBZPAY]'[^']+'", operand)
@@ -118,7 +117,7 @@ class SegmentMacro:
                 if expression == "~":
                     value = value_list.pop()
                 elif expression == '*':
-                    value = location_counter
+                    value = self.location_counter
                 else:
                     value, result = self.evaluate(expression)
                     if result != Error.NO_ERROR:
