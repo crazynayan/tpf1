@@ -1,9 +1,9 @@
 import unittest
 
 from v2.errors import Error
-from v2.segment import Program
 from v2.file_line import Line
 from v2.instruction import InstructionType
+from v2.segment import Program
 
 
 class SegmentTest(unittest.TestCase):
@@ -640,7 +640,7 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual(5, self.seg.macro.data_map[label].length)
         class_name = bytearray([0xC3, 0xD3, 0xC1, 0xE2, 0xE2])
         at = 0x000
-        self.assertEqual(class_name, self.seg.data.get_constant(at, at+5))
+        self.assertEqual(class_name, self.seg.data.get_constant(at, at + 5))
         self.assertEqual(class_name, self.seg.get_constant_bytes(label))
         # 2C'NAM'
         label = 'EXAM'
@@ -744,7 +744,7 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('R14', self.seg.nodes['TS080010.2'].field_len.base.reg)
         self.assertEqual(256, self.seg.nodes['TS080010.2'].field_len.length)
         self.assertEqual('R8', self.seg.nodes['TS080010.2'].field.base.reg)
-        self.assertEqual(bytearray([0x00]*256), self.seg.get_constant_bytes('$X_00'))
+        self.assertEqual(bytearray([0x00] * 256), self.seg.get_constant_bytes('$X_00'))
         self.assertEqual('R2', self.seg.nodes['TS080010.3'].field.base.reg)
         self.assertEqual('R1', self.seg.nodes['TS080010.4'].field.base.reg)
         self.assertEqual('R14', self.seg.nodes['TS080010.5'].field.base.reg)

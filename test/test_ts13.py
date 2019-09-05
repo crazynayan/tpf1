@@ -1,15 +1,10 @@
 import unittest
 
 from v2.errors import Error
-from v2.file_line import Line, File
-from v2.directive import AssemblerDirective
-from v2.instruction import InstructionType
 from v2.segment import Program
 
 
 class SegmentTest(unittest.TestCase):
-    NUMBER_OF_FILES = 29
-
     def setUp(self) -> None:
         self.program = Program()
         self.seg = None
@@ -696,13 +691,13 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('PATTERN', node.field_len.name)
         self.assertEqual('PCK1', node.field.name)
         # FULLTBL  DC    193X'FF',9X'00',7X'FF',9X'00',8X'FF',8X'00',22X'FF'
-        self.assertEqual(bytearray([0xFF]*193), self.seg.get_constant_bytes('FULLTBL', 193))
-        self.assertEqual(bytearray([0x00]*9), self.seg.get_constant_bytes("FULLTBL+C'A'", 9))
-        self.assertEqual(bytearray([0xFF]*7), self.seg.get_constant_bytes("FULLTBL+C'I'+1", 7))
-        self.assertEqual(bytearray([0x00]*9), self.seg.get_constant_bytes("FULLTBL+C'J'", 9))
-        self.assertEqual(bytearray([0xFF]*8), self.seg.get_constant_bytes("FULLTBL+C'R'+1", 8))
-        self.assertEqual(bytearray([0x00]*8), self.seg.get_constant_bytes("FULLTBL+C'S'", 8))
-        self.assertEqual(bytearray([0xFF]*22), self.seg.get_constant_bytes("FULLTBL+C'Z'+1", 22))
+        self.assertEqual(bytearray([0xFF] * 193), self.seg.get_constant_bytes('FULLTBL', 193))
+        self.assertEqual(bytearray([0x00] * 9), self.seg.get_constant_bytes("FULLTBL+C'A'", 9))
+        self.assertEqual(bytearray([0xFF] * 7), self.seg.get_constant_bytes("FULLTBL+C'I'+1", 7))
+        self.assertEqual(bytearray([0x00] * 9), self.seg.get_constant_bytes("FULLTBL+C'J'", 9))
+        self.assertEqual(bytearray([0xFF] * 8), self.seg.get_constant_bytes("FULLTBL+C'R'+1", 8))
+        self.assertEqual(bytearray([0x00] * 8), self.seg.get_constant_bytes("FULLTBL+C'S'", 8))
+        self.assertEqual(bytearray([0xFF] * 22), self.seg.get_constant_bytes("FULLTBL+C'Z'+1", 22))
 
     def test_execute(self):
         seg_name = 'TS13'
@@ -761,32 +756,6 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual(1, ex_node.field_len.length)
         self.assertEqual('EBW000', ex_node.field_len.name)
         self.assertEqual('EBT000', ex_node.field.name)
-
-    def test_eta5(self):
-        seg_name = 'ETA5'
-        accepted_errors_list = [
-        ]
-        self._common_checks(seg_name, accepted_errors_list)
-        # CLI   FQTUSH1-FQTUAAC(R14),C'*' with BNE   ETA9027X
-        node = self.seg.nodes['ETA9027X.7']
-        self.assertEqual('CLI', node.command)
-        self.assertEqual('R14_AREA', node.field.name)
-        self.assertEqual(29, node.field.dsp)
-        self.assertEqual('R14', node.field.base.reg)
-        self.assertEqual(0x5c, node.data)
-        self.assertEqual('*', node.data.to_bytes(1, 'big').decode('cp037'))
-        self.assertEqual('ETA9027X', node.goes)
-        self.assertEqual('BNE', node.on)
-
-    def test_check_segment(self):
-        seg_name = 'ETA5'
-        self.maxDiff = None
-        lines = Line.from_file(File.open(self.program.segments[seg_name].file_name))
-        unknown = [line.command for line in lines
-                   if line.command not in InstructionType.INS
-                   and line.command not in self.program.macros
-                   and line.command not in AssemblerDirective.AD]
-        self.assertListEqual(list(), unknown)
 
 
 if __name__ == '__main__':

@@ -80,7 +80,7 @@ class Segment:
 
     def load(self):
         if self.assembled:
-            return True
+            return
         # Init Macro
         self.macro.copy_default_from_global()
         self.macro.set_using(self.name, 'R8')
@@ -95,7 +95,7 @@ class Segment:
         self._assemble_instructions(lines)
         # Indicate segment assembled
         self.assembled = True
-        return True
+        return
 
     def _build_symbol_table(self, lines):
         AssemblerDirective.from_line(self.root_line, self.macro, self.name)
