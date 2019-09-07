@@ -2,6 +2,7 @@ import unittest
 
 from v2.errors import Error
 from v2.segment import Program
+from v2.state import Storage
 
 
 class SegmentTest(unittest.TestCase):
@@ -168,7 +169,7 @@ class SegmentTest(unittest.TestCase):
         node = self.seg.nodes['TS110020.2']
         self.assertEqual('LHI', node.command)
         self.assertEqual('R15', node.reg.reg)
-        self.assertEqual(4096, node.data)
+        self.assertEqual(Storage.GLOBAL, node.data)
         self.assertEqual('GLOBAL', self.seg.macro.data_map['@HAALC'].name)
         self.assertEqual('R15', self.seg.macro.get_base('GLOBAL'))
         # DETAC D8,CHECK=NO

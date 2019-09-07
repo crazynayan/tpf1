@@ -6,6 +6,7 @@ from v2.file_line import Label
 from v2.errors import Error
 from v2.command import cmd
 from v2.directive import Literal
+from v2.state import Storage
 
 
 class Instruction:
@@ -518,7 +519,7 @@ class Globz(RegisterData):
                 macro.load('GLOBAL', base=base.reg)
                 self.reg = base
                 self.command = 'LHI'
-                self.data = 4096
+                self.data = Storage.GLOBAL
             else:
                 result = Error.REG_INVALID
         return self, result

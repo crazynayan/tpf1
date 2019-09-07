@@ -64,9 +64,9 @@ class XDataType(DataTypeGeneric):
     def to_bytes(self, length=None):
         length = length or self.length
         try:
-            return self.value.to_bytes(length, 'big', signed=False)
+            return bytearray(self.value.to_bytes(length, 'big', signed=False))
         except OverflowError:
-            return self.value.to_bytes(self.length, 'big', signed=False)[(self.length - length):]
+            return bytearray(self.value.to_bytes(self.length, 'big', signed=False)[(self.length - length):])
 
     def from_bytes(self):
         return int.from_bytes(self.bytes, 'big', signed=False)
@@ -176,9 +176,9 @@ class NumericDataType(DataTypeGeneric):
     def to_bytes(self, length=None):
         length = length or self.length
         try:
-            return self.value.to_bytes(length, 'big', signed=True)
+            return bytearray(self.value.to_bytes(length, 'big', signed=True))
         except OverflowError:
-            return self.value.to_bytes(self.length, 'big', signed=True)[(self.length - length):]
+            return bytearray(self.value.to_bytes(self.length, 'big', signed=True)[(self.length - length):])
 
     def from_bytes(self):
         return int.from_bytes(self.bytes, 'big', signed=True)
