@@ -6,7 +6,8 @@ from config import config
 from v2.errors import Error
 from v2.file_line import File, Line, SymbolTable, Label
 from v2.directive import AssemblerDirective
-from v2.instruction import InstructionType, DataMacroDeclaration
+from v2.instruction_type import DataMacroDeclaration
+from v2.instruction import Instruction
 from v2.macro import SegmentMacro, DataMacro
 
 
@@ -74,6 +75,7 @@ class Segment:
         if symbol_table.is_constant:
             return self.data.get_constant(dsp, dsp + length)
         elif symbol_table.is_literal:
+            dsp = dsp - 4096
             return self.data.get_literal(dsp, dsp + length)
         else:
             return None
@@ -115,7 +117,7 @@ class Segment:
 
     def _assemble_instructions(self, lines):
         prior_label = Label(self.root_label)
-        self.nodes[str(prior_label)], _ = InstructionType.from_line(self.root_line, self.macro)
+        self.nodes[str(prior_label)], _ = Instruction.from_line(self.root_line, self.macro)
         for ins_line in Line.yield_lines(lines):
             line = ins_line[0]
             # Process data macro declarations and second pass assembler directives like USING, PUSH, POP
@@ -135,7 +137,7 @@ class Segment:
             prior_label = current_label
             line.label = str(current_label)
             # Create the node based on type of instruction
-            self.nodes[line.label], result = InstructionType.from_line(line, self.macro)
+            self.nodes[line.label], result = Instruction.from_line(line, self.macro)
             if result != Error.NO_ERROR:
                 self.errors.append(f'{result} {line} {self.name}')
             # Other lines contain one or more conditions (like BNE, JL) and instruction that don't change cc.
@@ -143,7 +145,7 @@ class Segment:
             for other_line in other_lines:
                 if other_line.is_assembler_directive:
                     continue
-                condition, result = InstructionType.from_line(other_line, self.macro)
+                condition, result = Instruction.from_line(other_line, self.macro)
                 if result != Error.NO_ERROR:
                     self.errors.append(f'{result} {other_line} {self.name}')
                 self.nodes[line.label].conditions.append(condition)

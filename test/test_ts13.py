@@ -319,7 +319,7 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('MHI', node.command)
         self.assertEqual('R5', node.reg.reg)
         self.assertEqual(-2, node.data)
-        # M     R4,ONE
+        # M     R4,=F'1'
         node = self.seg.nodes['TS120200.7']
         self.assertEqual('M', node.command)
         self.assertEqual('R4', node.reg.reg)

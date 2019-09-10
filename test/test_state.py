@@ -1,13 +1,13 @@
 import unittest
 
-from v2.state import Registers, Storage
+from v2.state import Registers, Storage, State
+from v2.segment import Program
 from v2.data_type import Register
 
 
-class StateTest(unittest.TestCase):
+class RegistersTest(unittest.TestCase):
     def setUp(self) -> None:
         self.regs = Registers()
-        self.storage = Storage()
 
     def test_registers(self):
         # Check set and get value
@@ -53,6 +53,12 @@ class StateTest(unittest.TestCase):
         self.assertRaises(AttributeError, self.regs.set_bytes_from_mask, bytearray([0x00] * 4), 'R04', 0b1111)
         self.assertRaises(ValueError, self.regs.set_bytes_from_mask, bytearray([0x00] * 2), 'R9', 0b0111)
         self.assertRaises(IndexError, self.regs.set_bytes_from_mask, bytearray([0x00] * 2), 'R1', 0b10000)
+
+
+class StorageTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.regs = Registers()
+        self.storage = Storage()
 
     def test_storage(self):
         # 1. Check allocate, get allocated address, nab, base_key, dsp
@@ -121,8 +127,19 @@ class StateTest(unittest.TestCase):
         self.assertFalse(self.storage.all_bits_on(byte, 0x10))
         self.assertTrue(self.storage.all_bits_off(byte, 0x10))
         self.storage.set_bit_on(byte, 0x30)
-        self.assertEqual(0x3E, self.storage.get_value(byte))
+        self.assertEqual(0x3E, self.storage.get_value(byte, 1))
         self.storage.set_bit_off(byte, 0x18)
+
+
+class StateTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.state = State(Program())
+
+    def test_ts14(self):
+        self.state.seg_name = 'TS14'
+        self.state.run()
+        self.assertListEqual(list(), self.state.global_program.segments[self.state.seg_name].errors)
+        self.assertListEqual(list(), self.state.errors)
 
 
 if __name__ == '__main__':

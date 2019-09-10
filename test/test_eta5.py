@@ -2,7 +2,7 @@ import unittest
 
 from v2.directive import AssemblerDirective
 from v2.file_line import Line, File
-from v2.instruction import InstructionType
+from v2.instruction import Instruction
 from v2.segment import Program
 
 
@@ -40,7 +40,7 @@ class SegmentTest(unittest.TestCase):
         self.maxDiff = None
         lines = Line.from_file(File.open(self.program.segments[seg_name].file_name))
         unknown = [line.command for line in lines
-                   if line.command not in InstructionType.INS
+                   if line.command not in Instruction.INS
                    and line.command not in self.program.macros
                    and line.command not in AssemblerDirective.AD]
         self.assertListEqual(list(), unknown)

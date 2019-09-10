@@ -2,12 +2,12 @@ import unittest
 
 from v2.errors import Error
 from v2.file_line import Line
-from v2.instruction import InstructionType
+from v2.instruction import Instruction
 from v2.segment import Program
 
 
 class SegmentTest(unittest.TestCase):
-    NUMBER_OF_FILES = 29
+    NUMBER_OF_FILES = 30
 
     def setUp(self) -> None:
         self.program = Program()
@@ -376,12 +376,12 @@ class SegmentTest(unittest.TestCase):
             f"{Error.FBD_INVALID_DSP} TS05E300.5:ICM:R1,7,-1(R9) {seg_name}",
         ]
         self._common_checks(seg_name, accepted_errors_list)
-        self.assertRaises(ValueError, InstructionType.from_line, Line.from_line(" AHI R1,1,3"), self.seg.macro)
-        self.assertRaises(ValueError, InstructionType.from_line, Line.from_line(" LHI R1"), self.seg.macro)
-        self.assertRaises(ValueError, InstructionType.from_line, Line.from_line(" STM R1,R2,B,C"), self.seg.macro)
-        self.assertRaises(ValueError, InstructionType.from_line, Line.from_line(" LM R1,R2"), self.seg.macro)
-        self.assertRaises(ValueError, InstructionType.from_line, Line.from_line(" ICM R1,1"), self.seg.macro)
-        self.assertRaises(ValueError, InstructionType.from_line, Line.from_line(" STCM R1"), self.seg.macro)
+        self.assertRaises(ValueError, Instruction.from_line, Line.from_line(" AHI R1,1,3"), self.seg.macro)
+        self.assertRaises(ValueError, Instruction.from_line, Line.from_line(" LHI R1"), self.seg.macro)
+        self.assertRaises(ValueError, Instruction.from_line, Line.from_line(" STM R1,R2,B,C"), self.seg.macro)
+        self.assertRaises(ValueError, Instruction.from_line, Line.from_line(" LM R1,R2"), self.seg.macro)
+        self.assertRaises(ValueError, Instruction.from_line, Line.from_line(" ICM R1,1"), self.seg.macro)
+        self.assertRaises(ValueError, Instruction.from_line, Line.from_line(" STCM R1"), self.seg.macro)
         # Check RegisterData
         # AHI   R15,SUIFF with BP    TS050110
         label = 'TS050100.1'
@@ -457,8 +457,8 @@ class SegmentTest(unittest.TestCase):
             f"{Error.FBD_INVALID_KEY} TS06E100.6:JE:TS061000 {seg_name}",
         ]
         self._common_checks(seg_name, accepted_errors_list)
-        self.assertRaises(ValueError, InstructionType.from_line, Line.from_line(" BC TS060100"), self.seg.macro)
-        self.assertRaises(ValueError, InstructionType.from_line, Line.from_line(" JC A,TS060100"), self.seg.macro)
+        self.assertRaises(ValueError, Instruction.from_line, Line.from_line(" BC TS060100"), self.seg.macro)
+        self.assertRaises(ValueError, Instruction.from_line, Line.from_line(" JC A,TS060100"), self.seg.macro)
         # Check TS060100
         node = self.seg.nodes['TS060100.1']
         # LTR  R1, R1 with multiple goes
