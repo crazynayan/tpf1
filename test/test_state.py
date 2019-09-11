@@ -140,6 +140,13 @@ class StateTest(unittest.TestCase):
         self.state.run()
         self.assertListEqual(list(), self.state.global_program.segments[self.state.seg_name].errors)
         self.assertListEqual(list(), self.state.errors)
+        self.assertEqual(0x00012000, self.state.regs.get_value('R1'))
+        self.assertEqual(0xFFFFC1C1 - 0x100000000, self.state.regs.get_value('R2'))
+        self.assertEqual(bytearray([0xC1, 0xC1]), self.state.vm.get_bytes(0x00012344, 2))
+        self.assertEqual(0x0000C1C10000, self.state.vm.get_value(0x00012342, 6))
+        self.assertEqual(2, self.state.regs.get_value('R3'))
+        self.assertEqual(0x02, self.state.vm.get_value(0x0001203F, 1))
+        self.assertEqual(0, self.state.regs.get_value('R4'))
 
 
 if __name__ == '__main__':
