@@ -72,13 +72,11 @@ class Segment:
             return None
         length = length or symbol_table.length
         dsp = dsp or symbol_table.dsp
-        if symbol_table.is_constant:
-            return self.data.get_constant(dsp, dsp + length)
-        elif symbol_table.is_literal:
-            dsp = dsp - 4096
+        if symbol_table.is_literal:
+            dsp = dsp - 0x1000
             return self.data.get_literal(dsp, dsp + length)
         else:
-            return None
+            return self.data.get_constant(dsp, dsp + length)
 
     def load(self):
         if self.assembled:

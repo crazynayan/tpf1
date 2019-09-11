@@ -162,40 +162,26 @@ class Line:
 
 
 class SymbolTable:
-    BRANCH = 'Branch'           # type is branch then it indicates that code can branch to this label.
-    CONSTANT = 'Constant'       # type is constant then it indicates that this label was defined by DC
-    LITERAL = 'Literal'         # type is literal then it indicates that was auto generated for an literal
-
     def __init__(self, label=None, dsp=None, length=None, name=None):
         self.label = label
         self.dsp = dsp
         self.length = length
         self.name = name        # Macro name or Segment name or Dsect name
-        self.type = set()
+        self.branch = False     # Code can branch to this label.
 
     def __repr__(self):
-        return f'{self.label}:{self.dsp}:{self.length}:{self.name}:{self.type}'
+        return f'{self.label}:{self.dsp}:{self.length}:{self.name}'
 
     @property
     def is_branch(self):
-        return self.BRANCH in self.type if self.type else False
-
-    @property
-    def is_constant(self):
-        return self.CONSTANT in self.type if self.type else False
+        return self.branch
 
     @property
     def is_literal(self):
-        return self.LITERAL in self.type if self.type else False
+        return self.dsp > 0xFFF
 
     def set_branch(self):
-        self.type.add(self.BRANCH)
-
-    def set_constant(self):
-        self.type.add(self.CONSTANT)
-
-    def set_literal(self):
-        self.type.add(self.LITERAL)
+        self.branch = True
 
 
 class Label:

@@ -86,7 +86,6 @@ class Ds:
             macro.data_map[line.label] = SymbolTable(line.label, dsp, dc.length, name)
             if dc.duplication_factor == 0 and name == macro.seg_name:
                 macro.data_map[line.label].set_branch()
-                macro.data_map[line.label].set_constant()
         macro.location_counter = dc.end
         if len(operands) > 1:
             for operand in operands[1:]:
@@ -109,7 +108,6 @@ class Dc:
         data.extend_constant([0x00] * dc.align_to_boundary)
         if line.label:
             macro.data_map[line.label] = SymbolTable(line.label, data.next_constant, dc.length, name)
-            macro.data_map[line.label].set_constant()
         macro.location_counter = dc.end
         data.extend_constant(dc.data * dc.duplication_factor)
         if len(operands) > 1:
@@ -241,7 +239,6 @@ class Literal:
         data.extend_literal(literal.data * literal.duplication_factor)
         label = f"L{Label.SEPARATOR * 2}{dsp:05X}"
         macro.data_map[label] = SymbolTable(label, dsp, literal.length, macro.seg_name)
-        macro.data_map[label].set_literal()
         return label
 
 

@@ -69,7 +69,7 @@ class SegmentMacro:
         return f"SegmentMacro:{self.seg_name}:{len(self.data_map)}"
 
     def is_branch(self, label):
-        return self.data_map[label].is_branch if label in self.data_map else False
+        return label in self.data_map and self.data_map[label].is_branch
 
     def is_present(self, macro_name):
         return self.global_program.is_macro_present(macro_name)
