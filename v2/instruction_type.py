@@ -1,12 +1,12 @@
 import re
 
 
+from config import config
 from v2.data_type import FieldBaseDsp, Bits, FieldIndex, FieldLen, Register
 from v2.file_line import Label
 from v2.errors import Error
 from v2.command import cmd
 from v2.directive import Literal
-from v2.state import Storage
 
 
 class InstructionGeneric:
@@ -519,7 +519,7 @@ class Globz(RegisterData):
                 macro.load('GLOBAL', base=base.reg)
                 self.reg = base
                 self.command = 'LHI'
-                self.data = Storage.GLOBAL
+                self.data = config.GLOBAL
             else:
                 result = Error.REG_INVALID
         return self, result

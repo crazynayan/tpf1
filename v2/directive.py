@@ -3,7 +3,7 @@ import re
 from v2.data_type import DataType, Register
 from v2.errors import Error
 from v2.file_line import SymbolTable, Label
-from v2.state import Storage
+from config import config
 
 
 class DsDc:
@@ -235,7 +235,7 @@ class Literal:
         if result != Error.NO_ERROR:
             raise AttributeError
         data = macro.global_program.segments[macro.seg_name].data
-        dsp = data.next_literal + Storage.F4K
+        dsp = data.next_literal + config.F4K
         data.extend_literal(literal.data * literal.duplication_factor)
         label = f"L{Label.SEPARATOR * 2}{dsp:05X}"
         macro.data_map[label] = SymbolTable(label, dsp, literal.length, macro.seg_name)

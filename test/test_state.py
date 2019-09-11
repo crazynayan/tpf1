@@ -1,8 +1,9 @@
 import unittest
 
-from v2.state import Registers, Storage, State
-from v2.segment import Program
 from v2.data_type import Register
+from v2.segment import Program
+from v2.state import Registers, Storage
+from v2.execute import Execute
 
 
 class RegistersTest(unittest.TestCase):
@@ -20,8 +21,8 @@ class RegistersTest(unittest.TestCase):
         # Check set and get bytes including from mask
         self.regs.set_bytes(bytearray([0x12, 0x34, 0x56, 0x78]), Register('R03'))
         self.assertEqual(bytearray([0x12, 0x34, 0x56, 0x78]), self.regs.get_bytes('R3'))
-        self.assertEqual(bytearray([0x12, 0x56]), self.regs.get_bytes_from_mask('R3', 0b1010))
-        self.regs.set_bytes_from_mask(bytearray([0x85, 0x23]), 'R3', 0b1010)
+        self.assertEqual(bytearray([0x12, 0x56]), self.regs.get_bytes_from_mask(Register('R3'), 0b1010))
+        self.regs.set_bytes_from_mask(bytearray([0x85, 0x23]), Register('R3'), 0b1010)
         self.assertEqual(bytearray([0x85, 0x34, 0x23, 0x78]), self.regs.get_bytes('R3'))
         self.regs.set_bytes_from_mask(bytearray([0x85, 0x23]), Register('RGB'), 0b0011)
         self.assertEqual(bytearray([0x85, 0x34, 0x85, 0x23]), self.regs.get_bytes('R3'))
@@ -35,7 +36,7 @@ class RegistersTest(unittest.TestCase):
         self.regs.set_value(0x00000010, 'R4')
         self.assertEqual(0x00001234, self.regs.get_address(Register('R9'), 0x234))
         self.assertEqual(0x00000234, self.regs.get_address(Register('RAC'), 0x234))
-        self.assertEqual(0x00001244, self.regs.get_address('R9', 0x234, Register('4')))
+        self.assertEqual(0x00001244, self.regs.get_address(Register('R9'), 0x234, Register('4')))
         self.assertEqual(0x00001234, self.regs.get_address(Register('REB'), 0x234, Register('0')))
         # Check errors and exceptions
         self.assertRaises(AttributeError, self.regs.get_value, 'RAC')
@@ -133,7 +134,7 @@ class StorageTest(unittest.TestCase):
 
 class StateTest(unittest.TestCase):
     def setUp(self) -> None:
-        self.state = State(Program())
+        self.state = Execute(Program())
 
     def test_ts14(self):
         self.state.seg_name = 'TS14'
