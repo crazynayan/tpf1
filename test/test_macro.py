@@ -180,6 +180,17 @@ class MacroTest(unittest.TestCase):
         macro_name = 'WI0BS'
         self._common_checks(macro_name)
         self.assertEqual(15, self.macro.symbol_table['#WI0BSG'].dsp)
+        # self.assertEqual(0x1C, self.macro.symbol_table['#WI0FXL'].dsp)
+        self.assertEqual(0xFF, self.macro.symbol_table['#WI0MAX'].dsp)
+        self.assertEqual(1, self.macro.symbol_table['WI0TYP'].length)
+        self.assertEqual(2, self.macro.symbol_table['#WI0CCS'].dsp)
+        self.assertEqual(0xE, self.macro.symbol_table['WI0BI3'].dsp)
+        # self.assertEqual(0x1A, self.macro.symbol_table['WI0FNB'].dsp)
+        # self.assertEqual(0x1C, self.macro.symbol_table['WI0VAR'].dsp)
+        self.assertEqual(1, self.macro.symbol_table['WI0VAR'].length)
+        self.assertEqual(0, self.macro.symbol_table['WI0EXF'].dsp)
+        self.assertEqual(0, self.macro.symbol_table['WI0EXL'].dsp)
+        self.assertEqual(0xF, self.macro.symbol_table['#WI0BSG'].dsp)
 
     def test_PNRCM(self):
         macro_name = 'PNRCM'
