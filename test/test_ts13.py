@@ -174,7 +174,7 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('R15', self.seg.macro.get_base('GLOBAL'))
         # DETAC D8,CHECK=NO
         node = self.seg.nodes['TS110020.3']
-        self.assertListEqual(['D8'], node.key_only)
+        self.assertEqual({'D8'}, node.key_only)
         # DBOPN REF=TR1GAA,REG=R4
         node = self.seg.nodes['TS110030.1']
         self.assertTrue(node.is_key('REF'))
@@ -230,7 +230,7 @@ class SegmentTest(unittest.TestCase):
         self.assertSetEqual({'TS110050', 'TS110060.2'}, node.next_labels)
         self.assertEqual('TS110050', node.goes)
         # SERRC R,19000
-        self.assertListEqual(['R', '19000'], self.seg.nodes['TS110060.2'].key_only)
+        self.assertEqual({'R', '19000'}, self.seg.nodes['TS110060.2'].key_only)
         self.assertListEqual(list(), self.seg.nodes['TS110060.2'].get_key_from_value('Invalid value'))
         # DBCLS REF=PD0_DF_REFX,FILE=PR001W
         self.assertEqual('PR001W', self.seg.nodes['TS110070.1'].items['FILE'])
@@ -239,7 +239,7 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('DBIFB', node.command)
         self.assertTrue(node.is_key('NEWREF'))
         self.assertEqual('PD0_DF_REF', node.get_value('REF'))
-        self.assertEqual(list(), node.key_only)
+        self.assertEqual(set(), node.key_only)
         self.assertSetEqual({'REF', 'NEWREF', 'FILE', 'ERRORA', }, node.keys)
         self.assertEqual(4, len(node.items))
         self.assertSetEqual({'TS110060'}, node.next_labels)

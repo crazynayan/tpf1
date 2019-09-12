@@ -191,12 +191,12 @@ class Instruction:
             raise KeyError
         self.instruction_object: ins.InstructionGeneric = self.INS[ins_type]()
 
-    def create(self, line: Line, macro: SegmentMacro) -> Tuple[list, ins.InstructionGeneric]:
+    def create(self, line: Line, macro: SegmentMacro) -> Tuple[ins.Instruction, str]:
         self.instruction_object.label = line.label
         self.instruction_object.command = line.command
         return self.instruction_object.set_operand(line, macro)
 
     @classmethod
-    def from_line(cls, line: Line, macro: SegmentMacro) -> Tuple[list, ins.InstructionGeneric]:
+    def from_line(cls, line: Line, macro: SegmentMacro) -> Tuple[ins.Instruction, str]:
         instruction_object = cls(line.command)
         return instruction_object.create(line, macro)

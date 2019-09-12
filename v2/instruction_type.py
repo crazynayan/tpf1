@@ -1,64 +1,68 @@
 import re
-
+from typing import Tuple, TypeVar, Optional, Union, List, Dict
 
 from config import config
-from v2.data_type import FieldBaseDsp, Bits, FieldIndex, FieldLen, Register
-from v2.file_line import Label
-from v2.errors import Error
 from v2.command import cmd
+from v2.data_type import Register
 from v2.directive import Literal
+from v2.errors import Error
+from v2.file_line import Label, Line
+from v2.instruction_operand import FieldBaseDsp, Bits, FieldIndex, FieldLen
+from v2.macro import SegmentMacro
+
+Instruction = TypeVar('Instruction', bound='InstructionGeneric')
 
 
 class InstructionGeneric:
-    def __init__(self, line=None):
-        self.label = line.label if line is not None else None
-        self.command = line.command if line is not None else None
-        self.fall_down = None
-        self.conditions = list()
+    def __init__(self, line: Line = None):
+        self.label: Optional[str] = line.label if line is not None else None
+        self.command: Optional[str] = line.command if line is not None else None
+        self.fall_down: Optional[str] = None
+        self.conditions: List = list()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         if self.fall_down is None:
             return f"{self.label}:{self.command}"
         else:
             return f"{self.label}:{self.command}:falls to {self.fall_down}"
 
-    def set_operand(self, line, macro):
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
         return self, Error.NO_ERROR
 
     @property
-    def next_labels(self):
+    def next_labels(self) -> set:
         labels = {condition.branch.name for condition in self.conditions if condition.is_check_cc and condition.branch}
         if self.fall_down:
             labels.add(self.fall_down)
         return labels
 
     @property
-    def goes(self):
+    def goes(self) -> str:
         return next((condition.goes for condition in self.conditions if condition.goes), None)
 
     @property
-    def on(self):
+    def on(self) -> str:
         return next((condition.command for condition in self.conditions if condition.is_check_cc), None)
 
     @property
-    def is_fall_down(self):
+    def is_fall_down(self) -> bool:
         return True if not self.get_attribute('no_fall_down') else False
 
     @property
-    def is_check_cc(self):
+    def is_check_cc(self) -> bool:
         return True if self.get_attribute('check_cc') else False
 
-    def get_attribute(self, attribute):
+    def get_attribute(self, attribute: str) -> Optional[str]:
         return cmd.check(self.command, attribute)
 
 
 class FieldBits(InstructionGeneric):
     def __init__(self):
         super().__init__()
-        self.field = None
-        self.bits = None
+        self.field: Optional[FieldBaseDsp] = None
+        self.bits: Optional[Bits] = None
 
-    def set_operand(self, line, macro):
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
         operand1, operand2 = line.split_operands()
         self.field = FieldBaseDsp()
         result = self.field.set(operand1, macro)
@@ -73,10 +77,10 @@ class FieldLenField(InstructionGeneric):
 
     def __init__(self):
         super().__init__()
-        self.field_len = None
-        self.field = None
+        self.field_len: Optional[FieldLen] = None
+        self.field: Optional[FieldBaseDsp] = None
 
-    def set_operand(self, line, macro):
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
         operand1, operand2 = line.split_operands()
         self.field_len = FieldLen()
         operand1 = Literal.update(literal=operand1, macro=macro)
@@ -93,10 +97,10 @@ class FieldLenFieldLen(InstructionGeneric):
 
     def __init__(self):
         super().__init__()
-        self.field_len1 = None
-        self.field_len2 = None
+        self.field_len1: Optional[FieldLen] = None
+        self.field_len2: Optional[FieldLen] = None
 
-    def set_operand(self, line, macro):
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
         operand1, operand2 = line.split_operands()
         self.field_len1 = FieldLen()
         operand1 = Literal.update(literal=operand1, macro=macro)
@@ -114,11 +118,11 @@ class FieldLenFieldData(InstructionGeneric):
 
     def __init__(self):
         super().__init__()
-        self.field_len = None
-        self.field = None
-        self.data = None
+        self.field_len: Optional[FieldLen] = None
+        self.field: Optional[FieldBaseDsp] = None
+        self.data: Optional[int] = None
 
-    def set_operand(self, line, macro):
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
         operand1, operand2, operand3 = line.split_operands()
         self.field_len = FieldLen()
         result = self.field_len.set(operand1, macro, self.MAX_LEN)
@@ -137,10 +141,10 @@ class FieldData(InstructionGeneric):
 
     def __init__(self):
         super().__init__()
-        self.field = None
-        self.data = None
+        self.field: Optional[FieldBaseDsp] = None
+        self.data: Optional[int] = None
 
-    def set_operand(self, line, macro):
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
         operand1, operand2 = line.split_operands()
         self.field = FieldBaseDsp()
         result = self.field.set(operand1, macro)
@@ -159,9 +163,9 @@ class FieldSingle(InstructionGeneric):
 
     def __init__(self):
         super().__init__()
-        self.field = None
+        self.field: Optional[FieldLen] = None
 
-    def set_operand(self, line, macro):
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
         self.field = FieldLen()
         result = self.field.set(line.operand, macro, self.MAX_LEN)
         return self, result
@@ -170,10 +174,10 @@ class FieldSingle(InstructionGeneric):
 class RegisterRegister(InstructionGeneric):
     def __init__(self):
         super().__init__()
-        self.reg1 = None
-        self.reg2 = None
+        self.reg1: Optional[Register] = None
+        self.reg2: Optional[Register] = None
 
-    def set_operand(self, line, macro):
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
         operand1, operand2 = line.split_operands()
         self.reg1 = Register(operand1)
         self.reg2 = Register(operand2)
@@ -184,10 +188,10 @@ class RegisterRegister(InstructionGeneric):
 class RegisterFieldIndex(InstructionGeneric):
     def __init__(self):
         super().__init__()
-        self.field = None
-        self.reg = None
+        self.field: Optional[FieldIndex] = None
+        self.reg: Optional[Register] = None
 
-    def set_operand(self, line, macro):
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
         length = int(self.get_attribute('field_len') or 0)
         operand1, operand2 = line.split_operands()
         self.reg = Register(operand1)
@@ -204,10 +208,10 @@ class RegisterData(InstructionGeneric):
 
     def __init__(self):
         super().__init__()
-        self.reg = None
-        self.data = None
+        self.reg: Optional[Register] = None
+        self.data: Optional[int] = None
 
-    def set_operand(self, line, macro):
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
         operand1, operand2 = line.split_operands()
         self.reg = Register(operand1)
         if self.reg.is_valid():
@@ -227,11 +231,11 @@ class RegisterData(InstructionGeneric):
 class RegisterRegisterField(InstructionGeneric):
     def __init__(self):
         super().__init__()
-        self.reg1 = None
-        self.reg2 = None
-        self.field = None
+        self.reg1: Optional[Register] = None
+        self.reg2: Optional[Register] = None
+        self.field: Optional[FieldBaseDsp] = None
 
-    def set_operand(self, line, macro):
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
         operand1, operand2, operand3 = line.split_operands()
         self.reg1 = Register(operand1)
         self.reg2 = Register(operand2)
@@ -247,11 +251,11 @@ class RegisterDataField(InstructionGeneric):
 
     def __init__(self):
         super().__init__()
-        self.reg = None
-        self.data = None
-        self.field = None
+        self.reg: Optional[Register] = None
+        self.data: Optional[int] = None
+        self.field: Optional[FieldBaseDsp] = None
 
-    def set_operand(self, line, macro):
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
         operand1, operand2, operand3 = line.split_operands()
         self.reg = Register(operand1)
         if self.reg.is_valid():
@@ -275,9 +279,9 @@ class Exit(InstructionGeneric):
 class BranchGeneric(InstructionGeneric):
     def __init__(self):
         super().__init__()
-        self.branch = None
+        self.branch: Optional[FieldIndex] = None
 
-    def set_branch(self, branch, macro):
+    def set_branch(self, branch: str, macro: SegmentMacro) -> str:
         self.branch = FieldIndex()
         result = self.branch.set(branch, macro, length=1)
         if result == Error.NO_ERROR:
@@ -288,7 +292,7 @@ class BranchGeneric(InstructionGeneric):
         return result
 
     @property
-    def next_labels(self):
+    def next_labels(self) -> set:
         labels = set()
         if self.fall_down:
             labels.add(self.fall_down)
@@ -297,20 +301,20 @@ class BranchGeneric(InstructionGeneric):
         return labels
 
     @property
-    def goes(self):
+    def goes(self) -> str:
         return self.branch.name if self.branch is not None else None
 
     @property
-    def on(self):
+    def on(self) -> str:
         return self.command
 
 
 class ConditionGeneric(InstructionGeneric):
     def __init__(self):
         super().__init__()
-        self.mask = None
+        self.mask: Optional[int] = None
 
-    def set_mask(self, line):
+    def set_mask(self, line: Line) -> Tuple[str, str]:
         mask = self.get_attribute('mask')
         result = Error.NO_ERROR
         if mask is not None:
@@ -335,7 +339,7 @@ class BranchCondition(BranchGeneric, ConditionGeneric):
     def __init__(self):
         super().__init__()
 
-    def set_operand(self, line, macro):
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
         branch, result = self.set_mask(line)
         if result == Error.NO_ERROR:
             result = self.set_branch(branch, macro)
@@ -348,9 +352,9 @@ class BranchCondition(BranchGeneric, ConditionGeneric):
 class BranchConditionRegister(BranchCondition):
     def __init__(self):
         super().__init__()
-        self.reg = None
+        self.reg: Optional[Register] = None
 
-    def set_operand(self, line, macro):
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
         reg, result = self.set_mask(line)
         if result == Error.NO_ERROR:
             self.reg = Register(reg)
@@ -362,9 +366,9 @@ class BranchConditionRegister(BranchCondition):
 class RegisterBranch(BranchGeneric):
     def __init__(self):
         super().__init__()
-        self.reg = None
+        self.reg: Optional[Register] = None
 
-    def set_operand(self, line, macro):
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
         reg, branch = line.split_operands()
         result = self.set_branch(branch, macro)
         if result == Error.NO_ERROR:
@@ -377,10 +381,10 @@ class RegisterBranch(BranchGeneric):
 class RegisterLabel(InstructionGeneric):
     def __init__(self):
         super().__init__()
-        self.reg = None
-        self.label = None
+        self.reg: Optional[Register] = None
+        self.label: Optional[str] = None
 
-    def set_operand(self, line, macro):
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
         reg, label = line.split_operands()
         self.reg = Register(reg)
         if not self.reg.is_valid():
@@ -410,10 +414,10 @@ class RegisterLabel(InstructionGeneric):
 class RegisterRegisterBranch(BranchGeneric):
     def __init__(self):
         super().__init__()
-        self.reg1 = None
-        self.reg2 = None
+        self.reg1: Optional[Register] = None
+        self.reg2: Optional[Register] = None
 
-    def set_operand(self, line, macro):
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
         operand1, operand2, operand3 = line.split_operands()
         result = self.set_branch(operand3, macro)
         if result == Error.NO_ERROR:
@@ -427,9 +431,9 @@ class RegisterRegisterBranch(BranchGeneric):
 class SegmentCall(BranchGeneric):
     def __init__(self):
         super().__init__()
-        self.seg_name = None
+        self.seg_name: Optional[str] = None
 
-    def set_operand(self, line, macro):
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
         self.seg_name = next(iter(line.split_operands()))
         try:
             called_seg = macro.global_program.segments[self.seg_name]
@@ -443,10 +447,10 @@ class SegmentCall(BranchGeneric):
 class KeyValue(InstructionGeneric):
     def __init__(self):
         super().__init__()
-        self.operands = dict()
-        self.branches = list()
+        self.operands: Dict[str, Union[Optional[str], Dict[str, Optional[str]]]] = dict()
+        self.branches: List[str] = list()
 
-    def set_operand(self, line, macro):
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
         operands = line.split_operands()
         for operand in operands:
             key_value = re.split(r"=(?![^()]*[)])", operand)
@@ -464,48 +468,48 @@ class KeyValue(InstructionGeneric):
                     self.branches.append(key_value[1])
         return self, Error.NO_ERROR
 
-    def is_key(self, key):
-        return True if key in self.operands else False
+    def is_key(self, key: str) -> bool:
+        return key in self.operands
 
-    def is_sub_key(self, key):
+    def is_sub_key(self, key: str) -> bool:
         return True if key in self.operands and not isinstance(self.operands[key], str) else False
 
-    def get_value(self, key):
+    def get_value(self, key: str) -> Union[str, dict]:
         return self.operands[key]
 
-    def get_key_from_value(self, value):
+    def get_key_from_value(self, value: str) -> list:
         return list(key for key, data in self.operands.items() if value == data)
 
     @property
-    def key_only(self):
-        return list(key for key, value in self.operands.items() if value is None)
+    def key_only(self) -> set:
+        return set(key for key, value in self.operands.items() if value is None)
 
     @property
-    def keys(self):
+    def keys(self) -> set:
         return set(self.operands)
 
     @property
-    def sub_keys(self):
+    def sub_keys(self) -> set:
         return {key for key, value in self.operands.items() if isinstance(value, dict)}
 
     @property
-    def items(self):
+    def items(self) -> dict:
         return self.operands
 
     @property
-    def next_labels(self):
+    def next_labels(self) -> set:
         labels = set(self.branches)
         if self.fall_down:
             labels.add(self.fall_down)
         return labels
 
     @property
-    def goes(self):
+    def goes(self) -> str:
         return next(iter(self.branches), None)
 
 
 class Globz(RegisterData):
-    def set_operand(self, line, macro):
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
         globz, result = KeyValue().set_operand(line, macro)
         if result == Error.NO_ERROR:
             if globz.is_key('REGR'):
@@ -526,7 +530,7 @@ class Globz(RegisterData):
 
 
 class DataMacroDeclaration:
-    def __init__(self, line, macro):
+    def __init__(self, line: Line, macro: SegmentMacro):
         data_macro, result = KeyValue().set_operand(line, macro)
         if result != Error.NO_ERROR:
             raise TypeError

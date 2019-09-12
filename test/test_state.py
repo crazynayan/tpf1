@@ -1,9 +1,10 @@
 import unittest
 
+from config import config
 from v2.data_type import Register
+from v2.execute import Execute
 from v2.segment import Program
 from v2.state import Registers, Storage
-from v2.execute import Execute
 
 
 class RegistersTest(unittest.TestCase):
@@ -147,7 +148,18 @@ class StateTest(unittest.TestCase):
         self.assertEqual(0x0000C1C10000, self.state.vm.get_value(0x00012342, 6))
         self.assertEqual(2, self.state.regs.get_value('R3'))
         self.assertEqual(0x02, self.state.vm.get_value(0x0001203F, 1))
-        self.assertEqual(0, self.state.regs.get_value('R4'))
+        self.assertEqual(2, self.state.regs.get_value('R5'))
+        self.assertEqual(-2, self.state.regs.get_value('R6'))
+        self.assertEqual(4, self.state.regs.get_value('R7'))
+        self.assertEqual(2, self.state.regs.get_value('R10'))
+        self.assertEqual(0x00000100, self.state.regs.get_value('R4'))
+        self.assertEqual(0x00000000, self.state.regs.get_value('R11'))
+        self.assertEqual(-1, self.state.regs.get_value('R12'))
+        self.assertEqual(0x0001203F, self.state.regs.get_value('R13'))
+        self.assertEqual(0x00012041, self.state.regs.get_value('R14'))
+        self.assertEqual(5, self.state.regs.get_value('R15'))
+        self.assertEqual(bytearray([0x02]), self.state.vm.get_bytes(config.ECB + 8))
+        self.assertEqual(bytearray([0x40, 0x40, 0x40, 0x40, 0x40]), self.state.vm.get_bytes(config.ECB + 9, 5))
 
 
 if __name__ == '__main__':

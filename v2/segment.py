@@ -3,11 +3,11 @@ import re
 from copy import copy
 
 from config import config
+from v2.directive import AssemblerDirective
 from v2.errors import Error
 from v2.file_line import File, Line, SymbolTable, Label
-from v2.directive import AssemblerDirective
-from v2.instruction_type import DataMacroDeclaration
 from v2.instruction import Instruction
+from v2.instruction_type import DataMacroDeclaration
 from v2.macro import SegmentMacro, DataMacro
 
 

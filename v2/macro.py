@@ -1,9 +1,9 @@
 import re
 
-from v2.errors import Error
-from v2.file_line import File, Line, SymbolTable
 from v2.data_type import DataType, Register
 from v2.directive import AssemblerDirective
+from v2.errors import Error
+from v2.file_line import File, Line, SymbolTable
 
 
 class DataMacro:
