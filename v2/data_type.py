@@ -1,22 +1,25 @@
-import re
-from v2.errors import Error
+from typing import Optional, Dict, Callable, List
 
 
 class DataTypeGeneric:
-    DATA_TYPES = {'X': 1, 'C': 1, 'H': 2, 'F': 4, 'D': 8, 'FD': 8, 'B': 1, 'P': 1, 'Z': 1, 'A': 4, 'Y': 2}
+    DATA_TYPES: Dict[str, int] = {
+        'X': 1, 'C': 1, 'H': 2, 'F': 4, 'D': 8, 'FD': 8, 'B': 1, 'P': 1, 'Z': 1, 'A': 4, 'Y': 2}
 
     def __init__(self):
-        self.data_type = None
-        self.input = None
-        self.bytes = None
+        self.data_type: Optional[str] = None
+        self.input: Optional[str] = None
+        self.bytes: Optional[bytearray] = None
 
     @property
-    def default_length(self):
+    def default_length(self) -> int:
         return self.DATA_TYPES[self.data_type] if self.bytes is None else len(self.bytes)
 
     @property
-    def align_to_boundary(self):
+    def align_to_boundary(self) -> int:
         return 0 if self.DATA_TYPES[self.data_type] == 1 else self.DATA_TYPES[self.data_type]
+
+    def from_bytes(self) -> int:
+        return int.from_bytes(self.bytes, 'big', signed=False)
 
 
 class CDataType(DataTypeGeneric):
@@ -27,15 +30,15 @@ class CDataType(DataTypeGeneric):
         self.data_type = 'C'
 
     @property
-    def length(self):
+    def length(self) -> int:
         return len(self.input) if self.input is not None else self.default_length
 
     @property
-    def value(self):
+    def value(self) -> int:
         return int.from_bytes(bytes(self.input, encoding='cp037'), 'big', signed=False) \
             if self.input is not None else self.from_bytes()
 
-    def to_bytes(self, length=None):
+    def to_bytes(self, length: int = None) -> bytearray:
         char_data = bytearray(self.input, encoding='cp037')
         if length is None or length == self.length:
             return char_data
@@ -44,7 +47,7 @@ class CDataType(DataTypeGeneric):
         char_data.extend(bytearray([self.PADDING] * (length - self.length)))
         return char_data               # Padding
 
-    def from_bytes(self):
+    def text(self) -> str:
         return self.bytes.decode(encoding='cp037')
 
 
@@ -54,22 +57,19 @@ class XDataType(DataTypeGeneric):
         self.data_type = 'X'
 
     @property
-    def length(self):
+    def length(self) -> int:
         return -(-len(self.input) // 2) if self.input is not None else self.default_length
 
     @property
-    def value(self):
+    def value(self) -> int:
         return int(self.input, 16) if self.input is not None else self.from_bytes()
 
-    def to_bytes(self, length=None):
+    def to_bytes(self, length: int = None) -> bytearray:
         length = length or self.length
         try:
             return bytearray(self.value.to_bytes(length, 'big', signed=False))
         except OverflowError:
             return bytearray(self.value.to_bytes(self.length, 'big', signed=False)[(self.length - length):])
-
-    def from_bytes(self):
-        return int.from_bytes(self.bytes, 'big', signed=False)
 
 
 class BDataType(DataTypeGeneric):
@@ -78,22 +78,19 @@ class BDataType(DataTypeGeneric):
         self.data_type = 'B'
 
     @property
-    def length(self):
+    def length(self) -> int:
         return -(-len(self.input) // 8) if self.input is not None else self.default_length
 
     @property
-    def value(self):
+    def value(self) -> int:
         return int(self.input, 2) if self.input is not None else self.from_bytes()
 
-    def to_bytes(self, length=None):
+    def to_bytes(self, length: int = None) -> bytearray:
         length = length or self.length
         try:
-            return self.value.to_bytes(length, 'big', signed=False)
+            return bytearray(self.value.to_bytes(length, 'big', signed=False))
         except OverflowError:
-            return self.value.to_bytes(self.length, 'big', signed=False)[(self.length - length):]
-
-    def from_bytes(self):
-        return int.from_bytes(self.bytes, 'big', signed=False)
+            return bytearray(self.value.to_bytes(self.length, 'big', signed=False)[(self.length - length):])
 
 
 class PDataType(DataTypeGeneric):
@@ -102,26 +99,26 @@ class PDataType(DataTypeGeneric):
         self.data_type = 'P'
 
     @property
-    def length(self):
+    def length(self) -> int:
         if self.input is None:
             return self.default_length
         length_input = len(self.input) + 1 if self.input[0] not in ['+', '-'] else len(self.input)
         return -(-length_input // 2)
 
     @property
-    def value(self):
+    def value(self) -> int:
         return int(self.input) if self.input is not None else self.from_bytes()
 
-    def to_bytes(self, length=None):
+    def to_bytes(self, length: int = None) -> bytearray:
         packed_data = self.input[1:] if self.input[0] in ['+', '-'] else self.input
         packed_data = packed_data + 'D' if self.input[0] == '-' else packed_data + 'C'
         length = length or self.length
         try:
-            return int(packed_data, 16).to_bytes(length, 'big', signed=False)
+            return bytearray(int(packed_data, 16).to_bytes(length, 'big', signed=False))
         except OverflowError:
-            return int(packed_data, 16).to_bytes(self.length, 'big', signed=False)[(self.length - length):]
+            return bytearray(int(packed_data, 16).to_bytes(self.length, 'big', signed=False)[(self.length - length):])
 
-    def from_bytes(self):
+    def from_bytes(self) -> int:
         sign = '-' if self.bytes[-1] & 0x0F == 0x0D else '+'
         number = int.from_bytes(self.bytes, 'big', signed=False)
         return int(f"{sign}{number >> 4:0x}")
@@ -135,16 +132,16 @@ class ZDataType(DataTypeGeneric):
         self.data_type = 'Z'
 
     @property
-    def length(self):
+    def length(self) -> int:
         if self.input is None:
             return self.default_length
         return len(self.input) - 1 if self.input[0] in ['+', '-'] else len(self.input)
 
     @property
-    def value(self):
+    def value(self) -> int:
         return int(self.input) if self.input is not None else self.from_bytes()
 
-    def to_bytes(self, length=None):
+    def to_bytes(self, length: int = None) -> bytearray:
         zoned_data = self.input[1:] if self.input[0] in ['+', '-'] else self.input
         sign = 0xD0 if self.input[0] == '-' else 0xC0
         zoned_data = bytearray(zoned_data, 'cp037')
@@ -157,7 +154,7 @@ class ZDataType(DataTypeGeneric):
         pad_data.extend(zoned_data)
         return pad_data                                # Padding
 
-    def from_bytes(self):
+    def from_bytes(self) -> int:
         sign = '-' if self.bytes[-1] & 0xF0 == 0xD0 else '+'
         numeric_bytes = self.bytes.copy()
         numeric_bytes[-1] |= 0xF0
@@ -166,21 +163,21 @@ class ZDataType(DataTypeGeneric):
 
 class NumericDataType(DataTypeGeneric):
     @property
-    def length(self):
+    def length(self) -> int:
         return self.default_length
 
     @property
-    def value(self):
+    def value(self) -> int:
         return round(float(self.input)) if self.input is not None else self.from_bytes()
 
-    def to_bytes(self, length=None):
+    def to_bytes(self, length: int = None) -> bytearray:
         length = length or self.length
         try:
             return bytearray(self.value.to_bytes(length, 'big', signed=True))
         except OverflowError:
             return bytearray(self.value.to_bytes(self.length, 'big', signed=True)[(self.length - length):])
 
-    def from_bytes(self):
+    def from_bytes(self) -> int:
         return int.from_bytes(self.bytes, 'big', signed=True)
 
 
@@ -221,20 +218,21 @@ class YDataType(NumericDataType):
 
 
 class DataType:
-    DT = {'X': XDataType,
-          'C': CDataType,
-          'H': HDataType,
-          'F': FDataType,
-          'D': DDataType,
-          'FD': FDDataType,
-          'B': BDataType,
-          'P': PDataType,
-          'Z': ZDataType,
-          'A': ADataType,
-          'Y': YDataType,
-          }
+    DT: Dict[str, Callable] = {
+        'X': XDataType,
+        'C': CDataType,
+        'H': HDataType,
+        'F': FDataType,
+        'D': DDataType,
+        'FD': FDDataType,
+        'B': BDataType,
+        'P': PDataType,
+        'Z': ZDataType,
+        'A': ADataType,
+        'Y': YDataType,
+    }
 
-    def __init__(self, data_type, **kwargs):
+    def __init__(self, data_type: str, **kwargs):
         if data_type not in self.DT:
             raise KeyError
         self.data_type_object = self.DT[data_type]()
@@ -242,31 +240,31 @@ class DataType:
         self.data_type_object.bytes = kwargs['bytes'] if 'bytes' in kwargs and 'input' not in kwargs else None
 
     @property
-    def default_length(self):
+    def default_length(self) -> int:
         return self.data_type_object.default_length
 
     @property
-    def align_to_boundary(self):
+    def align_to_boundary(self) -> int:
         return self.data_type_object.align_to_boundary
 
     @property
-    def length(self):
+    def length(self) -> int:
         return self.data_type_object.length
 
     @property
-    def value(self):
+    def value(self) -> int:
         return self.data_type_object.value
 
-    def to_bytes(self, length=None):
+    def to_bytes(self, length: int = None) -> bytearray:
         return self.data_type_object.to_bytes(length)
 
-    def from_bytes(self):
+    def from_bytes(self) -> int:
         return self.data_type_object.from_bytes()
 
 
 class Register:
     INVALID = '??'
-    REG = {
+    REG: Dict[str, List[str]] = {
         'R0': ['0', '00', 'R0', 'R00', 'RAC'],
         'R1': ['1', '01', 'R1', 'R01', 'RG1'],
         'R2': ['2', '02', 'R2', 'R02', 'RGA'],
@@ -285,236 +283,12 @@ class Register:
         'R15': ['15', 'R15', 'RDB'],
     }
 
-    def __init__(self, reg=None):
+    def __init__(self, reg: str = None):
         super().__init__()
         self.reg = next((key for key in self.REG for reg_val in self.REG[key] if reg_val == reg), self.INVALID)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.reg
 
-    def is_valid(self):
+    def is_valid(self) -> bool:
         return self.reg != self.INVALID
-
-
-class Field:
-    def __init__(self):
-        self.name = None
-        self.base = None
-        self.dsp = -1
-
-    def __repr__(self):
-        return f"{self.name}:{self.base}+{self.dsp}"
-
-    @staticmethod
-    def split_operand(operand):
-        # Returns up to 3 elements that are first divided by ( and then by a , and then by a )
-        return next(iter(re.findall(r"^([^(]+)\(*([^,)]*),*([^)]*)\)*", operand)))
-
-    def set_base_dsp_by_name(self, name, macro):
-        length = 0
-        if name.isdigit() or set("'+-").intersection(set(name)):
-            dsp, result = macro.get_value(name)
-            if result != Error.NO_ERROR:
-                return length, result
-            possible_name = next(iter(re.split(r"['+-]", name)))
-            if not name.isdigit() and possible_name in macro.data_map:
-                # Field type of NAME+L'NAME
-                base = Register(macro.get_base(macro.data_map[possible_name].name))
-                name = possible_name
-            else:
-                base = Register('R0')
-                name = 'R0_AREA'
-        else:
-            try:
-                dsp = macro.data_map[name].dsp
-            except KeyError:
-                return length, Error.FBD_INVALID_KEY
-            length = macro.data_map[name].length
-            try:
-                base = Register(macro.get_base(macro.data_map[name].name))
-            except (KeyError, StopIteration):
-                return length, Error.FBD_INVALID_KEY_BASE
-        self.name = name
-        self.dsp = dsp
-        self.base = base
-        return length, Error.NO_ERROR
-
-    def set_base_dsp_by_operands(self, base, dsp, macro, length):
-        # Set base register
-        self.base = Register(base)
-        if not self.base.is_valid():
-            return Error.FBD_INVALID_BASE
-        # Set displacement
-        self.dsp, result = macro.get_value(dsp)
-        if result != Error.NO_ERROR:
-            return result
-        if not isinstance(self.dsp, int) or not 0 <= self.dsp <= 4095:
-            return Error.FBD_INVALID_DSP
-        # Set name
-        possible_name = macro.get_field_name(self.base, self.dsp, length)
-        self.name = self.base.reg + '_AREA' if possible_name is None else possible_name
-        return Error.NO_ERROR
-
-
-class FieldBaseDsp(Field):
-    def __init__(self):
-        super().__init__()
-
-    def set(self, operand, macro, length=1):
-        operand1, operand2, error = self.split_operand(operand)
-        if error:
-            result = Error.FBD_NO_LEN
-        elif not operand2:
-            _, result = self.set_base_dsp_by_name(operand1, macro)
-        else:
-            result = self.set_base_dsp_by_operands(operand2, operand1, macro, length)
-        return result
-
-
-class FieldIndex(Field):
-    def __init__(self):
-        super().__init__()
-        self.index = None
-
-    def set(self, operand, macro, length):
-        operand1, operand2, operand3 = self.split_operand(operand)
-        if not operand2 and not operand3:
-            # Single label like EBW000
-            _, result = self.set_base_dsp_by_name(name=operand1, macro=macro)
-        elif not operand3:
-            # Note: In TPF these types are with no base but with index register set.
-            # In our tool we have flipped this. So there would be no index but the base would be present.
-            if operand1.isdigit() or set("+-*").intersection(operand1):
-                # Base_dsp 34(R5) or expression with base EBW008-EBW000(R9)
-                result = self.set_base_dsp_by_operands(base=operand2, dsp=operand1, macro=macro, length=length)
-            else:
-                # Label with index EBW000(R14) or EBW000(R14,)
-                _, result = self.set_base_dsp_by_name(name=operand1, macro=macro)
-                if result == Error.NO_ERROR:
-                    self.index = Register(operand2)
-                    result = Error.NO_ERROR if self.index.is_valid() else Error.FX_INVALID_INDEX
-        elif not operand2:
-            # Base_dsp with no index 10(,R5)
-            result = self.set_base_dsp_by_operands(operand3, operand1, macro, length)
-        else:
-            # Base_dsp with index 10(R3,R5)
-            result = self.set_base_dsp_by_operands(operand3, operand1, macro, length)
-            if result == Error.NO_ERROR:
-                self.index = Register(operand2)
-                result = Error.NO_ERROR if self.index.is_valid() else Error.FX_INVALID_INDEX
-        return result
-
-
-class FieldLen(Field):
-    def __init__(self):
-        super().__init__()
-        self.length = 0
-
-    def set(self, operand, macro, max_len):
-        operand1, operand2, operand3 = self.split_operand(operand)
-        length = -1
-        if not operand3:
-            length, result = self.set_base_dsp_by_name(operand1, macro)
-            if operand2 and result == Error.NO_ERROR:
-                length, result = macro.get_value(operand2)
-        elif not operand2:
-            result = Error.FL_LEN_REQUIRED
-        else:
-            length, result = macro.get_value(operand2)
-            if result == Error.NO_ERROR:
-                result = self.set_base_dsp_by_operands(operand3, operand1, macro, length)
-        if result == Error.NO_ERROR:
-            if isinstance(length, int) and 0 <= length <= max_len:
-                self.length = length if length > 0 else 1
-            else:
-                result = Error.FL_INVALID_LEN
-        return result
-
-
-class Bit:
-    def __init__(self, name, value, on=False):
-        self.name = name
-        self.value = value
-        self.on = on
-
-    def __repr__(self):
-        state = 'ON' if self.on else 'OFF'
-        return f"{self.name}:0x{self.value:02x}:{state}"
-
-
-class Bits:
-    PREFIX = '#BIT'
-    VALID_VALUE = {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01}
-
-    def __init__(self):
-        self.bit0 = Bit(self.PREFIX + '0', 0x80)
-        self.bit1 = Bit(self.PREFIX + '1', 0x40)
-        self.bit2 = Bit(self.PREFIX + '2', 0x20)
-        self.bit3 = Bit(self.PREFIX + '3', 0x10)
-        self.bit4 = Bit(self.PREFIX + '4', 0x08)
-        self.bit5 = Bit(self.PREFIX + '5', 0x04)
-        self.bit6 = Bit(self.PREFIX + '6', 0x02)
-        self.bit7 = Bit(self.PREFIX + '7', 0x01)
-
-    def __repr__(self):
-        bit_text = [str(bit) for _, bit in self.__dict__.items()]
-        return '+'.join(bit_text)
-
-    @property
-    def value(self):
-        return sum(bit.value for _, bit in self.__dict__.items() if bit.on)
-
-    @property
-    def text(self):
-        bit_text = [bit.name for _, bit in self.__dict__.items() if bit.on]
-        if len(bit_text) < 5:
-            return '+'.join(bit_text)
-        else:
-            bit_text = [bit.name for _, bit in self.__dict__.items() if not bit.on]
-            return f"#BITA-{'-'.join(bit_text)}"
-
-    def set_name(self, name, value):
-        bit = next(bit for _, bit in self.__dict__.items() if bit.value == value)
-        bit.name = name
-
-    def bit_by_name(self, name):
-        return next(bit for _, bit in self.__dict__.items() if bit.name == name)
-
-    def on_by_name(self, name):
-        bit = next(bit for _, bit in self.__dict__.items() if bit.name == name)
-        bit.on = True
-
-    def off_by_name(self, name):
-        bit = next(bit for _, bit in self.__dict__.items() if bit.name == name)
-        bit.on = False
-
-    def on_by_value(self, value):
-        bit = next(bit for _, bit in self.__dict__.items() if bit.value == value)
-        bit.on = True
-
-    def off_by_value(self, value):
-        bit = next(bit for _, bit in self.__dict__.items() if bit.value == value)
-        bit.on = False
-
-    def set_from_number(self, number):
-        value = 0x80
-        while value > 0:
-            if value & number != 0:
-                self.on_by_value(value)
-            value = value >> 1
-
-    def set(self, operand, macro):
-        number, result = macro.get_value(operand)
-        if result == Error.NO_ERROR:
-            result = Error.NO_ERROR if isinstance(number, int) and 0 <= number <= 255 else Error.BITS_INVALID_NUMBER
-            if result == Error.NO_ERROR:
-                self.set_from_number(number)
-                # Add the name from the expression
-                for expression in re.split(f"[+-]", operand):
-                    field, lookup_result = macro.lookup(expression)
-                    if lookup_result == Error.NO_ERROR:
-                        if field.dsp in self.VALID_VALUE:
-                            self.set_name(expression, field.dsp)
-                        else:
-                            result = Error.BITS_INVALID_BIT
-        return result

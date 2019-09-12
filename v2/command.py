@@ -1,11 +1,14 @@
-import gspread
 import json
 import os
+from typing import Optional, Tuple
+
+import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+
 from config import config
 
 
-def download_commands():
+def download_commands() -> None:
     # Use credentials to create a client to interact with the Google Drive API
     scope = ['https://spreadsheets.google.com/feeds',
              'https://www.googleapis.com/auth/drive']
@@ -40,7 +43,7 @@ class _Command:
         except FileNotFoundError:
             self._data = dict()
 
-    def command_check(self, command):
+    def command_check(self, command: str) -> bool:
         """
         Check whether a command exits or not.
         :param command: It is the 1st level key in the json file
@@ -48,7 +51,7 @@ class _Command:
         """
         return True if command in self._data else False
 
-    def get_commands(self, attribute, attribute_value):
+    def get_commands(self, attribute: str, attribute_value: str) -> list:
         """
         Returns a list of commands with a matching attribute
         :param attribute: 2nd level key in the json file
@@ -58,7 +61,7 @@ class _Command:
         return [command for command, attributes in self._data.items()
                 if attribute in attributes and attributes[attribute] == attribute_value]
 
-    def check(self, command, attribute):
+    def check(self, command: str, attribute: str) -> Optional[str]:
         """
         Return the attribute value for the command parameter provided.
         :param command: It is the 1st level key in the json file
@@ -73,7 +76,7 @@ class _Command:
         except TypeError:
             return None
 
-    def get_text(self, command, condition, opposite=False):
+    def get_text(self, command: str, condition: str, opposite: bool = False) -> Tuple[str, str]:
         """
         Return the text of a condition
         :param command: The compare command (CLC, SR, OI) which has a condition
@@ -94,7 +97,7 @@ class _Command:
                 text_operator = self._data[command][self._data[command]['branch_type']]
         return text_condition, text_operator
 
-    def get_operator(self, condition, opposite=False):
+    def get_operator(self, condition: str, opposite: bool = False) -> str:
         if condition not in self._data:
             return ''
         if opposite and 'opposite' in self._data[condition] and self._data[condition]['opposite']:

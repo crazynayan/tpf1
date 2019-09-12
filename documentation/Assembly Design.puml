@@ -22,11 +22,11 @@ class SymbolTable {
     dsp
     length
     name
-    type
+    branch
 }
 note right
     name can be of a macro, segment or a dsect
-    type can be any combination of BRANCH, CONSTANT, LITERAL
+    branch with True indicates that the code can branch at this label
 end note
 
 class Segment {

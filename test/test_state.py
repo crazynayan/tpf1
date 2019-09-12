@@ -1,8 +1,10 @@
 import unittest
 
-from v2.state import Registers, Storage, State
-from v2.segment import Program
+from config import config
 from v2.data_type import Register
+from v2.execute import Execute
+from v2.segment import Program
+from v2.state import Registers, Storage
 
 
 class RegistersTest(unittest.TestCase):
@@ -20,8 +22,8 @@ class RegistersTest(unittest.TestCase):
         # Check set and get bytes including from mask
         self.regs.set_bytes(bytearray([0x12, 0x34, 0x56, 0x78]), Register('R03'))
         self.assertEqual(bytearray([0x12, 0x34, 0x56, 0x78]), self.regs.get_bytes('R3'))
-        self.assertEqual(bytearray([0x12, 0x56]), self.regs.get_bytes_from_mask('R3', 0b1010))
-        self.regs.set_bytes_from_mask(bytearray([0x85, 0x23]), 'R3', 0b1010)
+        self.assertEqual(bytearray([0x12, 0x56]), self.regs.get_bytes_from_mask(Register('R3'), 0b1010))
+        self.regs.set_bytes_from_mask(bytearray([0x85, 0x23]), Register('R3'), 0b1010)
         self.assertEqual(bytearray([0x85, 0x34, 0x23, 0x78]), self.regs.get_bytes('R3'))
         self.regs.set_bytes_from_mask(bytearray([0x85, 0x23]), Register('RGB'), 0b0011)
         self.assertEqual(bytearray([0x85, 0x34, 0x85, 0x23]), self.regs.get_bytes('R3'))
@@ -35,7 +37,7 @@ class RegistersTest(unittest.TestCase):
         self.regs.set_value(0x00000010, 'R4')
         self.assertEqual(0x00001234, self.regs.get_address(Register('R9'), 0x234))
         self.assertEqual(0x00000234, self.regs.get_address(Register('RAC'), 0x234))
-        self.assertEqual(0x00001244, self.regs.get_address('R9', 0x234, Register('4')))
+        self.assertEqual(0x00001244, self.regs.get_address(Register('R9'), 0x234, Register('4')))
         self.assertEqual(0x00001234, self.regs.get_address(Register('REB'), 0x234, Register('0')))
         # Check errors and exceptions
         self.assertRaises(AttributeError, self.regs.get_value, 'RAC')
@@ -133,13 +135,31 @@ class StorageTest(unittest.TestCase):
 
 class StateTest(unittest.TestCase):
     def setUp(self) -> None:
-        self.state = State(Program())
+        self.state = Execute(Program())
 
     def test_ts14(self):
         self.state.seg_name = 'TS14'
         self.state.run()
         self.assertListEqual(list(), self.state.global_program.segments[self.state.seg_name].errors)
         self.assertListEqual(list(), self.state.errors)
+        self.assertEqual(0x00012000, self.state.regs.get_value('R1'))
+        self.assertEqual(0xFFFFC1C1 - 0x100000000, self.state.regs.get_value('R2'))
+        self.assertEqual(bytearray([0xC1, 0xC1]), self.state.vm.get_bytes(0x00012344, 2))
+        self.assertEqual(0x0000C1C10000, self.state.vm.get_value(0x00012342, 6))
+        self.assertEqual(2, self.state.regs.get_value('R3'))
+        self.assertEqual(0x02, self.state.vm.get_value(0x0001203F, 1))
+        self.assertEqual(2, self.state.regs.get_value('R5'))
+        self.assertEqual(-2, self.state.regs.get_value('R6'))
+        self.assertEqual(4, self.state.regs.get_value('R7'))
+        self.assertEqual(2, self.state.regs.get_value('R10'))
+        self.assertEqual(0x00000100, self.state.regs.get_value('R4'))
+        self.assertEqual(0x00000000, self.state.regs.get_value('R11'))
+        self.assertEqual(-1, self.state.regs.get_value('R12'))
+        self.assertEqual(0x0001203F, self.state.regs.get_value('R13'))
+        self.assertEqual(0x00012041, self.state.regs.get_value('R14'))
+        self.assertEqual(5, self.state.regs.get_value('R15'))
+        self.assertEqual(bytearray([0x02]), self.state.vm.get_bytes(config.ECB + 8))
+        self.assertEqual(bytearray([0x40, 0x40, 0x40, 0x40, 0x40]), self.state.vm.get_bytes(config.ECB + 9, 5))
 
 
 if __name__ == '__main__':

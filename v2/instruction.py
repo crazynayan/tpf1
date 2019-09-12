@@ -1,67 +1,14 @@
+from typing import Tuple, Dict, Callable
+
 import v2.instruction_type as ins
-
-
-class L(ins.RegisterFieldIndex):
-    def execute(self, state):
-        address = state.regs.get_address(self.field.base, self.field.dsp, self.field.index)
-        value = state.vm.get_value(address, 4)
-        value = state.validate(value)
-        state.regs.set_value(value, self.reg)
-
-
-class LH(ins.RegisterFieldIndex):
-    def execute(self, state):
-        address = state.regs.get_address(self.field.base, self.field.dsp, self.field.index)
-        value = state.vm.get_value(address, 2)
-        state.regs.set_value(value, self.reg)
-
-
-class N(ins.RegisterFieldIndex):
-    def execute(self, state):
-        address = state.regs.get_address(self.field.base, self.field.dsp, self.field.index)
-        value = state.vm.get_value(address, 4)
-        value &= state.regs.get_value(self.reg)
-        state.regs.set_value(value, self.reg)
-
-
-class STH(ins.RegisterFieldIndex):
-    def execute(self, state):
-        address = state.regs.get_address(self.field.base, self.field.dsp, self.field.index)
-        value = state.regs.get_value(self.reg)
-        state.vm.set_value(value, address, 2)
-
-
-class LHI(ins.RegisterData):
-    def execute(self, state):
-        state.regs.set_value(self.data, self.reg)
-
-
-class STC(ins.RegisterFieldIndex):
-    def execute(self, state):
-        address = state.regs.get_address(self.field.base, self.field.dsp, self.field.index)
-        byte = state.regs.get_bytes_from_mask(self.reg, 0b0001)
-        state.vm.set_bytes(byte, address)
-
-
-class BACKC(ins.Exit):
-    def execute(self, state):
-        pass
-
-
-class EQU(ins.InstructionGeneric):
-    def execute(self, state):
-        pass
-
-
-class DS(ins.InstructionGeneric):
-    def execute(self, state):
-        pass
+from v2.file_line import Line
+from v2.macro import SegmentMacro
 
 
 class Instruction:
-    INS = {
-        'EQU': EQU,
-        'DS': DS,
+    INS: Dict[str, Callable] = {
+        'EQU': ins.InstructionGeneric,
+        'DS': ins.InstructionGeneric,
         'NI': ins.FieldBits,
         'TM': ins.FieldBits,
         'OI': ins.FieldBits,
@@ -111,8 +58,8 @@ class Instruction:
         'ALR': ins.RegisterRegister,
         'SLR': ins.RegisterRegister,
         'CVB': ins.RegisterFieldIndex,
-        'STH': STH,
-        'LH': LH,
+        'STH': ins.RegisterFieldIndex,
+        'LH': ins.RegisterFieldIndex,
         'A': ins.RegisterFieldIndex,
         'AH': ins.RegisterFieldIndex,
         'S': ins.RegisterFieldIndex,
@@ -134,15 +81,15 @@ class Instruction:
         'SL': ins.RegisterFieldIndex,
         'O': ins.RegisterFieldIndex,
         'X': ins.RegisterFieldIndex,
-        'L': L,
+        'L': ins.RegisterFieldIndex,
         'IC': ins.RegisterFieldIndex,
-        'STC': STC,
-        'N': N,
+        'STC': ins.RegisterFieldIndex,
+        'N': ins.RegisterFieldIndex,
         'LA': ins.RegisterFieldIndex,
         'CH': ins.RegisterFieldIndex,
         'ST': ins.RegisterFieldIndex,
         'CVD': ins.RegisterFieldIndex,
-        'LHI': LHI,
+        'LHI': ins.RegisterData,
         'AHI': ins.RegisterData,
         'MHI': ins.RegisterData,
         'CHI': ins.RegisterData,
@@ -158,7 +105,7 @@ class Instruction:
         'BXH': ins.RegisterRegisterBranch,
         'BXLE': ins.RegisterRegisterBranch,
         'EXITC': ins.Exit,
-        'BACKC': BACKC,
+        'BACKC': ins.Exit,
         'B': ins.BranchCondition,
         'J': ins.BranchCondition,
         'BE': ins.BranchCondition,
@@ -239,17 +186,17 @@ class Instruction:
         'END': ins.KeyValue,
     }
 
-    def __init__(self, ins_type):
+    def __init__(self, ins_type: str):
         if ins_type not in self.INS:
             raise KeyError
-        self.instruction_object = self.INS[ins_type]()
+        self.instruction_object: ins.InstructionGeneric = self.INS[ins_type]()
 
-    def create(self, line, macro):
+    def create(self, line: Line, macro: SegmentMacro) -> Tuple[ins.Instruction, str]:
         self.instruction_object.label = line.label
         self.instruction_object.command = line.command
         return self.instruction_object.set_operand(line, macro)
 
     @classmethod
-    def from_line(cls, line, macro):
+    def from_line(cls, line: Line, macro: SegmentMacro) -> Tuple[ins.Instruction, str]:
         instruction_object = cls(line.command)
         return instruction_object.create(line, macro)
