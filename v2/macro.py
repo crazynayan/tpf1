@@ -1,4 +1,6 @@
 import re
+from typing import Optional, Dict, List, Tuple
+
 
 from v2.data_type import DataType, Register
 from v2.directive import AssemblerDirective
@@ -9,20 +11,20 @@ from v2.file_line import File, Line, SymbolTable
 class DataMacro:
     ACCEPTED_COMMANDS = {'DS', 'EQU', 'ORG', 'DSECT', 'DC'}
 
-    def __init__(self, name, file_name=None):
-        self.name = name
-        self.file_name = file_name
-        self.loaded = False
-        self.symbol_table = dict()
-        self.errors = list()
+    def __init__(self, name: str, file_name: Optional[str] = None):
+        self.name: str = name
+        self.file_name: Optional[str] = file_name
+        self.loaded: bool = False
+        self.symbol_table: Dict[str, SymbolTable] = dict()
+        self.errors: List[str] = list()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.name}:{self.loaded}:{len(self.symbol_table)}"
 
-    def load(self):
+    def load(self) -> None:
         if self.loaded:
             return
-        # Get the data from line after removing CVS and empty lines.
+        # Get the data from file after removing CVS and empty lines.
         file_lines = File.open(self.file_name)
         # Create a list of Line objects
         lines = Line.from_file(file_lines)
@@ -30,10 +32,8 @@ class DataMacro:
         lines = [line.remove_suffix() for line in lines if line.command in self.ACCEPTED_COMMANDS]
         # Create SymbolTable for each label and add it to dummy macro data_map.
         second_list = list()
-        macro = SegmentMacro()
+        macro = SegmentMacro(name=self.name)
         for line in lines:
-            if not line.is_first_pass:
-                continue
             result = AssemblerDirective.from_line(line, macro, self.name)
             if result != Error.NO_ERROR:
                 second_list.append((line, macro.location_counter))
@@ -95,13 +95,13 @@ class SegmentMacro:
             else:
                 raise TypeError
 
-    def get_value(self, operand):
+    def get_value(self, operand: str) -> Tuple[Optional[int], str]:
         if operand.isdigit():
             return int(operand), Error.NO_ERROR
-        data_list = re.findall(r"[CXHFDBZPAY]'[^']+'", operand)
+        data_list = re.findall(r"[CXHFDBZPAY]D?'[^']+'", operand)
         value_list = list()
         if data_list:
-            operand = re.sub(r"[CXHFDBZPAY]'[^']+'", "~", operand)
+            operand = re.sub(r"[CXHFDBZPAY]D?'[^']+'", "~", operand)
             for data in data_list:
                 value = DataType(data[0], input=data[2:-1]).value
                 value_list.insert(0, value)
@@ -125,7 +125,7 @@ class SegmentMacro:
                 eval_list.append(str(value))
         return eval(''.join(eval_list)), Error.NO_ERROR
 
-    def lookup(self, field):
+    def lookup(self, field: str) -> Tuple[SymbolTable, str]:
         field = next(iter(field.split('&')))
         try:
             return self.data_map[field], Error.NO_ERROR
