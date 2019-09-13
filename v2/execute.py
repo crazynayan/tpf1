@@ -10,20 +10,39 @@ class Execute(State):
     def __init__(self, global_program: Program, seg_name: Optional[str] = None):
         super().__init__(global_program, seg_name)
         self.ex: Dict[str, Callable] = {
-            'L': self.load_fullword,
-            'LH': self.load_halfword,
-            'N': self.and_fullword,
-            'STH': self.store_halfword,
-            'LHI': self.load_halfword_immediate,
-            'STC': self.store_character,
-            'LR': self.load_register,
             'AR': self.add_register,
             'SR': self.subtract_register,
-            'IC': self.insert_character,
-            'BCTR': self.branch_on_count_register,
+            'LR': self.load_register,
+            # LTR
+            'L': self.load_fullword,
+            'LH': self.load_halfword,
             'LA': self.load_address,
+            'IC': self.insert_character,
+            # ICM
+            # LM
+            # ST
+            'STH': self.store_halfword,
+            # STM
+            'STC': self.store_character,
+            # STCM - Not in ETA5
             'MVC': self.move_character,
             'MVI': self.move_immediate,
+            'LHI': self.load_halfword_immediate,
+            # NR - Not in ETA5
+            # XR - Not in ETA5
+            # OR - Not in ETA5
+            'N': self.and_fullword,
+            # O - Not in ETA5
+            # X - Not in ETA5
+            'NC': self.and_character,
+            'OC': self.or_character,
+            'XC': self.xor_character,
+            'NI': self.and_immediate,
+            'OI': self.or_immediate,
+            # XI - Not in ETA5 (Need to check the status of flipped bits via is_updated_bit)
+            'BCTR': self.branch_on_count_register,
+            # BCT - Not in ETA5
+            # BAS
             'EQU': self.no_operation,
             'DS': self.no_operation,
             'BACKC': self.no_operation,
@@ -102,12 +121,41 @@ class Execute(State):
         source_address = self.regs.get_address(node.field.base, node.field.dsp)
         target_address = self.regs.get_address(node.field_len.base, node.field_len.dsp)
         for index in range(node.field_len.length):
-            byte = self.vm.get_bytes(source_address + index)
-            self.vm.set_bytes(byte, target_address + index)
+            byte = self.vm.get_byte(source_address + index)
+            self.vm.set_byte(byte, target_address + index)
 
     def move_immediate(self, node: ins.FieldData) -> None:
         address = self.regs.get_address(node.field.base, node.field.dsp)
         self.vm.set_value(node.data, address, 1)
+
+    def xor_character(self, node: ins.FieldLenField) -> None:
+        source_address = self.regs.get_address(node.field.base, node.field.dsp)
+        target_address = self.regs.get_address(node.field_len.base, node.field_len.dsp)
+        for index in range(node.field_len.length):
+            byte = self.vm.get_byte(source_address + index) ^ self.vm.get_byte(target_address + index)
+            self.vm.set_byte(byte, target_address + index)
+
+    def or_character(self, node: ins.FieldLenField) -> None:
+        source_address = self.regs.get_address(node.field.base, node.field.dsp)
+        target_address = self.regs.get_address(node.field_len.base, node.field_len.dsp)
+        for index in range(node.field_len.length):
+            byte = self.vm.get_byte(source_address + index) | self.vm.get_byte(target_address + index)
+            self.vm.set_byte(byte, target_address + index)
+
+    def and_character(self, node: ins.FieldLenField) -> None:
+        source_address = self.regs.get_address(node.field.base, node.field.dsp)
+        target_address = self.regs.get_address(node.field_len.base, node.field_len.dsp)
+        for index in range(node.field_len.length):
+            byte = self.vm.get_byte(source_address + index) & self.vm.get_byte(target_address + index)
+            self.vm.set_byte(byte, target_address + index)
+
+    def or_immediate(self, node: ins.FieldBits) -> None:
+        address = self.regs.get_address(node.field.base, node.field.dsp)
+        self.vm.or_bit(address, node.bits.value)
+
+    def and_immediate(self, node: ins.FieldBits) -> None:
+        address = self.regs.get_address(node.field.base, node.field.dsp)
+        self.vm.and_bit(address, node.bits.value)
 
     def no_operation(self, node: Optional[ins.InstructionGeneric] = None) -> None:
         pass

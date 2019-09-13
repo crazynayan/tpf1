@@ -35,7 +35,6 @@ class SegmentTest(unittest.TestCase):
             f"{Error.FBD_INVALID_KEY} TS010010.4:OI:ERROR_FIELD,1 {seg_name}",
             f"{Error.FBD_INVALID_KEY_BASE} TS010010.5:OI:PD0_C_ITM,1 {seg_name}",
             f"{Error.BITS_INVALID_NUMBER} TS010010.7:OI:EBW000,250+250 {seg_name}",
-            f"{Error.BITS_INVALID_BIT} TS010010.8:OI:EBW000,#PD0_FLDEMP {seg_name}",
             f"{Error.FBD_INVALID_DSP} TS010010.9:OI:-1(R2),1 {seg_name}",
             f"{Error.FBD_INVALID_DSP} TS010010.10:OI:4096(R2),1 {seg_name}",
         ]

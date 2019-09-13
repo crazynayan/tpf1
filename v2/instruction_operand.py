@@ -225,6 +225,6 @@ class Bits:
                     if lookup_result == Error.NO_ERROR:
                         if field.dsp in self.VALID_VALUE:
                             self.set_name(expression, field.dsp)
-                        else:
-                            result = Error.BITS_INVALID_BIT
+                        # else:
+                        #     result = Error.BITS_INVALID_BIT
         return result

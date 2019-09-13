@@ -134,6 +134,10 @@ class Storage:
         base_address, start, end = self._get_data(address, length)
         return self.frames[base_address][start: end]
 
+    def get_byte(self, address: int) -> int:
+        base_address, dsp, _ = self._get_data(address)
+        return self.frames[base_address][dsp]
+
     def get_value(self, address: int, length: int = 4) -> int:
         return DataType('F', bytes=self.get_bytes(address, length)).value
 
@@ -142,6 +146,11 @@ class Storage:
         for index, byte in enumerate(byte_array[: end - start]):
             self.frames[base_address][index + start] = byte
             self._frame[base_address][index + start] = byte
+
+    def set_byte(self, byte: int, address: int) -> None:
+        base_address, dsp, _ = self._get_data(address)
+        self.frames[base_address][dsp] = byte
+        self._frame[base_address][dsp] = byte
 
     def set_value(self, value: int, address: int, length: int = 4):
         base_address, start, end = self._get_data(address, length)
@@ -164,15 +173,15 @@ class Storage:
         base_address, dsp, _ = self._get_data(address)
         return self.frames[base_address][dsp] & bits == 0
 
-    def set_bit_on(self, address: int, bit: int) -> None:
+    def or_bit(self, address: int, bit: int) -> None:
         base_address, dsp, _ = self._get_data(address)
         self.frames[base_address][dsp] |= bit
         self._frame[base_address][dsp] |= bit
 
-    def set_bit_off(self, address: int, bit: int) -> None:
+    def and_bit(self, address: int, bit: int) -> None:
         base_address, dsp, _ = self._get_data(address)
-        self.frames[base_address][dsp] = self.frames[base_address][dsp] & ~bit
-        self._frame[base_address][dsp] = self._frame[base_address][dsp] & ~bit
+        self.frames[base_address][dsp] = self.frames[base_address][dsp] & bit
+        self._frame[base_address][dsp] = self._frame[base_address][dsp] & bit
 
     def is_updated_bit(self, address: int, bit: int) -> bool:
         # Will return True only if all requested bits are updated

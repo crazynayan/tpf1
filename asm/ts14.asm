@@ -24,6 +24,15 @@
          MVC    EBW000,WA0TKK
          MVI    EBW001,C' '
          MVC    EBW002(5),EBW001
+         MVC    EBW008(6),EBW001
+         XC     EBW008(6),EBW008
+         MVC    EBW016,EBW001
+         OC     EBW016,EBW000
+         MVC    EBW017,EBW016
+         NC     EBW017,EBW001
+         OI     WA0TY1,#WA0GEN
+         MVI    EBW018,X'FF'
+         NI     EBW018,#BITA-#WA0GEN
          BACKC
 C_AA     DC     C'AA'
 SPACES   DS     0XL256

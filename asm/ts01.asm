@@ -19,6 +19,6 @@ TS010010 EQU   *
          OI    PD0_C_ITM,1
          OI    C'A'(R2),1              NO ERROR SINCE C'A' IS X'D5'
          OI    EBW000,250+250          CANNOT HAVE GREATER THAN 255
-         OI    EBW000,#PD0_FLDEMP
+         OI    EBW000,#PD0_FLDEMP      NO ERROR SINCE #PD0_FLDEMP = 03
          OI    -1(R2),1
          OI    4096(R2),1

@@ -100,12 +100,12 @@ class StorageTest(unittest.TestCase):
         # 5. Check bits
         byte = self.regs.R2 + 5
         self.assertFalse(self.storage.all_bits_on(byte, 0x80))
-        self.storage.set_bit_on(byte, 0x80)
+        self.storage.or_bit(byte, 0x80)
         self.assertTrue(self.storage.all_bits_on(byte, 0x80))
         self.assertFalse(self.storage.all_bits_on(byte, 0x40))
         self.assertFalse(self.storage.all_bits_off(byte, 0x80))
         self.assertTrue(self.storage.all_bits_off(byte, 0x40))
-        self.storage.set_bit_off(byte, 0x80)
+        self.storage.and_bit(byte, 0xFF - 0x80)
         self.assertFalse(self.storage.all_bits_on(byte, 0x80))
         self.assertEqual(0x00, self.storage.frames[base_r2][5])
         self.assertEqual(0x7F, self.storage._frame[base_r2][5])
@@ -117,7 +117,7 @@ class StorageTest(unittest.TestCase):
         self.assertFalse(self.storage.is_updated_bit(byte, 0xC0))
         # 6. Check multiple bits
         byte = self.regs.R2 + 6
-        self.storage.set_bit_on(byte, 0x0E)
+        self.storage.or_bit(byte, 0x0E)
         self.assertFalse(self.storage.all_bits_on(byte, 0x1C))
         self.assertFalse(self.storage.all_bits_off(byte, 0x1C))
         self.assertTrue(self.storage.all_bits_on(byte, 0x0C))
@@ -128,9 +128,10 @@ class StorageTest(unittest.TestCase):
         self.assertFalse(self.storage.all_bits_off(byte, 0x08))
         self.assertFalse(self.storage.all_bits_on(byte, 0x10))
         self.assertTrue(self.storage.all_bits_off(byte, 0x10))
-        self.storage.set_bit_on(byte, 0x30)
-        self.assertEqual(0x3E, self.storage.get_value(byte, 1))
-        self.storage.set_bit_off(byte, 0x18)
+        self.storage.or_bit(byte, 0x30)
+        self.assertEqual(0x3E, self.storage.get_byte(byte))
+        self.storage.and_bit(byte, 0xFF - 0x18)
+        self.assertEqual(0x26, self.storage.get_byte(byte))
 
 
 class StateTest(unittest.TestCase):
@@ -159,7 +160,15 @@ class StateTest(unittest.TestCase):
         self.assertEqual(0x00012041, self.state.regs.get_value('R14'))
         self.assertEqual(5, self.state.regs.get_value('R15'))
         self.assertEqual(bytearray([0x02]), self.state.vm.get_bytes(config.ECB + 8))
-        self.assertEqual(bytearray([0x40, 0x40, 0x40, 0x40, 0x40]), self.state.vm.get_bytes(config.ECB + 9, 5))
+        self.assertEqual(bytearray([0x40] * 6), self.state.vm.get_bytes(config.ECB + 9, 6))
+        self.assertEqual(bytearray([0x00] * 6), self.state.vm.get_bytes(config.ECB + 16, 6))
+        self.assertTrue(self.state.vm.is_updated(config.ECB + 16, 6))
+        self.assertFalse(self.state.vm.is_updated(config.ECB + 15, 1))
+        self.assertEqual(0x42, self.state.vm.get_value(config.ECB + 24, 1))
+        self.assertEqual(0x40, self.state.vm.get_value(config.ECB + 25, 1))
+        self.assertEqual(0x80, self.state.vm.get_byte(0x00012030))
+        self.assertTrue(self.state.vm.is_updated_bit(0x00012030, 0x80))
+        self.assertFalse(self.state.vm.is_updated_bit(0x00012030, 0x40))
 
 
 if __name__ == '__main__':

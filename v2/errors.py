@@ -11,7 +11,6 @@ class Error:
     FBD_INVALID_DSP = 'Field - Invalid displacement specified.'
     FX_INVALID_INDEX = 'FieldIndex - Invalid index register specified.'
     BITS_INVALID_NUMBER = 'Bits - Invalid number.'
-    BITS_INVALID_BIT = 'Bits - Invalid bit value.'
     REG_INVALID = 'Register - Invalid.'
     RFX_INVALID_REG = 'RegisterFieldIndex - Invalid register specified'
     FL_LEN_REQUIRED = 'FieldLen - Length required.'
