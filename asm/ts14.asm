@@ -1,5 +1,5 @@
 **********************************************************************
-*        EXECUTION OF RR AND RX INSTRUCTION
+*        EXECUTION OF NON CONDITIONAL INSTRUCTION (PART 1)
 **********************************************************************
          PGMID 'TS14'
          WA0AA  REG=R1

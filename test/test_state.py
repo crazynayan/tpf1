@@ -170,6 +170,28 @@ class StateTest(unittest.TestCase):
         self.assertTrue(self.state.vm.is_updated_bit(0x00012030, 0x80))
         self.assertFalse(self.state.vm.is_updated_bit(0x00012030, 0x40))
 
+    def test_ts15(self):
+        self.state.seg_name = 'TS15'
+        self.state.run()
+        self.assertListEqual(list(), self.state.global_program.segments[self.state.seg_name].errors)
+        self.assertListEqual(list(), self.state.errors)
+        self.assertEqual(23, self.state.regs.get_value('R2'))
+        self.assertEqual(bytearray([0x00, 0x00, 0x00, 0x17]), self.state.vm.get_bytes(config.ECB + 8, 4))
+        self.assertEqual(-2, self.state.regs.get_value('R3'))
+        self.assertEqual(bytearray([0xFF, 0x00]), self.state.vm.get_bytes(config.ECB + 12, 2))
+        self.assertEqual(0x40404040, self.state.regs.get_value('R15'))
+        self.assertEqual(0xC1404040 - 0x100000000, self.state.regs.get_value('R0'))
+        self.assertEqual(0x40C14040, self.state.regs.get_value('R1'))
+        self.assertEqual(0x40404040C140404040C14040, self.state.vm.get_value(config.ECB + 28, 12))
+        self.assertEqual(0x000000000002048C, self.state.vm.get_value(config.ECB + 48, 8))
+        self.assertEqual(2048, self.state.regs.get_value('R4'))
+        self.assertEqual(0x000000000012048C, self.state.vm.get_value(config.ECB + 56, 8))
+        self.assertEqual(12048, self.state.regs.get_value('R5'))
+        self.assertEqual(14096, self.state.regs.get_value('R6'))
+        self.assertEqual(0x000000000014096C, self.state.vm.get_value(config.ECB + 64, 8))
+        self.assertEqual(bytearray([0xF0, 0xF1, 0xF4, 0xF0, 0xF9, 0xC6]), self.state.vm.get_bytes(config.ECB + 40, 6))
+        self.assertEqual(bytearray([0xF0, 0xF1, 0xF4, 0xF0, 0xF9, 0xF6]), self.state.vm.get_bytes(config.ECB + 72, 6))
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -154,8 +154,10 @@ class SegmentMacro:
         return next(name for name, reg in self.using.items() if reg == base.reg)
 
     def get_base(self, macro_name):
-        # Will raise a KeyError exception if the macro name is not present.
-        return self.using[macro_name]
+        try:
+            return self.using[macro_name]
+        except KeyError:
+            raise KeyError
 
     def get_field_name(self, base, dsp, length):
         try:

@@ -21,6 +21,10 @@ class DataTypeGeneric:
     def from_bytes(self) -> int:
         return int.from_bytes(self.bytes, 'big', signed=False)
 
+    @property
+    def decode(self) -> str:
+        return self.bytes.decode(encoding='cp037')
+
 
 class CDataType(DataTypeGeneric):
     PADDING = 0x40
@@ -46,9 +50,6 @@ class CDataType(DataTypeGeneric):
             return char_data[:length]  # Truncation
         char_data.extend(bytearray([self.PADDING] * (length - self.length)))
         return char_data               # Padding
-
-    def text(self) -> str:
-        return self.bytes.decode(encoding='cp037')
 
 
 class XDataType(DataTypeGeneric):
@@ -260,6 +261,10 @@ class DataType:
 
     def from_bytes(self) -> int:
         return self.data_type_object.from_bytes()
+
+    @property
+    def decode(self) -> str:
+        return self.data_type_object.decode
 
 
 class Register:
