@@ -19,6 +19,7 @@ class RegistersTest(unittest.TestCase):
         self.regs.set_value(-1, Register('2'))
         self.assertEqual(-1, self.regs.R2)
         self.assertEqual(-1, self.regs.get_value('R2'))
+        self.assertEqual(0xFFFFFFFF, self.regs.get_unsigned_value('R2'))
         # Check set and get bytes including from mask
         self.regs.set_bytes(bytearray([0x12, 0x34, 0x56, 0x78]), Register('R03'))
         self.assertEqual(bytearray([0x12, 0x34, 0x56, 0x78]), self.regs.get_bytes('R3'))
@@ -180,7 +181,7 @@ class StateTest(unittest.TestCase):
         self.assertEqual(-2, self.state.regs.get_value('R3'))
         self.assertEqual(bytearray([0xFF, 0x00]), self.state.vm.get_bytes(config.ECB + 12, 2))
         self.assertEqual(0x40404040, self.state.regs.get_value('R15'))
-        self.assertEqual(0xC1404040 - 0x100000000, self.state.regs.get_value('R0'))
+        self.assertEqual(0xC1404040, self.state.regs.get_unsigned_value('R0'))
         self.assertEqual(0x40C14040, self.state.regs.get_value('R1'))
         self.assertEqual(0x40404040C140404040C14040, self.state.vm.get_value(config.ECB + 28, 12))
         self.assertEqual(0x000000000002048C, self.state.vm.get_value(config.ECB + 48, 8))
@@ -190,7 +191,32 @@ class StateTest(unittest.TestCase):
         self.assertEqual(14096, self.state.regs.get_value('R6'))
         self.assertEqual(0x000000000014096C, self.state.vm.get_value(config.ECB + 64, 8))
         self.assertEqual(bytearray([0xF0, 0xF1, 0xF4, 0xF0, 0xF9, 0xC6]), self.state.vm.get_bytes(config.ECB + 40, 6))
-        self.assertEqual(bytearray([0xF0, 0xF1, 0xF4, 0xF0, 0xF9, 0xF6]), self.state.vm.get_bytes(config.ECB + 72, 6))
+        self.assertEqual(0xF0F1F4F0F9F6, self.state.vm.get_unsigned_value(config.ECB + 72, 6))
+
+    def test_ts16(self):
+        self.state.seg_name = 'TS16'
+        self.state.run()
+        # Default state is 1.1, 2.1, 3.1
+        self.assertEqual(1, self.state.regs.get_value('R0'))
+        self.assertEqual(1, self.state.regs.get_value('R1'))
+        self.assertEqual(1, self.state.regs.get_value('R2'))
+        self.assertEqual(1, self.state.regs.get_value('R3'))
+        # Update state to 1.2, 2.2, 3.2
+        self.state.vm.set_bytes(bytearray([0xC1, 0xC2, 0xC3, 0xC4]), config.ECB + 8, 4)
+        self.state.vm.set_bytes(bytearray([0xC1, 0xC2, 0xC3, 0xC5]), config.ECB + 12, 4)
+        self.state.vm.set_bytes(bytearray([0xC1]), config.ECB + 16)
+        self.state.regs.set_value(-10, 'R7')
+        self.state.run()
+        self.assertEqual(2, self.state.regs.get_value('R0'))
+        self.assertEqual(2, self.state.regs.get_value('R1'))
+        self.assertEqual(2, self.state.regs.get_value('R2'))
+        self.assertEqual(1, self.state.regs.get_value('R3'))
+        # Update state to 3.3
+        self.state.regs.set_value(10, 'R7')
+        self.state.run()
+        self.assertEqual(3, self.state.regs.get_value('R2'))
+        self.assertEqual(2, self.state.regs.get_value('R3'))
+        self.state.run()
 
 
 if __name__ == '__main__':

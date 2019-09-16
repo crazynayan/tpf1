@@ -41,6 +41,9 @@ class Registers:
         except AttributeError:
             raise AttributeError
 
+    def get_unsigned_value(self, reg: Union[str, Register]) -> int:
+        return self.get_value(reg) & self.L
+
     def get_address(self, base: Register, dsp: int, index: Optional[Register] = None) -> int:
         return (self.get_value(base) if str(base) != 'R0' else 0) + dsp + \
                (self.get_value(index) if index and str(index) != 'R0' else 0)
@@ -140,6 +143,9 @@ class Storage:
 
     def get_value(self, address: int, length: int = 4) -> int:
         return DataType('F', bytes=self.get_bytes(address, length)).value
+
+    def get_unsigned_value(self, address: int, length: int = 4) -> int:
+        return DataType('X', bytes=self.get_bytes(address, length)).value
 
     def set_bytes(self, byte_array: bytearray, address: int, length: Optional[int] = None) -> None:
         base_address, start, end = self._get_data(address, length)
