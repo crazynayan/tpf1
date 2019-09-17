@@ -8,10 +8,10 @@
 *               3.2 - IF R15 < 0 THEN R2 = 2, R3 = 1
 *               3.3 - IF R15 > 0 THEN R2 = 3, R3 = 2
 *        SCENARIO 4 - R4 = 1 IF R14 ZERO ELSE 2
-*        SCENARIO 6
-*               6.1 - IF EBW009.X'11' OFF THEN R5 = 1
-*               6.2 - IF EBW009.X'11' ON  THEN R5 = 2
-*               6.3 - IF EBW009.X'11' MIXED THEN R5 = 3
+*        SCENARIO 5
+*               5.1 - IF EBW009.X'11' OFF THEN R5 = 1
+*               5.2 - IF EBW009.X'11' ON  THEN R5 = 2
+*               5.3 - IF EBW009.X'11' MIXED THEN R5 = 3
 **********************************************************************
          PGMID 'TS16'
 *
