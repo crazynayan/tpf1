@@ -71,10 +71,9 @@ class Execute(State):
 
 
             # S07 - And/Or/Xor, TM, EX, Data Conversion
-            # CHI - Not in ETA5
             # NR - Not in ETA5
             # XR - Not in ETA5
-            # OR - Not in ETA5
+            'OR': self.or_register,
             'N': self.and_fullword,
             # O - Not in ETA5
             # X - Not in ETA5
@@ -85,7 +84,7 @@ class Execute(State):
             'OI': self.or_immediate,
             # XI - Not in ETA5 (Need to check the status of flipped bits via is_updated_bit)
             'TM': self.test_mask,
-            # EX
+            'EX': self.execute,
             'PACK': self.pack,
             'CVB': self.convert_binary,
             'CVD': self.convert_decimal,
@@ -260,7 +259,7 @@ class Execute(State):
     def move_character(self, node: ins.FieldLenField) -> str:
         source_address = self.regs.get_address(node.field.base, node.field.dsp)
         target_address = self.regs.get_address(node.field_len.base, node.field_len.dsp)
-        for index in range(node.field_len.length):
+        for index in range(node.field_len.length + 1):
             byte = self.vm.get_byte(source_address + index)
             self.vm.set_byte(byte, target_address + index)
         return self.next_label(node)
@@ -297,8 +296,8 @@ class Execute(State):
     def compare_logical_character(self, node: ins.FieldLenField) -> str:
         source_address = self.regs.get_address(node.field.base, node.field.dsp)
         target_address = self.regs.get_address(node.field_len.base, node.field_len.dsp)
-        source_value = self.vm.get_unsigned_value(target_address, node.field_len.length)
-        target_value = self.vm.get_unsigned_value(source_address, node.field_len.length)
+        source_value = self.vm.get_unsigned_value(target_address, node.field_len.length + 1)
+        target_value = self.vm.get_unsigned_value(source_address, node.field_len.length + 1)
         self.set_number_cc(target_value - source_value)
         return self.next_label(node)
 
@@ -317,6 +316,13 @@ class Execute(State):
 
     # S07 - AND/OR/XOR, TM, EX, PACK/UNPK
 
+    def or_register(self, node: ins.RegisterRegister) -> str:
+        value = self.regs.get_value(node.reg1)
+        value |= self.regs.get_value(node.reg2)
+        self.regs.set_value(value, node.reg1)
+        self.set_zero_cc(value)
+        return self.next_label(node)
+
     def and_fullword(self, node: ins.RegisterFieldIndex) -> str:
         address = self.regs.get_address(node.field.base, node.field.dsp, node.field.index)
         value = self.vm.get_value(address)
@@ -328,30 +334,30 @@ class Execute(State):
     def xor_character(self, node: ins.FieldLenField) -> str:
         source_address = self.regs.get_address(node.field.base, node.field.dsp)
         target_address = self.regs.get_address(node.field_len.base, node.field_len.dsp)
-        for index in range(node.field_len.length):
+        for index in range(node.field_len.length + 1):
             byte = self.vm.get_byte(source_address + index) ^ self.vm.get_byte(target_address + index)
             self.vm.set_byte(byte, target_address + index)
-        self.set_zero_cc(self.vm.get_value(target_address, node.field_len.length))
+        self.set_zero_cc(self.vm.get_value(target_address, node.field_len.length + 1))
         return self.next_label(node)
 
     def or_character(self, node: ins.FieldLenField) -> str:
         source_address = self.regs.get_address(node.field.base, node.field.dsp)
         target_address = self.regs.get_address(node.field_len.base, node.field_len.dsp)
-        for index in range(node.field_len.length):
+        for index in range(node.field_len.length + 1):
             target_byte = self.vm.get_byte(target_address + index)
             byte = self.vm.get_byte(source_address + index) | target_byte
             if byte != target_byte:
                 self.vm.set_byte(byte, target_address + index)
-        self.set_zero_cc(self.vm.get_value(target_address, node.field_len.length))
+        self.set_zero_cc(self.vm.get_value(target_address, node.field_len.length + 1))
         return self.next_label(node)
 
     def and_character(self, node: ins.FieldLenField) -> str:
         source_address = self.regs.get_address(node.field.base, node.field.dsp)
         target_address = self.regs.get_address(node.field_len.base, node.field_len.dsp)
-        for index in range(node.field_len.length):
+        for index in range(node.field_len.length + 1):
             byte = self.vm.get_byte(source_address + index) & self.vm.get_byte(target_address + index)
             self.vm.set_byte(byte, target_address + index)
-        self.set_zero_cc(self.vm.get_value(target_address, node.field_len.length))
+        self.set_zero_cc(self.vm.get_value(target_address, node.field_len.length + 1))
         return self.next_label(node)
 
     def or_immediate(self, node: ins.FieldBits) -> str:
@@ -376,13 +382,44 @@ class Execute(State):
             self.cc = 1
         return self.next_label(node)
 
+    def execute(self, node: ins.RegisterLabel) -> str:
+        exec_node = self.global_program.segments[self.seg_name].nodes[node.label]
+        value = self.regs.get_value(node.reg) & 0xFF if node.reg.reg != 'R0' else 0
+        if isinstance(exec_node, ins.FieldLenField):
+            save = exec_node.field_len.length
+            exec_node.field_len.length |= value
+            self.ex[exec_node.command](exec_node)
+            exec_node.field_len.length = save
+        elif isinstance(exec_node, ins.FieldLenFieldLen):
+            save1, save2 = exec_node.field_len1.length, exec_node.field_len2.length
+            value1 = value >> 4
+            exec_node.field_len1.length |= value1
+            value2 = value & 0x0F
+            exec_node.field_len2.length |= value2
+            self.ex[exec_node.command](exec_node)
+            exec_node.field_len1.length, exec_node.field_len2.length = save1, save2
+        elif isinstance(exec_node, ins.FieldData):
+            save = exec_node.data
+            exec_node.data |= value
+            self.ex[exec_node.command](exec_node)
+            exec_node.data = save
+        elif isinstance(exec_node, ins.FieldBits):
+            save = exec_node.bits.value
+            value |= exec_node.bits.value
+            exec_node.bits.set_from_number(value)
+            self.ex[exec_node.command](exec_node)
+            exec_node.bits.set_from_number(save)
+        else:
+            raise TypeError
+        return self.next_label(node)
+
     def pack(self, node: ins.FieldLenFieldLen) -> str:
         source_address = self.regs.get_address(node.field_len2.base, node.field_len2.dsp)
         target_address = self.regs.get_address(node.field_len1.base, node.field_len1.dsp)
-        source_bytes = self.vm.get_bytes(source_address, node.field_len2.length)
+        source_bytes = self.vm.get_bytes(source_address, node.field_len2.length + 1)
         number = DataType('X', bytes=source_bytes).decode
-        packed_bytes = DataType('P', input=number).to_bytes(node.field_len1.length)
-        self.vm.set_bytes(packed_bytes, target_address, node.field_len1.length)
+        packed_bytes = DataType('P', input=number).to_bytes(node.field_len1.length + 1)
+        self.vm.set_bytes(packed_bytes, target_address, node.field_len1.length + 1)
         return self.next_label(node)
 
     def convert_binary(self, node: ins.RegisterFieldIndex):
@@ -402,10 +439,10 @@ class Execute(State):
     def unpack(self, node: ins.FieldLenFieldLen) -> str:
         source_address = self.regs.get_address(node.field_len2.base, node.field_len2.dsp)
         target_address = self.regs.get_address(node.field_len1.base, node.field_len1.dsp)
-        packed_bytes = self.vm.get_bytes(source_address, node.field_len2.length)
+        packed_bytes = self.vm.get_bytes(source_address, node.field_len2.length + 1)
         value = DataType('P', bytes=packed_bytes).value
-        zoned_bytes = DataType('Z', input=str(value)).to_bytes(node.field_len1.length)
-        self.vm.set_bytes(zoned_bytes, target_address, node.field_len1.length)
+        zoned_bytes = DataType('Z', input=str(value)).to_bytes(node.field_len1.length + 1)
+        self.vm.set_bytes(zoned_bytes, target_address, node.field_len1.length + 1)
         return self.next_label(node)
 
     def no_operation(self, node: Optional[ins.InstructionGeneric] = None) -> str:

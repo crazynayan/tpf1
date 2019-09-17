@@ -1,8 +1,8 @@
 **********************************************************************
-*        EXECUTION OF CONDITION INSTRUCTION
+*        EXECUTION OF CONDITION INSTRUCTION, SUBROUTINES
 *        INPUTS TO BE PROVIDED BEFORE EXECUTING
 *        SCENARIO 1 - R0 = 1 IF EBW000[:4] == EBW004[:4] ELSE 2
-*        SCENARIO 2 - R1 = 1 IF EBW008 != 'A' ELSE 2
+*        SCENARIO 2 - R1 = 2 IF EBW008 != 'A' ELSE 3
 *        SCENARIO 3
 *               3.1 - IF R15 == 0 THEN R2 = 1, R3 = 1
 *               3.2 - IF R15 < 0 THEN R2 = 2, R3 = 1
@@ -12,6 +12,13 @@
 *               5.1 - IF EBW009.X'11' OFF THEN R5 = 1
 *               5.2 - IF EBW009.X'11' ON  THEN R5 = 2
 *               5.3 - IF EBW009.X'11' MIXED THEN R5 = 3
+*        SCENARIO 6 - MULTIPLE NESTED SUBROUTINE
+*        SCENARIO 7 - EXECUTE
+*               7.1 - MOVE B IN EBW020 BASED ON VALUES OF R1 + 1
+*               7.2 - PACK 1234 IN EBW024[:4]
+*                   - NO. OF DIGITS FROM LEFT TO USE IS R1 + 1
+*               7.3 - EBW015 = 15 IF R1 BITS SET IN EBW014 ELSE 16
+*               7.4 - SAVE R1 INTO EBW016 USING MVI
 **********************************************************************
          PGMID 'TS16'
 *
@@ -27,9 +34,9 @@ TS160100 DS    0H
 *
 TS160200 DS    0H
          CLI   EBW008,C'A'
-         LHI   R1,1
-         BNE   TS160300
          LHI   R1,2
+         BNE   TS160300
+         LHI   R1,3
 *
 *        SCENARIO 3
 *
@@ -66,22 +73,55 @@ TS160510 DS    0H
          J     TS160600
 TS160520 DS    0H
          LHI   R5,2
+*
+*        SCENARIO 6
+*
 TS160600 DS    0H
-         BAS   R11,TS161100
-         BAS   R11,TS161200
+         BAS   R6,TS161100
+         BAS   R6,TS161200
+*
+*        SCENARIO 7
+*
+TS160700 DS    0H
+         MVC   EBW020(0),BEES
+         EX    R1,*-6
+         LHI   R7,X'30'
+         OR    R7,R1
+         EX    R7,TS16EX01
+         MVI   EBW014,1
+         TM    EBW014,0
+         EX    R1,*-4
+         BZ    TS160710
+         MVI   EBW015,15
+         B     TS160720
+TS160710 DS    0H
+         MVI   EBW015,16
+TS160720 DS    0H
+         EX    R1,TS16EX02
          BACKC
+*
+*        SUBROUTINES
+*
 TS161100 DS    0H
+         ST    R6,EBX000
          MVI   EBW010,10
-         BAS   R12,TS162100
-         BAS   R12,TS162200
-         BR    R11
+         BAS   R6,TS162100
+         BAS   R6,TS162200
+         L     R6,EBX000
+         BR    R6
 TS161200 DS    0H
          MVI   EBW011,11
-         BR    R11
+         BR    R6
 TS162100 DS    0H
          MVI   EBW012,12
-         BR    R12
+         BR    R6
 TS162200 DS    0H
          MVI   EBW013,13
-         BR    R12
-
+         BR    R6
+*
+*        CONSTANTS
+*
+TS16EX01 PACK  EBW024(0),NUM(0)
+TS16EX02 MVI   EBW016,0
+BEES     DC    C'BBBB'
+NUM      DC    C'1234'

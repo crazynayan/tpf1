@@ -135,7 +135,7 @@ class FieldLen(Field):
                 result = self.set_base_dsp_by_operands(operand3, operand1, macro, length)
         if result == Error.NO_ERROR:
             if isinstance(length, int) and 0 <= length <= max_len:
-                self.length = length if length > 0 else 1
+                self.length = length - 1 if length > 0 else 0
             else:
                 result = Error.FL_INVALID_LEN
         return result
@@ -211,6 +211,8 @@ class Bits:
         while value > 0:
             if value & number != 0:
                 self.on_by_value(value)
+            else:
+                self.off_by_value(value)
             value = value >> 1
 
     def set(self, operand: str, macro: SegmentMacro) -> str:
@@ -225,6 +227,4 @@ class Bits:
                     if lookup_result == Error.NO_ERROR:
                         if field.dsp in self.VALID_VALUE:
                             self.set_name(expression, field.dsp)
-                        # else:
-                        #     result = Error.BITS_INVALID_BIT
         return result
