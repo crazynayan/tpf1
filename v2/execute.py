@@ -15,7 +15,7 @@ class Execute(State):
 
             # S03 - Load & Store
             'LR': self.load_register,
-            # LTR
+            'LTR': self.load_test_register,
             # LPR - Not in ETA5
             # LNR - Not in ETA5
             # LCR - Not in ETA5
@@ -48,10 +48,13 @@ class Execute(State):
             'MVI': self.move_immediate,
             # MVCL - Not in ETA5
             # MVZ, MVO, MVN - Not in ETA5
+            'B': self.branch,
+            'J': self.branch,
             # BCT - Not in ETA5
             'BCTR': self.branch_on_count_register,
             # BXH, BXLE - Not in ETA5
             # BAS
+            # BR
             # BASR - Not in ETA5
 
             # S06 -  Compare & Logical
@@ -81,7 +84,7 @@ class Execute(State):
             'NI': self.and_immediate,
             'OI': self.or_immediate,
             # XI - Not in ETA5 (Need to check the status of flipped bits via is_updated_bit)
-            # TM
+            'TM': self.test_mask,
             # EX
             'PACK': self.pack,
             'CVB': self.convert_binary,
@@ -104,6 +107,14 @@ class Execute(State):
             'DS': self.no_operation,
             'BACKC': self.no_operation,
         }
+
+    def run(self) -> None:
+        self.regs.R9 = config.ECB
+        seg = self.init_seg(self.seg_name)
+        label = seg.root_label
+        while label:
+            node = seg.nodes[label]
+            label = self.ex[node.command](node)
 
     def next_label(self, node: ins.InstructionGeneric) -> str:
         for condition in node.conditions:
@@ -128,19 +139,17 @@ class Execute(State):
     def set_zero_cc(self, number: int) -> None:
         self.cc = 1 if number else 0
 
-    def run(self) -> None:
-        self.regs.R9 = config.ECB
-        seg = self.init_seg(self.seg_name)
-        label = seg.root_label
-        while label:
-            node = seg.nodes[label]
-            label = self.ex[node.command](node)
-
     # S03 - Load & Store
 
     def load_register(self, node: ins.RegisterRegister) -> str:
         value = self.regs.get_value(node.reg2)
         self.regs.set_value(value, node.reg1)
+        return self.next_label(node)
+
+    def load_test_register(self, node: ins.RegisterRegister) -> str:
+        value = self.regs.get_value(node.reg2)
+        self.regs.set_value(value, node.reg1)
+        self.set_number_cc(value)
         return self.next_label(node)
 
     def load_fullword(self, node: ins.RegisterFieldIndex) -> str:
@@ -261,6 +270,10 @@ class Execute(State):
         self.vm.set_value(node.data, address, 1)
         return self.next_label(node)
 
+    @staticmethod
+    def branch(node: ins.BranchCondition) -> str:
+        return node.branch.name
+
     def branch_on_count_register(self, node: ins.RegisterRegister) -> str:
         if node.reg2.reg != 'R0':
             raise TypeError
@@ -340,6 +353,16 @@ class Execute(State):
         address = self.regs.get_address(node.field.base, node.field.dsp)
         self.vm.and_bit(address, node.bits.value)
         self.set_zero_cc(self.vm.get_value(address, 1))
+        return self.next_label(node)
+
+    def test_mask(self, node: ins.FieldBits) -> str:
+        address = self.regs.get_address(node.field.base, node.field.dsp)
+        if self.vm.all_bits_off(address, node.bits.value):
+            self.cc = 0
+        elif self.vm.all_bits_on(address, node.bits.value):
+            self.cc = 3
+        else:
+            self.cc = 1
         return self.next_label(node)
 
     def pack(self, node: ins.FieldLenFieldLen) -> str:

@@ -196,26 +196,34 @@ class StateTest(unittest.TestCase):
     def test_ts16(self):
         self.state.seg_name = 'TS16'
         self.state.run()
-        # Default state is 1.1, 2.1, 3.1
+        # Default state is 1.1, 2.1, 3.1, 4.1, 5.1
         self.assertEqual(1, self.state.regs.get_value('R0'))
         self.assertEqual(1, self.state.regs.get_value('R1'))
         self.assertEqual(1, self.state.regs.get_value('R2'))
         self.assertEqual(1, self.state.regs.get_value('R3'))
-        # Update state to 1.2, 2.2, 3.2
+        self.assertEqual(1, self.state.regs.get_value('R4'))
+        self.assertEqual(1, self.state.regs.get_value('R5'))
+        # Update state to 1.2, 2.2, 3.2, 4.2, 5.2
         self.state.vm.set_bytes(bytearray([0xC1, 0xC2, 0xC3, 0xC4]), config.ECB + 8, 4)
         self.state.vm.set_bytes(bytearray([0xC1, 0xC2, 0xC3, 0xC5]), config.ECB + 12, 4)
         self.state.vm.set_bytes(bytearray([0xC1]), config.ECB + 16)
-        self.state.regs.set_value(-10, 'R7')
+        self.state.regs.set_value(-10, 'R15')
+        self.state.regs.set_value(23, 'R14')
+        self.state.vm.set_bytes(bytearray([0x11]), config.ECB + 17)
         self.state.run()
         self.assertEqual(2, self.state.regs.get_value('R0'))
         self.assertEqual(2, self.state.regs.get_value('R1'))
         self.assertEqual(2, self.state.regs.get_value('R2'))
         self.assertEqual(1, self.state.regs.get_value('R3'))
-        # Update state to 3.3
-        self.state.regs.set_value(10, 'R7')
+        self.assertEqual(2, self.state.regs.get_value('R4'))
+        self.assertEqual(2, self.state.regs.get_value('R5'))
+        # Update state to 3.3, 5.3
+        self.state.regs.set_value(10, 'R15')
+        self.state.vm.set_bytes(bytearray([0x10]), config.ECB + 17)
         self.state.run()
         self.assertEqual(3, self.state.regs.get_value('R2'))
         self.assertEqual(2, self.state.regs.get_value('R3'))
+        self.assertEqual(3, self.state.regs.get_value('R5'))
         self.state.run()
 
 

@@ -84,7 +84,7 @@ class FieldBaseDsp(Field):
 class FieldIndex(Field):
     def __init__(self):
         super().__init__()
-        self.index = None
+        self.index: Optional[Register] = None
 
     def set(self, operand: str, macro: SegmentMacro, length: int) -> str:
         operand1, operand2, operand3 = self.split_operand(operand)
