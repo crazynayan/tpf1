@@ -1,4 +1,5 @@
 import re
+from typing import List, Optional
 
 from v2.command import cmd
 
@@ -9,7 +10,7 @@ class File:
     COMMENT_C1 = {'*', '.'}
 
     @classmethod
-    def open(cls, file_name):
+    def open(cls, file_name: str) -> List[str]:
         # Open the file
         try:
             with open(file_name, 'r', errors='replace') as file:
@@ -41,13 +42,13 @@ class File:
 
 class Line:
     def __init__(self):
-        self.label = None
-        self.command = None
-        self.operand = None
-        self.continuation = False
+        self.label: Optional[str] = None
+        self.command: Optional[str] = None
+        self.operand: Optional[str] = None
+        self.continuation: bool = False
 
     @classmethod
-    def from_line(cls, file_line, continuing=False):
+    def from_line(cls, file_line: str, continuing: bool = False) -> 'Line':
         # Create a line object from a single file line.
         line = cls()
         if len(file_line) > 71 and file_line[71] != ' ':
@@ -73,7 +74,7 @@ class Line:
         return line
 
     @classmethod
-    def from_file(cls, file_lines):
+    def from_file(cls, file_lines: List[str]) -> List['Line']:
         # Create a list of Line objects. Also combines multiple continuing lines in a single line object.
         lines = list()
         prior_line = Line()
@@ -89,7 +90,7 @@ class Line:
         return lines
 
     @classmethod
-    def yield_lines(cls, lines):
+    def yield_lines(cls, lines: List['Line']) -> list:
         lines_to_yield = list()
         yielded_lines = list()
         for index, line in enumerate(lines):
@@ -114,50 +115,50 @@ class Line:
             yielded_lines = lines_to_yield
             lines_to_yield = list()
 
-    def remove_suffix(self):
+    def remove_suffix(self) -> 'Line':
         self.label = next(iter(self.label.split('&'))) if self.label is not None else None
         return self
 
     @property
-    def is_fall_down(self):
+    def is_fall_down(self) -> bool:
         return True if not cmd.check(self.command, 'no_fall_down') else False
 
     @property
-    def is_set_cc(self):
+    def is_set_cc(self) -> bool:
         return True if cmd.check(self.command, 'set_cc') else False
 
     @property
-    def is_first_pass(self):
+    def is_first_pass(self) -> bool:
         return True if cmd.check(self.command, 'first_pass') else False
 
     @property
-    def is_assembler_directive(self):
+    def is_assembler_directive(self) -> bool:
         return True if cmd.check(self.command, 'directive') else False
 
     @property
-    def is_sw00sr(self):
+    def is_sw00sr(self) -> bool:
         return True if cmd.check(self.command, 'sw00sr') else False
 
     @property
-    def is_check_cc(self):
+    def is_check_cc(self) -> bool:
         return True if cmd.check(self.command, 'check_cc') and \
                        (self.command not in ['BC', 'JC'] or self.operand[:2] not in ['15', '0,']) else False
 
     @property
-    def stop_checking_for_conditions(self):
+    def stop_checking_for_conditions(self) -> bool:
         return True if self.is_set_cc or not self.is_fall_down or self.label is not None \
                        or not cmd.command_check(self.command) else False
 
     @property
-    def length(self):
+    def length(self) -> int:
         length = cmd.check(self.command, 'len')
         return 0 if length is None else length
 
-    def split_operands(self):
+    def split_operands(self) -> List[str]:
         # Split operands separated by commas. Ignore commas enclosed in parenthesis.
         return re.split(r",(?![^()]*\))", self.operand) if self.operand else list()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'{self.label}:{self.command}:{self.operand}'
 
 
@@ -194,3 +195,18 @@ class Label:
 
     def __repr__(self):
         return self.name if self.index == 0 else f"{self.name}{self.separator}{self.index}"
+
+
+class LabelSave:
+    def __init__(self):
+        self.labels: List = list()
+
+    def dumps(self, label: str) -> int:
+        self.labels.append(label)
+        return len(self.labels) << 12
+
+    def loads(self, saved: int) -> str:
+        try:
+            return self.labels[(saved >> 12) - 1]
+        except IndexError:
+            raise IndexError

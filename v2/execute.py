@@ -53,8 +53,8 @@ class Execute(State):
             # BCT - Not in ETA5
             'BCTR': self.branch_on_count_register,
             # BXH, BXLE - Not in ETA5
-            # BAS
-            # BR
+            'BAS': self.branch_and_save,
+            'BR': self.branch_return,
             # BASR - Not in ETA5
 
             # S06 -  Compare & Logical
@@ -280,6 +280,17 @@ class Execute(State):
         value = self.regs.get_value(node.reg1) - 1
         self.regs.set_value(value, node.reg1)
         return self.next_label(node)
+
+    def branch_and_save(self, node: ins.RegisterBranch):
+        bas = self.global_program.segments[self.seg_name].bas
+        value = bas.dumps(node.fall_down)
+        self.regs.set_value(value, node.reg)
+        return node.branch.name
+
+    def branch_return(self, node: ins.BranchConditionRegister):
+        bas = self.global_program.segments[self.seg_name].bas
+        value = self.regs.get_value(node.reg)
+        return bas.loads(value)
 
     # S06 -  Compare & Logical
 

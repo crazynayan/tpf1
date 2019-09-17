@@ -67,4 +67,21 @@ TS160510 DS    0H
 TS160520 DS    0H
          LHI   R5,2
 TS160600 DS    0H
+         BAS   R11,TS161100
+         BAS   R11,TS161200
          BACKC
+TS161100 DS    0H
+         MVI   EBW010,10
+         BAS   R12,TS162100
+         BAS   R12,TS162200
+         BR    R11
+TS161200 DS    0H
+         MVI   EBW011,11
+         BR    R11
+TS162100 DS    0H
+         MVI   EBW012,12
+         BR    R12
+TS162200 DS    0H
+         MVI   EBW013,13
+         BR    R12
+

@@ -203,6 +203,11 @@ class StateTest(unittest.TestCase):
         self.assertEqual(1, self.state.regs.get_value('R3'))
         self.assertEqual(1, self.state.regs.get_value('R4'))
         self.assertEqual(1, self.state.regs.get_value('R5'))
+        # Test subroutines
+        self.assertEqual(10, self.state.vm.get_value(config.ECB + 18, 1))
+        self.assertEqual(11, self.state.vm.get_value(config.ECB + 19, 1))
+        self.assertEqual(12, self.state.vm.get_value(config.ECB + 20, 1))
+        self.assertEqual(13, self.state.vm.get_value(config.ECB + 21, 1))
         # Update state to 1.2, 2.2, 3.2, 4.2, 5.2
         self.state.vm.set_bytes(bytearray([0xC1, 0xC2, 0xC3, 0xC4]), config.ECB + 8, 4)
         self.state.vm.set_bytes(bytearray([0xC1, 0xC2, 0xC3, 0xC5]), config.ECB + 12, 4)
