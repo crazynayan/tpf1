@@ -1,6 +1,7 @@
 import re
 from typing import List, Optional
 
+from config import config
 from v2.command import cmd
 
 
@@ -164,36 +165,43 @@ class Line:
 
 class SymbolTable:
     def __init__(self, label=None, dsp=None, length=None, name=None):
-        self.label = label
-        self.dsp = dsp
-        self.length = length
-        self.name = name        # Macro name or Segment name or Dsect name
-        self.branch = False     # Code can branch to this label.
+        self.label: Optional[str] = label
+        self.dsp: Optional[int] = dsp
+        self.length: Optional[int] = length
+        self.name: Optional[int] = name        # Macro name or Segment name or Dsect name
+        self.branch: int = 0                   # Code can branch to this label.
 
     def __repr__(self):
         return f'{self.label}:{self.dsp}:{self.length}:{self.name}'
 
     @property
-    def is_branch(self):
-        return self.branch
+    def is_branch(self) -> bool:
+        return self.branch > 0
 
     @property
-    def is_literal(self):
+    def is_instruction_branch(self) -> bool:
+        return self.branch == 2
+
+    @property
+    def is_literal(self) -> bool:
         return self.dsp > 0xFFF
 
-    def set_branch(self):
-        self.branch = True
+    def set_branch(self) -> None:
+        self.branch = 1
+
+    def set_instruction_branch(self) -> None:
+        self.branch = 2
 
 
 class Label:
     SEPARATOR = '.'
 
-    def __init__(self, name, separator=None):
-        self.name = name
-        self.index = 0
-        self.separator = self.SEPARATOR if separator is None else separator
+    def __init__(self, name: str, separator: Optional[str] = None):
+        self.name: str = name
+        self.index: int = 0
+        self.separator: str = self.SEPARATOR if separator is None else separator
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.name if self.index == 0 else f"{self.name}{self.separator}{self.index}"
 
 
@@ -203,10 +211,10 @@ class LabelSave:
 
     def dumps(self, label: str) -> int:
         self.labels.append(label)
-        return len(self.labels) << 12
+        return len(self.labels) << config.DSP_SHIFT
 
     def loads(self, saved: int) -> str:
         try:
-            return self.labels[(saved >> 12) - 1]
+            return self.labels[(saved >> config.DSP_SHIFT) - 1]
         except IndexError:
             raise IndexError

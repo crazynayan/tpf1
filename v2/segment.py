@@ -111,7 +111,7 @@ class Segment:
                 if line.label:
                     self.macro.data_map[line.label] = SymbolTable(line.label, self.macro.location_counter,
                                                                   length, self.name)
-                    self.macro.data_map[line.label].set_branch()
+                    self.macro.data_map[line.label].set_instruction_branch()
                 self.macro.location_counter += line.length
 
     def _assemble_instructions(self, lines):

@@ -71,6 +71,9 @@ class SegmentMacro:
     def is_branch(self, label):
         return label in self.data_map and self.data_map[label].is_branch
 
+    def is_instruction_branch(self, label):
+        return label in self.data_map and self.data_map[label].is_instruction_branch
+
     def is_present(self, macro_name):
         return self.global_program.is_macro_present(macro_name)
 

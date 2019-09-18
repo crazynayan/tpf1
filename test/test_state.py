@@ -143,7 +143,6 @@ class StateTest(unittest.TestCase):
         self.state.seg_name = 'TS14'
         self.state.run()
         self.assertListEqual(list(), self.state.global_program.segments[self.state.seg_name].errors)
-        self.assertListEqual(list(), self.state.errors)
         self.assertEqual(0x00012000, self.state.regs.get_value('R1'))
         self.assertEqual(0xFFFFC1C1 - 0x100000000, self.state.regs.get_value('R2'))
         self.assertEqual(bytearray([0xC1, 0xC1]), self.state.vm.get_bytes(0x00012344, 2))
@@ -175,7 +174,6 @@ class StateTest(unittest.TestCase):
         self.state.seg_name = 'TS15'
         self.state.run()
         self.assertListEqual(list(), self.state.global_program.segments[self.state.seg_name].errors)
-        self.assertListEqual(list(), self.state.errors)
         self.assertEqual(23, self.state.regs.get_value('R2'))
         self.assertEqual(bytearray([0x00, 0x00, 0x00, 0x17]), self.state.vm.get_bytes(config.ECB + 8, 4))
         self.assertEqual(-2, self.state.regs.get_value('R3'))
@@ -240,6 +238,19 @@ class StateTest(unittest.TestCase):
         self.assertEqual(2, self.state.regs.get_value('R3'))
         self.assertEqual(3, self.state.regs.get_value('R5'))
         self.state.run()
+
+    def test_ts17(self):
+        self.state.seg_name = 'TS17'
+        self.state.run()
+        self.assertEqual(0xC1, self.state.vm.get_unsigned_value(self.state.regs.get_value('R1'), 1))
+        self.assertEqual(0xC2, self.state.vm.get_unsigned_value(self.state.regs.get_value('R2'), 1))
+        self.assertEqual(0xC3, self.state.vm.get_unsigned_value(self.state.regs.get_value('R3'), 1))
+        self.assertEqual(0xC4C4, self.state.vm.get_unsigned_value(self.state.regs.get_value('R4'), 2))
+        self.assertListEqual(['021014', '19000'], self.state.dumps)
+        self.assertEqual("'MAXIMUM NUMBER OF NAMES PER PNR IS 99 - CREATE NEW PNR'", self.state.message)
+        self.assertEqual(self.state.heap['TS17PDWK'], self.state.regs.get_value('R4'))
+        self.assertEqual(1, len(self.state.detac_stack['2']))
+        self.assertEqual(0, len(self.state.detac_stack['1']))
 
 
 if __name__ == '__main__':

@@ -1,4 +1,4 @@
-from typing import Union, Optional, Tuple, Dict
+from typing import Union, Optional, Tuple, Dict, List
 
 from config import config
 from v2.data_type import DataType, Register
@@ -82,19 +82,14 @@ class Registers:
 
 
 class Storage:
-    NIBBLE = 4
-    NIBBLE_3 = 12
-    ZERO = 0x00
-    ONES = 0xFF
-
     def __init__(self):
         self.frames: Dict[str, bytearray] = dict()                 # Frames init with ZERO
         self._frame: Dict[str, bytearray] = dict()                 # Frames init with ONES
-        self.nab: int = config.F4K << self.NIBBLE                  # To ensure total 16 fixed frames
-        self.frames[self.base_key(config.ECB)] = bytearray([self.ZERO] * config.F4K)
-        self.frames[self.base_key(config.GLOBAL)] = bytearray([self.ZERO] * config.GLOBAL_FRAME_SIZE)
-        self._frame[self.base_key(config.ECB)] = bytearray([self.ONES] * config.F4K)
-        self._frame[self.base_key(config.GLOBAL)] = bytearray([self.ONES] * config.GLOBAL_FRAME_SIZE)
+        self.nab: int = config.F4K << config.NIBBLE                  # To ensure total 16 fixed frames
+        self.frames[self.base_key(config.ECB)] = bytearray([config.ZERO] * config.F4K)
+        self.frames[self.base_key(config.GLOBAL)] = bytearray([config.ZERO] * config.GLOBAL_FRAME_SIZE)
+        self._frame[self.base_key(config.ECB)] = bytearray([config.ONES] * config.F4K)
+        self._frame[self.base_key(config.GLOBAL)] = bytearray([config.ONES] * config.GLOBAL_FRAME_SIZE)
 
     def __repr__(self) -> str:
         return f"Storage:{len(self.frames)}"
@@ -109,8 +104,9 @@ class Storage:
     def get_allocated_address(self) -> bytearray:
         return DataType('F', input=str(self.nab - config.F4K)).to_bytes(Registers.LEN)
 
-    def base_key(self, address: int) -> str:
-        address = (address >> self.NIBBLE_3) << self.NIBBLE_3
+    @staticmethod
+    def base_key(address: int) -> str:
+        address = (address >> config.DSP_SHIFT) << config.DSP_SHIFT
         return f"{address:08x}"
 
     @staticmethod
@@ -123,8 +119,8 @@ class Storage:
         except KeyError:
             raise KeyError
         if length > frame_len:
-            self.frames[base_address].extend(bytearray([self.ZERO] * (length - frame_len)))
-            self._frame[base_address].extend(bytearray([self.ONES] * (length - frame_len)))
+            self.frames[base_address].extend(bytearray([config.ZERO] * (length - frame_len)))
+            self._frame[base_address].extend(bytearray([config.ONES] * (length - frame_len)))
 
     def _get_data(self, address: int, length: Optional[int] = None) -> Tuple[str, int, int]:
         base_address = self.base_key(address)
@@ -201,7 +197,10 @@ class State:
         self.seg_name: str = seg_name                # The name of the current segment that is executing
         self.regs: Registers = Registers()
         self.vm: Storage = Storage()
-        self.errors: list = list()
+        self.detac_stack: Dict[str, List] = {level: list() for level in config.ECB_LEVELS}
+        self.message: Optional[str] = None
+        self.dumps: List[str] = list()
+        self.heap: Dict[str, int] = dict()
 
     def __repr__(self) -> str:
         return f"State:{self.seg_name}:{self.vm}"
@@ -217,3 +216,12 @@ class State:
 
     def validate(self, address: int) -> int:
         return address if address else self.vm.allocate()
+
+    def get_ecb_address(self, level: str, ecb_label: str) -> int:
+        # level is from D0 to DF, ecb_label is the partial label to which the level number (0-F) to be appended
+        if not level.startswith('D') or len(level) != 2 or level[1] not in config.ECB_LEVELS:
+            # For DECB=(R1) DECB=L1ADR
+            raise TypeError
+        level = f"{ecb_label}{level[1]}"
+        dsp = self.global_program.macros['EB0EB'].symbol_table[level].dsp
+        return config.ECB + dsp

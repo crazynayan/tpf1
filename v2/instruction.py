@@ -177,6 +177,7 @@ class Instruction:
         'DBRED': ins.KeyValue,
         'SENDA': ins.KeyValue,
         'CFCMA': ins.KeyValue,
+        'HEAPA': ins.KeyValue,
         'SERRC': ins.KeyValue,
         'DBCLS': ins.KeyValue,
         'DBIFB': ins.KeyValue,

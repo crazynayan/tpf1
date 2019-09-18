@@ -7,7 +7,7 @@ from v2.segment import Program
 
 
 class SegmentTest(unittest.TestCase):
-    NUMBER_OF_FILES = 32
+    NUMBER_OF_FILES = 33
 
     def setUp(self) -> None:
         self.program = Program()

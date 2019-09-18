@@ -1,5 +1,5 @@
 import re
-from typing import Tuple, TypeVar, Optional, Union, List, Dict
+from typing import Tuple, TypeVar, Optional, Union, List
 
 from config import config
 from v2.command import cmd
@@ -391,10 +391,10 @@ class RegisterLabel(InstructionGeneric):
             result = Error.REG_INVALID
         else:
             if macro.is_branch(label):
-                if macro.data_map[label].length < 2:  # TODO Might be a bug for a DS 0H labels for EX
-                    self.label = label + Label.SEPARATOR + '1'
-                else:
+                if macro.is_instruction_branch(label):
                     self.label = label
+                else:
+                    self.label = label + Label.SEPARATOR + '1'
                 result = Error.NO_ERROR
             else:
                 if label.startswith('*-'):
@@ -447,7 +447,7 @@ class SegmentCall(BranchGeneric):
 class KeyValue(InstructionGeneric):
     def __init__(self):
         super().__init__()
-        self.operands: Dict[str, Union[Optional[str], Dict[str, Optional[str]]]] = dict()
+        self.operands: List[Tuple[str, Union[str, List, None]]] = list()
         self.branches: List[str] = list()
 
     def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
@@ -456,45 +456,56 @@ class KeyValue(InstructionGeneric):
             key_value = re.split(r"=(?![^()]*[)])", operand)
             if len(key_value) > 1 and key_value[1].startswith('(') and key_value[1].endswith(')'):
                 sub_operands = key_value[1][1:-1]
-                self.operands[key_value[0]] = dict()
+                self.operands.append((key_value[0], list()))
                 for sub_operand in sub_operands.split(','):
                     sub_key_value = sub_operand.split('=')
-                    self.operands[key_value[0]][sub_key_value[0]] = sub_key_value[1] if len(sub_key_value) > 1 else None
-                    if len(sub_key_value) > 1 and macro.is_branch(sub_key_value[1]):
-                        self.branches.append(sub_key_value[1])
+                    value = sub_key_value[1] if len(sub_key_value) > 1 else None
+                    self.operands[-1][1].append((sub_key_value[0], value))
+                    if macro.is_branch(value):
+                        self.branches.append(value)
             else:
-                self.operands[key_value[0]] = key_value[1] if len(key_value) > 1 else None
-                if len(key_value) > 1 and macro.is_branch(key_value[1]):
-                    self.branches.append(key_value[1])
+                value = key_value[1] if len(key_value) > 1 else None
+                self.operands.append((key_value[0], value))
+                if macro.is_branch(value):
+                    self.branches.append(value)
         return self, Error.NO_ERROR
 
     def is_key(self, key: str) -> bool:
-        return key in self.operands
+        return key in self.keys
 
     def is_sub_key(self, key: str) -> bool:
-        return True if key in self.operands and not isinstance(self.operands[key], str) else False
+        return key in self.sub_keys
 
-    def get_value(self, key: str) -> Union[str, dict]:
-        return self.operands[key]
+    def get_value(self, key: str) -> Union[str, List, None]:
+        return next((key_value[1] for key_value in self.operands if key_value[0] == key), None)
 
-    def get_key_from_value(self, value: str) -> list:
-        return list(key for key, data in self.operands.items() if value == data)
+    def get_key_from_value(self, value: Union[str, List]) -> Optional[str]:
+        return next((key_value[0] for key_value in self.operands if key_value[1] == value), None)
 
-    @property
-    def key_only(self) -> set:
-        return set(key for key, value in self.operands.items() if value is None)
-
-    @property
-    def keys(self) -> set:
-        return set(self.operands)
+    def startswith(self, value: str) -> Optional[str]:
+        return next((key[len(value):] for key in self.key_only if key.startswith(value)), None)
 
     @property
-    def sub_keys(self) -> set:
-        return {key for key, value in self.operands.items() if isinstance(value, dict)}
+    def key_only(self) -> List[str]:
+        return [key_value[0] for key_value in self.operands if key_value[1] is None]
 
     @property
-    def items(self) -> dict:
-        return self.operands
+    def keys(self) -> List[str]:
+        return [key_value[0] for key_value in self.operands]
+
+    @property
+    def sub_keys(self) -> List[str]:
+        # Returns all keys that have sub_keys
+        return [key_value[0] for key_value in self.operands if isinstance(key_value[1], list)]
+
+    @property
+    def sub_key_value(self) -> List[Tuple[str, List]]:
+        # Returns all key_value that have sub_keys
+        return [key_value for key_value in self.operands if isinstance(key_value[1], list)]
+
+    def get_sub_value(self, key: str, sub_key: str) -> str:
+        return next((sub_key_value[1] for key_value in self.sub_key_value for sub_key_value in key_value[1]
+                     if key_value[0] == key and sub_key_value[0] == sub_key), None)
 
     @property
     def next_labels(self) -> set:
