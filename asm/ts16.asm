@@ -98,7 +98,7 @@ TS160710 DS    0H
          MVI   EBW015,16
 TS160720 DS    0H
          EX    R1,TS16EX02
-         BACKC
+         EXITC
 *
 *        SUBROUTINES
 *
@@ -110,6 +110,9 @@ TS161100 DS    0H
          L     R6,EBX000
          BR    R6
 TS161200 DS    0H
+         LTR   R1,R1
+         TM    EBW009,X'11'
+         BZR   R6
          MVI   EBW011,11
          BR    R6
 TS162100 DS    0H

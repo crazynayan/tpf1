@@ -2,7 +2,7 @@
 *        SEGMENT CALLS
 **********************************************************************
          ENTRC TS01
-         ENTNC TS02
-         ENTDC TS03
+         ENTDC TS13
+         ENTNC TS02             THIS IS JUST USED FOR ASSEMBLY CHECKS
 TS10E100 EQU   *
          ENTRC A000

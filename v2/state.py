@@ -192,27 +192,33 @@ class Storage:
 
 
 class State:
-    def __init__(self, global_program: Program, seg_name: Optional[str] = None):
+    def __init__(self, global_program: Program):
         self.global_program: Program = global_program
-        self.seg_name: str = seg_name                # The name of the current segment that is executing
+        self.seg: Optional[Segment] = None
         self.regs: Registers = Registers()
         self.vm: Storage = Storage()
         self.detac_stack: Dict[str, List] = {level: list() for level in config.ECB_LEVELS}
         self.message: Optional[str] = None
         self.dumps: List[str] = list()
         self.heap: Dict[str, int] = dict()
+        self.call_stack: List[str] = list()
+        self.loaded_seg: Dict[str, Tuple[Segment, int]] = dict()
 
     def __repr__(self) -> str:
-        return f"State:{self.seg_name}:{self.vm}"
+        return f"State:{self.seg}:{self.regs}:{self.vm}"
 
-    def init_seg(self, seg_name: str) -> Segment:
-        self.global_program.load(seg_name)
-        self.regs.R8 = self.vm.allocate()   # Constant TODO Improve re-usability of initializing the same seg twice
-        literal = self.vm.allocate()        # Literal is immediately the next frame
-        seg: Segment = self.global_program.segments[seg_name]
-        self.vm.set_bytes(seg.data.constant, self.regs.R8, len(seg.data.constant))
-        self.vm.set_bytes(seg.data.literal, literal, len(seg.data.literal))
-        return seg
+    def init_seg(self, seg_name: str) -> None:
+        if seg_name in self.loaded_seg:
+            self.regs.R8 = self.loaded_seg[seg_name][1]
+            self.seg = self.loaded_seg[seg_name][0]
+        else:
+            self.global_program.load(seg_name)
+            self.regs.R8 = self.vm.allocate()   # Constant
+            literal = self.vm.allocate()        # Literal is immediately the next frame
+            self.seg = self.global_program.segments[seg_name]
+            self.vm.set_bytes(self.seg.data.constant, self.regs.R8, len(self.seg.data.constant))
+            self.vm.set_bytes(self.seg.data.literal, literal, len(self.seg.data.literal))
+            self.loaded_seg[seg_name] = (self.seg, self.regs.R8)
 
     def validate(self, address: int) -> int:
         return address if address else self.vm.allocate()

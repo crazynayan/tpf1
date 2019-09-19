@@ -8,8 +8,8 @@ from v2.state import State
 
 
 class Execute(State):
-    def __init__(self, global_program: Program, seg_name: Optional[str] = None):
-        super().__init__(global_program, seg_name)
+    def __init__(self, global_program: Program):
+        super().__init__(global_program)
         self.cc: Optional[int] = None
         self.ex: Dict[str, Callable] = {
 
@@ -111,6 +111,10 @@ class Execute(State):
             'SENDA': self.senda,
             'SYSRA': self.sysra,
             'SERRC': self.serrc,
+            'ENTRC': self.entrc,
+            'ENTNC': self.entnc,
+            'ENTDC': self.entdc,
+            'BACKC': self.backc,
 
             # TPFDF Macros
             # DBOPN
@@ -130,25 +134,26 @@ class Execute(State):
             # No operation
             'EQU': self.no_operation,
             'DS': self.no_operation,
-            'BACKC': self.no_operation,
+            'EXITC': self.no_operation,
         }
 
-    def run(self) -> None:
+    def run(self, seg_name: Optional[str] = None) -> None:
+        seg_name = self.seg.name if seg_name is None else seg_name
+        self.init_seg(seg_name)
         self.regs.R9 = config.ECB
-        seg = self.init_seg(self.seg_name)
-        label = seg.root_label
+        label = self.seg.root_label
         while label:
-            node = seg.nodes[label]
+            node = self.seg.nodes[label]
             label = self.ex[node.command](node)
 
     def next_label(self, node: ins.InstructionGeneric) -> Optional[str]:
         for condition in node.conditions:
             if condition.is_check_cc:
                 if condition.mask & (1 << 3 - self.cc) != 0:
-                    try:
-                        return condition.branch.name
-                    except AttributeError:  # Exception will happen for instructions like BZR, BNER etc.
-                        raise AttributeError
+                    if condition.branch:
+                        return self.branch(condition)
+                    else:
+                        return self.branch_return(condition)
             else:
                 self.ex[condition.command](condition)
         return node.fall_down
@@ -307,13 +312,13 @@ class Execute(State):
         return self.next_label(node)
 
     def branch_and_save(self, node: ins.RegisterBranch):
-        bas = self.global_program.segments[self.seg_name].bas
+        bas = self.seg.bas
         value = bas.dumps(node.fall_down)
         self.regs.set_value(value, node.reg)
         return node.branch.name
 
     def branch_return(self, node: ins.BranchConditionRegister):
-        bas = self.global_program.segments[self.seg_name].bas
+        bas = self.seg.bas
         value = self.regs.get_value(node.reg)
         return bas.loads(value)
 
@@ -409,7 +414,7 @@ class Execute(State):
         return self.next_label(node)
 
     def execute(self, node: ins.RegisterLabel) -> str:
-        exec_node = self.global_program.segments[self.seg_name].nodes[node.label]
+        exec_node = self.seg.nodes[node.label]
         value = self.regs.get_value(node.reg) & 0xFF if node.reg.reg != 'R0' else 0
         if isinstance(exec_node, ins.FieldLenField):
             save = exec_node.field_len.length
@@ -524,6 +529,26 @@ class Execute(State):
         else:
             raise TypeError
 
+    def entrc(self, node: ins.SegmentCall) -> str:
+        self.call_stack.append((node.fall_down, self.seg.name))
+        self.init_seg(node.seg_name)
+        return node.branch.name
+
+    def entnc(self, node: ins.SegmentCall) -> str:
+        self.init_seg(node.seg_name)
+        return node.branch.name
+
+    def entdc(self, node: ins.SegmentCall) -> str:
+        self.init_seg(node.seg_name)
+        self.call_stack = list()
+        self.init_seg(node.seg_name)
+        return node.branch.name
+
+    def backc(self, _) -> str:
+        branch, seg_name = self.call_stack.pop()
+        self.init_seg(seg_name)
+        return branch
+
     # TPFDF Macros
 
     # User Defined Macros
@@ -543,7 +568,7 @@ class Execute(State):
             sref = node.get_value('SREF')
             if sref is None:
                 raise TypeError
-            ref_bytes = self.global_program.segments[self.seg_name].get_constant_bytes(sref, 8)
+            ref_bytes = self.seg.get_constant_bytes(sref, 8)
             ref = DataType('X', bytes=ref_bytes).decode
         if command == 'ALLOCATE':
             address = self.vm.allocate()

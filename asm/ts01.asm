@@ -1,7 +1,7 @@
 **********************************************************************
 *        FIELD BITS
 **********************************************************************
-         OI    EBW008-EBW000(2),1
+         OI    EBW008-EBW000(9),1
          OI    EBW000,X'80'
          OI    23(R9),23
          OI    EBT000+L'CE1DSTMP(R9),CE1SEW+CE1CPS+CE1DTX+CE1SNP
@@ -11,6 +11,8 @@
          OI    EBX000,1
 TS010010 EQU   *
          OI    EBT000,1
+         ENTNC TS02
+TS01E000 EQU   *
 *  ERROR SCENARIOS FOLLOWS
          OI    23(2,R9),1
          OI    EBW000(L'EBW001),1

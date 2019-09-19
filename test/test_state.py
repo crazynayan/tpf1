@@ -140,9 +140,8 @@ class StateTest(unittest.TestCase):
         self.state = Execute(Program())
 
     def test_ts14(self):
-        self.state.seg_name = 'TS14'
-        self.state.run()
-        self.assertListEqual(list(), self.state.global_program.segments[self.state.seg_name].errors)
+        self.state.run('TS14')
+        self.assertListEqual(list(), self.state.seg.errors)
         self.assertEqual(0x00012000, self.state.regs.get_value('R1'))
         self.assertEqual(0xFFFFC1C1 - 0x100000000, self.state.regs.get_value('R2'))
         self.assertEqual(bytearray([0xC1, 0xC1]), self.state.vm.get_bytes(0x00012344, 2))
@@ -171,9 +170,8 @@ class StateTest(unittest.TestCase):
         self.assertFalse(self.state.vm.is_updated_bit(0x00012030, 0x40))
 
     def test_ts15(self):
-        self.state.seg_name = 'TS15'
-        self.state.run()
-        self.assertListEqual(list(), self.state.global_program.segments[self.state.seg_name].errors)
+        self.state.run('TS15')
+        self.assertListEqual(list(), self.state.seg.errors)
         self.assertEqual(23, self.state.regs.get_value('R2'))
         self.assertEqual(bytearray([0x00, 0x00, 0x00, 0x17]), self.state.vm.get_bytes(config.ECB + 8, 4))
         self.assertEqual(-2, self.state.regs.get_value('R3'))
@@ -192,9 +190,8 @@ class StateTest(unittest.TestCase):
         self.assertEqual(0xF0F1F4F0F9F6, self.state.vm.get_unsigned_value(config.ECB + 72, 6))
 
     def test_ts16(self):
-        self.state.seg_name = 'TS16'
-        self.state.run()
-        # Default state is 1.1, 2.1, 3.1, 4.1, 5.1, 7.1.1, 7.2.1, 7.3.1, 7.4.1
+        self.state.run('TS16')
+        # Default state is 1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 7.1.1, 7.2.1, 7.3.1, 7.4.1
         self.assertEqual(1, self.state.regs.get_value('R0'))
         self.assertEqual(2, self.state.regs.get_value('R1'))
         self.assertEqual(1, self.state.regs.get_value('R2'))
@@ -208,7 +205,7 @@ class StateTest(unittest.TestCase):
         self.assertEqual(2, self.state.vm.get_unsigned_value(config.ECB + 24, 1))
         # Test subroutines
         self.assertEqual(10, self.state.vm.get_value(config.ECB + 18, 1))
-        self.assertEqual(11, self.state.vm.get_value(config.ECB + 19, 1))
+        self.assertEqual(0, self.state.vm.get_value(config.ECB + 19, 1))
         self.assertEqual(12, self.state.vm.get_value(config.ECB + 20, 1))
         self.assertEqual(13, self.state.vm.get_value(config.ECB + 21, 1))
         # Update state to 1.2, 2.2, 3.2, 4.2, 5.2, 7.1.2, 7.2.2, 7.3.2, 7.4.2
@@ -225,6 +222,7 @@ class StateTest(unittest.TestCase):
         self.assertEqual(1, self.state.regs.get_value('R3'))
         self.assertEqual(2, self.state.regs.get_value('R4'))
         self.assertEqual(2, self.state.regs.get_value('R5'))
+        self.assertEqual(11, self.state.vm.get_value(config.ECB + 19, 1))
         self.assertEqual(0xC2C2C2C2, self.state.vm.get_unsigned_value(config.ECB + 28))
         self.assertEqual(0x33, self.state.regs.get_value('R7'))
         self.assertEqual(0x0001234C, self.state.vm.get_unsigned_value(config.ECB + 32))
@@ -240,8 +238,7 @@ class StateTest(unittest.TestCase):
         self.state.run()
 
     def test_ts17(self):
-        self.state.seg_name = 'TS17'
-        self.state.run()
+        self.state.run('TS17')
         self.assertEqual(0xC1, self.state.vm.get_unsigned_value(self.state.regs.get_value('R1'), 1))
         self.assertEqual(0xC2, self.state.vm.get_unsigned_value(self.state.regs.get_value('R2'), 1))
         self.assertEqual(0xC3, self.state.vm.get_unsigned_value(self.state.regs.get_value('R3'), 1))
@@ -251,6 +248,16 @@ class StateTest(unittest.TestCase):
         self.assertEqual(self.state.heap['TS17PDWK'], self.state.regs.get_value('R4'))
         self.assertEqual(1, len(self.state.detac_stack['2']))
         self.assertEqual(0, len(self.state.detac_stack['1']))
+
+    def test_segment_call(self):
+        # Flow is TS10 <-> TS01 -> TS02 -< TS10 => TS13
+        self.state.run('TS10')
+        # Check if OI EBT000,1 is executed (Proof of execution of TS01)
+        self.assertTrue(self.state.vm.all_bits_on(config.ECB + 0x70, 0x01))
+        # Check if BCTR R5,0 is executed (Proof of execution of TS02)
+        self.assertEqual(-1, self.state.regs.get_value('R5'))
+        # Check if MVC EBW000,EBT000 is executed (Proof of execution of TS13)
+        self.assertEqual(0x01, self.state.vm.get_value(config.ECB + 8, 1))
 
 
 if __name__ == '__main__':

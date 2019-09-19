@@ -106,7 +106,7 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('$$TS01$$', node.goes)
         self.assertSetEqual({'$$TS01$$', '$$TS10$$.2'}, node.next_labels)
         # ENTNC TS02
-        node = self.seg.nodes['$$TS10$$.2']
+        node = self.seg.nodes['$$TS10$$.3']
         seg = self.program.segments[node.seg_name]
         self.assertEqual('ENTNC', node.command)
         self.assertEqual('TS02', node.seg_name)
@@ -115,16 +115,16 @@ class SegmentTest(unittest.TestCase):
         self.assertIn('SR', seg.nodes['TS020010'].command)
         self.assertEqual('$$TS02$$', node.goes)
         self.assertSetEqual({'$$TS02$$'}, node.next_labels)
-        # ENTDC TS03
-        node = self.seg.nodes['$$TS10$$.3']
+        # ENTDC TS13
+        node = self.seg.nodes['$$TS10$$.2']
         seg = self.program.segments[node.seg_name]
         self.assertEqual('ENTDC', node.command)
-        self.assertEqual('TS03', node.seg_name)
-        self.assertEqual('$$TS03$$', node.branch.name)
-        self.assertIn('$$TS03$$', seg.macro.data_map)
-        self.assertIn('L', seg.nodes['$$TS03$$.1'].command)
-        self.assertEqual('$$TS03$$', node.goes)
-        self.assertSetEqual({'$$TS03$$'}, node.next_labels)
+        self.assertEqual('TS13', node.seg_name)
+        self.assertEqual('$$TS13$$', node.branch.name)
+        self.assertIn('$$TS13$$', seg.macro.data_map)
+        self.assertIn('EQU', seg.nodes['$$TS13$$'].command)
+        self.assertEqual('$$TS13$$', node.goes)
+        self.assertSetEqual({'$$TS13$$'}, node.next_labels)
 
     def test_key_value(self):
         seg_name = 'TS11'
@@ -718,24 +718,24 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('EX', node.command)
         self.assertEqual('R15', node.reg.reg)
         self.assertEqual('TS130010.1', node.label)
-        self.assertEqual('TS130010', node.goes)
-        self.assertSetEqual({'TS130020', 'TS130010'}, node.next_labels)
+        self.assertEqual('TS130040', node.goes)
+        self.assertSetEqual({'TS130010.3', 'TS130040'}, node.next_labels)
         ex_node = self.seg.nodes[node.label]
         self.assertEqual('TM', ex_node.command)
         self.assertEqual(0, ex_node.bits.value)
-        # EX    R15,*-6 on MVC   EBW000,EBT000
+        # EX    R1,*-6 on MVC   EBW000,EBT000
         node = self.seg.nodes['TS130020.2']
         self.assertEqual('EX', node.command)
-        self.assertEqual('R15', node.reg.reg)
+        self.assertEqual('R1', node.reg.reg)
         self.assertEqual('TS130020.1', node.label)
-        self.assertSetEqual({'TS130020.3'}, node.next_labels)
+        self.assertSetEqual({'TS130010'}, node.next_labels)
         ex_node = self.seg.nodes[node.label]
         self.assertEqual('MVC', ex_node.command)
         self.assertEqual(0, ex_node.field_len.length)
         self.assertEqual('EBW000', ex_node.field_len.name)
         self.assertEqual('EBT000', ex_node.field.name)
         # EX    R15,TS130030 on PACK  EBW088(8),4(1,R2)
-        node = self.seg.nodes['TS130020.3']
+        node = self.seg.nodes['TS130010.3']
         self.assertEqual('EX', node.command)
         self.assertEqual('R15', node.reg.reg)
         self.assertEqual('TS130030', node.label)

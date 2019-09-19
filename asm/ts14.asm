@@ -34,7 +34,7 @@
          OI     WA0TY1,#WA0GEN
          MVI    EBW018,X'FF'
          NI     EBW018,#BITA-#WA0GEN
-         BACKC
+         EXITC
 C_AA     DC     C'AA'
 SPACES   DS     0XL256
          DC     256C' '

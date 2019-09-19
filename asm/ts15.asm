@@ -31,7 +31,7 @@ $IS$     CSECT
          UNPK  SUM,DWD3
          MVC   FIN,SUM
          OI    FIN+L'FIN-1,X'F0'
-         BACKC
+         EXITC
 C_AA     DC     C'AA'
 SPACES   DS     0XL256
          DC     256C' '

@@ -30,20 +30,20 @@ class SegmentTest(unittest.TestCase):
     def test_field_bits(self):
         seg_name = 'TS01'
         accepted_errors_list = [
-            f"{Error.FBD_NO_LEN} TS010010.2:OI:23(2,R9),1 {seg_name}",
-            f"{Error.FBD_INVALID_BASE} TS010010.3:OI:EBW000(L'EBW001),1 {seg_name}",
-            f"{Error.FBD_INVALID_KEY} TS010010.4:OI:ERROR_FIELD,1 {seg_name}",
-            f"{Error.FBD_INVALID_KEY_BASE} TS010010.5:OI:PD0_C_ITM,1 {seg_name}",
-            f"{Error.BITS_INVALID_NUMBER} TS010010.7:OI:EBW000,250+250 {seg_name}",
-            f"{Error.FBD_INVALID_DSP} TS010010.9:OI:-1(R2),1 {seg_name}",
-            f"{Error.FBD_INVALID_DSP} TS010010.10:OI:4096(R2),1 {seg_name}",
+            f"{Error.FBD_NO_LEN} TS01E000.1:OI:23(2,R9),1 {seg_name}",
+            f"{Error.FBD_INVALID_BASE} TS01E000.2:OI:EBW000(L'EBW001),1 {seg_name}",
+            f"{Error.FBD_INVALID_KEY} TS01E000.3:OI:ERROR_FIELD,1 {seg_name}",
+            f"{Error.FBD_INVALID_KEY_BASE} TS01E000.4:OI:PD0_C_ITM,1 {seg_name}",
+            f"{Error.BITS_INVALID_NUMBER} TS01E000.6:OI:EBW000,250+250 {seg_name}",
+            f"{Error.FBD_INVALID_DSP} TS01E000.8:OI:-1(R2),1 {seg_name}",
+            f"{Error.FBD_INVALID_DSP} TS01E000.9:OI:4096(R2),1 {seg_name}",
         ]
         self._common_checks(seg_name, accepted_errors_list)
-        # Check EBW008-EBW000(2),1
+        # Check EBW008-EBW000(9),1
         label = '$$TS01$$.1'
-        self.assertEqual('R2', self.seg.nodes[label].field.base.reg)
+        self.assertEqual('R9', self.seg.nodes[label].field.base.reg)
         self.assertEqual(8, self.seg.nodes[label].field.dsp)
-        self.assertEqual('R2_AREA', self.seg.nodes[label].field.name)
+        self.assertEqual('EBW000', self.seg.nodes[label].field.name)
         self.assertTrue(self.seg.nodes[label].bits.bit7.on)
         self.assertEqual("#BIT7", self.seg.nodes[label].bits.bit7.name)
         # Check EBW000,X'80'

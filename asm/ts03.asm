@@ -19,6 +19,7 @@
          PD0WRK REG=R5,SUFFIX=X
          L     R6,PD0_RT_ADR
          L     R6,PD0_RT_ADRX
+         EXITC
 TS03E010 DS    0H                   ERROR PATHS
          L     R16,EBW000
          LA    R1,2(R1,R3,R4)
