@@ -11,7 +11,7 @@ class RealTimeMacro(State):
         ecb_address = self.get_ecb_address(node.keys[0], 'CE1CR')
         self.vm.set_value(address, ecb_address)
         self.regs.R14 = address
-        return self.next_label(node)
+        return node.fall_down
 
     def detac(self, node: KeyValue) -> str:
         level = node.keys[0]
@@ -20,7 +20,7 @@ class RealTimeMacro(State):
         core_bytes = self.vm.get_bytes(core_address, 8)
         file_bytes = self.vm.get_bytes(file_address, 8)
         self.detac_stack[level[1]].append((core_bytes, file_bytes))
-        return self.next_label(node)
+        return node.fall_down
 
     def attac(self, node: KeyValue) -> str:
         level = node.keys[0]
@@ -29,18 +29,18 @@ class RealTimeMacro(State):
         core_bytes, file_bytes = self.detac_stack[level[1]].pop()
         self.vm.set_bytes(core_bytes, core_address)
         self.vm.set_bytes(file_bytes, file_address)
-        return self.next_label(node)
+        return node.fall_down
 
     def senda(self, node: KeyValue) -> str:
         self.message = node.get_value('MSG')
-        return self.next_label(node)
+        return node.fall_down
 
     def sysra(self, node: KeyValue) -> Optional[str]:
         return_code = node.get_value('P1')
         dump = node.get_value('P2')
         self.dumps.append(dump)
         if return_code == 'R':
-            return self.next_label(node)
+            return node.fall_down
         elif return_code == 'E':
             return None
         else:
@@ -51,7 +51,7 @@ class RealTimeMacro(State):
         dump = node.keys[1]
         self.dumps.append(dump)
         if return_code == 'R':
-            return self.next_label(node)
+            return node.fall_down
         elif return_code == 'E':
             return None
         else:
@@ -86,7 +86,7 @@ class UserDefinedMacro(State):
         reg = Register(node.get_value('BASEREG'))
         if reg.is_valid():
             self.regs.set_value(address, reg)
-        return self.next_label(node)
+        return node.fall_down
 
     def heapa(self, node: KeyValue) -> str:
         command = node.keys[0]
@@ -117,7 +117,7 @@ class UserDefinedMacro(State):
             pass
         else:
             raise TypeError
-        return self.next_label(node)
+        return node.fall_down
 
 
 class ExecutableMacro(RealTimeMacro, UserDefinedMacro):

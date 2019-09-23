@@ -1,5 +1,5 @@
 import re
-from typing import Optional, Dict, List, Tuple
+from typing import Optional, Dict, List, Tuple, Set
 
 
 from v2.data_type import DataType, Register
@@ -54,16 +54,16 @@ class SegmentMacro:
     FIELD_LOOKUP = '$FIELD_LOOKUP$'
     DEFAULT_MACRO_LOAD = {'EB0EB', 'AASEQ'}
 
-    def __init__(self, program=None, name=None):
-        self.seg_name = name                # Segment name for which this instance is created.
-        self.global_program = program       # Reference to the program instance.
-        self.data_map = dict()              # Dictionary of SymbolTable. Field name is the key.
-        self.dsect = None                   # Tuple of location counter and name of DSECT
-        self.using = dict()                 # Key is macro name and Value is Reg
-        self.using_stack = list()           # A stack of using dicts
-        self.data_macro = set()             # Set of data macro names which are already loaded.
-        self.location_counter = 0           # Used for calculating dsp (displacement)
-        self.max_counter = 0                # Used for ORG
+    def __init__(self, program=None, name: Optional[str] = None):
+        self.seg_name:  Optional[str] = name                    # Segment name for which this instance is created.
+        self.global_program = program                           # Reference to the program instance.
+        self.data_map: Dict[str, SymbolTable] = dict()          # Dictionary of SymbolTable. Field name is the key.
+        self.dsect: Optional[Tuple[int, str]] = None            # Tuple of location counter and name of DSECT
+        self.using: Dict[str, Register] = dict()                # Key is macro name and Value is Reg
+        self.using_stack: List[Dict[str, Register]] = list()    # A stack of using dicts
+        self.data_macro: Set[str] = set()                       # Set of data macro names which are already loaded.
+        self.location_counter: int = 0                          # Used for calculating dsp (displacement)
+        self.max_counter: int = 0                               # Used for ORG
 
     def __repr__(self):
         return f"SegmentMacro:{self.seg_name}:{len(self.data_map)}"

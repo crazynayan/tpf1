@@ -259,6 +259,11 @@ class StateTest(unittest.TestCase):
         # Check if MVC EBW000,EBT000 is executed (Proof of execution of TS13)
         self.assertEqual(0x01, self.state.vm.get_value(config.ECB + 8, 1))
 
+    def test_pdred_ts18(self):
+        self.state.run('TS18')
+        self.assertListEqual(list(), self.state.seg.errors)
+        self.assertEqual(24, self.state.regs.R1)
+
 
 if __name__ == '__main__':
     unittest.main()

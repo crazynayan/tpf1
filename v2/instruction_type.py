@@ -507,6 +507,10 @@ class KeyValue(InstructionGeneric):
         return next((sub_key_value[1] for key_value in self.sub_key_value for sub_key_value in key_value[1]
                      if key_value[0] == key and sub_key_value[0] == sub_key), None)
 
+    def get_sub_keys(self, key: str) -> List[str]:
+        return [sub_key_value[0] for key_value in self.sub_key_value for sub_key_value in key_value[1]
+                if key_value[0] == key]
+
     @property
     def next_labels(self) -> set:
         labels = set(self.branches)

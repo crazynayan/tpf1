@@ -126,7 +126,7 @@ class Execute(Instruction, ExecutableMacro, DbMacro):
             # FILEC, FILNC
 
             # User defined Db Macros
-            # PDRED
+            'PDRED': self.pdred,
             # PDCLS
             # PDADD, PDDEL - Not in ETA5
 
