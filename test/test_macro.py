@@ -53,6 +53,10 @@ class MacroTest(unittest.TestCase):
         self.assertEqual(0xD4, self.macro.symbol_table['EBSW01'].dsp)
         self.assertEqual(8, self.macro.symbol_table['CE1ERS15'].length)
         self.assertEqual(0x2c8, self.macro.symbol_table['CE1SSQ'].dsp)
+        self.assertEqual(0x3f8, self.macro.symbol_table['CE1WKB'].dsp)
+        self.assertEqual(0x39d, self.macro.symbol_table['CE1$UID'].dsp)
+        self.assertEqual(0x270, self.macro.symbol_table['EBCSD0'].dsp)
+        self.assertEqual(0x1e6, self.macro.symbol_table['EBCCCF'].dsp)
 
     def test_SH0HS(self):
         macro_name = 'SH0HS'
