@@ -1,176 +1,9 @@
-from typing import Optional, Dict, Callable
-
 import v2.instruction_type as ins
-from config import config
-from v2.data_type import DataType, Register
-from v2.segment import Program
-from v2.state import State
+from execution.state import State
+from v2.data_type import DataType
 
 
-class Execute(State):
-    def __init__(self, global_program: Program):
-        super().__init__(global_program)
-        self.cc: Optional[int] = None
-        self.ex: Dict[str, Callable] = {
-
-            # S03 - Load & Store
-            'LR': self.load_register,
-            'LTR': self.load_test_register,
-            # LPR - Not in ETA5
-            # LNR - Not in ETA5
-            # LCR - Not in ETA5
-            'L': self.load_fullword,
-            'ST': self.store_fullword,
-            'LA': self.load_address,
-            'LH': self.load_halfword,
-            'LHI': self.load_halfword_immediate,
-            'STH': self.store_halfword,
-            'IC': self.insert_character,
-            'ICM': self.insert_character_mask,
-            'STC': self.store_character,
-            'STCM': self.store_character_mask,
-            'LM': self.load_multiple,
-            'STM': self.store_multiple,
-
-            # S04 - Arithmetic & Shift Algebraic
-            'AR': self.add_register,
-            # A - Not in ETA5
-            # AH - Not in ETA5
-            'AHI': self.add_halfword_immediate,
-            'SR': self.subtract_register,
-            # S - Not in ETA5
-            # SH - Not in ETA5
-            # MH, MHI, M, MR, DR, D - Not in ETA5
-            # SLA, SRA, SLDA, SRDA - Not in ETA5
-
-            # S05 - Moving Store & Logic Control
-            'MVC': self.move_character,
-            'MVI': self.move_immediate,
-            # MVCL - Not in ETA5
-            # MVZ, MVO, MVN - Not in ETA5
-            'B': self.branch,
-            'J': self.branch,
-            # BCT - Not in ETA5
-            'BCTR': self.branch_on_count_register,
-            # BXH, BXLE - Not in ETA5
-            'BAS': self.branch_and_save,
-            'BR': self.branch_return,
-            # BASR - Not in ETA5
-
-            # S06 -  Compare & Logical
-            # CR - Not in ETA5
-            # C - Not in ETA5
-            'CH': self.compare_halfword,
-            # CHI - Not in ETA5
-            # CL, CLR - Not in ETA5
-            'CLI': self.compare_logical_immediate,
-            'CLC': self.compare_logical_character,
-            # CLM, CLCL - Not in ETA5
-            # SLL, SRL, SLDL, SRDL - Not in ETA5
-            # ALR, AL, SLR, SL - Not in ETA5
-
-
-            # S07 - And/Or/Xor, TM, EX, Data Conversion
-            # NR - Not in ETA5
-            # XR - Not in ETA5
-            'OR': self.or_register,
-            'N': self.and_fullword,
-            # O - Not in ETA5
-            # X - Not in ETA5
-            'NC': self.and_character,
-            'OC': self.or_character,
-            'XC': self.xor_character,
-            'NI': self.and_immediate,
-            'OI': self.or_immediate,
-            # XI - Not in ETA5 (Need to check the status of flipped bits via is_updated_bit)
-            'TM': self.test_mask,
-            'EX': self.execute,
-            'PACK': self.pack,
-            'CVB': self.convert_binary,
-            'CVD': self.convert_decimal,
-            'UNPK': self.unpack,
-
-            # S08 - Decimal Arithmetic & Complex - Not in ETA5
-            # ZAP
-            # AP
-            # SP
-            # MP, DP, SRP
-            # CP
-            # TP
-            # TR
-            # TRT
-            # ED, EDMK
-
-            # Realtime Macros
-            'GETCC': self.getcc,
-            'MODEC': self.no_operation,
-            'DETAC': self.detac,
-            'ATTAC': self.attac,
-            'RELCC': self.no_operation,
-            'CRUSA': self.no_operation,
-            'SENDA': self.senda,
-            'SYSRA': self.sysra,
-            'SERRC': self.serrc,
-            'ENTRC': self.entrc,
-            'ENTNC': self.entnc,
-            'ENTDC': self.entdc,
-            'BACKC': self.backc,
-
-            # TPFDF Macros
-            # DBOPN
-            # DBRED
-            # DBCLS
-            # DBIFB
-
-            # User defined Macros
-            'AAGET': self.aaget,
-            'CFCMA': self.heapa,
-            'HEAPA': self.heapa,
-            # PNRCC
-            # PDRED
-            # PDCLS
-
-
-            # No operation
-            'EQU': self.no_operation,
-            'DS': self.no_operation,
-            'EXITC': self.no_operation,
-        }
-
-    def run(self, seg_name: Optional[str] = None) -> None:
-        seg_name = self.seg.name if seg_name is None else seg_name
-        self.init_seg(seg_name)
-        self.regs.R9 = config.ECB
-        label = self.seg.root_label
-        while label:
-            node = self.seg.nodes[label]
-            label = self.ex[node.command](node)
-
-    def next_label(self, node: ins.InstructionGeneric) -> Optional[str]:
-        for condition in node.conditions:
-            if condition.is_check_cc:
-                if condition.mask & (1 << 3 - self.cc) != 0:
-                    if condition.branch:
-                        return self.branch(condition)
-                    else:
-                        return self.branch_return(condition)
-            else:
-                self.ex[condition.command](condition)
-        return node.fall_down
-
-    def set_number_cc(self, number: int) -> None:
-        if number > 0:
-            self.cc = 2
-        elif number == 0:
-            self.cc = 0
-        else:
-            self.cc = 1
-
-    def set_zero_cc(self, number: int) -> None:
-        self.cc = 1 if number else 0
-
-    # S03 - Load & Store
-
+class LoadStore(State):
     def load_register(self, node: ins.RegisterRegister) -> str:
         value = self.regs.get_value(node.reg2)
         self.regs.set_value(value, node.reg1)
@@ -265,8 +98,8 @@ class Execute(State):
             reg = self.regs.next_reg(reg)
         return self.next_label(node)
 
-    # S04 - Arithmetic & Shift Algebraic
 
+class ArithmeticShiftAlgebraic(State):
     def add_register(self, node: ins.RegisterRegister) -> str:
         value = self.regs.get_value(node.reg1) + self.regs.get_value(node.reg2)
         self.regs.set_value(value, node.reg1)
@@ -285,8 +118,8 @@ class Execute(State):
         self.set_number_cc(value)
         return self.next_label(node)
 
-    # S05 - Moving Store & Logic Control
 
+class MoveLogicControl(State):
     def move_character(self, node: ins.FieldLenField) -> str:
         source_address = self.regs.get_address(node.field.base, node.field.dsp)
         target_address = self.regs.get_address(node.field_len.base, node.field_len.dsp)
@@ -311,19 +144,19 @@ class Execute(State):
         self.regs.set_value(value, node.reg1)
         return self.next_label(node)
 
-    def branch_and_save(self, node: ins.RegisterBranch):
+    def branch_and_save(self, node: ins.RegisterBranch) -> str:
         bas = self.seg.bas
         value = bas.dumps(node.fall_down)
         self.regs.set_value(value, node.reg)
         return node.branch.name
 
-    def branch_return(self, node: ins.BranchConditionRegister):
+    def branch_return(self, node: ins.BranchConditionRegister) -> str:
         bas = self.seg.bas
         value = self.regs.get_value(node.reg)
         return bas.loads(value)
 
-    # S06 -  Compare & Logical
 
+class CompareLogical(State):
     def compare_logical_character(self, node: ins.FieldLenField) -> str:
         source_address = self.regs.get_address(node.field.base, node.field.dsp)
         target_address = self.regs.get_address(node.field_len.base, node.field_len.dsp)
@@ -345,8 +178,8 @@ class Execute(State):
         self.set_number_cc(reg_value - value)
         return self.next_label(node)
 
-    # S07 - AND/OR/XOR, TM, EX, PACK/UNPK
 
+class LogicalUsefulConversion(State):
     def or_register(self, node: ins.RegisterRegister) -> str:
         value = self.regs.get_value(node.reg1)
         value |= self.regs.get_value(node.reg2)
@@ -476,121 +309,11 @@ class Execute(State):
         self.vm.set_bytes(zoned_bytes, target_address, node.field_len1.length + 1)
         return self.next_label(node)
 
-    # Realtime Macros
 
-    def getcc(self, node: ins.KeyValue) -> str:
-        address = self.vm.allocate()
-        ecb_address = self.get_ecb_address(node.keys[0], 'CE1CR')
-        self.vm.set_value(address, ecb_address)
-        self.regs.R14 = address
-        return self.next_label(node)
+class DecimalArithmeticComplex(State):
+    pass
 
-    def detac(self, node: ins.KeyValue) -> str:
-        level = node.keys[0]
-        core_address = self.get_ecb_address(level, 'CE1CR')
-        file_address = self.get_ecb_address(level, 'CE1FA')
-        core_bytes = self.vm.get_bytes(core_address, 8)
-        file_bytes = self.vm.get_bytes(file_address, 8)
-        self.detac_stack[level[1]].append((core_bytes, file_bytes))
-        return self.next_label(node)
 
-    def attac(self, node: ins.KeyValue) -> str:
-        level = node.keys[0]
-        core_address = self.get_ecb_address(level, 'CE1CR')
-        file_address = self.get_ecb_address(level, 'CE1FA')
-        core_bytes, file_bytes = self.detac_stack[level[1]].pop()
-        self.vm.set_bytes(core_bytes, core_address)
-        self.vm.set_bytes(file_bytes, file_address)
-        return self.next_label(node)
-
-    def senda(self, node: ins.KeyValue) -> str:
-        self.message = node.get_value('MSG')
-        return self.next_label(node)
-
-    def sysra(self, node: ins.KeyValue) -> Optional[str]:
-        return_code = node.get_value('P1')
-        dump = node.get_value('P2')
-        self.dumps.append(dump)
-        if return_code == 'R':
-            return self.next_label(node)
-        elif return_code == 'E':
-            return None
-        else:
-            raise TypeError
-
-    def serrc(self, node: ins.KeyValue) -> Optional[str]:
-        return_code = node.keys[0]
-        dump = node.keys[1]
-        self.dumps.append(dump)
-        if return_code == 'R':
-            return self.next_label(node)
-        elif return_code == 'E':
-            return None
-        else:
-            raise TypeError
-
-    def entrc(self, node: ins.SegmentCall) -> str:
-        self.call_stack.append((node.fall_down, self.seg.name))
-        self.init_seg(node.seg_name)
-        return node.branch.name
-
-    def entnc(self, node: ins.SegmentCall) -> str:
-        self.init_seg(node.seg_name)
-        return node.branch.name
-
-    def entdc(self, node: ins.SegmentCall) -> str:
-        self.init_seg(node.seg_name)
-        self.call_stack = list()
-        self.init_seg(node.seg_name)
-        return node.branch.name
-
-    def backc(self, _) -> str:
-        branch, seg_name = self.call_stack.pop()
-        self.init_seg(seg_name)
-        return branch
-
-    # TPFDF Macros
-
-    # User Defined Macros
-    def aaget(self, node: ins.KeyValue) -> str:
-        address = self.vm.allocate()
-        ecb_address = self.get_ecb_address('D1', 'CE1CR')
-        self.vm.set_value(address, ecb_address)
-        reg = Register(node.get_value('BASEREG'))
-        if reg.is_valid():
-            self.regs.set_value(address, reg)
-        return self.next_label(node)
-
-    def heapa(self, node: ins.KeyValue) -> str:
-        command = node.keys[0]
-        ref = node.get_value('REF')
-        if ref is None:
-            sref = node.get_value('SREF')
-            if sref is None:
-                raise TypeError
-            ref_bytes = self.seg.get_constant_bytes(sref, 8)
-            ref = DataType('X', bytes=ref_bytes).decode
-        if command == 'ALLOCATE':
-            address = self.vm.allocate()
-            self.heap[ref] = address
-            reg = Register(node.get_value('REG'))
-            if reg.is_valid():
-                self.regs.set_value(address, reg)
-        elif command == 'LOADADD':
-            address = self.heap[ref] if ref in self.heap else 0
-            reg = Register(node.get_value('REG'))
-            if reg.is_valid():
-                self.regs.set_value(address, reg)
-            if address == 0:
-                if node.is_key('ERROR'):
-                    return node.get_value('ERROR')
-                elif node.is_key('NOTFOUND'):
-                    return node.get_value('NOTFOUND')
-        elif command == 'FREE':
-            pass
-        else:
-            raise TypeError
-        return self.next_label(node)
-
-    def no_operation(self, node: Optional[ins.InstructionGeneric] = None) -> str:
-        return self.next_label(node)
+class Instruction(LoadStore, ArithmeticShiftAlgebraic, MoveLogicControl, CompareLogical, LogicalUsefulConversion,
+                  DecimalArithmeticComplex):
+    pass

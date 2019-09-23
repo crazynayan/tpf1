@@ -2,9 +2,9 @@ import unittest
 
 from config import config
 from v2.data_type import Register
-from v2.execute import Execute
+from execution.execute import Execute
 from v2.segment import Program
-from v2.state import Registers, Storage
+from execution.state import Registers, Storage
 
 
 class RegistersTest(unittest.TestCase):

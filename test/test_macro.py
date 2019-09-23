@@ -5,7 +5,7 @@ from v2.segment import Program
 
 
 class MacroTest(unittest.TestCase):
-    NUMBER_OF_FILES = 16
+    NUMBER_OF_FILES = 17
 
     def setUp(self) -> None:
         self.program = Program()
@@ -220,6 +220,20 @@ class MacroTest(unittest.TestCase):
             f"{Error.EXP_INVALID_KEY} DFDUMP_ON:EQU:#BITA-DFDUMP_OFF {macro_name}",
         ]
         self._common_checks(macro_name, accepted_errors_list)
+
+    def test_MI0MI(self):
+        macro_name = 'MI0MI'
+        accepted_errors_list = [
+        ]
+        self._common_checks(macro_name, accepted_errors_list)
+        self.assertEqual(0x15, self.macro.symbol_table['MI0ACC'].dsp)
+
+    def test_PDEQU(self):
+        macro_name = 'PDEQU'
+        accepted_errors_list = [
+        ]
+        self._common_checks(macro_name, accepted_errors_list)
+        self.assertEqual(0x50, self.macro.symbol_table['#PD_NAME_K'].dsp)
 
 
 if __name__ == '__main__':

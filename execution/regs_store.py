@@ -1,8 +1,7 @@
-from typing import Union, Optional, Tuple, Dict, List
+from typing import Union, Optional, Tuple, Dict
 
 from config import config
 from v2.data_type import DataType, Register
-from v2.segment import Program, Segment
 
 
 class Registers:
@@ -189,45 +188,3 @@ class Storage:
         # Will return True only if all requested bits are updated
         base_address, dsp, _ = self._get_data(address)
         return self.frames[base_address][dsp] & bit == self._frame[base_address][dsp] & bit
-
-
-class State:
-    def __init__(self, global_program: Program):
-        self.global_program: Program = global_program
-        self.seg: Optional[Segment] = None
-        self.regs: Registers = Registers()
-        self.vm: Storage = Storage()
-        self.detac_stack: Dict[str, List] = {level: list() for level in config.ECB_LEVELS}
-        self.message: Optional[str] = None
-        self.dumps: List[str] = list()
-        self.heap: Dict[str, int] = dict()
-        self.call_stack: List[str] = list()
-        self.loaded_seg: Dict[str, Tuple[Segment, int]] = dict()
-
-    def __repr__(self) -> str:
-        return f"State:{self.seg}:{self.regs}:{self.vm}"
-
-    def init_seg(self, seg_name: str) -> None:
-        if seg_name in self.loaded_seg:
-            self.regs.R8 = self.loaded_seg[seg_name][1]
-            self.seg = self.loaded_seg[seg_name][0]
-        else:
-            self.global_program.load(seg_name)
-            self.regs.R8 = self.vm.allocate()   # Constant
-            literal = self.vm.allocate()        # Literal is immediately the next frame
-            self.seg = self.global_program.segments[seg_name]
-            self.vm.set_bytes(self.seg.data.constant, self.regs.R8, len(self.seg.data.constant))
-            self.vm.set_bytes(self.seg.data.literal, literal, len(self.seg.data.literal))
-            self.loaded_seg[seg_name] = (self.seg, self.regs.R8)
-
-    def validate(self, address: int) -> int:
-        return address if address else self.vm.allocate()
-
-    def get_ecb_address(self, level: str, ecb_label: str) -> int:
-        # level is from D0 to DF, ecb_label is the partial label to which the level number (0-F) to be appended
-        if not level.startswith('D') or len(level) != 2 or level[1] not in config.ECB_LEVELS:
-            # For DECB=(R1) DECB=L1ADR
-            raise TypeError
-        level = f"{ecb_label}{level[1]}"
-        dsp = self.global_program.macros['EB0EB'].symbol_table[level].dsp
-        return config.ECB + dsp
