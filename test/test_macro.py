@@ -191,6 +191,11 @@ class MacroTest(unittest.TestCase):
         self.assertEqual(0, self.macro.symbol_table['WI0EXF'].dsp)
         self.assertEqual(0, self.macro.symbol_table['WI0EXL'].dsp)
         self.assertEqual(0xF, self.macro.symbol_table['#WI0BSG'].dsp)
+        self.assertEqual(2, self.macro.symbol_table['WI0EXD'].dsp)
+        self.assertEqual(2, self.macro.symbol_table['WI0BFA'].dsp)
+        self.assertEqual(2, self.macro.symbol_table['WI0TTL'].dsp)
+        self.assertEqual(8, self.macro.symbol_table['WI0RCL'].dsp)
+        self.assertEqual(0x1C, self.macro.symbol_table['WI0ZRL'].dsp)
 
     def test_PNRCM(self):
         macro_name = 'PNRCM'
