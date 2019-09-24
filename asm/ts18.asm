@@ -15,12 +15,17 @@ TS180020 EQU   *
          CLI   2(R2),C'C'
          BNE   TS180030
          PACK  EBW088(8),4(2,R2)
-         B     TS180040
+         B     TS180050
 TS180030 EQU   *
          CLI   2(R2),C'I'
-         BE    TS180040
+         BE    TS180050
+         TM    3(R2),X'F0'
+         BO    TS180040
          PACK  EBW088(8),2(1,R2)
+         B     TS180050
 TS180040 EQU   *
+         PACK  EBW088(8),2(2,R2)
+TS180050 EQU   *
          CVB   R15,EBW088
          IC    R0,EBW015
          AR    R0,R15

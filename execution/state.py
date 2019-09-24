@@ -49,6 +49,12 @@ class State:
         dsp = self.global_program.macros['EB0EB'].symbol_table[level].dsp
         return config.ECB + dsp
 
+    def restart(self, seg_name: str) -> None:
+        self.regs = Registers()
+        self.vm = Storage()
+        self.loaded_seg = dict()
+        self.run(seg_name)
+
     def run(self, seg_name: Optional[str] = None) -> None:
         seg_name = self.seg.name if seg_name is None else seg_name
         self.init_seg(seg_name)

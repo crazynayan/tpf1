@@ -5,6 +5,7 @@ from v2.data_type import Register
 from execution.execute import Execute
 from v2.segment import Program
 from execution.state import Registers, Storage
+from db.pnr import Pnr
 
 
 class RegistersTest(unittest.TestCase):
@@ -260,9 +261,28 @@ class StateTest(unittest.TestCase):
         self.assertEqual(0x01, self.state.vm.get_value(config.ECB + 8, 1))
 
     def test_pdred_ts18(self):
+        names = [
+            'C/21VEENA WORLD',
+            '1ZAVERI/NAYAN MR',
+            '1ZAVERI/PURVI MRS',
+            'I/ZAVERI/S',
+        ]
+        Pnr.add_names(config.AAAPNR, names)
         self.state.run('TS18')
         self.assertListEqual(list(), self.state.seg.errors)
         self.assertEqual(24, self.state.regs.R1)
+        # Check for another corporate
+        Pnr.add_names(config.AAAPNR, ['C/21VEENA TOURS'])
+        self.state.restart('TS18')
+        self.assertEqual("'MORE THAN 1 C/'", self.state.message)
+        self.assertEqual(0, self.state.regs.R1)
+        # Check for > 99 names
+        names = ['55ZAVERI', '45SHAH']
+        Pnr.init_db()
+        Pnr.add_names(config.AAAPNR, names)
+        self.state.restart('TS18')
+        self.assertEqual("'MORE THAN 99 NAMES'", self.state.message)
+        self.assertEqual(100, self.state.regs.R1)
 
 
 if __name__ == '__main__':
