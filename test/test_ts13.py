@@ -195,7 +195,7 @@ class SegmentTest(unittest.TestCase):
         node = self.seg.nodes['TS110030.3']
         self.assertListEqual(['WORKAREA'], node.sub_keys)
         self.assertIsNone(node.get_sub_value('WORKAREA', 'LEV'))
-        self.assertListEqual([('LEV', None), ('5', None)], node.get_value('WORKAREA'))
+        self.assertListEqual(['LEV', '5'], node.get_value('WORKAREA'))
         self.assertEqual('WORKAREA', node.get_key_from_value([('LEV', None), ('5', None)]))
         # ATTAC DA
         self.assertTrue(self.seg.nodes['TS110040.1'].is_key('DA'))

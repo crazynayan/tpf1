@@ -9,7 +9,7 @@ from v2.file_line import SymbolTable
 class UserDefinedDbMacro(State):
     def pdred(self, node: KeyValue) -> str:
         # Get the base of PD0WRK
-        workarea = node.get_sub_keys('WORKAREA')
+        workarea = node.get_value('WORKAREA')
         if workarea[0] == 'LEV':
             level = f"D{workarea[1]}"
             level_address = self.get_ecb_address(level, 'CE1CR')
@@ -29,7 +29,7 @@ class UserDefinedDbMacro(State):
         try:
             key = f"{self.seg.macro.data_map[key_label].dsp:2x}"
         except KeyError:
-            # TODO Code for INDEX=
+            # TODO Code for INDEX= Not in ETA5
             raise TypeError
 
         # Get the item number to read (Item numbers start from 1)
@@ -44,7 +44,7 @@ class UserDefinedDbMacro(State):
         elif item_number == total_items:
             last_item_bit: int = self.seg.macro.data_map['#PD0_RT_LST'].dsp
             pd0_rt_id1: SymbolTable = self.seg.macro.data_map['PD0_RT_ID1']
-            self.vm.all_bits_on(pd0_base + pd0_rt_id1.dsp, last_item_bit)
+            self.vm.or_bit(pd0_base + pd0_rt_id1.dsp, last_item_bit)
 
         # Get the data
         data: bytearray = Pnr.get_pnr_data(config.AAAPNR, key, item_number)

@@ -30,7 +30,9 @@ TS180050 EQU   *
          IC    R0,EBW015
          AR    R0,R15
          STC   R0,EBW015
-         B     TS180010
+         L     R2,CE1CR5        COMMENT THIS LINE OUT FOR NOTFOUND
+         TM    PD0_RT_ID1,#PD0_RT_LST
+         BZ    TS180010
 TS180100 EQU   *
          IC    R1,EBW015
          CH    R1,=H'99'

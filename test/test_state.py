@@ -270,6 +270,7 @@ class StateTest(unittest.TestCase):
         Pnr.add_names(config.AAAPNR, names)
         self.state.run('TS18')
         self.assertListEqual(list(), self.state.seg.errors)
+        self.assertIsNone(self.state.message)
         self.assertEqual(24, self.state.regs.R1)
         # Check for another corporate
         Pnr.add_names(config.AAAPNR, ['C/21VEENA TOURS'])

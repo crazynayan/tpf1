@@ -477,13 +477,13 @@ class KeyValue(InstructionGeneric):
         return key in self.sub_keys
 
     def get_value(self, key: str) -> Union[str, List, None]:
-        return next((key_value[1] for key_value in self.operands if key_value[0] == key), None)
+        value = next((key_value[1] for key_value in self.operands if key_value[0] == key), None)
+        if isinstance(value, list) and all(sub_key_value[1] is None for sub_key_value in value):
+            value = [sub_key_value[0] for sub_key_value in value]
+        return value
 
     def get_key_from_value(self, value: Union[str, List]) -> Optional[str]:
         return next((key_value[0] for key_value in self.operands if key_value[1] == value), None)
-
-    def startswith(self, value: str) -> Optional[str]:
-        return next((key[len(value):] for key in self.key_only if key.startswith(value)), None)
 
     @property
     def key_only(self) -> List[str]:
@@ -506,10 +506,6 @@ class KeyValue(InstructionGeneric):
     def get_sub_value(self, key: str, sub_key: str) -> str:
         return next((sub_key_value[1] for key_value in self.sub_key_value for sub_key_value in key_value[1]
                      if key_value[0] == key and sub_key_value[0] == sub_key), None)
-
-    def get_sub_keys(self, key: str) -> List[str]:
-        return [sub_key_value[0] for key_value in self.sub_key_value for sub_key_value in key_value[1]
-                if key_value[0] == key]
 
     @property
     def next_labels(self) -> set:
