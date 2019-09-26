@@ -47,7 +47,7 @@ class UserDefinedDbMacro(State):
             self.vm.or_bit(pd0_base + pd0_rt_id1.dsp, last_item_bit)
 
         # Get the data
-        data: bytearray = Pnr.get_pnr_data(config.AAAPNR, key, item_number)
+        data, item_number = Pnr.get_pnr_data(config.AAAPNR, key, item_number)
         self.vm.set_value(item_number, pd0_base + pd0_mc_cin.dsp, pd0_mc_cin.length)
 
         # Update the data in PD0WRK
