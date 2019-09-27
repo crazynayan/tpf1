@@ -285,6 +285,21 @@ class StateTest(unittest.TestCase):
         self.assertEqual("'MORE THAN 99 NAMES'", self.state.message)
         self.assertEqual(100, self.state.regs.R1)
 
+    def test_pdred_ts19(self):
+        hfax = [
+            'SSRFQTUBA2811Y20OCTDFW  ORD  0510EXP/DGHWCL RR    ',
+            'SSRWCHRAA2812Y20OCT/NN1',
+            'SSRFQTUAA2812Y20OCTDFW  ORD  0510EXP/DGHWCL RR    ',
+            'SSRFQTUAA2813Y20OCTDFW  ORD  0510EXP*DGHWCL DR    ',
+            'SSRWCHRAA2812Y20OCT/NN1',
+            'SSRWCHRAA2812Y20OCT/NN1',
+            'SSRFQTUAA2814Y20OCTDFW  ORD  0510EXP*DGHWCL RR    ',
+        ]
+        Pnr.add_hfax(config.AAAPNR, hfax)
+        self.state.run('TS19')
+        self.assertListEqual(list(), self.state.seg.errors)
+        self.assertEqual(0xF2F8F1F4, self.state.regs.get_unsigned_value('R1'))
+
 
 if __name__ == '__main__':
     unittest.main()

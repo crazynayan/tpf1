@@ -1,3 +1,5 @@
+from typing import Optional
+
 from config import config
 from db.pnr import Pnr
 from execution.state import State
@@ -35,30 +37,47 @@ class UserDefinedDbMacro(State):
         # Get the item number to read (Item numbers start from 1)
         pd0_mc_cin: SymbolTable = self.seg.macro.data_map['PD0_MC_CIN']
         item_number = self.vm.get_value(pd0_base + pd0_mc_cin.dsp, pd0_mc_cin.length) + 1
-        total_items = Pnr.get_len(config.AAAPNR, key)
-        if item_number > total_items:
+
+        # SEARCH-n parameters
+        starts_with: Optional[str] = None
+        for index in range(1, 7):
+            search = node.get_value(f'SEARCH{index}')
+            if search is None:
+                break
+            if search[0] == 'START':
+                if len(search) != 2 or not search[1].startswith("'") or not search[1].endswith("'"):
+                    raise ValueError
+                starts_with = search[1][1:-1]
+
+        # Get the data
+        packed = node.get_value('FORMATOUT') == 'PACKED'
+        data, item_number = Pnr.get_pnr_data(config.AAAPNR, key, item_number, packed=packed, starts_with=starts_with)
+        self.vm.set_value(item_number, pd0_base + pd0_mc_cin.dsp, pd0_mc_cin.length)
+
+        # NOTFOUND & last item
+        if data is None:
             not_found = node.get_value('NOTFOUND')
             if not_found is None:
                 raise IndexError
             return not_found
-        elif item_number == total_items:
+        elif item_number == Pnr.get_len(config.AAAPNR, key):
             last_item_bit: int = self.seg.macro.data_map['#PD0_RT_LST'].dsp
             pd0_rt_id1: SymbolTable = self.seg.macro.data_map['PD0_RT_ID1']
             self.vm.or_bit(pd0_base + pd0_rt_id1.dsp, last_item_bit)
 
-        # Get the data
-        data, item_number = Pnr.get_pnr_data(config.AAAPNR, key, item_number)
-        self.vm.set_value(item_number, pd0_base + pd0_mc_cin.dsp, pd0_mc_cin.length)
-
         # Update the data in PD0WRK
-        pd0_c_itm: SymbolTable = self.seg.macro.data_map['PD0_C_ITM']
-        pd0_p_itm: SymbolTable = self.seg.macro.data_map['PD0_P_ITM']
+        pd0_itm: SymbolTable = self.seg.macro.data_map['PD0_P_DATA'] if packed else \
+            self.seg.macro.data_map['PD0_C_ITM']
         pd0_rt_adr: SymbolTable = self.seg.macro.data_map['PD0_RT_ADR']
-        if len(data) > pd0_c_itm.length:
+        if len(data) > pd0_itm.length:
             raise ValueError
-        self.vm.set_bytes(data, pd0_base + pd0_c_itm.dsp, len(data))
-        self.vm.set_bytes(data, pd0_base + pd0_p_itm.dsp, len(data))
-        self.vm.set_value(pd0_base + pd0_p_itm.dsp, pd0_base + pd0_rt_adr.dsp, pd0_rt_adr.length)
+        self.vm.set_bytes(data, pd0_base + pd0_itm.dsp, len(data))
+        pd0_rt_adr_value = pd0_base + pd0_itm.dsp
+        if packed:
+            pd0_rt_adr_value += (len(Pnr.HEADER) + len(Pnr.HDR[key]['std_fix'])) >> 1
+        if node.get_value('POINT') == 'YES':
+            pd0_rt_adr_value += len(Pnr.HDR[key]['std_var']) >> 1
+        self.vm.set_value(pd0_rt_adr_value, pd0_base + pd0_rt_adr.dsp, pd0_rt_adr.length)
         return node.fall_down
 
 
