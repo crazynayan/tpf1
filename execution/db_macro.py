@@ -74,9 +74,9 @@ class UserDefinedDbMacro(State):
         self.vm.set_bytes(data, pd0_base + pd0_itm.dsp, len(data))
         pd0_rt_adr_value = pd0_base + pd0_itm.dsp
         if packed:
-            pd0_rt_adr_value += (len(Pnr.HEADER) + len(Pnr.HDR[key]['std_fix'])) >> 1
+            pd0_rt_adr_value += (len(Pnr.HEADER) + len(Pnr.HDR[key]['std_fix']))
         if node.get_value('POINT') == 'YES':
-            pd0_rt_adr_value += len(Pnr.HDR[key]['std_var']) >> 1
+            pd0_rt_adr_value += len(Pnr.HDR[key]['std_var'])
         self.vm.set_value(pd0_rt_adr_value, pd0_base + pd0_rt_adr.dsp, pd0_rt_adr.length)
         return node.fall_down
 
