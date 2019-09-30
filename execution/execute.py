@@ -127,7 +127,7 @@ class Execute(Instruction, ExecutableMacro, DbMacro):
 
             # User defined Db Macros
             'PDRED': self.pdred,
-            # PDCLS
+            'PDCLS': self.pdcls,
             # PDADD, PDDEL - Not in ETA5
 
             # TPFDF Macros

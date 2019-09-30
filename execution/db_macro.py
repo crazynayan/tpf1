@@ -9,11 +9,10 @@ from v2.file_line import SymbolTable
 
 
 class UserDefinedDbMacro(State):
-    def pdred(self, node: KeyValue) -> str:
-        # Get the base of PD0WRK
+    def _pd0_base(self, node: KeyValue):
         workarea = node.get_value('WORKAREA')
         if workarea[0] == 'LEV':
-            level = f"D{workarea[1]}"
+            level = f"D{workarea[1]}" if len(workarea[1]) == 1 else workarea[1]
             level_address = self.get_ecb_address(level, 'CE1CR')
             pd0_base = self.vm.get_value(level_address)
         elif workarea[0] == 'REG':
@@ -23,6 +22,16 @@ class UserDefinedDbMacro(State):
             pd0_base = self.regs.get_value(reg)
         else:
             raise TypeError
+        return pd0_base
+
+    def pdcls(self, node: KeyValue) -> str:
+        pd0_base = self._pd0_base(node)
+        self.vm.init(pd0_base)
+        return node.fall_down
+
+    def pdred(self, node: KeyValue) -> str:
+        # Get the base of PD0WRK
+        pd0_base = self._pd0_base(node)
 
         # Get the key from FIELD= or INDEX=
         self.seg.macro.load('PDEQU')
@@ -73,9 +82,9 @@ class UserDefinedDbMacro(State):
             raise ValueError
         self.vm.set_bytes(data, pd0_base + pd0_itm.dsp, len(data))
         pd0_rt_adr_value = pd0_base + pd0_itm.dsp
-        if packed:
-            pd0_rt_adr_value += (len(Pnr.HEADER) + len(Pnr.HDR[key]['std_fix']))
         if node.get_value('POINT') == 'YES':
+            if packed:
+                pd0_rt_adr_value += (len(Pnr.HEADER) + len(Pnr.HDR[key]['std_fix']))
             pd0_rt_adr_value += len(Pnr.HDR[key]['std_var'])
         self.vm.set_value(pd0_rt_adr_value, pd0_base + pd0_rt_adr.dsp, pd0_rt_adr.length)
         return node.fall_down

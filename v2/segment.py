@@ -200,3 +200,6 @@ class Program:
 
     def is_macro_present(self, macro_name):
         return macro_name in self.macros
+
+
+program = Program()

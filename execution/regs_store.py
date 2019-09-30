@@ -188,3 +188,11 @@ class Storage:
         # Will return True only if all requested bits are updated
         base_address, dsp, _ = self._get_data(address)
         return self.frames[base_address][dsp] & bit == self._frame[base_address][dsp] & bit
+
+    def init(self, address: int) -> None:
+        base_address = self.base_key(address)
+        try:
+            self.frames[base_address] = bytearray()
+            self._frame[base_address] = bytearray()
+        except KeyError:
+            raise KeyError

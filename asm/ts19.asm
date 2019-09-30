@@ -28,6 +28,8 @@ FQTU1SP2 DS    XL14
 $IS$     CSECT
          USING FQTUITEM,R4
          PD0WRK REG=R5
+         PR001W REG=R6
+         WI0BS  REG=R7
          GETCC D5,L4,FILL=00
          L     R5,CE1CR5
 TS190010 EQU   *
@@ -42,5 +44,30 @@ TS190010 EQU   *
          CLI   FQTUSH1,C'*'
          BNE   TS190010
          L     R1,FQTUFLN
+         PDCLS WORKAREA=(LEV,D5)
+TS190020 EQU   *
+         PDRED FIELD=FQTV,WORKAREA=(LEV,5),FORMATOUT=PACKED,           X
+               NOTFOUND=TS190100
+         L     R6,PD0_RT_ADR
+         CLC   PR00_60_FQT_CXR,$C_AA
+         BNE   TS190020
+         TM    PR00_60_FQT_TYP,X'40'
+         BNO   TS190020
+         L     R2,PR00_60_FQT_FTN+3
+         PDCLS WORKAREA=(LEV,D5)
+TS190030 EQU   *
+         PDRED FIELD=ITINERARY,WORKAREA=(REG,R5),FORMATOUT=UNPACKED    X
+               NOTFOUND=TS190100
+         L     R7,PD0_RT_ADR
+         CLC   WI0ARC,$C_AA
+         BNE   TS190030
+         CLC   WI0FNB,=H'2812'
+         BNE   TS190030
+         CLC   WI0DTE,=X'4CC1'
+         BNE   TS190030
+         CLC   WI0BRD,=C'DFW'
+         BNE   TS190030
+         ICM   R3,7,WI0OFF
 TS190100 EQU   *
          EXITC
+$C_AA    DC    C'AA'

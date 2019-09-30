@@ -1,11 +1,11 @@
 import unittest
 
 from config import config
-from v2.data_type import Register
-from execution.execute import Execute
-from v2.segment import Program
-from execution.state import Registers, Storage
 from db.pnr import Pnr
+from execution.execute import Execute
+from execution.state import Registers, Storage
+from v2.data_type import Register, DataType
+from v2.segment import Program
 
 
 class RegistersTest(unittest.TestCase):
@@ -138,7 +138,8 @@ class StorageTest(unittest.TestCase):
 
 class StateTest(unittest.TestCase):
     def setUp(self) -> None:
-        self.state = Execute(Program())
+        self.program = Program()
+        self.state = Execute(self.program)
 
     def test_ts14(self):
         self.state.run('TS14')
@@ -286,6 +287,7 @@ class StateTest(unittest.TestCase):
         self.assertEqual(100, self.state.regs.R1)
 
     def test_pdred_ts19(self):
+        # This also test PDCLS
         hfax = [
             'SSRFQTUBA2811Y20OCTDFW  ORD  0510EXP/DGHWCL RR    ',
             'SSRWCHRAA2812Y20OCT/NN1',
@@ -295,10 +297,68 @@ class StateTest(unittest.TestCase):
             'SSRWCHRAA2812Y20OCT/NN1',
             'SSRFQTUAA2814Y20OCTDFW  ORD  0510EXP*DGHWCL RR    ',
         ]
+        fqtv = [
+            {
+                'PR00_60_FQT_CXR': DataType('C', input='BA').to_bytes(),
+                'PR00_60_FQT_FTN': DataType('C', input='NKE9086').to_bytes(),
+                'PR00_60_FQT_TYP': DataType('X', input='60').to_bytes(),
+            },
+            {
+                'PR00_60_FQT_CXR': DataType('C', input='AA').to_bytes(),
+                'PR00_60_FQT_FTN': DataType('C', input='NKE9087').to_bytes(),
+                'PR00_60_FQT_TYP': DataType('X', input='80').to_bytes(),
+            },
+            {
+                'PR00_60_FQT_CXR': DataType('C', input='AA').to_bytes(),
+                'PR00_60_FQT_FTN': DataType('C', input='NKE9088').to_bytes(),
+                'PR00_60_FQT_TYP': DataType('X', input='60').to_bytes(),
+            },
+        ]
+        itin = [
+            {
+                'WI0ARC': DataType('C', input='BA').to_bytes(),
+                'WI0FNB': DataType('H', input='2812').to_bytes(),
+                'WI0DTE': DataType('X', input='4CC1').to_bytes(),
+                'WI0BRD': DataType('C', input='DFW').to_bytes(),
+                'WI0OFF': DataType('C', input='ORZ').to_bytes(),
+            },
+            {
+                'WI0ARC': DataType('C', input='AA').to_bytes(),
+                'WI0FNB': DataType('H', input='2811').to_bytes(),
+                'WI0DTE': DataType('X', input='4CC1').to_bytes(),
+                'WI0BRD': DataType('C', input='DFW').to_bytes(),
+                'WI0OFF': DataType('C', input='ORA').to_bytes(),
+            },
+            {
+                'WI0ARC': DataType('C', input='AA').to_bytes(),
+                'WI0FNB': DataType('H', input='2812').to_bytes(),
+                'WI0DTE': DataType('X', input='4CC0').to_bytes(),
+                'WI0BRD': DataType('C', input='DFW').to_bytes(),
+                'WI0OFF': DataType('C', input='ORB').to_bytes(),
+            },
+            {
+                'WI0ARC': DataType('C', input='AA').to_bytes(),
+                'WI0FNB': DataType('H', input='2812').to_bytes(),
+                'WI0DTE': DataType('X', input='4CC1').to_bytes(),
+                'WI0BRD': DataType('C', input='DFX').to_bytes(),
+                'WI0OFF': DataType('C', input='ORC').to_bytes(),
+            },
+            {
+                'WI0ARC': DataType('C', input='AA').to_bytes(),
+                'WI0FNB': DataType('H', input='2812').to_bytes(),
+                'WI0DTE': DataType('X', input='4CC1').to_bytes(),
+                'WI0BRD': DataType('C', input='DFW').to_bytes(),
+                'WI0OFF': DataType('C', input='ORD').to_bytes(),
+            },
+        ]
         Pnr.add_hfax(config.AAAPNR, hfax)
+        Pnr.add_fqtv(config.AAAPNR, fqtv)
+        Pnr.add_itin(config.AAAPNR, itin)
         self.state.run('TS19')
         self.assertListEqual(list(), self.state.seg.errors)
         self.assertEqual(0xF2F8F1F4, self.state.regs.get_unsigned_value('R1'))
+        self.assertEqual(0xF9F0F8F8, self.state.regs.get_unsigned_value('R2'))
+        self.assertEqual(0x00D6D9C4, self.state.regs.get_unsigned_value('R3'))
 
 
 if __name__ == '__main__':
