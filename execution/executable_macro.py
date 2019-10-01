@@ -1,8 +1,8 @@
 from typing import Optional
 
+from assembly.instruction_type import KeyValue, SegmentCall
 from execution.state import State
-from v2.data_type import DataType, Register
-from v2.instruction_type import KeyValue, SegmentCall
+from utils.data_type import DataType, Register
 
 
 class RealTimeMacro(State):

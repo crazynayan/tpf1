@@ -1,6 +1,6 @@
-import v2.instruction_type as ins
+import assembly.instruction_type as ins
 from execution.state import State
-from v2.data_type import DataType
+from utils.data_type import DataType
 
 
 class LoadStore(State):

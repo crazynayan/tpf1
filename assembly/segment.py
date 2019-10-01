@@ -1,14 +1,11 @@
-import os
 import re
 from copy import copy
 
-from config import config
-from v2.directive import AssemblerDirective
-from v2.errors import Error
-from v2.file_line import File, Line, SymbolTable, Label, LabelSave
-from v2.instruction import Instruction
-from v2.instruction_type import DataMacroDeclaration
-from v2.macro import SegmentMacro, DataMacro
+from assembly.directive import AssemblerDirective
+from assembly.file_line import File, Line, SymbolTable, Label, LabelSave
+from assembly.instruction import Instruction
+from assembly.instruction_type import DataMacroDeclaration
+from utils.errors import Error
 
 
 class Data:
@@ -169,37 +166,3 @@ class Segment:
         if result != Error.NO_ERROR:
             self.errors.append(f'{result} {line} {self.name}')
         return True
-
-
-class Program:
-    ASM_EXT = {'.asm', '.txt'}
-    ASM_FOLDER_NAME = os.path.join(config.ROOT_DIR, 'asm')
-    MAC_EXT = {'.mac', '.txt'}
-    MAC_FOLDER_NAME = os.path.join(config.ROOT_DIR, 'macro')
-
-    def __init__(self):
-        self.segments = dict()          # Dictionary of Segment. Segment name is the key.
-        self.macros = dict()
-        for file_name in os.listdir(self.ASM_FOLDER_NAME):
-            if len(file_name) < 6 or file_name[-4:].lower() not in self.ASM_EXT:
-                continue
-            seg_name = file_name[:-4].upper()
-            seg_macro = SegmentMacro(self, seg_name)
-            self.segments[seg_name] = Segment(os.path.join(self.ASM_FOLDER_NAME, file_name), seg_name, seg_macro)
-        for file_name in os.listdir(self.MAC_FOLDER_NAME):
-            if len(file_name) < 6 or file_name[-4:].lower() not in self.MAC_EXT:
-                continue
-            macro_name = file_name[:-4].upper()
-            self.macros[macro_name] = DataMacro(macro_name, os.path.join(self.MAC_FOLDER_NAME, file_name))
-
-    def __repr__(self):
-        return f"Program:S={len(self.segments)}:M={len(self.macros)}"
-
-    def load(self, seg_name):
-        self.segments[seg_name].load()
-
-    def is_macro_present(self, macro_name):
-        return macro_name in self.macros
-
-
-program = Program()

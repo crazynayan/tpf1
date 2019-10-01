@@ -1,20 +1,19 @@
 import unittest
 
-from v2.directive import AssemblerDirective
-from v2.file_line import Line, File
-from v2.instruction import Instruction
-from v2.segment import Program
+from assembly.directive import AssemblerDirective
+from assembly.file_line import Line, File
+from assembly.instruction import Instruction
+from assembly.program import program
 
 
 class SegmentTest(unittest.TestCase):
     def setUp(self) -> None:
-        self.program = Program()
         self.seg = None
 
     def _common_checks(self, seg_name, accepted_errors_list=None):
         accepted_errors_list = list() if accepted_errors_list is None else accepted_errors_list
-        self.program.load(seg_name)
-        self.seg = self.program.segments[seg_name]
+        program.load(seg_name)
+        self.seg = program.segments[seg_name]
         self.assertListEqual(accepted_errors_list, self.seg.errors, '\n\n\n' + '\n'.join(list(
             set(self.seg.errors) - set(accepted_errors_list))))
         self.assertTrue(self.seg.assembled)
@@ -38,10 +37,10 @@ class SegmentTest(unittest.TestCase):
     def test_check_segment(self):
         seg_name = 'ETA5'
         self.maxDiff = None
-        lines = Line.from_file(File.open(self.program.segments[seg_name].file_name))
+        lines = Line.from_file(File.open(program.segments[seg_name].file_name))
         unknown = [line.command for line in lines
                    if line.command not in Instruction.INS
-                   and line.command not in self.program.macros
+                   and line.command not in program.macros
                    and line.command not in AssemblerDirective.AD]
         self.assertListEqual(list(), unknown)
 

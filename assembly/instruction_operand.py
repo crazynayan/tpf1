@@ -1,9 +1,9 @@
 import re
 from typing import Optional, Tuple
 
-from v2.data_type import Register
-from v2.errors import Error
-from v2.macro import SegmentMacro
+from assembly.macro import SegmentMacro
+from utils.data_type import Register
+from utils.errors import Error
 
 
 class Field:

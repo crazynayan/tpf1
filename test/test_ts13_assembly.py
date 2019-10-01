@@ -1,20 +1,19 @@
 import unittest
 
+from assembly.instruction_type import KeyValue, RegisterData
+from assembly.program import program
 from config import config
-from v2.instruction_type import KeyValue, RegisterData
-from v2.errors import Error
-from v2.segment import Program
+from utils.errors import Error
 
 
 class SegmentTest(unittest.TestCase):
     def setUp(self) -> None:
-        self.program = Program()
         self.seg = None
 
     def _common_checks(self, seg_name, accepted_errors_list=None):
         accepted_errors_list = list() if accepted_errors_list is None else accepted_errors_list
-        self.program.load(seg_name)
-        self.seg = self.program.segments[seg_name]
+        program.load(seg_name)
+        self.seg = program.segments[seg_name]
         self.assertListEqual(accepted_errors_list, self.seg.errors, '\n\n\n' + '\n'.join(list(
             set(self.seg.errors) - set(accepted_errors_list))))
         self.assertTrue(self.seg.assembled)
@@ -97,7 +96,7 @@ class SegmentTest(unittest.TestCase):
         self._common_checks(seg_name, accepted_errors_list)
         # ENTRC TS01
         node = self.seg.nodes['$$TS10$$.1']
-        seg = self.program.segments[node.seg_name]
+        seg = program.segments[node.seg_name]
         self.assertEqual('ENTRC', node.command)
         self.assertEqual('TS01', node.seg_name)
         self.assertEqual('$$TS01$$', node.branch.name)
@@ -107,7 +106,7 @@ class SegmentTest(unittest.TestCase):
         self.assertSetEqual({'$$TS01$$', '$$TS10$$.2'}, node.next_labels)
         # ENTNC TS02
         node = self.seg.nodes['$$TS10$$.3']
-        seg = self.program.segments[node.seg_name]
+        seg = program.segments[node.seg_name]
         self.assertEqual('ENTNC', node.command)
         self.assertEqual('TS02', node.seg_name)
         self.assertEqual('$$TS02$$', node.branch.name)
@@ -117,7 +116,7 @@ class SegmentTest(unittest.TestCase):
         self.assertSetEqual({'$$TS02$$'}, node.next_labels)
         # ENTDC TS13
         node = self.seg.nodes['$$TS10$$.2']
-        seg = self.program.segments[node.seg_name]
+        seg = program.segments[node.seg_name]
         self.assertEqual('ENTDC', node.command)
         self.assertEqual('TS13', node.seg_name)
         self.assertEqual('$$TS13$$', node.branch.name)

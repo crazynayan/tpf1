@@ -1,9 +1,9 @@
 import re
 
+from assembly.file_line import SymbolTable, Label
 from config import config
-from v2.data_type import DataType, Register
-from v2.errors import Error
-from v2.file_line import SymbolTable, Label
+from utils.data_type import DataType, Register
+from utils.errors import Error
 
 
 class DsDc:

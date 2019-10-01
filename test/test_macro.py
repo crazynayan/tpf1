@@ -1,14 +1,14 @@
 import unittest
 
-from v2.errors import Error
-from v2.segment import Program
+from utils.errors import Error
+from assembly.program import program
 
 
 class MacroTest(unittest.TestCase):
     NUMBER_OF_FILES = 17
 
     def setUp(self) -> None:
-        self.program = Program()
+        self.program = program
         self.macro = None
 
     def test_files(self):

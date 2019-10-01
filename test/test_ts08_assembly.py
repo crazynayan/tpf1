@@ -1,31 +1,30 @@
 import unittest
 
-from v2.errors import Error
-from v2.file_line import Line
-from v2.instruction import Instruction
-from v2.segment import Program
+from assembly.file_line import Line
+from assembly.instruction import Instruction
+from assembly.program import program
+from utils.errors import Error
 
 
 class SegmentTest(unittest.TestCase):
     NUMBER_OF_FILES = 35
 
     def setUp(self) -> None:
-        self.program = Program()
         self.seg = None
 
     def _common_checks(self, seg_name, accepted_errors_list=None):
         accepted_errors_list = list() if accepted_errors_list is None else accepted_errors_list
-        self.program.load(seg_name)
-        self.seg = self.program.segments[seg_name]
+        program.load(seg_name)
+        self.seg = program.segments[seg_name]
         self.assertListEqual(accepted_errors_list, self.seg.errors, '\n\n\n' + '\n'.join(list(
             set(self.seg.errors) - set(accepted_errors_list))))
         self.assertTrue(self.seg.assembled)
 
     def test_files(self):
-        self.assertTrue('TS02' in self.program.segments)
-        self.assertTrue('TS01' in self.program.segments)
-        self.assertFalse('EB0EB' in self.program.segments)
-        self.assertEqual(self.NUMBER_OF_FILES, len(self.program.segments), 'Update number of files in SegmentTest')
+        self.assertTrue('TS02' in program.segments)
+        self.assertTrue('TS01' in program.segments)
+        self.assertFalse('EB0EB' in program.segments)
+        self.assertEqual(self.NUMBER_OF_FILES, len(program.segments), 'Update number of files in SegmentTest')
 
     def test_field_bits(self):
         seg_name = 'TS01'

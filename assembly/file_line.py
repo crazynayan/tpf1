@@ -2,7 +2,7 @@ import re
 from typing import List, Optional
 
 from config import config
-from v2.command import cmd
+from utils.command import cmd
 
 
 class File:

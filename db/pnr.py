@@ -1,9 +1,9 @@
 from typing import List, Dict, Union, Tuple, Optional
 
+from assembly.program import program
 from config import config
 from db.stream import Stream
-from v2.data_type import DataType
-from v2.segment import program
+from utils.data_type import DataType
 
 
 class Pnr:

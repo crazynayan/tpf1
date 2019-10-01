@@ -1,11 +1,11 @@
 from typing import Optional
 
+from assembly.file_line import SymbolTable
+from assembly.instruction_type import KeyValue
 from config import config
 from db.pnr import Pnr
 from execution.state import State
-from v2.instruction_type import KeyValue
-from v2.data_type import Register
-from v2.file_line import SymbolTable
+from utils.data_type import Register
 
 
 class UserDefinedDbMacro(State):

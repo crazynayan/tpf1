@@ -3,13 +3,12 @@ from typing import Dict, Callable
 from execution.executable_macro import ExecutableMacro
 from execution.instruction import Instruction
 from execution.db_macro import DbMacro
-from v2.instruction_type import InstructionGeneric
-from v2.segment import Program
+from assembly.instruction_type import InstructionGeneric
 
 
 class Execute(Instruction, ExecutableMacro, DbMacro):
-    def __init__(self, global_program: Program):
-        super().__init__(global_program)
+    def __init__(self):
+        super().__init__()
         self.ex: Dict[str, Callable] = {
 
             # S03 - Load & Store

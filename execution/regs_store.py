@@ -1,7 +1,7 @@
 from typing import Union, Optional, Tuple, Dict
 
 from config import config
-from v2.data_type import DataType, Register
+from utils.data_type import DataType, Register
 
 
 class Registers:
