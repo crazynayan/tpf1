@@ -130,10 +130,10 @@ class Execute(Instruction, ExecutableMacro, DbMacro):
             # PDADD, PDDEL - Not in ETA5
 
             # TPFDF Macros
-            # DBOPN
-            # DBRED
-            # DBCLS
-            # DBIFB
+            'DBOPN': self.dbopn,
+            'DBRED': self.dbred,
+            'DBCLS': self.dbcls,
+            'DBIFB': self.dbifb,
             # DBADD, DBDEL - Not in ETA5
 
             # No operation

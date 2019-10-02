@@ -174,7 +174,7 @@ class Instruction:
         'PNRCM': ins.KeyValue,
         'GLOBZ': ins.Globz,
         'SYSRA': ins.KeyValue,
-        'DBRED': ins.KeyValue,
+        'DBRED': ins.Dbred,
         'SENDA': ins.KeyValue,
         'CFCMA': ins.KeyValue,
         'HEAPA': ins.KeyValue,

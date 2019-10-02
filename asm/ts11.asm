@@ -1,6 +1,12 @@
 **********************************************************************
 *        KEY VALUE (REALTIME AND USER DEFINED EXECUTABLE MACROS)
 **********************************************************************
+INPUT    DSECT
+$C_AA    DS    CL2
+FQTUUFF  DS    XL1
+EFFD     DS    XL2
+$IS$     CSECT
+         USING INPUT,R4
 TS110010 EQU   *
          WA0AA REG=R1
          AAGET BASEREG=R1,GET=CORE,INIT=YES,FILE=NO

@@ -20,6 +20,7 @@ class State:
         self.heap: Dict[str, int] = dict()
         self.call_stack: List[Tuple[str, str]] = list()
         self.loaded_seg: Dict[str, Tuple[Segment, int]] = dict()
+        self.tpfdf_ref: Dict[str, int] = dict()
 
     def __repr__(self) -> str:
         return f"State:{self.seg}:{self.regs}:{self.vm}"
@@ -38,6 +39,7 @@ class State:
             self.loaded_seg[seg_name] = (self.seg, self.regs.R8)
 
     def validate(self, address: int) -> int:
+        # Called from L to ensure non-zero base
         return address if address else self.vm.allocate()
 
     @staticmethod

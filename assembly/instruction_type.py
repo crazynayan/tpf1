@@ -503,9 +503,14 @@ class KeyValue(InstructionGeneric):
         # Returns all key_value that have sub_keys
         return [key_value for key_value in self.operands if isinstance(key_value[1], list)]
 
-    def get_sub_value(self, key: str, sub_key: str) -> str:
+    def get_sub_value(self, key: str, sub_key: str) -> Union[str, FieldBaseDsp]:
         return next((sub_key_value[1] for key_value in self.sub_key_value for sub_key_value in key_value[1]
                      if key_value[0] == key and sub_key_value[0] == sub_key), None)
+
+    def set_sub_value(self, value: FieldBaseDsp, original_value: str, key: str, sub_key: str) -> None:
+        key_value_list = self.get_value(key)
+        key_value_list.remove((sub_key, original_value))
+        key_value_list.append((sub_key, value))
 
     @property
     def next_labels(self) -> set:
@@ -519,6 +524,26 @@ class KeyValue(InstructionGeneric):
         return next(iter(self.branches), None)
 
 
+class Dbred(KeyValue):
+    def __init__(self):
+        super().__init__()
+
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
+        super().set_operand(line, macro)
+        for key_number in range(2, 7):
+            key_n = f"KEY{key_number}"
+            if not self.is_key(key_n):
+                break
+            field_name = self.get_sub_value(key_n, 'S')
+            if not field_name:
+                break
+            field = FieldBaseDsp()
+            if field.set(field_name, macro) != Error.NO_ERROR:
+                raise TypeError
+            self.set_sub_value(field, field_name, key_n, 'S')
+        return self, Error.NO_ERROR
+
+
 class Globz(RegisterData):
     def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
         globz, result = KeyValue().set_operand(line, macro)
@@ -529,7 +554,6 @@ class Globz(RegisterData):
                 base = Register(globz.get_value('REGS'))
             else:
                 base = None
-                result = Error.REG_INVALID
             if base and base.is_valid():
                 macro.load('GLOBAL', base=base.reg)
                 self.reg = base

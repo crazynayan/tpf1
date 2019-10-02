@@ -6,8 +6,8 @@ from assembly.program import program
 from utils.errors import Error
 
 
-class SegmentTest(unittest.TestCase):
-    NUMBER_OF_FILES = 35
+class AssemblyTest(unittest.TestCase):
+    NUMBER_OF_FILES = 36
 
     def setUp(self) -> None:
         self.seg = None
@@ -20,6 +20,8 @@ class SegmentTest(unittest.TestCase):
             set(self.seg.errors) - set(accepted_errors_list))))
         self.assertTrue(self.seg.assembled)
 
+
+class SegmentTest(AssemblyTest):
     def test_files(self):
         self.assertTrue('TS02' in program.segments)
         self.assertTrue('TS01' in program.segments)
@@ -553,24 +555,15 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('BNO', node.conditions[0].command)
         self.assertEqual('TS060100', node.conditions[0].branch.name)
         self.assertEqual(14, node.conditions[0].mask)
-        # JC    15,TS060120
-        node = self.seg.nodes['TS060130.2']
-        self.assertEqual('B', node.command)
-        self.assertEqual('TS060120', node.branch.name)
-        self.assertEqual(15, node.mask)
-        self.assertSetEqual({'TS060120'}, node.next_labels)
-        self.assertIsNone(node.fall_down)
-        self.assertEqual('B', node.on)
-        self.assertEqual('TS060120', node.goes)
-        # BC    15,TS060120
-        node = self.seg.nodes['TS060130.4']
-        self.assertEqual('B', node.command)
-        self.assertEqual('TS060120', node.branch.name)
-        self.assertEqual(15, node.mask)
-        self.assertSetEqual({'TS060120'}, node.next_labels)
-        self.assertIsNone(node.fall_down)
-        self.assertEqual('B', node.on)
-        self.assertEqual('TS060120', node.goes)
+        # JC    15,TS060120 & BC    15,TS060120
+        for node in {self.seg.nodes['TS060130.2'], self.seg.nodes['TS060130.4']}:
+            self.assertEqual('B', node.command)
+            self.assertEqual('TS060120', node.branch.name)
+            self.assertEqual(15, node.mask)
+            self.assertSetEqual({'TS060120'}, node.next_labels)
+            self.assertIsNone(node.fall_down)
+            self.assertEqual('B', node.on)
+            self.assertEqual('TS060120', node.goes)
         # LR    R3,R5
         node = self.seg.nodes['TS060130.5']
         self.assertEqual('R3', node.reg1.reg)

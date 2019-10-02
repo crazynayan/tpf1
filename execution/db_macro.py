@@ -4,6 +4,7 @@ from assembly.file_line import SymbolTable
 from assembly.instruction_type import KeyValue
 from config import config
 from db.pnr import Pnr
+from db.tpfdf import Tpfdf
 from execution.state import State
 from utils.data_type import Register
 
@@ -95,7 +96,78 @@ class RealTimeDbMacro(State):
 
 
 class TpfdfMacro(State):
-    pass
+    C = {'E': '==', 'EQ': '==', 'NE': '!=', 'GE': '>=', 'LE': '<=', 'GT': '>', 'LT': '<', 'H': '>', 'L':  '<',
+         'NH': '<=', 'NL': '>='}
+
+    def _base_sw00sr(self) -> None:
+        self.regs.R3 = self.vm.valid_address(self.regs.R3)
+        self.seg.macro.load('SW00SR')
+
+    def dbopn(self, node: KeyValue) -> str:
+        self.tpfdf_ref[node.get_value('REF')] = 0
+        return node.fall_down
+
+    def dbcls(self, node: KeyValue) -> str:
+        del self.tpfdf_ref[node.get_value('REF')]
+        return node.fall_down
+
+    def dbifb(self, node: KeyValue) -> str:
+        self._base_sw00sr()
+        if node.get_value('REF') not in self.tpfdf_ref:
+            self.regs.R3 = 0
+            if node.is_key('ERROR'):
+                return node.get_value('ERROR')
+            if node.is_key('ERRORA'):
+                return node.get_value('ERRORA')
+        return node.fall_down
+
+    def dbred(self, node: KeyValue) -> str:
+        self._base_sw00sr()
+
+        # Setup KEY1 Primary key
+        pky = node.get_sub_value('KEY1', 'PKY')
+        if pky is not None:
+            key = f'{self.seg.macro.data_map[pky].dsp:02X}'
+        else:
+            key = f"{self.seg.macro.data_map[node.get_sub_value('KEY1', 'S')].dsp:02X}"
+
+        # Set up KEY2 to KEY6
+        other_keys = dict()
+        for key_number in range(2, 7):
+            key_n = f'KEY{key_number}'
+            if not node.is_key(key_n):
+                break
+            df_field_name = node.get_sub_value(key_n, 'R')
+            condition = node.get_sub_value(key_n, 'C')
+            sign = self.C[condition] if condition is not None else '=='
+            field = node.get_sub_value(key_n, 'S')
+            if field is None:
+                # TODO For M, D, L types
+                raise TypeError
+            base_address = self.regs.get_value(field.base)
+            length = self.seg.macro.data_map[df_field_name].length
+            byte_array = self.vm.get_bytes(base_address + field.dsp, length)
+            other_keys[df_field_name] = (f'{sign} {byte_array}', length)
+
+        # Get the lrec
+        ref_name = node.get_value('REF')
+        item_number = 0 if node.is_key('BEGIN') else self.tpfdf_ref[ref_name]
+        item_number += 1
+        lrec, item_number = Tpfdf.get_lrec(ref_name, key, item_number, other_keys)
+        self.tpfdf_ref[ref_name] = item_number
+
+        # Update error_code and REG=
+        if lrec is None:
+            error_code = self.seg.macro.data_map['#TPFDBER'].dsp
+        else:
+            error_code = self.seg.macro.data_map['#TPFDBOK'].dsp
+            data_address = self.regs.R3 + self.seg.macro.data_map['SW00KL1'].dsp
+            self.vm.set_bytes(lrec, data_address, len(lrec))
+            reg = Register(node.get_value('REG'))
+            if reg.is_valid():
+                self.regs.set_value(data_address, reg)
+        self.vm.set_byte(error_code, self.regs.R3 + self.seg.macro.data_map['SW00RTN'].dsp)
+        return node.fall_down
 
 
 class DbMacro(UserDefinedDbMacro, RealTimeDbMacro, TpfdfMacro):

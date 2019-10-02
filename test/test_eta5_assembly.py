@@ -1,23 +1,13 @@
 import unittest
 
+from test.test_ts08_assembly import AssemblyTest
 from assembly.directive import AssemblerDirective
 from assembly.file_line import Line, File
 from assembly.instruction import Instruction
 from assembly.program import program
 
 
-class SegmentTest(unittest.TestCase):
-    def setUp(self) -> None:
-        self.seg = None
-
-    def _common_checks(self, seg_name, accepted_errors_list=None):
-        accepted_errors_list = list() if accepted_errors_list is None else accepted_errors_list
-        program.load(seg_name)
-        self.seg = program.segments[seg_name]
-        self.assertListEqual(accepted_errors_list, self.seg.errors, '\n\n\n' + '\n'.join(list(
-            set(self.seg.errors) - set(accepted_errors_list))))
-        self.assertTrue(self.seg.assembled)
-
+class SegmentTest(AssemblyTest):
     def test_eta5(self):
         seg_name = 'ETA5'
         accepted_errors_list = [

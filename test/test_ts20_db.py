@@ -2,6 +2,7 @@ import unittest
 
 from config import config
 from db.pnr import Pnr
+from db.tpfdf import Tpfdf
 from execution.execute import Execute
 from utils.data_type import DataType
 
@@ -108,6 +109,21 @@ class DbTest(unittest.TestCase):
         self.assertEqual(0xF2F8F1F4, self.state.regs.get_unsigned_value('R1'))
         self.assertEqual(0xF9F0F8F8, self.state.regs.get_unsigned_value('R2'))
         self.assertEqual(0x00D6D9C4, self.state.regs.get_unsigned_value('R3'))
+
+    def test_tpfdf_ts20(self):
+        tr1gaa = [
+            {
+                'TR1G_40_OCC': DataType('C', input='AA').to_bytes(),
+                'TR1G_40_ACSTIERCODE': DataType('C', input='EXP').to_bytes(),
+                'TR1G_40_TIER_EFFD': DataType('X', input='47D3').to_bytes(),
+                'TR1G_40_TIER_DISD': DataType('X', input='7FFF').to_bytes(),
+                'TR1G_40_PTI': DataType('X', input='60').to_bytes(),
+            },
+        ]
+        Tpfdf.add(tr1gaa, 'TR1GAA', '40')
+        self.state.run('TS20')
+        self.assertEqual(21, self.state.regs.R0)
+        self.assertEqual(0x60, self.state.vm.get_byte(self.state.regs.R5 + 5))
 
 
 if __name__ == '__main__':

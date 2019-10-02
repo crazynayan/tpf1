@@ -3,21 +3,11 @@ import unittest
 from assembly.instruction_type import KeyValue, RegisterData
 from assembly.program import program
 from config import config
+from test.test_ts08_assembly import AssemblyTest
 from utils.errors import Error
 
 
-class SegmentTest(unittest.TestCase):
-    def setUp(self) -> None:
-        self.seg = None
-
-    def _common_checks(self, seg_name, accepted_errors_list=None):
-        accepted_errors_list = list() if accepted_errors_list is None else accepted_errors_list
-        program.load(seg_name)
-        self.seg = program.segments[seg_name]
-        self.assertListEqual(accepted_errors_list, self.seg.errors, '\n\n\n' + '\n'.join(list(
-            set(self.seg.errors) - set(accepted_errors_list))))
-        self.assertTrue(self.seg.assembled)
-
+class SegmentTest(AssemblyTest):
     def test_subroutine(self):
         seg_name = 'TS09'
         accepted_errors_list = [
@@ -186,7 +176,7 @@ class SegmentTest(unittest.TestCase):
         self.assertEqual('ERRORA', node.get_key_from_value('TS110020'))
         self.assertListEqual(['KEY1', 'KEY2', 'KEY3', 'KEY4', 'KEY5'], node.sub_keys)
         self.assertEqual('TR1G_40_ACSTIERCODE', node.get_sub_value('KEY3', 'R'))
-        self.assertEqual('$C_AA', node.get_sub_value('KEY2', 'S'))
+        self.assertEqual('$C_AA', node.get_sub_value('KEY2', 'S').name)
         self.assertEqual('LE', node.get_sub_value('KEY4', 'C'))
         self.assertSetEqual({'TS110030.3', 'TS110020'}, node.next_labels)
         self.assertEqual('TS110020', node.goes)

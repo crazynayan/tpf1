@@ -196,3 +196,6 @@ class Storage:
             self._frame[base_address] = bytearray()
         except KeyError:
             raise KeyError
+
+    def valid_address(self, address: int) -> int:
+        return address if self.base_key(address) in self.frames else self.allocate()
