@@ -161,13 +161,13 @@ class UserDefinedMacro(State):
                 self.regs.R6 = 0
         elif option_byte == 0xFF:
             # PARS day number to Date. 4CB0 -> 03OCT
-            days_from_start = self.vm.get_value(self.regs.R7, 2)
+            days_from_start = self.regs.R7
             if 0 <= days_from_start <= 0x7FFF:
                 date = start + timedelta(days=days_from_start)
-                date_str = date.strftime('%d%b')
+                date_str = date.strftime('%d%b').upper()
                 date_bytes = DataType('C', input=date_str).to_bytes()
                 self.regs.R7 = self.regs.R6
-                self.vm.set_bytes(date_bytes, self.regs.R7)
+                self.vm.set_bytes(date_bytes, self.regs.R7, len(date_bytes))
             else:
                 self.regs.R6 = 0
         else:

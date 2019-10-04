@@ -12,7 +12,7 @@ FQTUITM  DS    0XL56
 FQTUAAC  DS    CL2      AIRLINE CODE
 FQTUFLN  DS    CL4
 FQTUCLS  DS    CL1
-FQTUDTE  DS    CL5
+FQTUDTE  DS    CL5      DATE
 FQTUCTY3 DS    CL10
 FQTUDTM  DS    CL4
 FQTUUFF  DS    CL3
@@ -50,6 +50,7 @@ TS190010 EQU   *
          CLI   FQTUSH1,C'*'
          BNE   TS190010
          L     R1,FQTUFLN
+         MVC   EBW001(L'FQTUDTE),FQTUDTE
          LA    R10,PNRCWK
          XC    PM1WRK,PM1WRK
          MVC   PM1LOC,FQTUUCR
@@ -59,6 +60,17 @@ TS190010 EQU   *
          DETAC D1,CHECK=NO
          AAGET BASEREG=R14,GET=CORE,INIT=YES,FILE=NO
          ENTRC PRP1
+         MVI   EBW000,0
+         LA    R6,EBW000
+         LA    R7,EBW001
+         ENTRC UCDR
+         LTR   R6,R6
+         BZ    TS190100
+         STH   R6,EBW008
+         LA    R7,4(R6)
+         MVI   EBW000,X'FF'
+         LA    R6,EBW000
+         ENTRC UCDR
 TS190020 EQU   *
          PDRED FIELD=FQTV,WORKAREA=(LEV,5),FORMATOUT=PACKED,           X
                NOTFOUND=TS190100
@@ -79,7 +91,7 @@ TS190030 EQU   *
          BNE   TS190030
          CLC   WI0FNB,=H'2812'
          BNE   TS190030
-         CLC   WI0DTE,=X'4CC1'
+         CLC   WI0DTE,EBW008
          BNE   TS190030
          CLC   WI0BRD,=C'DFW'
          BNE   TS190030
