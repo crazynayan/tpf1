@@ -2,8 +2,7 @@ from typing import Optional
 
 from assembly.file_line import SymbolTable
 from assembly.instruction_type import KeyValue
-from config import config
-from db.pnr import Pnr
+from db.pnr import Pnr, PnrLocator
 from db.tpfdf import Tpfdf
 from execution.state import State
 from utils.data_type import Register
@@ -24,6 +23,12 @@ class UserDefinedDbMacro(State):
         else:
             raise TypeError
         return pd0_base
+
+    def _get_pnr_locator(self):
+        aaa_address = self.vm.get_value(self.regs.R9 + self.seg.macro.data_map['CE1CR1'].dsp)
+        self.seg.macro.load('WA0AA')
+        pnr_ordinal = self.vm.get_value(aaa_address + self.seg.macro.data_map['WA0PWR'].dsp)
+        return PnrLocator.to_locator(pnr_ordinal)
 
     def pdcls(self, node: KeyValue) -> str:
         pd0_base = self._pd0_base(node)
@@ -60,8 +65,9 @@ class UserDefinedDbMacro(State):
                 starts_with = search[1][1:-1]
 
         # Get the data
+        pnr_locator = self._get_pnr_locator()
         packed = node.get_value('FORMATOUT') == 'PACKED'
-        data, item_number = Pnr.get_pnr_data(config.AAAPNR, key, item_number, packed=packed, starts_with=starts_with)
+        data, item_number = Pnr.get_pnr_data(pnr_locator, key, item_number, packed=packed, starts_with=starts_with)
         self.vm.set_value(item_number, pd0_base + pd0_mc_cin.dsp, pd0_mc_cin.length)
 
         # NOTFOUND & last item
@@ -70,7 +76,7 @@ class UserDefinedDbMacro(State):
             if not_found is None:
                 raise IndexError
             return not_found
-        elif item_number == Pnr.get_len(config.AAAPNR, key):
+        elif item_number == Pnr.get_len(pnr_locator, key):
             last_item_bit: int = self.seg.macro.data_map['#PD0_RT_LST'].dsp
             pd0_rt_id1: SymbolTable = self.seg.macro.data_map['PD0_RT_ID1']
             self.vm.or_bit(pd0_base + pd0_rt_id1.dsp, last_item_bit)

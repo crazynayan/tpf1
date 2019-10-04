@@ -52,16 +52,19 @@ class State:
         dsp = program.macros['EB0EB'].symbol_table[level].dsp
         return config.ECB + dsp
 
-    def restart(self, seg_name: str) -> None:
+    def restart(self, seg_name: str, aaa: bool = False) -> None:
         self.regs = Registers()
         self.vm = Storage()
         self.loaded_seg = dict()
-        self.run(seg_name)
+        self.run(seg_name, aaa)
 
-    def run(self, seg_name: Optional[str] = None) -> None:
+    def run(self, seg_name: Optional[str] = None, aaa: bool = False) -> None:
         seg_name = self.seg.name if seg_name is None else seg_name
         self.init_seg(seg_name)
         self.regs.R9 = config.ECB
+        if aaa:
+            # Save AAA address in CE1CR1
+            self.vm.set_value(self.vm.allocate(), config.ECB + 0x170)
         label = self.seg.root_label
         while label:
             node = self.seg.nodes[label]

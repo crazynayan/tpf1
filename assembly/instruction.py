@@ -182,6 +182,7 @@ class Instruction:
         'DBCLS': ins.KeyValue,
         'DBIFB': ins.KeyValue,
         'PDRED': ins.KeyValue,
+        'PARS_DATE': ins.KeyValue,
         'LTORG': ins.KeyValue,
         'FINIS': ins.KeyValue,
         'END': ins.KeyValue,

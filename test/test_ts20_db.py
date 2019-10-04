@@ -19,20 +19,20 @@ class DbTest(unittest.TestCase):
             'I/ZAVERI/S',
         ]
         Pnr.add_names(config.AAAPNR, names)
-        self.state.run('TS18')
+        self.state.run('TS18', aaa=True)
         self.assertListEqual(list(), self.state.seg.errors)
         self.assertIsNone(self.state.message)
         self.assertEqual(24, self.state.regs.R1)
         # Check for another corporate
         Pnr.add_names(config.AAAPNR, ['C/21VEENA TOURS'])
-        self.state.restart('TS18')
+        self.state.restart('TS18', aaa=True)
         self.assertEqual("'MORE THAN 1 C/'", self.state.message)
         self.assertEqual(0, self.state.regs.R1)
         # Check for > 99 names
         names = ['55ZAVERI', '45SHAH']
         Pnr.init_db()
         Pnr.add_names(config.AAAPNR, names)
-        self.state.restart('TS18')
+        self.state.restart('TS18', aaa=True)
         self.assertEqual("'MORE THAN 99 NAMES'", self.state.message)
         self.assertEqual(100, self.state.regs.R1)
 
@@ -102,9 +102,9 @@ class DbTest(unittest.TestCase):
             },
         ]
         Pnr.add_hfax(config.AAAPNR, hfax)
-        Pnr.add_fqtv(config.AAAPNR, fqtv)
+        Pnr.add_fqtv('DGHWCL', fqtv)
         Pnr.add_itin(config.AAAPNR, itin)
-        self.state.run('TS19')
+        self.state.run('TS19', aaa=True)
         self.assertListEqual(list(), self.state.seg.errors)
         self.assertEqual(0xF2F8F1F4, self.state.regs.get_unsigned_value('R1'))
         self.assertEqual(0xF9F0F8F8, self.state.regs.get_unsigned_value('R2'))
@@ -121,7 +121,7 @@ class DbTest(unittest.TestCase):
             },
         ]
         Tpfdf.add(tr1gaa, 'TR1GAA', '40')
-        self.state.run('TS20')
+        self.state.run('TS20', aaa=True)
         self.assertEqual(21, self.state.regs.R0)
         self.assertEqual(0x60, self.state.vm.get_byte(self.state.regs.R5 + 5))
 

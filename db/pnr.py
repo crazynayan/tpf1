@@ -110,3 +110,24 @@ class Pnr:
     @staticmethod
     def init_db() -> None:
         Pnr.DB = [{'id': config.AAAPNR, 'doc': list()}]
+
+
+class PnrLocator:
+    VALID = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    LEN_OF_VALID = len(VALID)
+    
+    @staticmethod
+    def to_ordinal(locator: str) -> int:
+        ordinal = 0
+        for character in locator:
+            ordinal *= PnrLocator.LEN_OF_VALID
+            ordinal += PnrLocator.VALID.index(character)
+        return ordinal
+
+    @staticmethod
+    def to_locator(ordinal: int) -> str:
+        locator = str()
+        for _ in range(6):
+            locator = PnrLocator.VALID[ordinal % PnrLocator.LEN_OF_VALID] + locator
+            ordinal //= PnrLocator.LEN_OF_VALID
+        return locator

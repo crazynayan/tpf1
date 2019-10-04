@@ -1,9 +1,11 @@
 **********************************************************************
 *        PDRED FOR HFAX, FQTU, ITIN WITH START PARAM. PDCLS.
+*        PNRCC AND WORKING ON DIFFERENT PNRS
 **********************************************************************
          PGMID 'TS1901'
 FQTUITEM DSECT
-FQTUREC  DS    XL256
+FQTUREC  DS    XL63
+PNRCWK   DS    XL(13*4)
          ORG   FQTUREC
 FQTUTXT  DS    CL7
 FQTUITM  DS    0XL56
@@ -33,6 +35,7 @@ $IS$     CSECT
          PD0WRK REG=R5
          PR001W REG=R6
          WI0BS  REG=R7
+         PNRCM  REG=R10
          GETCC D5,L4,FILL=00
          L     R5,CE1CR5
 TS190010 EQU   *
@@ -47,7 +50,15 @@ TS190010 EQU   *
          CLI   FQTUSH1,C'*'
          BNE   TS190010
          L     R1,FQTUFLN
+         LA    R10,PNRCWK
+         XC    PM1WRK,PM1WRK
+         MVC   PM1LOC,FQTUUCR
+         PNRCC ACTION=CRLON,REG=R10
+         MVC   EBCFA5,PM1ORN
          PDCLS WORKAREA=(LEV,D5)
+         DETAC D1,CHECK=NO
+         AAGET BASEREG=R14,GET=CORE,INIT=YES,FILE=NO
+         ENTRC PRP1
 TS190020 EQU   *
          PDRED FIELD=FQTV,WORKAREA=(LEV,5),FORMATOUT=PACKED,           X
                NOTFOUND=TS190100
@@ -58,8 +69,10 @@ TS190020 EQU   *
          BNO   TS190020
          L     R2,PR00_60_FQT_FTN+3
          PDCLS WORKAREA=(LEV,D5)
+         RELCC D1
+         ATTAC D1
 TS190030 EQU   *
-         PDRED FIELD=ITINERARY,WORKAREA=(REG,R5),FORMATOUT=UNPACKED    X
+         PDRED FIELD=ITINERARY,WORKAREA=(REG,R5),FORMATOUT=UNPACKED,   X
                NOTFOUND=TS190100
          L     R7,PD0_RT_ADR
          CLC   WI0ARC,$C_AA

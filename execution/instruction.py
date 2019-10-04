@@ -18,7 +18,6 @@ class LoadStore(State):
     def load_fullword(self, node: ins.RegisterFieldIndex) -> str:
         address = self.regs.get_address(node.field.base, node.field.dsp, node.field.index)
         value = self.vm.get_value(address, 4)
-        value = self.validate(value)
         self.regs.set_value(value, node.reg)
         return self.next_label(node)
 
@@ -74,6 +73,7 @@ class LoadStore(State):
         self.vm.set_bytes(byte, address, bin(node.data).count('1'))
         return self.next_label(node)
 
+    # noinspection DuplicatedCode
     def load_multiple(self, node: ins.RegisterRegisterField) -> str:
         reg = node.reg1.reg
         address = self.regs.get_address(node.field.base, node.field.dsp)
@@ -86,6 +86,7 @@ class LoadStore(State):
             reg = self.regs.next_reg(reg)
         return self.next_label(node)
 
+    # noinspection DuplicatedCode
     def store_multiple(self, node: ins.RegisterRegisterField) -> str:
         reg = node.reg1.reg
         address = self.regs.get_address(node.field.base, node.field.dsp)

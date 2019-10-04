@@ -118,7 +118,8 @@ class Execute(Instruction, ExecutableMacro, DbMacro):
             'AAGET': self.aaget,
             'CFCMA': self.heapa,
             'HEAPA': self.heapa,
-            # PNRCC
+            'PNRCC': self.pnrcc,
+            'PARS_DATE': self.pars_date,
 
             # Realtime Db Macros - Not in ETA5
             # FINWC, FIWHC, FINDC, FINHC
