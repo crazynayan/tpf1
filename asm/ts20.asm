@@ -27,7 +27,12 @@ $IS$     CSECT
          DBIFB REF=TR1GAA
          LTR   R3,R3
          BNZ   TS200100
+         LHI   R3,1
+         DBIFB REF=WPSGPNRF,NEWREF=PD0_DF_REF,FILE=PR001W
+         LTR   R3,R3
+         BZ    TS200100
          LHI   R0,21
 TS200100 EQU   *
+         DBCLS REF=PD0_DF_REFX,FILE=PR001W
          EXITC
 $C_AA    DC    C'AA'

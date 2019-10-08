@@ -114,11 +114,15 @@ class TpfdfMacro(State):
         return node.fall_down
 
     def dbcls(self, node: KeyValue) -> str:
+        if node.get_value('FILE') == 'PR001W':
+            return node.fall_down
         del self.tpfdf_ref[node.get_value('REF')]
         return node.fall_down
 
     def dbifb(self, node: KeyValue) -> str:
         self._base_sw00sr()
+        if node.get_value('FILE') == 'PR001W':
+            return node.fall_down
         if node.get_value('REF') not in self.tpfdf_ref:
             self.regs.R3 = 0
             if node.is_key('ERROR'):
