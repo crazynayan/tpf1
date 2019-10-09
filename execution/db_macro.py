@@ -9,8 +9,10 @@ from utils.data_type import Register
 
 
 class UserDefinedDbMacro(State):
-    def _pd0_base(self, node: KeyValue):
+    def _pd0_base(self, node: KeyValue) -> Optional[int]:
         workarea = node.get_value('WORKAREA')
+        if workarea is None:
+            return None
         if workarea[0] == 'LEV':
             level = f"D{workarea[1]}" if len(workarea[1]) == 1 else workarea[1]
             level_address = self.get_ecb_address(level, 'CE1CR')
@@ -48,6 +50,17 @@ class UserDefinedDbMacro(State):
         except KeyError:
             # TODO Code for INDEX= Not in ETA5
             raise TypeError
+
+        # ACTION=VERIFY
+        if node.get_value('ACTION') == 'VERIFY':
+            data, _ = Pnr.get_pnr_data(self._get_pnr_locator(), key, item_number=1)
+            if data is None:
+                not_found = node.get_value('NOTFOUND')
+                if not_found is None:
+                    raise TypeError
+                return not_found
+            else:
+                return node.fall_down
 
         # Get the item number to read (Item numbers start from 1)
         pd0_mc_cin: SymbolTable = self.seg.macro.data_map['PD0_MC_CIN']

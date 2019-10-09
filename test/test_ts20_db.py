@@ -111,6 +111,7 @@ class DbTest(unittest.TestCase):
         self.assertEqual(0x00D6D9C4, self.state.regs.get_unsigned_value('R3'))
         date_bytes = self.state.vm.get_bytes(config.ECB + 8, 5)
         self.assertEqual('24OCT', DataType('X', bytes=date_bytes).decode)
+        self.assertEqual(12, self.state.regs.R12)
 
     def test_tpfdf_ts20(self):
         tr1gaa = [
