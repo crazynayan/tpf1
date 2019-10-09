@@ -10,6 +10,7 @@ from utils.data_type import DataType
 class DbTest(unittest.TestCase):
     def setUp(self) -> None:
         self.state = Execute()
+        Pnr.init_db()
 
     def test_pdred_ts18(self):
         names = [

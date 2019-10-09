@@ -21,6 +21,7 @@ class State:
         self.call_stack: List[Tuple[str, str]] = list()
         self.loaded_seg: Dict[str, Tuple[Segment, int]] = dict()
         self.tpfdf_ref: Dict[str, int] = dict()
+        self.setup: Dict[str, Dict[str, bytearray]] = dict()
 
     def __repr__(self) -> str:
         return f"State:{self.seg}:{self.regs}:{self.vm}"
@@ -52,6 +53,14 @@ class State:
         dsp = program.macros['EB0EB'].symbol_table[level].dsp
         return config.ECB + dsp
 
+    def _setup(self, aaa_address: int) -> None:
+        address_map: Dict[str, int] = {'EB0EB': config.ECB, 'GLOBAL': config.GLOBAL, 'WA0AA': aaa_address}
+        for macro_name, update_items in self.setup.items():
+            base = address_map[macro_name]
+            for field_name, byte_array in update_items.items():
+                dsp = program.macros[macro_name].symbol_table[field_name].dsp
+                self.vm.set_bytes(byte_array, base + dsp, len(byte_array))
+
     def restart(self, seg_name: str, aaa: bool = False) -> None:
         self.regs = Registers()
         self.vm = Storage()
@@ -62,9 +71,11 @@ class State:
         seg_name = self.seg.name if seg_name is None else seg_name
         self.init_seg(seg_name)
         self.regs.R9 = config.ECB
+        aaa_address = self.vm.allocate()
         if aaa:
             # Save AAA address in CE1CR1
-            self.vm.set_value(self.vm.allocate(), config.ECB + 0x170)
+            self.vm.set_value(aaa_address, config.ECB + 0x170)
+        self._setup(aaa_address)
         label = self.seg.root_label
         while label:
             node = self.seg.nodes[label]

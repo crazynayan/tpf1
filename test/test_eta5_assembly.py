@@ -5,6 +5,7 @@ from assembly.directive import AssemblerDirective
 from assembly.file_line import Line, File
 from assembly.instruction import Instruction
 from assembly.program import program
+from utils.data_type import DataType
 
 
 class SegmentTest(AssemblyTest):
@@ -20,7 +21,7 @@ class SegmentTest(AssemblyTest):
         self.assertEqual(29, node.field.dsp)
         self.assertEqual('R14', node.field.base.reg)
         self.assertEqual(0x5c, node.data)
-        self.assertEqual('*', node.data.to_bytes(1, 'big').decode('cp037'))
+        self.assertEqual('*', DataType('X', bytes=bytes([node.data])).decode)
         self.assertEqual('ETA9027X', node.goes)
         self.assertEqual('BNE', node.on)
 
