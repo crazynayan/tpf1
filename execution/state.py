@@ -61,13 +61,17 @@ class State:
                 dsp = program.macros[macro_name].symbol_table[field_name].dsp
                 self.vm.set_bytes(byte_array, base + dsp, len(byte_array))
 
-    def restart(self, seg_name: str, aaa: bool = False) -> None:
+    def init_run(self) -> None:
         self.regs = Registers()
         self.vm = Storage()
         self.loaded_seg = dict()
+        self.setup = dict()
+
+    def restart(self, seg_name: str, aaa: bool = False) -> None:
+        self.init_run()
         self.run(seg_name, aaa)
 
-    def run(self, seg_name: Optional[str] = None, aaa: bool = False) -> None:
+    def run(self, seg_name: Optional[str] = None, aaa: bool = False) -> str:
         seg_name = self.seg.name if seg_name is None else seg_name
         self.init_seg(seg_name)
         self.regs.R9 = config.ECB
@@ -77,9 +81,11 @@ class State:
             self.vm.set_value(aaa_address, config.ECB + 0x170)
         self._setup(aaa_address)
         label = self.seg.root_label
-        while label:
+        while True:
             node = self.seg.nodes[label]
             label = self.ex[node.command](node)
+            if label is None:
+                return node.label
 
     @staticmethod
     def branch(_) -> str:
