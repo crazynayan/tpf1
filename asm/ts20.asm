@@ -11,7 +11,7 @@ $IS$     CSECT
          TR1GAA REG=R4
          GETCC D2,L4
          L     R5,CE1CR2
-         MVC   FQTUUFF,=C'EXP'
+         MVC   FQTUUFF,=C'GLD'
          MVC   EFFD,=X'4CC1'
          DBOPN REF=TR1GAA,REG=R4
          DBRED REF=TR1GAA,REG=R4,BEGIN,KEY1=(PKY=#TR1GK40),            X

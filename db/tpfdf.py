@@ -33,10 +33,10 @@ class Tpfdf:
         return ref
 
     @staticmethod
-    def add(dict_lrecs: List[Dict[str, bytearray]], ref_name: str, key: str) -> None:
+    def add(data: List[Dict[str, bytearray]], ref_name: str, key: str) -> None:
         ref = Tpfdf.get_ref(ref_name)
         program.macros[ref_name].load()
-        for lrec_dict in dict_lrecs:
+        for lrec_dict in data:
             lrec = dict()
             lrec['key'] = key
             lrec['data'] = bytearray()

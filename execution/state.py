@@ -21,7 +21,7 @@ class State:
         self.call_stack: List[Tuple[str, str]] = list()
         self.loaded_seg: Dict[str, Tuple[Segment, int]] = dict()
         self.tpfdf_ref: Dict[str, int] = dict()
-        self.setup: Dict[str, Dict[str, bytearray]] = dict()
+        self.setup: Dict[str, Dict[str, bytearray]] = {'EB0EB': dict(), 'GLOBAL': dict(), 'WA0AA': dict()}
 
     def __repr__(self) -> str:
         return f"State:{self.seg}:{self.regs}:{self.vm}"
@@ -38,10 +38,6 @@ class State:
             self.vm.set_bytes(self.seg.data.constant, self.regs.R8, len(self.seg.data.constant))
             self.vm.set_bytes(self.seg.data.literal, literal, len(self.seg.data.literal))
             self.loaded_seg[seg_name] = (self.seg, self.regs.R8)
-
-    def validate(self, address: int) -> int:
-        # Called from L to ensure non-zero base
-        return address if address else self.vm.allocate()
 
     @staticmethod
     def get_ecb_address(level: str, ecb_label: str) -> int:
@@ -62,10 +58,7 @@ class State:
                 self.vm.set_bytes(byte_array, base + dsp, len(byte_array))
 
     def init_run(self) -> None:
-        self.regs = Registers()
-        self.vm = Storage()
-        self.loaded_seg = dict()
-        self.setup = dict()
+        self.__init__()
 
     def restart(self, seg_name: str, aaa: bool = False) -> None:
         self.init_run()

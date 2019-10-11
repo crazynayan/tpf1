@@ -7,7 +7,7 @@ from utils.errors import Error
 
 
 class AssemblyTest(unittest.TestCase):
-    NUMBER_OF_FILES = 36
+    NUMBER_OF_FILES = 37
 
     def setUp(self) -> None:
         self.seg = None
