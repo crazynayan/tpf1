@@ -29,16 +29,19 @@ class T:
     ui2098 = program.macros['UI2PF'].symbol_table['#UI2098'].dsp
     ui2214 = program.macros['UI2PF'].symbol_table['#UI2214'].dsp
     # Database
-    hfax = [
-        'SSRFQTUBA2811Y20OCTDFW  ORD  0510EXP/DGHWCL RR    ',
+    hfax_2812_gld = [
+        'SSRFQTUBA2811Y20OCTDFW  ORD  0510GLD/DGHWCL RR    ',
         'SSRWCHRAA2814Y20OCT/NN1',
-        'SSRFQTUAA2810Y20OCTDFW  ORD  0510EXP/DGHWCL RR    ',
-        'SSRFQTUAA2813Y20OCTDFW  ORD  0510EXP*DGHWCL DR    ',
+        'SSRFQTUAA2810Y20OCTDFW  ORD  0510GLD/DGHWCL RR    ',
+        'SSRFQTUAA2813Y20OCTDFW  ORD  0510GLD*DGHWCL DR    ',
         'SSRWCHRAA2814Y20OCT/NN1',
         'SSRWCHRAA2814Y20OCT/NN1',
         'SSRFQTUAA2812Y20OCTDFW  ORD  0510GLD*DGHWCL RR    ',
     ]
-    fqtv = [
+    hfax_2811_exp = ['SSRFQTUAA2811Y20OCTDFW  ORD  0510EXP*DGHWCL RR    ']
+    hfax_2812_exp = ['SSRFQTUAA2812Y20OCTDFW  ORD  0510EXP*DGHWCL RR    ']
+    hfax_2812_key = ['SSRFQTUAA2812Y20OCTDFW  ORD  0510KEY*DGHWCL RR    ']
+    fqtv_gld = [
         {
             'PR00_60_FQT_CXR': DataType('C', input='BA').to_bytes(),
             'PR00_60_FQT_FTN': DataType('C', input='NKE9086').to_bytes(),
@@ -49,13 +52,15 @@ class T:
             'PR00_60_FQT_FTN': DataType('C', input='NKE9087').to_bytes(),
             'PR00_60_FQT_TYP': DataType('X', input='80').to_bytes(),    # GLD
         },
+    ]
+    fqtv_exp_key = [
         {
             'PR00_60_FQT_CXR': DataType('C', input='AA').to_bytes(),
             'PR00_60_FQT_FTN': DataType('C', input='NKE9088').to_bytes(),
-            'PR00_60_FQT_TYP': DataType('X', input='60').to_bytes(),    # EXP and # KEY
+            'PR00_60_FQT_TYP': DataType('X', input='60').to_bytes(),  # EXP and # KEY
         },
     ]
-    itin = [
+    itin_2811_2812 = [
         {
             'WI0ARC': DataType('C', input='BA').to_bytes(),
             'WI0FNB': DataType('H', input='2812').to_bytes(),
@@ -68,7 +73,7 @@ class T:
             'WI0FNB': DataType('H', input='2811').to_bytes(),
             'WI0DTE': DataType('X', input='4CC1').to_bytes(),
             'WI0BRD': DataType('C', input='DFW').to_bytes(),
-            'WI0OFF': DataType('C', input='ORA').to_bytes(),
+            'WI0OFF': DataType('C', input='ORD').to_bytes(),
         },
         {
             'WI0ARC': DataType('C', input='AA').to_bytes(),
@@ -109,5 +114,19 @@ class T:
             'TR1G_40_TIER_EFFD': DataType('X', input='47D3').to_bytes(),
             'TR1G_40_TIER_DISD': DataType('X', input='7FFF').to_bytes(),
             'TR1G_40_PTI': DataType('X', input='80').to_bytes(),
+        },
+        {
+            'TR1G_40_OCC': DataType('C', input='AA').to_bytes(),
+            'TR1G_40_ACSTIERCODE': DataType('C', input='EXP').to_bytes(),
+            'TR1G_40_TIER_EFFD': DataType('X', input='47D3').to_bytes(),
+            'TR1G_40_TIER_DISD': DataType('X', input='7FFF').to_bytes(),
+            'TR1G_40_PTI': DataType('X', input='40').to_bytes(),
+        },
+        {
+            'TR1G_40_OCC': DataType('C', input='AA').to_bytes(),
+            'TR1G_40_ACSTIERCODE': DataType('C', input='KEY').to_bytes(),
+            'TR1G_40_TIER_EFFD': DataType('X', input='47D3').to_bytes(),
+            'TR1G_40_TIER_DISD': DataType('X', input='7FFF').to_bytes(),
+            'TR1G_40_PTI': DataType('X', input='20').to_bytes(),
         },
     ]

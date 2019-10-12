@@ -42,3 +42,12 @@ class Tpfdf:
             lrec['data'] = bytearray()
             lrec['data'].extend(Stream.to_bytes(lrec_dict, program.macros[ref_name]))
             ref.append(lrec)
+
+    @staticmethod
+    def init_db(ref_name: Optional[str] = None):
+        if ref_name is None:
+            Tpfdf.DB = list()
+        else:
+            df_record = next((df_record for df_record in Tpfdf.DB if df_record['id'] == ref_name), None)
+            if df_record is not None:
+                Tpfdf.DB.remove(df_record)

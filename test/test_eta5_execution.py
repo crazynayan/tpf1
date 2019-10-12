@@ -478,23 +478,81 @@ class NameException(unittest.TestCase):
 class Companion(unittest.TestCase):
 
     def setUp(self) -> None:
+        # Award is for Flight 2812 and not for other flight -> Check WP89
         Pnr.init_db()
+        Tpfdf.init_db()
         T.state.init_run()
-
-    def test_fqtv_itin_match_award_not_exp_key_ETK2(self) -> None:
-        # Award is for Flight 2812 and not for other flight
         T.state.setup['GLOBAL']['@HAALC'] = DataType('C', input='AA').to_bytes()
         T.state.setup['GLOBAL']['@U1DMO'] = DataType('X', input='4CC2').to_bytes()
         T.state.setup['WA0AA']['WA0ET6'] = bytearray([T.wa0hfx])
         Tpfdf.add(data=T.tr1gaa, ref_name='TR1GAA', key='40')
-        Pnr.add_hfax(config.AAAPNR, T.hfax)
-        Pnr.add_fqtv('DGHWCL', T.fqtv)
-        Pnr.add_itin('DGHWCL', T.itin)
+        Pnr.add_names(config.AAAPNR, ['1ZAVERI'])
+
+    def test_fqtv_itin_match_award_not_exp_key_ETK2(self) -> None:
+        Pnr.add_hfax(config.AAAPNR, T.hfax_2812_gld)
+        Pnr.add_fqtv('DGHWCL', T.fqtv_gld)
+        Pnr.add_itin('DGHWCL', T.itin_2811_2812)
         label = T.state.run('ETA5', aaa=True)
         self.assertEqual('ETK20100.1', label)
+        self.assertEqual('WP89', DataType('X', bytes=T.state.vm.get_bytes(T.ebw000, 4)).decode)
         self.assertEqual(0x60, T.state.vm.get_byte(T.ebrs01))
         self.assertEqual(116, T.state.regs.R6)
+
+    def test_fqtv_no_match_award_not_exp_key_ETK2(self) -> None:
+        Pnr.add_hfax(config.AAAPNR, T.hfax_2812_gld)
+        Pnr.add_fqtv('DGHWCL', T.fqtv_exp_key)
+        Pnr.add_itin('DGHWCL', T.itin_2811_2812)
+        label = T.state.run('ETA5', aaa=True)
+        self.assertEqual('ETK20100.1', label)
+        self.assertNotEqual('WP89', DataType('X', bytes=T.state.vm.get_bytes(T.ebw000, 4)).decode)
+        self.assertEqual(0x60, T.state.vm.get_byte(T.ebrs01))
+        self.assertEqual(116, T.state.regs.R6)
+
+    def test_itin_no_match_award_not_exp_key_ETK2(self) -> None:
+        Pnr.add_hfax(config.AAAPNR, T.hfax_2812_gld)
+        Pnr.add_fqtv('DGHWCL', T.fqtv_gld)
+        label = T.state.run('ETA5', aaa=True)
+        self.assertEqual('ETK20100.1', label)
+        self.assertNotEqual('WP89', DataType('X', bytes=T.state.vm.get_bytes(T.ebw000, 4)).decode)
+        self.assertEqual(0x60, T.state.vm.get_byte(T.ebrs01))
+        self.assertEqual(116, T.state.regs.R6)
+
+    def test_fqtv_itin_match_no_award_exp_ETAW(self) -> None:
+        Pnr.add_hfax(config.AAAPNR, T.hfax_2811_exp)
+        Pnr.add_fqtv('DGHWCL', T.fqtv_exp_key)
+        Pnr.add_itin('DGHWCL', T.itin_2811_2812)
+        label = T.state.run('ETA5', aaa=True)
+        self.assertEqual('$$ETAW$$.1', label)
         self.assertEqual('WP89', DataType('X', bytes=T.state.vm.get_bytes(T.ebw000, 4)).decode)
+        self.assertEqual(1, T.state.vm.get_byte(T.state.regs.R1 + T.wa0pty))
+
+    def test_fqtv_itin_match_award_exp_ETAW(self) -> None:
+        Pnr.add_hfax(config.AAAPNR, T.hfax_2812_exp)
+        Pnr.add_fqtv('DGHWCL', T.fqtv_exp_key)
+        Pnr.add_itin('DGHWCL', T.itin_2811_2812)
+        label = T.state.run('ETA5', aaa=True)
+        self.assertEqual('$$ETAW$$.1', label)
+        self.assertEqual('WP89', DataType('X', bytes=T.state.vm.get_bytes(T.ebw000, 4)).decode)
+        self.assertEqual(1, T.state.vm.get_byte(T.state.regs.R1 + T.wa0pty))
+
+    def test_fqtv_itin_match_award_key_ETAW(self) -> None:
+        Pnr.add_hfax(config.AAAPNR, T.hfax_2812_key)
+        Pnr.add_fqtv('DGHWCL', T.fqtv_exp_key)
+        Pnr.add_itin('DGHWCL', T.itin_2811_2812)
+        label = T.state.run('ETA5', aaa=True)
+        self.assertEqual('$$ETAW$$.1', label)
+        self.assertEqual('WP89', DataType('X', bytes=T.state.vm.get_bytes(T.ebw000, 4)).decode)
+        self.assertEqual(1, T.state.vm.get_byte(T.state.regs.R1 + T.wa0pty))
+
+    def test_no_tr1gaa_ETAW(self) -> None:
+        Pnr.add_hfax(config.AAAPNR, T.hfax_2812_gld)
+        Pnr.add_fqtv('DGHWCL', T.fqtv_gld)
+        Pnr.add_itin('DGHWCL', T.itin_2811_2812)
+        Tpfdf.init_db('TR1GAA')
+        label = T.state.run('ETA5', aaa=True)
+        self.assertEqual('$$ETAW$$.1', label)
+        self.assertNotEqual('WP89', DataType('X', bytes=T.state.vm.get_bytes(T.ebw000, 4)).decode)
+        self.assertEqual(1, T.state.vm.get_byte(T.state.regs.R1 + T.wa0pty))
 
 
 if __name__ == '__main__':

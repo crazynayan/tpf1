@@ -84,7 +84,7 @@ TS190020 EQU   *
          L     R6,PD0_RT_ADR
          CLC   PR00_60_FQT_CXR,$C_AA
          BNE   TS190020
-         TM    PR00_60_FQT_TYP,X'40'
+         TM    PR00_60_FQT_TYP,X'80'    IS IT GOLD?
          BNO   TS190020
          L     R2,PR00_60_FQT_FTN+3
          PDCLS WORKAREA=(LEV,D5)

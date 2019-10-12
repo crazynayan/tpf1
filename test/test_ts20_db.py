@@ -34,13 +34,13 @@ class DbTest(unittest.TestCase):
 
     def test_pdred_ts19(self):
         # This also test PDCLS
-        Pnr.add_hfax(config.AAAPNR, T.hfax)
-        Pnr.add_fqtv('DGHWCL', T.fqtv)
-        Pnr.add_itin(config.AAAPNR, T.itin)
+        Pnr.add_hfax(config.AAAPNR, T.hfax_2812_gld)
+        Pnr.add_fqtv('DGHWCL', T.fqtv_gld)
+        Pnr.add_itin(config.AAAPNR, T.itin_2811_2812)
         T.state.run('TS19', aaa=True)
         self.assertListEqual(list(), T.state.seg.errors)
         self.assertEqual(0xF2F8F1F2, T.state.regs.get_unsigned_value('R1'))
-        self.assertEqual(0xF9F0F8F8, T.state.regs.get_unsigned_value('R2'))
+        self.assertEqual(0xF9F0F8F7, T.state.regs.get_unsigned_value('R2'))
         self.assertEqual(0x00D6D9C4, T.state.regs.get_unsigned_value('R3'))
         date_bytes = T.state.vm.get_bytes(config.ECB + 8, 5)
         self.assertEqual('24OCT', DataType('X', bytes=date_bytes).decode)
