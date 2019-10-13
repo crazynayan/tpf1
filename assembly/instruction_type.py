@@ -10,23 +10,21 @@ from utils.command import cmd
 from utils.data_type import Register
 from utils.errors import Error
 
-Instruction = TypeVar('Instruction', bound='InstructionGeneric')
+InstructionType = TypeVar('InstructionType', bound='InstructionGeneric')
 
 
 class InstructionGeneric:
-    def __init__(self, line: Line = None):
-        self.label: Optional[str] = line.label if line is not None else None
-        self.command: Optional[str] = line.command if line is not None else None
+    def __init__(self):
+        self.index: Optional[int] = None
+        self.label: Optional[str] = None
+        self.command: Optional[str] = None
         self.fall_down: Optional[str] = None
         self.conditions: List = list()
 
     def __repr__(self) -> str:
-        if self.fall_down is None:
-            return f"{self.label}:{self.command}"
-        else:
-            return f"{self.label}:{self.command}:falls to {self.fall_down}"
+        return f"{self.index}:{self.label}:{self.command}"
 
-    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[InstructionType, str]:
         return self, Error.NO_ERROR
 
     @property
@@ -62,7 +60,10 @@ class FieldBits(InstructionGeneric):
         self.field: Optional[FieldBaseDsp] = None
         self.bits: Optional[Bits] = None
 
-    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}:{self.field},{self.bits}"
+
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[InstructionType, str]:
         operand1, operand2 = line.split_operands()
         self.field = FieldBaseDsp()
         result = self.field.set(operand1, macro)
@@ -80,7 +81,10 @@ class FieldLenField(InstructionGeneric):
         self.field_len: Optional[FieldLen] = None
         self.field: Optional[FieldBaseDsp] = None
 
-    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}:{self.field_len},{self.field}"
+
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[InstructionType, str]:
         operand1, operand2 = line.split_operands()
         self.field_len = FieldLen()
         operand1 = Literal.update(literal=operand1, macro=macro)
@@ -100,7 +104,10 @@ class FieldLenFieldLen(InstructionGeneric):
         self.field_len1: Optional[FieldLen] = None
         self.field_len2: Optional[FieldLen] = None
 
-    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}:{self.field_len1},{self.field_len2}"
+
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[InstructionType, str]:
         operand1, operand2 = line.split_operands()
         self.field_len1 = FieldLen()
         operand1 = Literal.update(literal=operand1, macro=macro)
@@ -122,7 +129,10 @@ class FieldLenFieldData(InstructionGeneric):
         self.field: Optional[FieldBaseDsp] = None
         self.data: Optional[int] = None
 
-    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}:{self.field_len},{self.field},{self.data}"
+
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[InstructionType, str]:
         operand1, operand2, operand3 = line.split_operands()
         self.field_len = FieldLen()
         result = self.field_len.set(operand1, macro, self.MAX_LEN)
@@ -144,7 +154,10 @@ class FieldData(InstructionGeneric):
         self.field: Optional[FieldBaseDsp] = None
         self.data: Optional[int] = None
 
-    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}:{self.field},{self.data}"
+
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[InstructionType, str]:
         operand1, operand2 = line.split_operands()
         self.field = FieldBaseDsp()
         result = self.field.set(operand1, macro)
@@ -165,7 +178,10 @@ class FieldSingle(InstructionGeneric):
         super().__init__()
         self.field: Optional[FieldLen] = None
 
-    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}:{self.field}"
+
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[InstructionType, str]:
         self.field = FieldLen()
         result = self.field.set(line.operand, macro, self.MAX_LEN)
         return self, result
@@ -177,7 +193,10 @@ class RegisterRegister(InstructionGeneric):
         self.reg1: Optional[Register] = None
         self.reg2: Optional[Register] = None
 
-    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}:{self.reg1},{self.reg2}"
+
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[InstructionType, str]:
         operand1, operand2 = line.split_operands()
         self.reg1 = Register(operand1)
         self.reg2 = Register(operand2)
@@ -191,7 +210,10 @@ class RegisterFieldIndex(InstructionGeneric):
         self.field: Optional[FieldIndex] = None
         self.reg: Optional[Register] = None
 
-    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}:{self.reg},{self.field}"
+
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[InstructionType, str]:
         length = int(self.get_attribute('field_len') or 0)
         operand1, operand2 = line.split_operands()
         self.reg = Register(operand1)
@@ -211,7 +233,10 @@ class RegisterData(InstructionGeneric):
         self.reg: Optional[Register] = None
         self.data: Optional[int] = None
 
-    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}:{self.reg},{self.data}"
+
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[InstructionType, str]:
         operand1, operand2 = line.split_operands()
         self.reg = Register(operand1)
         if self.reg.is_valid():
@@ -235,7 +260,10 @@ class RegisterRegisterField(InstructionGeneric):
         self.reg2: Optional[Register] = None
         self.field: Optional[FieldBaseDsp] = None
 
-    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}:{self.reg1},{self.reg2},{self.field}"
+
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[InstructionType, str]:
         operand1, operand2, operand3 = line.split_operands()
         self.reg1 = Register(operand1)
         self.reg2 = Register(operand2)
@@ -255,7 +283,10 @@ class RegisterDataField(InstructionGeneric):
         self.data: Optional[int] = None
         self.field: Optional[FieldBaseDsp] = None
 
-    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}:{self.reg},{self.data},{self.field}"
+
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[InstructionType, str]:
         operand1, operand2, operand3 = line.split_operands()
         self.reg = Register(operand1)
         if self.reg.is_valid():
@@ -339,7 +370,10 @@ class BranchCondition(BranchGeneric, ConditionGeneric):
     def __init__(self):
         super().__init__()
 
-    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}:{self.mask},{self.branch}"
+
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[InstructionType, str]:
         branch, result = self.set_mask(line)
         if result == Error.NO_ERROR:
             result = self.set_branch(branch, macro)
@@ -354,7 +388,10 @@ class BranchConditionRegister(BranchCondition):
         super().__init__()
         self.reg: Optional[Register] = None
 
-    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}:{self.mask},{self.reg}"
+
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[InstructionType, str]:
         reg, result = self.set_mask(line)
         if result == Error.NO_ERROR:
             self.reg = Register(reg)
@@ -368,7 +405,10 @@ class RegisterBranch(BranchGeneric):
         super().__init__()
         self.reg: Optional[Register] = None
 
-    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}:{self.reg},{self.branch}"
+
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[InstructionType, str]:
         reg, branch = line.split_operands()
         result = self.set_branch(branch, macro)
         if result == Error.NO_ERROR:
@@ -384,7 +424,10 @@ class RegisterLabel(InstructionGeneric):
         self.reg: Optional[Register] = None
         self.label: Optional[str] = None
 
-    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}:{self.reg},{self.label}"
+
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[InstructionType, str]:
         reg, label = line.split_operands()
         self.reg = Register(reg)
         if not self.reg.is_valid():
@@ -417,7 +460,10 @@ class RegisterRegisterBranch(BranchGeneric):
         self.reg1: Optional[Register] = None
         self.reg2: Optional[Register] = None
 
-    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}:{self.reg1},{self.reg2},{self.branch}"
+
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[InstructionType, str]:
         operand1, operand2, operand3 = line.split_operands()
         result = self.set_branch(operand3, macro)
         if result == Error.NO_ERROR:
@@ -433,7 +479,10 @@ class SegmentCall(BranchGeneric):
         super().__init__()
         self.seg_name: Optional[str] = None
 
-    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}:{self.seg_name},{self.branch}"
+
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[InstructionType, str]:
         self.seg_name = next(iter(line.split_operands()))
         try:
             called_seg = macro.global_program.segments[self.seg_name]
@@ -450,7 +499,10 @@ class KeyValue(InstructionGeneric):
         self.operands: List[Tuple[str, Union[str, List, None]]] = list()
         self.branches: List[str] = list()
 
-    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}:{self.operands}"
+
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[InstructionType, str]:
         operands = line.split_operands()
         for operand in operands:
             key_value = re.split(r"=(?![^()]*[)])", operand)
@@ -528,7 +580,7 @@ class Dbred(KeyValue):
     def __init__(self):
         super().__init__()
 
-    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[InstructionType, str]:
         super().set_operand(line, macro)
         for key_number in range(2, 7):
             key_n = f"KEY{key_number}"
@@ -545,7 +597,7 @@ class Dbred(KeyValue):
 
 
 class Globz(RegisterData):
-    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[Instruction, str]:
+    def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[InstructionType, str]:
         globz, result = KeyValue().set_operand(line, macro)
         if result == Error.NO_ERROR:
             if globz.is_key('REGR'):

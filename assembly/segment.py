@@ -1,64 +1,68 @@
 import re
 from copy import copy
+from typing import Optional, List, Dict
 
 from assembly.directive import AssemblerDirective
 from assembly.file_line import File, Line, SymbolTable, Label, LabelSave
 from assembly.instruction import Instruction
-from assembly.instruction_type import DataMacroDeclaration
+from assembly.instruction_type import DataMacroDeclaration, InstructionType
+from assembly.macro import SegmentMacro
 from utils.errors import Error
 
 
 class Data:
     def __init__(self):
-        self.constant = bytearray()
-        self.literal = bytearray()
+        self.constant: bytearray = bytearray()
+        self.literal: bytearray = bytearray()
 
     @property
-    def next_constant(self):
+    def next_constant(self) -> int:
         return len(self.constant)
 
     @property
-    def next_literal(self):
+    def next_literal(self) -> int:
         return len(self.literal)
 
-    def extend_constant(self, data):
+    def extend_constant(self, data: bytearray) -> None:
         self.constant.extend(data)
 
-    def extend_literal(self, data):
+    def extend_literal(self, data: bytearray) -> None:
         self.literal.extend(data)
 
-    def get_constant(self, start, end=None):
+    def get_constant(self, start, end=None) -> bytearray:
         end = start + 1 if end is None else end
         return self.constant[start: end]
 
-    def get_literal(self, start, end=None):
+    def get_literal(self, start: int, end: Optional[int] = None) -> bytearray:
         end = start + 1 if end is None else end
         return self.literal[start: end]
 
 
 class Segment:
-    def __init__(self, file_name, name, macro):
-        self.file_name = file_name
-        self.name = name
-        self.macro = macro
-        self.nodes = dict()     # Dictionary of Instruction. Label is the key.
-        self.errors = list()
-        self.assembled = False
-        self.data = Data()
-        self.bas = LabelSave()
+    def __init__(self, file_name: str, name: str, macro: SegmentMacro):
+        self.file_name: str = file_name
+        self.name: str = name
+        self.macro: SegmentMacro = macro
+        self.nodes: Dict[str, InstructionType] = dict()  # Dictionary of Instruction. Label is the key.
+        self.errors: List[str] = list()
+        self.assembled: bool = False
+        self.data: Data = Data()
+        self.bas: LabelSave = LabelSave()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.name}:{self.assembled}:{len(self.nodes)}"
 
     @property
-    def root_label(self):
+    def root_label(self) -> str:
         return '$$' + self.name + '$$'
 
     @property
-    def root_line(self):
-        return Line.from_line(f"{self.root_label} EQU *")
+    def root_line(self) -> Line:
+        line = Line.from_line(f"{self.root_label} EQU *")
+        line.index = 0
+        return line
 
-    def get_constant_bytes(self, label, length=None):
+    def get_constant_bytes(self, label: str, length: Optional[int] = None) -> Optional[bytearray]:
         if set("+-").intersection(set(label)):
             dsp, result = self.macro.get_value(label)
             label = next(iter(re.split(r"[+-]", label)))
@@ -76,7 +80,7 @@ class Segment:
         else:
             return self.data.get_constant(dsp, dsp + length)
 
-    def load(self):
+    def load(self) -> None:
         if self.assembled:
             return
         # Init Macro
@@ -89,13 +93,15 @@ class Segment:
         lines = Line.from_file(file_lines)
         # First pass - Build Symbol Table and generate constants.
         self._build_symbol_table(lines)
-        # Second pass - Assemble instructions and populates nodes.
+        # Update index of each line
+        lines = self._update_index(lines)
+        # Second pass - Assemble instructions and populates n odes.
         self._assemble_instructions(lines)
         # Indicate segment assembled
         self.assembled = True
         return
 
-    def _build_symbol_table(self, lines):
+    def _build_symbol_table(self, lines: List[Line]) -> None:
         AssemblerDirective.from_line(self.root_line, self.macro, self.name)
         for line in lines:
             length = line.length if line.length else 1
@@ -111,7 +117,7 @@ class Segment:
                     self.macro.data_map[line.label].set_instruction_branch()
                 self.macro.location_counter += line.length
 
-    def _assemble_instructions(self, lines):
+    def _assemble_instructions(self, lines: List[Line]) -> None:
         prior_label = Label(self.root_label)
         self.nodes[str(prior_label)], _ = Instruction.from_line(self.root_line, self.macro)
         for ins_line in Line.yield_lines(lines):
@@ -146,7 +152,7 @@ class Segment:
                     self.errors.append(f'{result} {other_line} {self.name}')
                 self.nodes[line.label].conditions.append(condition)
 
-    def _process_assembler_directive(self, line):
+    def _process_assembler_directive(self, line: Line) -> bool:
         # return True -> skip creating node.
         # return False -> continue creating the node.
         if line.is_sw00sr:
@@ -166,3 +172,9 @@ class Segment:
         if result != Error.NO_ERROR:
             self.errors.append(f'{result} {line} {self.name}')
         return True
+
+    @staticmethod
+    def _update_index(lines: List[Line]) -> List[Line]:
+        for line in lines:
+            line.index = lines.index(line) + 1
+        return lines

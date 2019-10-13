@@ -47,6 +47,7 @@ class Line:
         self.command: Optional[str] = None
         self.operand: Optional[str] = None
         self.continuation: bool = False
+        self.index: Optional[int] = None
 
     @classmethod
     def from_line(cls, file_line: str, continuing: bool = False) -> 'Line':

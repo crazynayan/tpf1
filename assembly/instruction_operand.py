@@ -13,7 +13,7 @@ class Field:
         self.dsp: int = -1
 
     def __repr__(self) -> str:
-        return f"{self.name}:{self.base}+{self.dsp}"
+        return f"{self.name}({self.base}+{self.dsp})"
 
     @staticmethod
     def split_operand(operand: str) -> list:
@@ -118,7 +118,10 @@ class FieldIndex(Field):
 class FieldLen(Field):
     def __init__(self):
         super().__init__()
-        self.length = 0
+        self.length: int = 0
+
+    def __repr__(self) -> str:
+        return f"{self.name}({self.base}+{self.dsp},{self.length})"
 
     def set(self, operand: str, macro: SegmentMacro, max_len: int) -> str:
         operand1, operand2, operand3 = self.split_operand(operand)
@@ -148,8 +151,7 @@ class Bit:
         self.on = on
 
     def __repr__(self) -> str:
-        state = 'ON' if self.on else 'OFF'
-        return f"{self.name}:0x{self.value:02x}:{state}"
+        return f"{self.name}=0x{self.value:02x}"
 
 
 class Bits:
@@ -167,7 +169,7 @@ class Bits:
         self.bit7 = Bit(self.PREFIX + '7', 0x01)
 
     def __repr__(self) -> str:
-        bit_text = [str(bit) for _, bit in self.__dict__.items()]
+        bit_text = [str(bit) for _, bit in self.__dict__.items() if bit.on]
         return '+'.join(bit_text)
 
     @property
