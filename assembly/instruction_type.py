@@ -422,10 +422,10 @@ class RegisterLabel(InstructionGeneric):
     def __init__(self):
         super().__init__()
         self.reg: Optional[Register] = None
-        self.label: Optional[str] = None
+        self.ex_label: Optional[str] = None
 
     def __repr__(self) -> str:
-        return f"{super().__repr__()}:{self.reg},{self.label}"
+        return f"{super().__repr__()}:{self.reg},{self.ex_label}"
 
     def set_operand(self, line: Line, macro: SegmentMacro) -> Tuple[InstructionType, str]:
         reg, label = line.split_operands()
@@ -435,9 +435,9 @@ class RegisterLabel(InstructionGeneric):
         else:
             if macro.is_branch(label):
                 if macro.is_instruction_branch(label):
-                    self.label = label
+                    self.ex_label = label
                 else:
-                    self.label = label + Label.SEPARATOR + '1'
+                    self.ex_label = label + Label.SEPARATOR + '1'
                 result = Error.NO_ERROR
             else:
                 if label.startswith('*-'):
@@ -445,7 +445,7 @@ class RegisterLabel(InstructionGeneric):
                     prior_ins = next(node for _, node in nodes.items() if node.fall_down == line.label)
                     prior_ins_len, _ = macro.get_value(label[2:])
                     if prior_ins.get_attribute('len') == prior_ins_len:
-                        self.label = prior_ins.label
+                        self.ex_label = prior_ins.label
                         result = Error.NO_ERROR
                     else:
                         result = Error.RL_INVALID_LEN

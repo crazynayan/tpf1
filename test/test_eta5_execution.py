@@ -480,13 +480,11 @@ class Companion(unittest.TestCase):
     def setUp(self) -> None:
         # Award is for Flight 2812 and not for other flight -> Check WP89
         Pnr.init_db()
-        Tpfdf.init_db()
-        T.state.init_run()
-        T.state.setup['GLOBAL']['@HAALC'] = DataType('C', input='AA').to_bytes()
-        T.state.setup['GLOBAL']['@U1DMO'] = DataType('X', input='4CC2').to_bytes()
-        T.state.setup['WA0AA']['WA0ET6'] = bytearray([T.wa0hfx])
-        Tpfdf.add(data=T.tr1gaa, ref_name='TR1GAA', key='40')
         Pnr.add_names(config.AAAPNR, ['1ZAVERI'])
+        Tpfdf.init_db()
+        Tpfdf.add(data=T.tr1gaa, ref_name='TR1GAA', key='40')
+        T.state.init_run()
+        T.state.setup['WA0AA']['WA0ET6'] = bytearray([T.wa0hfx])
 
     def test_fqtv_itin_match_award_not_exp_key_ETK2(self) -> None:
         Pnr.add_hfax(config.AAAPNR, T.hfax_2812_gld)
@@ -553,6 +551,12 @@ class Companion(unittest.TestCase):
         self.assertEqual('$$ETAW$$.1', label)
         self.assertNotEqual('WP89', DataType('X', bytes=T.state.vm.get_bytes(T.ebw000, 4)).decode)
         self.assertEqual(1, T.state.vm.get_byte(T.state.regs.R1 + T.wa0pty))
+
+
+# noinspection PyPep8Naming
+def tearDownModule():
+    with open('trace_log.txt', 'w') as trace_log:
+        trace_log.write('\n'.join([str(trace) for trace in T.state.DEBUG.get_no_hit()]))
 
 
 if __name__ == '__main__':

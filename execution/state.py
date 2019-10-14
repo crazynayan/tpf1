@@ -1,13 +1,16 @@
 from typing import Callable, Optional, Tuple, Dict, List
 
-from assembly.instruction_type import InstructionGeneric
+from assembly.instruction_type import InstructionGeneric, InstructionType
 from assembly.program import program
 from assembly.segment import Segment
 from config import config
+from execution.debug import Debug
 from execution.regs_store import Registers, Storage
 
 
 class State:
+    DEBUG: Debug = Debug()
+
     def __init__(self):
         self.seg: Optional[Segment] = None
         self.regs: Registers = Registers()
@@ -38,6 +41,13 @@ class State:
             self.vm.set_bytes(self.seg.data.constant, self.regs.R8, len(self.seg.data.constant))
             self.vm.set_bytes(self.seg.data.literal, literal, len(self.seg.data.literal))
             self.loaded_seg[seg_name] = (self.seg, self.regs.R8)
+
+    def init_debug(self, seg_list: List[str]) -> None:
+        nodes = dict()
+        for seg_name in seg_list:
+            program.segments[seg_name].load()
+            nodes = {**nodes, **program.segments[seg_name].nodes}
+        self.DEBUG.init_trace(nodes, seg_list)
 
     @staticmethod
     def get_ecb_address(level: str, ecb_label: str) -> int:
@@ -76,9 +86,14 @@ class State:
         label = self.seg.root_label
         while True:
             node = self.seg.nodes[label]
-            label = self.ex[node.command](node)
+            label = self.ex_command(node)
             if label is None:
                 return node.label
+
+    def ex_command(self, node: InstructionType) -> str:
+        label = self.ex[node.command](node)
+        self.DEBUG.hit(node, label)
+        return label
 
     @staticmethod
     def branch(_) -> str:

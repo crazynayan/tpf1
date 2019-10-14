@@ -706,19 +706,19 @@ class SegmentTest(AssemblyTest):
         node = self.seg.nodes['TS130010.2']
         self.assertEqual('EX', node.command)
         self.assertEqual('R15', node.reg.reg)
-        self.assertEqual('TS130010.1', node.label)
+        self.assertEqual('TS130010.1', node.ex_label)
         self.assertEqual('TS130040', node.goes)
         self.assertSetEqual({'TS130010.3', 'TS130040'}, node.next_labels)
-        ex_node = self.seg.nodes[node.label]
+        ex_node = self.seg.nodes[node.ex_label]
         self.assertEqual('TM', ex_node.command)
         self.assertEqual(0, ex_node.bits.value)
         # EX    R1,*-6 on MVC   EBW000,EBT000
         node = self.seg.nodes['TS130020.2']
         self.assertEqual('EX', node.command)
         self.assertEqual('R1', node.reg.reg)
-        self.assertEqual('TS130020.1', node.label)
+        self.assertEqual('TS130020.1', node.ex_label)
         self.assertSetEqual({'TS130010'}, node.next_labels)
-        ex_node = self.seg.nodes[node.label]
+        ex_node = self.seg.nodes[node.ex_label]
         self.assertEqual('MVC', ex_node.command)
         self.assertEqual(0, ex_node.field_len.length)
         self.assertEqual('EBW000', ex_node.field_len.name)
@@ -727,9 +727,9 @@ class SegmentTest(AssemblyTest):
         node = self.seg.nodes['TS130010.3']
         self.assertEqual('EX', node.command)
         self.assertEqual('R15', node.reg.reg)
-        self.assertEqual('TS130030', node.label)
+        self.assertEqual('TS130030', node.ex_label)
         self.assertSetEqual({'TS130030'}, node.next_labels)
-        ex_node = self.seg.nodes[node.label]
+        ex_node = self.seg.nodes[node.ex_label]
         self.assertEqual('PACK', ex_node.command)
         self.assertEqual(7, ex_node.field_len1.length)
         self.assertEqual(0, ex_node.field_len2.length)
@@ -740,9 +740,9 @@ class SegmentTest(AssemblyTest):
         node = self.seg.nodes['TS130030.1']
         self.assertEqual('EX', node.command)
         self.assertEqual('R15', node.reg.reg)
-        self.assertEqual('TS130040.1', node.label)
+        self.assertEqual('TS130040.1', node.ex_label)
         self.assertSetEqual({'TS130040'}, node.next_labels)
-        ex_node = self.seg.nodes[node.label]
+        ex_node = self.seg.nodes[node.ex_label]
         self.assertEqual('MVC', ex_node.command)
         self.assertEqual(0, ex_node.field_len.length)
         self.assertEqual('EBW000', ex_node.field_len.name)

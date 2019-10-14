@@ -26,6 +26,8 @@ class Program:
                 continue
             macro_name = file_name[:-4].upper()
             self.macros[macro_name] = DataMacro(macro_name, os.path.join(self.MAC_FOLDER_NAME, file_name))
+        self.macros['EB0EB'].load()
+        self.macros['GLOBAL'].load()
 
     def __repr__(self):
         return f"Program:S={len(self.segments)}:M={len(self.macros)}"

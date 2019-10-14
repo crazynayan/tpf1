@@ -11,6 +11,7 @@ program.macros['UI2PF'].load()
 
 class T:
     state: Execute = Execute()
+    state.init_debug(['ETA5'])
     ebsw01 = config.ECB + program.macros['EB0EB'].symbol_table['EBSW01'].dsp
     ebw000 = config.ECB + program.macros['EB0EB'].symbol_table['EBW000'].dsp
     ebrs01 = config.ECB + program.macros['EB0EB'].symbol_table['EBRS01'].dsp

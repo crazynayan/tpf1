@@ -2,9 +2,10 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 from assembly.instruction_type import KeyValue, SegmentCall
+from config import config
+from db.pnr import PnrLocator
 from execution.state import State
 from utils.data_type import DataType, Register
-from db.pnr import PnrLocator
 
 
 class RealTimeMacro(State):
@@ -139,7 +140,6 @@ class UserDefinedMacro(State):
     def pars_date(self, node: KeyValue) -> str:
         # Some constants
         gross_days = 333
-        start = datetime(1966, 1, 2)
         today = datetime.today()
         today = datetime(year=today.year, month=today.month, day=today.day)
         # Get the option_byte and do the conversion
@@ -155,7 +155,7 @@ class UserDefinedMacro(State):
                 past_days_allowed = gross_days - (datetime(today.year, 12, 31) - datetime(today.year, 1, 1)).days
                 if days_from_today < past_days_allowed:
                     date = date.replace(year=date.year + 1)
-                self.regs.R6 = (date - start).days
+                self.regs.R6 = (date - config.START).days
                 self.regs.R7 = (date - today).days
             except ValueError:
                 self.regs.R6 = 0
@@ -163,7 +163,7 @@ class UserDefinedMacro(State):
             # PARS day number to Date. 4CB0 -> 03OCT
             days_from_start = self.regs.R7
             if 0 <= days_from_start <= 0x7FFF:
-                date = start + timedelta(days=days_from_start)
+                date = config.START + timedelta(days=days_from_start)
                 date_str = date.strftime('%d%b').upper()
                 date_bytes = DataType('C', input=date_str).to_bytes()
                 self.regs.R7 = self.regs.R6

@@ -1,5 +1,7 @@
+from datetime import datetime
 from typing import Union, Optional, Tuple, Dict
 
+from assembly.program import program
 from config import config
 from utils.data_type import DataType, Register
 
@@ -85,10 +87,9 @@ class Storage:
         self.frames: Dict[str, bytearray] = dict()                 # Frames init with ZERO
         self._frame: Dict[str, bytearray] = dict()                 # Frames init with ONES
         self.nab: int = config.F4K << config.NIBBLE                  # To ensure total 16 fixed frames
-        self.frames[self.base_key(config.ECB)] = bytearray([config.ZERO] * config.F4K)
-        self.frames[self.base_key(config.GLOBAL)] = bytearray([config.ZERO] * config.GLOBAL_FRAME_SIZE)
-        self._frame[self.base_key(config.ECB)] = bytearray([config.ONES] * config.F4K)
-        self._frame[self.base_key(config.GLOBAL)] = bytearray([config.ONES] * config.GLOBAL_FRAME_SIZE)
+        self.allocate_fixed(config.ECB)
+        self.allocate_fixed(config.GLOBAL)
+        self._setup_global()
 
     def __repr__(self) -> str:
         return f"Storage:{len(self.frames)}"
@@ -99,6 +100,20 @@ class Storage:
         self._frame[base_address] = bytearray()
         self.nab += config.F4K
         return self.nab - config.F4K
+
+    def allocate_fixed(self, address: int) -> None:
+        base_address = self.base_key(address)
+        self.frames[base_address] = bytearray()
+        self._frame[base_address] = bytearray()
+
+    def _setup_global(self):
+        haalc = config.GLOBAL + program.macros['GLOBAL'].symbol_table['@HAALC'].dsp
+        self.set_bytes(bytearray([0xC1, 0xC1]), haalc, 2)
+        u1dmo = config.GLOBAL + program.macros['GLOBAL'].symbol_table['@U1DMO'].dsp
+        today = datetime.today()
+        today = datetime(year=today.year, month=today.month, day=today.day)
+        pars_today = (today - config.START).days
+        self.set_value(pars_today, u1dmo, 2)
 
     def get_allocated_address(self) -> bytearray:
         return DataType('F', input=str(self.nab - config.F4K)).to_bytes(Registers.LEN)

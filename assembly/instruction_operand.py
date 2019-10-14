@@ -121,7 +121,7 @@ class FieldLen(Field):
         self.length: int = 0
 
     def __repr__(self) -> str:
-        return f"{self.name}({self.base}+{self.dsp},{self.length})"
+        return f"{self.name}({self.base}+{self.dsp},{self.length + 1})"
 
     def set(self, operand: str, macro: SegmentMacro, max_len: int) -> str:
         operand1, operand2, operand3 = self.split_operand(operand)

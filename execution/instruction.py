@@ -248,12 +248,12 @@ class LogicalUsefulConversion(State):
         return self.next_label(node)
 
     def execute(self, node: ins.RegisterLabel) -> str:
-        exec_node = self.seg.nodes[node.label]
+        exec_node = self.seg.nodes[node.ex_label]
         value = self.regs.get_value(node.reg) & 0xFF if node.reg.reg != 'R0' else 0
         if isinstance(exec_node, ins.FieldLenField):
             save = exec_node.field_len.length
             exec_node.field_len.length |= value
-            self.ex[exec_node.command](exec_node)
+            self.ex_command(exec_node)
             exec_node.field_len.length = save
         elif isinstance(exec_node, ins.FieldLenFieldLen):
             save1, save2 = exec_node.field_len1.length, exec_node.field_len2.length
@@ -261,18 +261,18 @@ class LogicalUsefulConversion(State):
             exec_node.field_len1.length |= value1
             value2 = value & 0x0F
             exec_node.field_len2.length |= value2
-            self.ex[exec_node.command](exec_node)
+            self.ex_command(exec_node)
             exec_node.field_len1.length, exec_node.field_len2.length = save1, save2
         elif isinstance(exec_node, ins.FieldData):
             save = exec_node.data
             exec_node.data |= value
-            self.ex[exec_node.command](exec_node)
+            self.ex_command(exec_node)
             exec_node.data = save
         elif isinstance(exec_node, ins.FieldBits):
             save = exec_node.bits.value
             value |= exec_node.bits.value
             exec_node.bits.set_from_number(value)
-            self.ex[exec_node.command](exec_node)
+            self.ex_command(exec_node)
             exec_node.bits.set_from_number(save)
         else:
             raise TypeError
