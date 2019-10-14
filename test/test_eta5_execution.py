@@ -85,7 +85,7 @@ class NameSuccessETAW(unittest.TestCase):
 
     def test_group_C_not_at_start_wa0pty_history_no_match_ETAW(self):
         Pnr.add_names(config.AAAPNR, ['10ZAVERI', 'C/21TOURS', '1SHAH'])
-        T.state.setup = {'WA0AA': {'WA0PTY': bytearray([0xE3])}}                # 99 = 0x63 with bit0 on is 0xE3
+        T.state.setup['WA0AA']['WA0PTY'] = bytearray([0xE3])  # 99 = 0x63 with bit0 on is 0xE3
         label = T.state.run('ETA5', aaa=True)
         self.assertEqual('$$ETAW$$.1', label)
         self.assertListEqual(list(), T.state.dumps)
@@ -94,20 +94,29 @@ class NameSuccessETAW(unittest.TestCase):
         self.assertEqual(21, T.state.vm.get_byte(T.ebw000 + 15))
         self.assertEqual(0x95, T.state.vm.get_byte(T.state.regs.R1 + T.wa0pty))  # 21 = 0x15 with bit0 on is 0x95
 
-    def test_pn2_on_group_C_ETAW(self):
+    def test_pn2_on_group_9_C_ETAW(self):
         Pnr.add_names(config.AAAPNR, ['C/99W/TOURS', '3SHAH'])
-        T.state.setup = {'WA0AA': {'WA0UB1': bytearray([T.wa0pn2])}}
+        T.state.setup['WA0AA']['WA0UB1'] = bytearray([T.wa0pn2])
         label = T.state.run('ETA5', aaa=True)
         self.assertEqual('$$ETAW$$.1', label)
         self.assertEqual(0xF0F6, T.state.vm.get_unsigned_value(T.state.regs.R1 + T.wa0ext, 2))
         self.assertEqual(9, T.state.vm.get_byte(T.ebw000 + 15))
         self.assertEqual(9, T.state.vm.get_byte(T.state.regs.R1 + T.wa0pty))
 
+    def test_pn2_on_group_99_C_ETAW(self):
+        Pnr.add_names(config.AAAPNR, ['C/999W/TOURS', '3SHAH'])
+        T.state.setup['WA0AA']['WA0UB1'] = bytearray([T.wa0pn2])
+        label = T.state.run('ETA5', aaa=True)
+        self.assertEqual('$$ETAW$$.1', label)
+        self.assertEqual(0xF9F6, T.state.vm.get_unsigned_value(T.state.regs.R1 + T.wa0ext, 2))
+        self.assertEqual(99, T.state.vm.get_byte(T.ebw000 + 15))
+        self.assertEqual(99, T.state.vm.get_byte(T.state.regs.R1 + T.wa0pty))
+
     def test_pn2_on_group_Z_wa0pty_history_match_ETAW(self):
         # T.wa0PN2 OFF behaves the same way
         Pnr.add_names(config.AAAPNR, ['Z/99W/SABRE', '3SHAH'])
-        T.state.setup = {'WA0AA': {'WA0UB1': bytearray([T.wa0pn2])}}
-        T.state.setup = {'WA0AA': {'WA0PTY': bytearray([0xE3])}}                # 99 = 0x63 with bit0 on is 0xE3
+        T.state.setup['WA0AA']['WA0UB1'] = bytearray([T.wa0pn2])
+        T.state.setup['WA0AA']['WA0PTY'] = bytearray([0xE3])  # 99 = 0x63 with bit0 on is 0xE3
         label = T.state.run('ETA5', aaa=True)
         self.assertEqual('$$ETAW$$.1', label)
         self.assertEqual(0xF9F6, T.state.vm.get_unsigned_value(T.state.regs.R1 + T.wa0ext, 2))
@@ -116,8 +125,8 @@ class NameSuccessETAW(unittest.TestCase):
 
     def test_pn2_off_group_wa0pti_ETAW(self):
         Pnr.add_names(config.AAAPNR, ['C/99W/TOURS', '3SHAH'])
-        T.state.setup = {'WA0AA': {'WA0UB1': bytearray([0x00])}}
-        T.state.setup = {'WA0AA': {'WA0PTI': bytearray([0x03])}}
+        T.state.setup['WA0AA']['WA0UB1'] = bytearray([0x00])
+        T.state.setup['WA0AA']['WA0PTI'] = bytearray([0x03])
         label = T.state.run('ETA5', aaa=True)
         self.assertEqual('$$ETAW$$.1', label)
         self.assertIn('021014', T.state.dumps)
@@ -192,7 +201,7 @@ class NameSuccessVarious(unittest.TestCase):
     def test_infant_group_call_from_TOQ1(self) -> None:
         Pnr.add_names(config.AAAPNR, ['I/5ZAVERI', '3ZAVERI', 'C/25TOURS', '6SHAH', 'I/2SHAH'])
         label = T.state.run('TOQ1', aaa=True)
-        self.assertEqual('$$TOQ1$$.3', label)
+        self.assertEqual('$$TOQ1$$.4', label)
         self.assertListEqual(list(), T.state.dumps)
         self.assertEqual(0xF1F6, T.state.vm.get_unsigned_value(T.state.regs.R1 + T.wa0ext, 2))  # Group - Adults
         self.assertEqual(32, T.state.vm.get_byte(T.ebw000 + 15))                                # Group + Infants
@@ -432,8 +441,23 @@ class NameFailETA2(unittest.TestCase):
         self.assertIn('19000', T.state.dumps)
         self.assertEqual(1, T.state.regs.R1)
 
-    def test_invalid_infant_ETA2(self) -> None:
+    def test_invalid_name_high_after_group_ETA2(self):
+        Pnr.add_names(config.AAAPNR, ['Z/25SABRE', chr(0xDB) + 'ZAVERI', '1SHAH'])
+        label = T.state.run('ETA5', aaa=True)
+        self.assertEqual('$$ETA2$$.1', label)
+        self.assertIn('19000', T.state.dumps)
+        self.assertEqual(1, T.state.regs.R1)
+
+    def test_invalid_infant_less_ETA2(self) -> None:
         Pnr.add_names(config.AAAPNR, ['I/ZAVERI'])
+        label = T.state.run('ETA5', aaa=True)
+        self.assertEqual('$$ETA2$$.1', label)
+        self.assertIn('19000', T.state.dumps)
+        self.assertEqual(1, T.state.regs.R1)
+
+    def test_invalid_infant_high_ETA2(self) -> None:
+        # Without number in party at start
+        Pnr.add_names(config.AAAPNR, ['I/' + chr(0xDB) + 'TOURS'])
         label = T.state.run('ETA5', aaa=True)
         self.assertEqual('$$ETA2$$.1', label)
         self.assertIn('19000', T.state.dumps)
@@ -490,9 +514,9 @@ class Companion(unittest.TestCase):
         Pnr.add_hfax(config.AAAPNR, T.hfax_2812_gld)
         Pnr.add_fqtv('DGHWCL', T.fqtv_gld)
         Pnr.add_itin('DGHWCL', T.itin_2811_2812)
-        label = T.state.run('ETA5', aaa=True)
+        label = T.state.run('TOQ1', aaa=True)
         self.assertEqual('ETK20100.1', label)
-        self.assertEqual('WP89', DataType('X', bytes=T.state.vm.get_bytes(T.ebw000, 4)).decode)
+        self.assertEqual('WP89', DataType('X', bytes=T.state.vm.get_bytes(T.ebx000, 4)).decode)
         self.assertEqual(0x60, T.state.vm.get_byte(T.ebrs01))
         self.assertEqual(116, T.state.regs.R6)
 
@@ -502,7 +526,7 @@ class Companion(unittest.TestCase):
         Pnr.add_itin('DGHWCL', T.itin_2811_2812)
         label = T.state.run('ETA5', aaa=True)
         self.assertEqual('ETK20100.1', label)
-        self.assertNotEqual('WP89', DataType('X', bytes=T.state.vm.get_bytes(T.ebw000, 4)).decode)
+        self.assertNotEqual('WP89', DataType('X', bytes=T.state.vm.get_bytes(T.ebx000, 4)).decode)
         self.assertEqual(0x60, T.state.vm.get_byte(T.ebrs01))
         self.assertEqual(116, T.state.regs.R6)
 
@@ -511,7 +535,7 @@ class Companion(unittest.TestCase):
         Pnr.add_fqtv('DGHWCL', T.fqtv_gld)
         label = T.state.run('ETA5', aaa=True)
         self.assertEqual('ETK20100.1', label)
-        self.assertNotEqual('WP89', DataType('X', bytes=T.state.vm.get_bytes(T.ebw000, 4)).decode)
+        self.assertNotEqual('WP89', DataType('X', bytes=T.state.vm.get_bytes(T.ebx000, 4)).decode)
         self.assertEqual(0x60, T.state.vm.get_byte(T.ebrs01))
         self.assertEqual(116, T.state.regs.R6)
 
@@ -521,7 +545,7 @@ class Companion(unittest.TestCase):
         Pnr.add_itin('DGHWCL', T.itin_2811_2812)
         label = T.state.run('ETA5', aaa=True)
         self.assertEqual('$$ETAW$$.1', label)
-        self.assertEqual('WP89', DataType('X', bytes=T.state.vm.get_bytes(T.ebw000, 4)).decode)
+        self.assertEqual('WP89', DataType('X', bytes=T.state.vm.get_bytes(T.ebx000, 4)).decode)
         self.assertEqual(1, T.state.vm.get_byte(T.state.regs.R1 + T.wa0pty))
 
     def test_fqtv_itin_match_award_exp_ETAW(self) -> None:
@@ -530,7 +554,7 @@ class Companion(unittest.TestCase):
         Pnr.add_itin('DGHWCL', T.itin_2811_2812)
         label = T.state.run('ETA5', aaa=True)
         self.assertEqual('$$ETAW$$.1', label)
-        self.assertEqual('WP89', DataType('X', bytes=T.state.vm.get_bytes(T.ebw000, 4)).decode)
+        self.assertEqual('WP89', DataType('X', bytes=T.state.vm.get_bytes(T.ebx000, 4)).decode)
         self.assertEqual(1, T.state.vm.get_byte(T.state.regs.R1 + T.wa0pty))
 
     def test_fqtv_itin_match_award_key_ETAW(self) -> None:
@@ -539,7 +563,7 @@ class Companion(unittest.TestCase):
         Pnr.add_itin('DGHWCL', T.itin_2811_2812)
         label = T.state.run('ETA5', aaa=True)
         self.assertEqual('$$ETAW$$.1', label)
-        self.assertEqual('WP89', DataType('X', bytes=T.state.vm.get_bytes(T.ebw000, 4)).decode)
+        self.assertEqual('WP89', DataType('X', bytes=T.state.vm.get_bytes(T.ebx000, 4)).decode)
         self.assertEqual(1, T.state.vm.get_byte(T.state.regs.R1 + T.wa0pty))
 
     def test_no_tr1gaa_ETAW(self) -> None:
@@ -549,8 +573,71 @@ class Companion(unittest.TestCase):
         Tpfdf.init_db('TR1GAA')
         label = T.state.run('ETA5', aaa=True)
         self.assertEqual('$$ETAW$$.1', label)
-        self.assertNotEqual('WP89', DataType('X', bytes=T.state.vm.get_bytes(T.ebw000, 4)).decode)
+        self.assertNotEqual('WP89', DataType('X', bytes=T.state.vm.get_bytes(T.ebx000, 4)).decode)
         self.assertEqual(1, T.state.vm.get_byte(T.state.regs.R1 + T.wa0pty))
+
+
+class BeforeNameETAW(unittest.TestCase):
+
+    def setUp(self) -> None:
+        Pnr.init_db()
+        Pnr.add_names(config.AAAPNR, ['1ZAVERI'])
+        T.state.init_run()
+
+    def test_HFX_BA_SRT5(self):
+        T.state.setup['WA0AA']['WA0ET6'] = bytearray([T.wa0hfx])
+        T.state.set_partition('BA')
+        label = T.state.run('ETA5', aaa=True)
+        self.assertEqual('$$ETAW$$.1', label)
+        self.assertNotEqual('SRT5', DataType('X', bytes=T.state.vm.get_bytes(T.ebx000 + 4, 4)).decode)
+
+    def test_HFX_AA_TKV_SRT5(self):
+        T.state.setup['WA0AA']['WA0ET6'] = bytearray([T.wa0hfx])
+        T.state.setup['WA0AA']['WA0US3'] = bytearray([T.wa0tkv])
+        label = T.state.run('ETA5', aaa=True)
+        self.assertEqual('$$ETAW$$.1', label)
+        self.assertEqual('SRT5', DataType('X', bytes=T.state.vm.get_bytes(T.ebx000 + 4, 4)).decode)
+
+    def test_ASC_ITN_fqtv_ETAS(self):
+        T.state.setup['WA0AA']['WA0ASC'] = bytearray([0x01])
+        T.state.setup['WA0AA']['WA0ET2'] = bytearray([T.wa0itn])
+        Pnr.add_fqtv(config.AAAPNR, T.fqtv_gld)
+        label = T.state.run('ETA5', aaa=True)
+        self.assertEqual('$$ETAW$$.1', label)
+        self.assertEqual('ETAS', DataType('X', bytes=T.state.vm.get_bytes(T.ebx000 + 8, 4)).decode)
+
+    def test_ASC_FTN_ETAS(self):
+        T.state.setup['WA0AA']['WA0ASC'] = bytearray([0x01])
+        T.state.setup['WA0AA']['WA0XX3'] = bytearray([T.wa0ftn])
+        label = T.state.run('ETA5', aaa=True)
+        self.assertEqual('$$ETAW$$.1', label)
+        self.assertNotEqual('ETAS', DataType('X', bytes=T.state.vm.get_bytes(T.ebx000 + 8, 4)).decode)
+
+    def test_ASC_fqtv_ETAS(self):
+        T.state.setup['WA0AA']['WA0ASC'] = bytearray([0x01])
+        Pnr.add_fqtv(config.AAAPNR, T.fqtv_gld)
+        label = T.state.run('ETA5', aaa=True)
+        self.assertEqual('$$ETAW$$.1', label)
+        self.assertNotEqual('ETAS', DataType('X', bytes=T.state.vm.get_bytes(T.ebx000 + 8, 4)).decode)
+
+    def test_FTD_ETK2(self):
+        T.state.setup['WA0AA']['WA0XX3'] = bytearray([T.wa0ftd])
+        label = T.state.run('ETA5', aaa=True)
+        self.assertEqual('$$ETAW$$.1', label)
+        self.assertEqual(13, T.state.regs.R6)
+
+    def test_AFU_subs_ETGN(self):
+        T.state.setup['WA0AA']['WA0USE'] = bytearray([T.wa0afu])
+        Pnr.add_subs_card_seg(config.AAAPNR, ['TEST'])
+        label = T.state.run('ETA5', aaa=True)
+        self.assertEqual('$$ETAW$$.1', label)
+        self.assertEqual('ETGN', DataType('X', bytes=T.state.vm.get_bytes(T.ebx000 + 12, 4)).decode)
+
+    def test_AFU_ETGN(self):
+        T.state.setup['WA0AA']['WA0USE'] = bytearray([T.wa0afu])
+        label = T.state.run('ETA5', aaa=True)
+        self.assertEqual('$$ETAW$$.1', label)
+        self.assertNotEqual('ETGN', DataType('X', bytes=T.state.vm.get_bytes(T.ebx000 + 12, 4)).decode)
 
 
 # noinspection PyPep8Naming

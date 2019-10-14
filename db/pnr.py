@@ -26,6 +26,10 @@ class Pnr:
             'std_fix': bytearray(),
             'std_var': bytearray(),
         },
+        '66': {  # SUBS_CARD_SEG
+            'std_fix': bytearray(),
+            'std_var': bytearray(),
+        },
     }
 
     @staticmethod
@@ -106,6 +110,13 @@ class Pnr:
         program.macros['WI0BS'].load()
         itineraries: List[bytearray] = [Stream.to_bytes(itin, program.macros['WI0BS']) for itin in itineraries]
         Pnr.add_elements(pnr_doc, itineraries, '30')
+
+    @staticmethod
+    def add_subs_card_seg(pnr_locator: str, subs_card_segs: List[str]) -> None:
+        pnr_doc = Pnr.get_pnr_doc(pnr_locator)
+        subs_card_segs: List[bytearray] = [DataType('C', input=subs_card_seg).to_bytes()
+                                           for subs_card_seg in subs_card_segs]
+        Pnr.add_elements(pnr_doc, subs_card_segs, '66')
 
     @staticmethod
     def init_db() -> None:

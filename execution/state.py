@@ -6,10 +6,12 @@ from assembly.segment import Segment
 from config import config
 from execution.debug import Debug
 from execution.regs_store import Registers, Storage
+from utils.data_type import DataType
 
 
 class State:
     DEBUG: Debug = Debug()
+    PARTITION: Dict[str, int] = {'AA': 0x00, 'BA': 0xE0}
 
     def __init__(self):
         self.seg: Optional[Segment] = None
@@ -124,3 +126,9 @@ class State:
 
     def set_zero_cc(self, number: int) -> None:
         self.cc = 1 if number else 0
+
+    def set_partition(self, partition: str) -> None:
+        haalc = config.GLOBAL + program.macros['GLOBAL'].symbol_table['@HAALC'].dsp
+        ce1uid = config.ECB + program.macros['EB0EB'].symbol_table['CE1$UID'].dsp
+        self.vm.set_bytes(DataType('C', input=partition).to_bytes(), haalc, 2)
+        self.vm.set_value(self.PARTITION[partition], ce1uid, 1)

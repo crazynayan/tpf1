@@ -46,7 +46,8 @@ class UserDefinedDbMacro(State):
         self.seg.macro.load('PD0WRK')
         key_label = f"#PD_{node.get_value('FIELD')}_K"
         try:
-            key = f"{self.seg.macro.data_map[key_label].dsp:2x}"
+            key_number = self.seg.macro.data_map[key_label].dsp
+            key = f"{key_number:2x}"
         except KeyError:
             # TODO Code for INDEX= Not in ETA5
             raise TypeError
@@ -63,8 +64,12 @@ class UserDefinedDbMacro(State):
                 return node.fall_down
 
         # Get the item number to read (Item numbers start from 1)
+        pd0_ctl_key: SymbolTable = self.seg.macro.data_map['PD0_CTL_KEY']
         pd0_mc_cin: SymbolTable = self.seg.macro.data_map['PD0_MC_CIN']
-        item_number = self.vm.get_value(pd0_base + pd0_mc_cin.dsp, pd0_mc_cin.length) + 1
+        last_key = self.vm.get_unsigned_value(pd0_base + pd0_ctl_key.dsp, pd0_ctl_key.length)
+        item_number = self.vm.get_value(pd0_base + pd0_mc_cin.dsp, pd0_mc_cin.length) + 1 \
+            if last_key == key_number else 1
+        self.vm.set_value(key_number, pd0_base + pd0_ctl_key.dsp, pd0_ctl_key.length)
 
         # SEARCH-n parameters
         starts_with: Optional[str] = None

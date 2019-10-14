@@ -15,6 +15,6 @@ $IS$     CSECT
          BNE   WP890100
          MVI   ETA90TKT,C'A'
 WP890100 EQU   *
-         MVC   EBW000(L'WP89),WP89
+         MVC   EBX000(L'WP89),WP89
          BACKC
 WP89     DC    C'WP89'

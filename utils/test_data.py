@@ -14,6 +14,7 @@ class T:
     state.init_debug(['ETA5'])
     ebsw01 = config.ECB + program.macros['EB0EB'].symbol_table['EBSW01'].dsp
     ebw000 = config.ECB + program.macros['EB0EB'].symbol_table['EBW000'].dsp
+    ebx000 = config.ECB + program.macros['EB0EB'].symbol_table['EBX000'].dsp
     ebrs01 = config.ECB + program.macros['EB0EB'].symbol_table['EBRS01'].dsp
     wa0et4 = program.macros['WA0AA'].symbol_table['WA0ET4'].dsp
     wa0et5 = program.macros['WA0AA'].symbol_table['WA0ET5'].dsp
@@ -25,6 +26,11 @@ class T:
     wa0any = program.macros['WA0AA'].symbol_table['#WA0ANY'].dsp
     wa0tty = program.macros['WA0AA'].symbol_table['#WA0TTY'].dsp
     wa0hfx = program.macros['WA0AA'].symbol_table['#WA0HFX'].dsp
+    wa0tkv = program.macros['WA0AA'].symbol_table['#WA0TKV'].dsp
+    wa0itn = program.macros['WA0AA'].symbol_table['#WA0ITN'].dsp
+    wa0ftn = program.macros['WA0AA'].symbol_table['#WA0FTN'].dsp
+    wa0ftd = program.macros['WA0AA'].symbol_table['#WA0FTD'].dsp
+    wa0afu = program.macros['WA0AA'].symbol_table['#WA0AFU'].dsp
     ui2cnn = program.macros['UI2PF'].symbol_table['UI2CNN'].dsp
     ui2097 = program.macros['UI2PF'].symbol_table['#UI2097'].dsp
     ui2098 = program.macros['UI2PF'].symbol_table['#UI2098'].dsp
