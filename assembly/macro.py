@@ -1,7 +1,7 @@
 import re
 from typing import Optional, Dict, List, Tuple, Set
 
-from assembly.directive import AssemblerDirective
+from assembly.directive import Directive
 from assembly.file_line import File, Line, SymbolTable
 from utils.data_type import DataType, Register
 from utils.errors import Error
@@ -30,18 +30,16 @@ class DataMacro:
         # Remove suffix like &CG1 from label and only keep the accepted commands.
         lines = [line.remove_suffix() for line in lines if line.command in self.ACCEPTED_COMMANDS]
         # Create SymbolTable for each label and add it to dummy macro data_map.
-        second_list = list()
+        second_list: List[Tuple[Line, int]] = list()
         macro = SegmentMacro(name=self.name)
         for line in lines:
-            result = AssemblerDirective.from_line(line, macro, self.name)
+            result = Directive.from_line(line, macro, self.name)
             if result != Error.NO_ERROR:
                 second_list.append((line, macro.location_counter))
         # Add the saved equates which were not added in the first pass
-        assembler_directive = AssemblerDirective('EQU')
-        assembler_directive.second_pass(second_list, macro, self.name, self.errors)
+        Directive.second_pass('EQU', second_list, macro, self.name, self.errors)
         # Add the saved DS which were not added in the first pass
-        assembler_directive = AssemblerDirective('DS')
-        assembler_directive.second_pass(second_list, macro, self.name, self.errors)
+        Directive.second_pass('DS', second_list, macro, self.name, self.errors)
         # Move the data_map into global_map
         self.symbol_table = macro.data_map
         # Indicate data is mapped for that macro

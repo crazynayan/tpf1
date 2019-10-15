@@ -1,10 +1,10 @@
 import unittest
 
-from test.test_ts08_assembly import AssemblyTest
-from assembly.directive import AssemblerDirective
+from assembly.directive import Directive
 from assembly.file_line import Line, File
 from assembly.instruction import Instruction
 from assembly.program import program
+from test.test_ts08_assembly import AssemblyTest
 from utils.data_type import DataType
 
 
@@ -32,7 +32,7 @@ class SegmentTest(AssemblyTest):
         unknown = [line.command for line in lines
                    if line.command not in Instruction.INS
                    and line.command not in program.macros
-                   and line.command not in AssemblerDirective.AD]
+                   and line.command not in Directive.AD]
         self.assertListEqual(list(), unknown)
 
 

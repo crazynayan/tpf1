@@ -398,7 +398,7 @@
         "first_pass": 1
     },
     "DSECT": {
-        "create": "Dsect",
+        "create": "dsect",
         "directive": 1,
         "first_pass": 1
     },
@@ -411,6 +411,11 @@
         "create": "FieldLenField",
         "len": 6,
         "set_cc": 1
+    },
+    "END": {
+        "create": "no_operation",
+        "directive": 1,
+        "first_pass": 1
     },
     "ENTDC": {
         "create": "SegmentCall",
@@ -437,6 +442,11 @@
     "EXITC": {
         "create": "Exit",
         "no_fall_down": 1
+    },
+    "FINIS": {
+        "create": "no_operation",
+        "directive": 1,
+        "first_pass": 1
     },
     "GETCC": {
         "create": "KeyValue",
@@ -602,6 +612,11 @@
         "create": "RegisterRegister",
         "len": 2
     },
+    "LTORG": {
+        "create": "no_operation",
+        "directive": 1,
+        "first_pass": 1
+    },
     "LTR": {
         "create": "RegisterRegister",
         "len": 2,
@@ -710,7 +725,7 @@
         "set_cc": 1
     },
     "ORG": {
-        "create": "Org",
+        "create": "org",
         "directive": 1,
         "first_pass": 1
     },
@@ -727,7 +742,7 @@
         "len": 4
     },
     "PGMID": {
-        "create": "Pgmid",
+        "create": "pgmid",
         "directive": 1,
         "first_pass": 1
     },
@@ -740,7 +755,7 @@
         "len": 4
     },
     "POP": {
-        "create": "Pop",
+        "create": "pop",
         "directive": 1
     },
     "PUSH": {
@@ -889,7 +904,7 @@
         "len": 6
     },
     "USING": {
-        "create": "Using",
+        "create": "using",
         "directive": 1
     },
     "X": {

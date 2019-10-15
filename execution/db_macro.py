@@ -52,6 +52,11 @@ class UserDefinedDbMacro(State):
             # TODO Code for INDEX= Not in ETA5
             raise TypeError
 
+        # ERROR=
+        error_label = node.get_value('ERROR')
+        if error_label and self.is_error(node.label):
+            return error_label
+
         # ACTION=VERIFY
         if node.get_value('ACTION') == 'VERIFY':
             data, _ = Pnr.get_pnr_data(self._get_pnr_locator(), key, item_number=1)
@@ -139,14 +144,16 @@ class TpfdfMacro(State):
 
     def dbifb(self, node: KeyValue) -> str:
         self._base_sw00sr()
+        error_label = node.get_value('ERRORA')
         if node.get_value('FILE') == 'PR001W':
+            if error_label and self.is_error(node.label):
+                self.regs.R3 = 0
+                return error_label
             return node.fall_down
         if node.get_value('REF') not in self.tpfdf_ref:
             self.regs.R3 = 0
-            if node.is_key('ERROR'):
-                return node.get_value('ERROR')
-            if node.is_key('ERRORA'):
-                return node.get_value('ERRORA')
+            if error_label:
+                return error_label
         return node.fall_down
 
     def dbred(self, node: KeyValue) -> str:
@@ -185,7 +192,7 @@ class TpfdfMacro(State):
         self.tpfdf_ref[ref_name] = item_number
 
         # Update error_code and REG=
-        if lrec is None:
+        if lrec is None or self.is_error(node.label):
             error_code = self.seg.macro.data_map['#TPFDBER'].dsp
         else:
             error_code = self.seg.macro.data_map['#TPFDBOK'].dsp
@@ -195,6 +202,12 @@ class TpfdfMacro(State):
             if reg.is_valid():
                 self.regs.set_value(data_address, reg)
         self.vm.set_byte(error_code, self.regs.R3 + self.seg.macro.data_map['SW00RTN'].dsp)
+
+        # ERROR=
+        error_label = node.get_value('ERRORA')
+        if error_label and self.is_error(node.label):
+            return error_label
+
         return node.fall_down
 
 

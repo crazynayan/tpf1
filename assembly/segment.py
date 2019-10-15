@@ -2,7 +2,7 @@ import re
 from copy import copy
 from typing import Optional, List, Dict
 
-from assembly.directive import AssemblerDirective
+from assembly.directive import Directive
 from assembly.file_line import File, Line, SymbolTable, Label, LabelSave
 from assembly.instruction import Instruction
 from assembly.instruction_type import DataMacroDeclaration, InstructionType
@@ -102,12 +102,12 @@ class Segment:
         return
 
     def _build_symbol_table(self, lines: List[Line]) -> None:
-        AssemblerDirective.from_line(self.root_line, self.macro, self.name)
+        Directive.from_line(self.root_line, self.macro, self.name)
         for line in lines:
             length = line.length if line.length else 1
             if line.is_first_pass:
                 name = self.name if self.macro.dsect is None else self.macro.dsect[1]
-                result = AssemblerDirective.from_line(line, self.macro, name)
+                result = Directive.from_line(line, self.macro, name)
                 if result != Error.NO_ERROR:
                     self.errors.append(f'{result} {line} {self.name}')
             else:
@@ -168,7 +168,7 @@ class Segment:
         if not line.is_assembler_directive:
             return False
         # Second pass assembler directive like USING, PUSH, POP
-        result = AssemblerDirective.from_line(line, self.macro, self.name)
+        result = Directive.from_line(line, self.macro, self.name)
         if result != Error.NO_ERROR:
             self.errors.append(f'{result} {line} {self.name}')
         return True

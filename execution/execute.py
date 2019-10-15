@@ -119,7 +119,10 @@ class Execute(Instruction, ExecutableMacro, DbMacro):
             'CFCMA': self.heapa,
             'HEAPA': self.heapa,
             'PNRCC': self.pnrcc,
+
+            # User Defined Executable Macros created for this tool
             'PARS_DATE': self.pars_date,
+            'ERROR_CHECK': self.error_check,
 
             # Realtime Db Macros - Not in ETA5
             # FINWC, FIWHC, FINDC, FINHC

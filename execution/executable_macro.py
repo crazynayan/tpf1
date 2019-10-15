@@ -92,7 +92,8 @@ class UserDefinedMacro(State):
         return node.fall_down
 
     def heapa(self, node: KeyValue) -> str:
-        command = node.keys[0]
+        # REG, REF and SREF
+        reg = Register(node.get_value('REG'))
         ref = node.get_value('REF')
         if ref is None:
             sref = node.get_value('SREF')
@@ -100,22 +101,27 @@ class UserDefinedMacro(State):
                 raise TypeError
             ref_bytes = self.seg.get_constant_bytes(sref, 8)
             ref = DataType('X', bytes=ref_bytes).decode
+
+        # ERROR= for forced errors
+        error_label = node.get_value('ERROR')
+        if error_label and self.is_error(node.label):
+            if reg.is_valid():
+                self.regs.set_value(0, reg)
+            return error_label
+
+        # HEAPA / CFCMA command types
+        command = node.keys[0]
         if command == 'ALLOCATE':
             address = self.vm.allocate()
             self.heap[ref] = address
-            reg = Register(node.get_value('REG'))
             if reg.is_valid():
                 self.regs.set_value(address, reg)
         elif command == 'LOADADD':
             address = self.heap[ref] if ref in self.heap else 0
-            reg = Register(node.get_value('REG'))
             if reg.is_valid():
                 self.regs.set_value(address, reg)
-            if address == 0:
-                if node.is_key('ERROR'):
-                    return node.get_value('ERROR')
-                elif node.is_key('NOTFOUND'):
-                    return node.get_value('NOTFOUND')
+            if address == 0 and error_label:
+                return error_label
         elif command == 'FREE':
             pass
         else:
@@ -129,6 +135,10 @@ class UserDefinedMacro(State):
             raise TypeError
         pnrcm_base = self.regs.get_value(reg)
         self.seg.macro.load('PNRCM')
+        if self.is_error(node.label):
+            error_code = self.seg.macro.data_map['#PM1ER5'].dsp
+            self.vm.set_value(error_code, pnrcm_base + self.seg.macro.data_map['PM1ERR'].dsp, 1)
+            return node.fall_down
         if action in ['CRLON']:
             pnr_locator_bytes = self.vm.get_bytes(pnrcm_base + self.seg.macro.data_map['PM1LOC'].dsp, 6)
             pnr_locator = DataType('X', bytes=pnr_locator_bytes).decode
@@ -172,6 +182,15 @@ class UserDefinedMacro(State):
                 self.regs.R6 = 0
         else:
             self.regs.R6 = 0
+        return node.fall_down
+
+    def error_check(self, node: KeyValue) -> str:
+        if self.is_error(node.label):
+            field_name = node.get_value('FIELD')
+            reg = Register(node.get_value('BASE'))
+            address = self.regs.get_unsigned_value(reg) + self.seg.macro.data_map[field_name].dsp
+            byte_array = DataType('X', input=node.get_value('XVALUE')).to_bytes()
+            self.vm.set_bytes(byte_array, address, len(byte_array))
         return node.fall_down
 
 

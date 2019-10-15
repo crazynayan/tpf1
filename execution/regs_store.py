@@ -86,9 +86,11 @@ class Storage:
     def __init__(self):
         self.frames: Dict[str, bytearray] = dict()                 # Frames init with ZERO
         self._frame: Dict[str, bytearray] = dict()                 # Frames init with ONES
-        self.nab: int = config.F4K << config.NIBBLE                  # To ensure total 16 fixed frames
+        self.nab: int = config.F4K << config.NIBBLE  # To ensure total 16 fixed frames
         self.allocate_fixed(config.ECB)
         self.allocate_fixed(config.GLOBAL)
+        self.allocate_fixed(config.AAA)
+        self.allocate_fixed(config.IMG)
         self._setup_global()
 
     def __repr__(self) -> str:

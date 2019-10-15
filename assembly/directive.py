@@ -1,6 +1,7 @@
 import re
+from typing import Dict, List, Tuple
 
-from assembly.file_line import SymbolTable, Label
+from assembly.file_line import SymbolTable, Label, Line
 from config import config
 from utils.data_type import DataType, Register
 from utils.errors import Error
@@ -73,9 +74,9 @@ class DsDc:
         return dsdc, Error.NO_ERROR
 
 
-class Ds:
+class DirectiveImplementation:
     @staticmethod
-    def update(line, macro, name):
+    def ds(line, macro, name):
         data = macro.global_program.segments[macro.seg_name].data if macro.global_program else None
         operands = line.split_operands()
         dc, result = DsDc.from_operand(operands[0], macro)
@@ -96,10 +97,8 @@ class Ds:
         macro.max_counter = macro.location_counter if macro.location_counter > macro.max_counter else macro.max_counter
         return Error.NO_ERROR
 
-
-class Dc:
     @staticmethod
-    def update(line, macro, name):
+    def dc(line, macro, name):
         data = macro.global_program.segments[macro.seg_name].data if macro.global_program else None
         operands = line.split_operands()
         dc, result = DsDc.from_operand(operands[0], macro)
@@ -121,10 +120,8 @@ class Dc:
         macro.max_counter = macro.location_counter if macro.location_counter > macro.max_counter else macro.max_counter
         return Error.NO_ERROR
 
-
-class Equ:
     @staticmethod
-    def update(line, macro, name):
+    def equ(line, macro, name):
         if line.label is None:
             return Error.EQU_LABEL_REQUIRED
         operands = line.split_operands()
@@ -158,10 +155,8 @@ class Equ:
             macro.data_map[line.label].set_branch()
         return Error.NO_ERROR
 
-
-class Dsect:
     @staticmethod
-    def update(line, macro, **_):
+    def dsect(line, macro, **_):
         name = line.label
         seg_location_counter, _ = macro.dsect if macro.dsect is not None else (macro.location_counter, None)
         macro.dsect = seg_location_counter, name
@@ -170,10 +165,8 @@ class Dsect:
         macro.data_map[name] = SymbolTable(name, 0, 0, name)
         return Error.NO_ERROR
 
-
-class Csect:
     @staticmethod
-    def update(line, macro, **_):
+    def csect(line, macro, **_):
         dsect_location_counter, name = macro.dsect
         macro.dsect = None
         macro.location_counter = dsect_location_counter
@@ -181,10 +174,8 @@ class Csect:
         macro.data_map[line.label] = SymbolTable(line.label, macro.location_counter, 0, name)
         return Error.NO_ERROR
 
-
-class Org:
     @staticmethod
-    def update(line, macro, **_):
+    def org(line, macro, **_):
         if line.operand is None:
             macro.location_counter = macro.max_counter
             return Error.NO_ERROR
@@ -192,31 +183,23 @@ class Org:
             macro.location_counter, result = macro.get_value(line.operand)
             return result
 
-
-class Pgmid:
     @staticmethod
-    def update(macro, **_):
+    def pgmid(macro, **_):
         macro.location_counter = 8
         return Error.NO_ERROR
 
-
-class Push:
     @staticmethod
-    def update(macro, **_):
+    def push(macro, **_):
         macro.using_stack.append(macro.using.copy())
         return Error.NO_ERROR
 
-
-class Pop:
     @staticmethod
-    def update(macro, **_):
+    def pop(macro, **_):
         macro.using = macro.using_stack.pop()
         return Error.NO_ERROR
 
-
-class Using:
     @staticmethod
-    def update(line, macro, name):
+    def using(line, macro, name):
         operands = line.split_operands()
         if len(operands) == 2 and Register(operands[1]).is_valid():
             dsect = name if operands[0] == '*' else operands[0]
@@ -224,6 +207,10 @@ class Using:
             return Error.NO_ERROR
         else:
             raise TypeError
+
+    @staticmethod
+    def no_operation(**_):
+        return Error.NO_ERROR
 
 
 class Literal:
@@ -242,28 +229,33 @@ class Literal:
         return label
 
 
-class AssemblerDirective:
-    AD = {'DS': Ds, 'DC': Dc, 'EQU': Equ, 'DSECT': Dsect, 'CSECT': Csect, 'ORG': Org, 'PGMID': Pgmid,
-          'PUSH': Push, 'POP': Pop, 'USING': Using}
+class Directive:
+    AD: Dict[str, callable] = {
+        'DS': DirectiveImplementation.ds,
+        'DC': DirectiveImplementation.dc,
+        'EQU': DirectiveImplementation.equ,
+        'DSECT': DirectiveImplementation.dsect,
+        'CSECT': DirectiveImplementation.csect,
+        'ORG': DirectiveImplementation.org,
+        'PGMID': DirectiveImplementation.pgmid,
+        'PUSH': DirectiveImplementation.push,
+        'POP': DirectiveImplementation.pop,
+        'USING': DirectiveImplementation.using,
+        'LTORG': DirectiveImplementation.no_operation,
+        'FINIS': DirectiveImplementation.no_operation,
+        'END': DirectiveImplementation.no_operation,
+    }
 
-    def __init__(self, ad_type):
-        if ad_type not in self.AD:
-            raise KeyError
-        self.ad_type = ad_type
-
-    def update(self, line, macro, name):
-        return self.AD[self.ad_type].update(line=line, macro=macro, name=name)
-
-    def second_pass(self, ad_list, macro, name, errors):
+    @classmethod
+    def second_pass(cls, directive_type: str, ad_list: List[Tuple[Line, int]], macro, name: str, errors: list):
         for line, location_counter in ad_list:
-            if line.command != self.ad_type:
+            if line.command != directive_type:
                 continue
             macro.location_counter = location_counter
-            result = self.AD[self.ad_type].update(line=line, macro=macro, name=name)
+            result = cls.AD[line.command](line=line, macro=macro, name=name)
             if result != Error.NO_ERROR:
                 errors.append(f'{result} {line} {name}')
 
     @classmethod
     def from_line(cls, line, macro, name):
-        assembler_directive_object = cls(line.command)
-        return assembler_directive_object.update(line, macro, name)
+        return cls.AD[line.command](line=line, macro=macro, name=name)

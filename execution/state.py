@@ -1,4 +1,4 @@
-from typing import Callable, Optional, Tuple, Dict, List
+from typing import Callable, Optional, Tuple, Dict, List, Set
 
 from assembly.instruction_type import InstructionGeneric, InstructionType
 from assembly.program import program
@@ -11,7 +11,6 @@ from utils.data_type import DataType
 
 class State:
     DEBUG: Debug = Debug()
-    PARTITION: Dict[str, int] = {'AA': 0x00, 'BA': 0xE0}
 
     def __init__(self):
         self.seg: Optional[Segment] = None
@@ -26,7 +25,7 @@ class State:
         self.call_stack: List[Tuple[str, str]] = list()
         self.loaded_seg: Dict[str, Tuple[Segment, int]] = dict()
         self.tpfdf_ref: Dict[str, int] = dict()
-        self.setup: Dict[str, Dict[str, bytearray]] = {'EB0EB': dict(), 'GLOBAL': dict(), 'WA0AA': dict()}
+        self.setup: Setup = Setup()
 
     def __repr__(self) -> str:
         return f"State:{self.seg}:{self.regs}:{self.vm}"
@@ -61,13 +60,9 @@ class State:
         dsp = program.macros['EB0EB'].symbol_table[level].dsp
         return config.ECB + dsp
 
-    def _setup(self, aaa_address: int) -> None:
-        address_map: Dict[str, int] = {'EB0EB': config.ECB, 'GLOBAL': config.GLOBAL, 'WA0AA': aaa_address}
-        for macro_name, update_items in self.setup.items():
-            base = address_map[macro_name]
-            for field_name, byte_array in update_items.items():
-                dsp = program.macros[macro_name].symbol_table[field_name].dsp
-                self.vm.set_bytes(byte_array, base + dsp, len(byte_array))
+    def _setup(self) -> None:
+        for byte_array, address in self.setup.yield_data():
+            self.vm.set_bytes(byte_array, address, len(byte_array))
 
     def init_run(self) -> None:
         self.__init__()
@@ -80,11 +75,9 @@ class State:
         seg_name = self.seg.name if seg_name is None else seg_name
         self.init_seg(seg_name)
         self.regs.R9 = config.ECB
-        aaa_address = self.vm.allocate()
         if aaa:
-            # Save AAA address in CE1CR1
-            self.vm.set_value(aaa_address, config.ECB + 0x170)
-        self._setup(aaa_address)
+            self.vm.set_value(config.AAA, config.ECB + 0x170)  # Save AAA address in CE1CR1
+        self._setup()
         label = self.seg.root_label
         while True:
             node = self.seg.nodes[label]
@@ -131,4 +124,26 @@ class State:
         haalc = config.GLOBAL + program.macros['GLOBAL'].symbol_table['@HAALC'].dsp
         ce1uid = config.ECB + program.macros['EB0EB'].symbol_table['CE1$UID'].dsp
         self.vm.set_bytes(DataType('C', input=partition).to_bytes(), haalc, 2)
-        self.vm.set_value(self.PARTITION[partition], ce1uid, 1)
+        self.vm.set_value(config.PARTITION[partition], ce1uid, 1)
+
+    def is_error(self, label: str) -> bool:
+        return label in self.setup.errors
+
+
+class Setup:
+    def __init__(self):
+        self.ecb: Dict[str, bytearray] = dict()
+        self.img: Dict[str, bytearray] = dict()
+        self.aaa: Dict[str, bytearray] = dict()
+        self.errors: Set[str] = set()
+
+    def yield_data(self) -> Tuple[bytearray, int]:
+        for label, byte_array in self.ecb.items():
+            dsp = program.macros['EB0EB'].symbol_table[label].dsp
+            yield byte_array, config.ECB + dsp
+        for label, byte_array in self.img.items():
+            dsp = program.macros['MI0MI'].symbol_table[label].dsp
+            yield byte_array, config.IMG + dsp
+        for label, byte_array in self.aaa.items():
+            dsp = program.macros['WA0AA'].symbol_table[label].dsp
+            yield byte_array, config.AAA + dsp
