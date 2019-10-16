@@ -1,7 +1,7 @@
 import re
 from typing import Dict, List, Tuple
 
-from assembly.file_line import SymbolTable, Label, Line
+from assembly.file_line import LabelReference, Label, Line
 from config import config
 from utils.data_type import DataType, Register
 from utils.errors import Error
@@ -84,7 +84,7 @@ class DirectiveImplementation:
             return result
         if line.label:
             dsp = data.next_constant if data and dc.duplication_factor == 0 and name == macro.seg_name else dc.start
-            macro.data_map[line.label] = SymbolTable(line.label, dsp, dc.length, name)
+            macro.data_map[line.label] = LabelReference(line.label, dsp, dc.length, name)
             if dc.duplication_factor == 0 and name == macro.seg_name:
                 macro.data_map[line.label].set_branch()
         macro.location_counter = dc.end
@@ -108,7 +108,7 @@ class DirectiveImplementation:
             return result
         data.extend_constant([0x00] * dc.align_to_boundary)
         if line.label:
-            macro.data_map[line.label] = SymbolTable(line.label, data.next_constant, dc.length, name)
+            macro.data_map[line.label] = LabelReference(line.label, data.next_constant, dc.length, name)
         macro.location_counter = dc.end
         data.extend_constant(dc.data * dc.duplication_factor)
         if len(operands) > 1:
@@ -152,7 +152,7 @@ class DirectiveImplementation:
             length, result = macro.get_value(operands[1])
             if result != Error.NO_ERROR:
                 return result
-        macro.data_map[line.label] = SymbolTable(line.label, dsp, length, name)
+        macro.data_map[line.label] = LabelReference(line.label, dsp, length, name)
         if macro.location_counter == dsp and name == macro.seg_name:
             macro.data_map[line.label].set_branch()
         return Error.NO_ERROR
@@ -164,7 +164,7 @@ class DirectiveImplementation:
         macro.dsect = seg_location_counter, name
         macro.location_counter = 0
         macro.max_counter = 0
-        macro.data_map[name] = SymbolTable(name, 0, 0, name)
+        macro.data_map[name] = LabelReference(name, 0, 0, name)
         return Error.NO_ERROR
 
     @staticmethod
@@ -173,7 +173,7 @@ class DirectiveImplementation:
         macro.dsect = None
         macro.location_counter = dsect_location_counter
         macro.max_counter = dsect_location_counter
-        macro.data_map[line.label] = SymbolTable(line.label, macro.location_counter, 0, name)
+        macro.data_map[line.label] = LabelReference(line.label, macro.location_counter, 0, name)
         return Error.NO_ERROR
 
     @staticmethod
@@ -229,7 +229,7 @@ class Literal:
         dsp = data.next_literal + config.F4K
         data.extend_literal(literal.data * literal.duplication_factor)
         label = f"L{Label.SEPARATOR * 2}{dsp:05X}"
-        macro.data_map[label] = SymbolTable(label, dsp, literal.length, macro.seg_name)
+        macro.data_map[label] = LabelReference(label, dsp, literal.length, macro.seg_name)
         return label
 
 

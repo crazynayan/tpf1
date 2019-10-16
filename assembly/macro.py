@@ -2,19 +2,19 @@ import re
 from typing import Optional, Dict, List, Tuple, Set
 
 from assembly.directive import Directive
-from assembly.file_line import File, Line, SymbolTable
+from assembly.file_line import File, Line, LabelReference
 from utils.data_type import DataType, Register
 from utils.errors import Error
 
 
 class DataMacro:
-    ACCEPTED_COMMANDS = {'DS', 'EQU', 'ORG', 'DSECT', 'DC'}
+    ACCEPTED_COMMANDS = {'DS', 'EQU', 'ORG', 'DSECT'}
 
-    def __init__(self, name: str, file_name: Optional[str] = None):
+    def __init__(self, name: str, file_name: str):
         self.name: str = name
-        self.file_name: Optional[str] = file_name
+        self.file_name: str = file_name
         self.loaded: bool = False
-        self.symbol_table: Dict[str, SymbolTable] = dict()
+        self.symbol_table: Dict[str, LabelReference] = dict()
         self.errors: List[str] = list()
 
     def __repr__(self) -> str:
@@ -29,7 +29,7 @@ class DataMacro:
         lines = Line.from_file(file_lines)
         # Remove suffix like &CG1 from label and only keep the accepted commands.
         lines = [line.remove_suffix() for line in lines if line.command in self.ACCEPTED_COMMANDS]
-        # Create SymbolTable for each label and add it to dummy macro data_map.
+        # Create LabelReference for each label and add it to dummy macro data_map.
         second_list: List[Tuple[Line, int]] = list()
         macro = SegmentMacro(name=self.name)
         for line in lines:
@@ -54,7 +54,7 @@ class SegmentMacro:
     def __init__(self, program=None, name: Optional[str] = None):
         self.seg_name:  Optional[str] = name                    # Segment name for which this instance is created.
         self.global_program = program                           # Reference to the program instance.
-        self.data_map: Dict[str, SymbolTable] = dict()          # Dictionary of SymbolTable. Field name is the key.
+        self.data_map: Dict[str, LabelReference] = dict()  # Dictionary of LabelReference. Field name is the key.
         self.dsect: Optional[Tuple[int, str]] = None            # Tuple of location counter and name of DSECT
         self.using: Dict[str, Register] = dict()                # Key is macro name and Value is Reg
         self.using_stack: List[Dict[str, Register]] = list()    # A stack of using dicts
@@ -85,7 +85,7 @@ class SegmentMacro:
         if suffix is not None:
             original_name = macro_name
             macro_name = macro_name + suffix
-            new_symbol_table = {label + suffix: SymbolTable(label + suffix, entry.dsp, entry.length, macro_name)
+            new_symbol_table = {label + suffix: LabelReference(label + suffix, entry.dsp, entry.length, macro_name)
                                 for label, entry in self.global_program.macros[original_name].symbol_table.items()}
             self.data_map = {**self.data_map, **new_symbol_table}
         elif macro_name not in self.data_macro:
@@ -127,12 +127,12 @@ class SegmentMacro:
                 eval_list.append(str(value))
         return eval(''.join(eval_list)), Error.NO_ERROR
 
-    def lookup(self, field: str) -> Tuple[SymbolTable, str]:
+    def lookup(self, field: str) -> Tuple[LabelReference, str]:
         field = next(iter(field.split('&')))
         try:
             return self.data_map[field], Error.NO_ERROR
         except KeyError:
-            return SymbolTable(), Error.EXP_INVALID_KEY
+            return LabelReference(), Error.EXP_INVALID_KEY
 
     def evaluate(self, expression):
         if expression.isdigit():

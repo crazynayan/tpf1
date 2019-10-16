@@ -17,7 +17,7 @@ class DataMacro {
     errors
 }
 
-class SymbolTable {
+class LabelReference {
     primary_key(label)
     dsp
     length
@@ -70,10 +70,10 @@ class Instruction {
 }
 Program::macros --> "Many" DataMacro : contains
 Program::segments --> "Many" Segment : contains
-DataMacro::symbol_table --> "Many" SymbolTable : contains
+DataMacro::symbol_table --> "Many" LabelReference : contains
 Segment::macro  -->  SegmentMacro : has
 SegmentMacro::global_program --> Program : refers to
-SegmentMacro::data_map  --> "Many" SymbolTable : contains
+SegmentMacro::data_map  --> "Many" LabelReference : contains
 Segment::data --> Data : has
 Segment::nodes --> "Many" Instruction : contains
 

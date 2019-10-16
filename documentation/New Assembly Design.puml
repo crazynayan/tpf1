@@ -1,0 +1,79 @@
+@startuml
+
+class LabelReference {
+    +label: str
+    +dsp: int
+    +length: int
+    +name: str
+    -branch: int ~ 0, 1, 2
+    +is_branch: property -> bool
+    +is_instruction_branch: property -> bool
+    +is_literal: property -> bool
+    +set_branch()
+    +set_is_instruction_branch()
+}
+
+class Dsdc {
+    +duplication_factor: int
+    +length: int
+    +data_type: str
+    +data: bytearray
+    +start: int
+}
+
+abstract class MacroGeneric {
+    +name: str
+    -symbol_table: Dict[label, LabelReference]
+    -directives: Dict[command, callable]
+    -location_counter: int
+    -max_location_counter: int
+    +lookup(label: str) -> LabelReference
+    +evaluate(expression: str) -> int
+    +get_value(expression: str) -> int
+    -dsdc(operand: str) -> Dsdc
+}
+note left
+# lookup() is for a single label
+# evaluate() is for
+## digits
+## dsp of label
+## length of label(L'XY)
+# get_value() is for
+## all that evaluate() returns
+## arithmetic(+-*)
+## DataTypes(X'AB')
+end note
+
+MacroGeneric::symbol_table *- LabelReference
+MacroGeneric::dsdc *-- Dsdc
+
+abstract class DataMacroImplementation {
+    +ds(line: Line)
+    +equ(line: Line)
+    +org(line: Line)
+    +dsect(line: Line)
+}
+DataMacroImplementation --|>  MacroGeneric
+
+class DataMacro {
+    +file_name:str
+    +default_macros: Dict[label, LabelReference]
+    -second_pass(command: str, second_list: list)
+    +load()
+}
+DataMacro --|>  DataMacroImplementation
+
+class SegmentMacro {
+    +seg_name: str
+    +is_branch(label: str) -> bool
+    +is_instruction_branch(label: str) -> bool
+}
+
+SegmentMacro --|> MacroGeneric
+
+class Assembly <<Singleton>> {
+    +macros: Dict[name, DataMacro]
+}
+
+Assembly::DataMacro *- DataMacro
+@enduml

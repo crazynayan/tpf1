@@ -25,3 +25,19 @@ class Error:
     FLFD_INVALID_DATA = 'FieldLenFieldData - Invalid data.'
     RL_INVALID_LEN = 'RegisterLabel - Invalid length of previous instruction.'
     RL_INVALID_LABEL = 'RegisterLabel - Invalid label.'
+
+
+class TpfAnalyzerError(KeyError):
+    pass
+
+
+class NotFoundInSymbolTableError(TpfAnalyzerError):
+    pass
+
+
+class EquLabelRequiredError(TpfAnalyzerError):
+    pass
+
+
+class EquDataTypeHasAmpersandError(TpfAnalyzerError):
+    pass

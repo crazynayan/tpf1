@@ -1,6 +1,6 @@
 from typing import Optional
 
-from assembly.file_line import SymbolTable
+from assembly.file_line import LabelReference
 from assembly.instruction_type import KeyValue
 from db.pnr import Pnr, PnrLocator
 from db.tpfdf import Tpfdf
@@ -69,8 +69,8 @@ class UserDefinedDbMacro(State):
                 return node.fall_down
 
         # Get the item number to read (Item numbers start from 1)
-        pd0_ctl_key: SymbolTable = self.seg.macro.data_map['PD0_CTL_KEY']
-        pd0_mc_cin: SymbolTable = self.seg.macro.data_map['PD0_MC_CIN']
+        pd0_ctl_key: LabelReference = self.seg.macro.data_map['PD0_CTL_KEY']
+        pd0_mc_cin: LabelReference = self.seg.macro.data_map['PD0_MC_CIN']
         last_key = self.vm.get_unsigned_value(pd0_base + pd0_ctl_key.dsp, pd0_ctl_key.length)
         item_number = self.vm.get_value(pd0_base + pd0_mc_cin.dsp, pd0_mc_cin.length) + 1 \
             if last_key == key_number else 1
@@ -101,13 +101,13 @@ class UserDefinedDbMacro(State):
             return not_found
         elif item_number == Pnr.get_len(pnr_locator, key):
             last_item_bit: int = self.seg.macro.data_map['#PD0_RT_LST'].dsp
-            pd0_rt_id1: SymbolTable = self.seg.macro.data_map['PD0_RT_ID1']
+            pd0_rt_id1: LabelReference = self.seg.macro.data_map['PD0_RT_ID1']
             self.vm.or_bit(pd0_base + pd0_rt_id1.dsp, last_item_bit)
 
         # Update the data in PD0WRK
-        pd0_itm: SymbolTable = self.seg.macro.data_map['PD0_P_DATA'] if packed else \
+        pd0_itm: LabelReference = self.seg.macro.data_map['PD0_P_DATA'] if packed else \
             self.seg.macro.data_map['PD0_C_ITM']
-        pd0_rt_adr: SymbolTable = self.seg.macro.data_map['PD0_RT_ADR']
+        pd0_rt_adr: LabelReference = self.seg.macro.data_map['PD0_RT_ADR']
         if len(data) > pd0_itm.length:
             raise ValueError
         self.vm.set_bytes(data, pd0_base + pd0_itm.dsp, len(data))

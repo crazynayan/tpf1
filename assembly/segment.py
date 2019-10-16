@@ -3,7 +3,7 @@ from copy import copy
 from typing import Optional, List, Dict
 
 from assembly.directive import Directive
-from assembly.file_line import File, Line, SymbolTable, Label, LabelSave
+from assembly.file_line import File, Line, LabelReference, Label, LabelSave
 from assembly.instruction import Instruction
 from assembly.instruction_type import DataMacroDeclaration, InstructionType
 from assembly.macro import SegmentMacro
@@ -112,8 +112,8 @@ class Segment:
                     self.errors.append(f'{result} {line} {self.name}')
             else:
                 if line.label:
-                    self.macro.data_map[line.label] = SymbolTable(line.label, self.macro.location_counter,
-                                                                  length, self.name)
+                    self.macro.data_map[line.label] = LabelReference(line.label, self.macro.location_counter,
+                                                                     length, self.name)
                     self.macro.data_map[line.label].set_instruction_branch()
                 self.macro.location_counter += line.length
 
