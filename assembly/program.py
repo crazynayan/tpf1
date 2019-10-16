@@ -30,6 +30,9 @@ class Program:
         self.macros['GLOBAL'].load()
         self.macros['WA0AA'].load()
         self.macros['MI0MI'].load()
+        self.macros['AASEQ'].load()
+        self.macros['SYSEQ'].load()
+        self.macros['SYSEQC'].load()
 
     def __repr__(self):
         return f"Program:S={len(self.segments)}:M={len(self.macros)}"

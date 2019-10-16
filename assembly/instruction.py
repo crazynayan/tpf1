@@ -182,6 +182,8 @@ class Instruction:
         'DBCLS': ins.KeyValue,
         'DBIFB': ins.KeyValue,
         'PDRED': ins.KeyValue,
+        'FINWC': ins.KeyValue,
+        'LOCAA': ins.KeyValue,
         'PARS_DATE': ins.KeyValue,
         'ERROR_CHECK': ins.KeyValue,
     }

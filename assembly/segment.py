@@ -102,12 +102,12 @@ class Segment:
         return
 
     def _build_symbol_table(self, lines: List[Line]) -> None:
-        Directive.from_line(self.root_line, self.macro, self.name)
+        Directive.update(self.root_line, self.macro, self.name)
         for line in lines:
             length = line.length if line.length else 1
             if line.is_first_pass:
                 name = self.name if self.macro.dsect is None else self.macro.dsect[1]
-                result = Directive.from_line(line, self.macro, name)
+                result = Directive.update(line, self.macro, name)
                 if result != Error.NO_ERROR:
                     self.errors.append(f'{result} {line} {self.name}')
             else:
@@ -168,7 +168,7 @@ class Segment:
         if not line.is_assembler_directive:
             return False
         # Second pass assembler directive like USING, PUSH, POP
-        result = Directive.from_line(line, self.macro, self.name)
+        result = Directive.update(line, self.macro, self.name)
         if result != Error.NO_ERROR:
             self.errors.append(f'{result} {line} {self.name}')
         return True

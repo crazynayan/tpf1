@@ -33,7 +33,7 @@ class DataMacro:
         second_list: List[Tuple[Line, int]] = list()
         macro = SegmentMacro(name=self.name)
         for line in lines:
-            result = Directive.from_line(line, macro, self.name)
+            result = Directive.update(line, macro, self.name)
             if result != Error.NO_ERROR:
                 second_list.append((line, macro.location_counter))
         # Add the saved equates which were not added in the first pass
@@ -49,7 +49,7 @@ class DataMacro:
 
 class SegmentMacro:
     FIELD_LOOKUP = '$FIELD_LOOKUP$'
-    DEFAULT_MACRO_LOAD = {'EB0EB', 'AASEQ'}
+    DEFAULT_MACRO_LOAD = {'EB0EB', 'AASEQ', 'SYSEQ', 'SYSEQC'}
 
     def __init__(self, program=None, name: Optional[str] = None):
         self.seg_name:  Optional[str] = name                    # Segment name for which this instance is created.
@@ -80,6 +80,8 @@ class SegmentMacro:
 
     def load(self, macro_name, base=None, suffix=None):
         self.global_program.macros[macro_name].load()
+        # if self.global_program.macros[macro_name].errors:
+        #     raise TypeError     # TODO Fix Design DataMacro.load() cannot use an instance of SegmentMacro.
         if suffix is not None:
             original_name = macro_name
             macro_name = macro_name + suffix

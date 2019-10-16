@@ -7,7 +7,7 @@ from utils.errors import Error
 
 
 class AssemblyTest(unittest.TestCase):
-    NUMBER_OF_FILES = 37
+    NUMBER_OF_FILES = 40
 
     def setUp(self) -> None:
         self.seg = None
@@ -34,7 +34,7 @@ class SegmentTest(AssemblyTest):
             f"{Error.FBD_NO_LEN} TS01E000.1:OI:23(2,R9),1 {seg_name}",
             f"{Error.FBD_INVALID_BASE} TS01E000.2:OI:EBW000(L'EBW001),1 {seg_name}",
             f"{Error.FBD_INVALID_KEY} TS01E000.3:OI:ERROR_FIELD,1 {seg_name}",
-            f"{Error.FBD_INVALID_KEY_BASE} TS01E000.4:OI:PD0_C_ITM,1 {seg_name}",
+            # f"{Error.FBD_INVALID_KEY_BASE} TS01E000.4:OI:PD0_C_ITM,1 {seg_name}",
             f"{Error.BITS_INVALID_NUMBER} TS01E000.6:OI:EBW000,250+250 {seg_name}",
             f"{Error.FBD_INVALID_DSP} TS01E000.8:OI:-1(R2),1 {seg_name}",
             f"{Error.FBD_INVALID_DSP} TS01E000.9:OI:4096(R2),1 {seg_name}",

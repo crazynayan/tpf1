@@ -100,6 +100,8 @@ class DirectiveImplementation:
     @staticmethod
     def dc(line, macro, name):
         data = macro.global_program.segments[macro.seg_name].data if macro.global_program else None
+        if data is None:
+            raise TypeError  # TODO Fix in redesign
         operands = line.split_operands()
         dc, result = DsDc.from_operand(operands[0], macro)
         if result != Error.NO_ERROR:
@@ -181,6 +183,8 @@ class DirectiveImplementation:
             return Error.NO_ERROR
         else:
             macro.location_counter, result = macro.get_value(line.operand)
+            if result != Error.NO_ERROR:
+                raise TypeError
             return result
 
     @staticmethod
@@ -257,5 +261,5 @@ class Directive:
                 errors.append(f'{result} {line} {name}')
 
     @classmethod
-    def from_line(cls, line, macro, name):
+    def update(cls, line, macro, name):
         return cls.AD[line.command](line=line, macro=macro, name=name)

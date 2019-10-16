@@ -104,7 +104,7 @@ class Execute(Instruction, ExecutableMacro, DbMacro):
             'MODEC': self.no_operation,
             'DETAC': self.detac,
             'ATTAC': self.attac,
-            'RELCC': self.no_operation,
+            'RELCC': self.relcc,
             'CRUSA': self.no_operation,
             'SENDA': self.senda,
             'SYSRA': self.sysra,

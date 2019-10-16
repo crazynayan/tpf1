@@ -43,7 +43,7 @@ class Field:
             try:
                 base = Register(macro.get_base(macro.data_map[name].name))
             except (KeyError, StopIteration):
-                return length, Error.FBD_INVALID_KEY_BASE
+                base = Register('R0')
         self.name = name
         self.dsp = dsp
         self.base = base

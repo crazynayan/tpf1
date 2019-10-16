@@ -11,9 +11,16 @@ from utils.data_type import DataType, Register
 class RealTimeMacro(State):
     def getcc(self, node: KeyValue) -> str:
         address = self.vm.allocate()
-        ecb_address = self.get_ecb_address(node.keys[0], 'CE1CR')
-        self.vm.set_value(address, ecb_address)
+        level_address = self.get_ecb_address(node.keys[0], 'CE1CR')
+        control_address = self.get_ecb_address(node.keys[0], 'CE1CT')
+        self.vm.set_value(address, level_address)
+        self.vm.set_value(1, control_address, 2)
         self.regs.R14 = address
+        return node.fall_down
+
+    def relcc(self, node: KeyValue) -> str:
+        control_address = self.get_ecb_address(node.keys[0], 'CE1CT')
+        self.vm.set_value(0, control_address, 2)
         return node.fall_down
 
     def detac(self, node: KeyValue) -> str:

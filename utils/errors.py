@@ -6,7 +6,6 @@ class Error:
     EXP_REGEX = 'Expression - Regex cannot parse the expression.'
     FBD_NO_LEN = 'FieldBaseDsp - Operand cannot have length or index.'
     FBD_INVALID_KEY = 'Field - Field not present in data map.'
-    FBD_INVALID_KEY_BASE = 'Field - Macro not present for identifying base register.'
     FBD_INVALID_BASE = 'Field - Invalid base register specified.'
     FBD_INVALID_DSP = 'Field - Invalid displacement specified.'
     FX_INVALID_INDEX = 'FieldIndex - Invalid index register specified.'
