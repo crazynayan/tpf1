@@ -269,8 +269,5 @@ class _Assembly:
         self.macros['WA0AA'].load()
         self.macros['MI0MI'].load()
 
-    def is_macro_present(self, macro_name):
-        return macro_name in self.macros
-
 
 assembly = _Assembly()

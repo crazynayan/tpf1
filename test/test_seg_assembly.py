@@ -9,11 +9,11 @@ from utils.test_data import T
 
 
 class SegmentTest(AssemblyTest):
+    def setUp(self) -> None:
+        self.seg_name = 'ETA5'
+
     def test_segment(self):
-        seg_name = 'ETAJ'
-        accepted_errors_list = [
-        ]
-        self._common_checks(seg_name, accepted_errors_list)
+        self._common_checks(self.seg_name)
         # CLI   FQTUSH1-FQTUAAC(R14),C'*' with BNE   ETA9027X
         # node = self.seg.nodes['ETA9027X.7']
         # self.assertEqual('CLI', node.command)
@@ -26,9 +26,8 @@ class SegmentTest(AssemblyTest):
         # self.assertEqual('BNE', node.on)
 
     def test_check_segment(self):
-        seg_name = 'ETA5'
         self.maxDiff = None
-        lines = Line.from_file(File.open(program.segments[seg_name].file_name))
+        lines = Line.from_file(File.open(program.segments[self.seg_name].file_name))
         instructions = [line.command for line in lines
                         if line.command not in [*list(Directive.AD), *list(program.macros), *['GLOBZ']]
                         and not line.is_check_cc]

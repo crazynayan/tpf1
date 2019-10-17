@@ -1,5 +1,5 @@
 import re
-from typing import Tuple, TypeVar, Optional, Union, List
+from typing import Tuple, TypeVar, Optional, Union, List, Set
 
 from assembly.directive import Literal
 from assembly.file_line import Label, Line
@@ -28,7 +28,7 @@ class InstructionGeneric:
         return self, Error.NO_ERROR
 
     @property
-    def next_labels(self) -> set:
+    def next_labels(self) -> Set[str]:
         labels = {condition.branch.name for condition in self.conditions if condition.is_check_cc and condition.branch}
         if self.fall_down:
             labels.add(self.fall_down)
@@ -50,8 +50,8 @@ class InstructionGeneric:
     def is_check_cc(self) -> bool:
         return True if self.get_attribute('check_cc') else False
 
-    def get_attribute(self, attribute: str) -> Optional[str]:
-        return cmd.check(self.command, attribute)
+    def get_attribute(self, cmd_attribute: str) -> Optional[str]:
+        return cmd.check(self.command, cmd_attribute)
 
 
 class FieldBits(InstructionGeneric):
@@ -496,7 +496,7 @@ class SegmentCall(BranchGeneric):
 class KeyValue(InstructionGeneric):
     def __init__(self):
         super().__init__()
-        self.operands: List[Tuple[str, Union[str, List, None]]] = list()
+        self.operands: List[Tuple[str, Union[Optional[str], List[Tuple[str, Optional[str]]]]]] = list()
         self.branches: List[str] = list()
 
     def __repr__(self) -> str:

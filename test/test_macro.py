@@ -7,11 +7,7 @@ class MacroTest(unittest.TestCase):
     NUMBER_OF_FILES = 21
 
     def test_files(self):
-        self.assertTrue(assembly.is_macro_present('WA0AA'))
-        self.assertTrue(assembly.is_macro_present('EB0EB'))
-        self.assertFalse(assembly.is_macro_present('ETA5'))
-        self.assertEqual(self.NUMBER_OF_FILES, len(assembly.macros),
-                         'Update number of files in MacroTest')
+        self.assertEqual(self.NUMBER_OF_FILES, len(assembly.macros), 'Update number of files in MacroTest')
 
     def _common_checks(self, macro_name, accepted_errors_list=None):
         self.macro: DataMacro = assembly.macros[macro_name]

@@ -192,14 +192,6 @@ class Bits:
     def bit_by_name(self, name: str) -> Bit:
         return next(bit for _, bit in self.__dict__.items() if bit.name == name)
 
-    def on_by_name(self, name: str) -> None:
-        bit = next(bit for _, bit in self.__dict__.items() if bit.name == name)
-        bit.on = True
-
-    def off_by_name(self, name: str) -> None:
-        bit = next(bit for _, bit in self.__dict__.items() if bit.name == name)
-        bit.on = False
-
     def on_by_value(self, value: int) -> None:
         bit = next(bit for _, bit in self.__dict__.items() if bit.value == value)
         bit.on = True
