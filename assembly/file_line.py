@@ -164,36 +164,6 @@ class Line:
         return f'{self.label}:{self.command}:{self.operand}'
 
 
-class LabelReference:
-    def __init__(self, label=None, dsp=None, length=None, name=None):
-        self.label: Optional[str] = label
-        self.dsp: Optional[int] = dsp
-        self.length: Optional[int] = length
-        self.name: Optional[int] = name        # Macro name or Segment name or Dsect name
-        self._branch: int = 0  # Code can branch to this label.
-
-    def __repr__(self):
-        return f'{self.label}:{self.dsp}:{self.length}:{self.name}'
-
-    @property
-    def is_branch(self) -> bool:
-        return self._branch > 0
-
-    @property
-    def is_instruction_branch(self) -> bool:
-        return self._branch == 2
-
-    @property
-    def is_literal(self) -> bool:
-        return self.dsp > 0xFFF
-
-    def set_branch(self) -> None:
-        self._branch = 1
-
-    def set_instruction_branch(self) -> None:
-        self._branch = 2
-
-
 class Label:
     SEPARATOR = '.'
 

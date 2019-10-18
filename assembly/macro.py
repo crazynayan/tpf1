@@ -2,7 +2,8 @@ import re
 from typing import Optional, Dict, List, Tuple, Set
 
 from assembly.directive import Directive
-from assembly.file_line import File, Line, LabelReference
+from assembly.file_line import File, Line
+from assembly2.mac0_generic import LabelReference
 from utils.data_type import DataType, Register
 from utils.errors import Error
 

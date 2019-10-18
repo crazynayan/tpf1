@@ -19,6 +19,7 @@ class _Config:
     AAAPNR = 'AAAAAA'
     START = datetime(1966, 1, 2)
     PARTITION: Dict[str, int] = {'AA': 0x00, 'BA': 0xE0}
+    DEFAULT_INSTRUCTION_LENGTH = 4
 
 
 config = _Config()

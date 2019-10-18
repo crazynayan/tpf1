@@ -14,7 +14,7 @@ class SegmentTest(AssemblyTest):
             f"{Error.REG_INVALID} TS09E100.1:BAS:R16,TS09S100 {seg_name}",
             f"{Error.REG_INVALID} TS09E100.2:BR:-1 {seg_name}",
         ]
-        self._common_checks(seg_name, accepted_errors_list)
+        self.old_common_checks(seg_name, accepted_errors_list)
         # BAS   R4,TS09S100
         node = self.seg.nodes['TS090010.1']
         self.assertEqual('R4', node.reg.reg)
@@ -83,7 +83,7 @@ class SegmentTest(AssemblyTest):
         accepted_errors_list = [
             f"{Error.SC_INVALID_SEGMENT} TS10E100.1:ENTRC:A000 {seg_name}",
         ]
-        self._common_checks(seg_name, accepted_errors_list)
+        self.old_common_checks(seg_name, accepted_errors_list)
         # ENTRC TS01
         node = self.seg.nodes['$$TS10$$.1']
         seg = program.segments[node.seg_name]
@@ -119,7 +119,7 @@ class SegmentTest(AssemblyTest):
         seg_name = 'TS11'
         accepted_errors_list = [
         ]
-        self._common_checks(seg_name, accepted_errors_list)
+        self.old_common_checks(seg_name, accepted_errors_list)
         # AAGET BASEREG=R1,GET=CORE,INIT=YES,FILE=NO
         node: KeyValue = self.seg.nodes['TS110010.1']
         self.assertEqual('AAGET', node.command)
@@ -239,7 +239,7 @@ class SegmentTest(AssemblyTest):
         seg_name = 'TS12'
         accepted_errors_list = [
         ]
-        self._common_checks(seg_name, accepted_errors_list)
+        self.old_common_checks(seg_name, accepted_errors_list)
         # LH    R1,FNAME(R2)
         node = self.seg.nodes['TS120100.1']
         self.assertEqual('LH', node.command)
@@ -697,7 +697,7 @@ class SegmentTest(AssemblyTest):
             f"{Error.RL_INVALID_LEN} TS13E000.2:EX:R15,*-1 {seg_name}",
             f"{Error.RL_INVALID_LABEL} TS13E000.3:EX:R15,TS13INVALID {seg_name}"
         ]
-        self._common_checks(seg_name, accepted_errors_list)
+        self.old_common_checks(seg_name, accepted_errors_list)
         # TM    EBW000,0
         node = self.seg.nodes['TS130010.1']
         self.assertEqual('TM', node.command)

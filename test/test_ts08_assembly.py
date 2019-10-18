@@ -9,10 +9,7 @@ from utils.errors import Error
 class AssemblyTest(unittest.TestCase):
     NUMBER_OF_FILES = 40
 
-    def setUp(self) -> None:
-        self.seg = None
-
-    def _common_checks(self, seg_name, accepted_errors_list=None):
+    def old_common_checks(self, seg_name, accepted_errors_list=None):
         accepted_errors_list = list() if accepted_errors_list is None else accepted_errors_list
         program.load(seg_name)
         self.seg = program.segments[seg_name]
@@ -28,79 +25,13 @@ class SegmentTest(AssemblyTest):
         self.assertFalse('EB0EB' in program.segments)
         self.assertEqual(self.NUMBER_OF_FILES, len(program.segments), 'Update number of files in SegmentTest')
 
-    def test_field_bits(self):
-        seg_name = 'TS01'
-        accepted_errors_list = [
-            f"{Error.FBD_NO_LEN} TS01E000.1:OI:23(2,R9),1 {seg_name}",
-            f"{Error.FBD_INVALID_BASE} TS01E000.2:OI:EBW000(L'EBW001),1 {seg_name}",
-            f"{Error.FBD_INVALID_KEY} TS01E000.3:OI:ERROR_FIELD,1 {seg_name}",
-            # f"{Error.FBD_INVALID_KEY_BASE} TS01E000.4:OI:PD0_C_ITM,1 {seg_name}",
-            f"{Error.BITS_INVALID_NUMBER} TS01E000.6:OI:EBW000,250+250 {seg_name}",
-            f"{Error.FBD_INVALID_DSP} TS01E000.8:OI:-1(R2),1 {seg_name}",
-            f"{Error.FBD_INVALID_DSP} TS01E000.9:OI:4096(R2),1 {seg_name}",
-        ]
-        self._common_checks(seg_name, accepted_errors_list)
-        # Check EBW008-EBW000(9),1
-        label = '$$TS01$$.1'
-        self.assertEqual('R9', self.seg.nodes[label].field.base.reg)
-        self.assertEqual(8, self.seg.nodes[label].field.dsp)
-        self.assertEqual('EBW000', self.seg.nodes[label].field.name)
-        self.assertTrue(self.seg.nodes[label].bits.bit7.on)
-        self.assertEqual("#BIT7", self.seg.nodes[label].bits.bit7.name)
-        # Check EBW000,X'80'
-        label = '$$TS01$$.2'
-        self.assertEqual('R9', self.seg.nodes[label].field.base.reg)
-        self.assertEqual(8, self.seg.nodes[label].field.dsp)
-        self.assertEqual('EBW000', self.seg.nodes[label].field.name)
-        self.assertTrue(self.seg.nodes[label].bits.bit0.on)
-        self.assertEqual("#BIT0", self.seg.nodes[label].bits.bit0.name)
-        self.assertEqual(0x80, self.seg.nodes[label].bits.value)
-        # Check 23(R9),23
-        label = '$$TS01$$.3'
-        self.assertEqual('EBW015', self.seg.nodes[label].field.name)
-        self.assertEqual('R9', self.seg.nodes[label].field.base.reg)
-        self.assertEqual(23, self.seg.nodes[label].field.dsp)
-        self.assertTrue(self.seg.nodes[label].bits.bit7.on)
-        self.assertEqual("#BIT3+#BIT5+#BIT6+#BIT7", self.seg.nodes[label].bits.text)
-        self.assertEqual(0b00010111, self.seg.nodes[label].bits.value)
-        # Check EBT000+L'CE1DSTMP(R9),CE1SEW+CE1CPS+CE1DTX+CE1SNP
-        label = '$$TS01$$.4'
-        self.assertEqual('EBT008', self.seg.nodes[label].field.name)
-        self.assertEqual('R9', self.seg.nodes[label].field.base.reg)
-        self.assertEqual(0x78, self.seg.nodes[label].field.dsp)
-        self.assertEqual("CE1SEW+CE1CPS+CE1DTX+CE1SNP", self.seg.nodes[label].bits.text)
-        self.assertEqual(0xf0, self.seg.nodes[label].bits.value)
-        self.assertTrue(self.seg.nodes[label].bits.bit_by_name('CE1DTX').on)
-        self.assertFalse(self.seg.nodes[label].bits.bit6.on)
-        # Check L'EBW000+3+EBW008-EBW000(9),X'FF'-CE1SEW-CE1CPS
-        label = '$$TS01$$.5'
-        self.assertEqual('EBW004', self.seg.nodes[label].field.name)
-        self.assertEqual('R9', self.seg.nodes[label].field.base.reg)
-        self.assertEqual(0x0c, self.seg.nodes[label].field.dsp)
-        self.assertEqual("#BITA-CE1SEW-CE1CPS", self.seg.nodes[label].bits.text)
-        self.assertEqual(0x3f, self.seg.nodes[label].bits.value)
-        self.assertFalse(self.seg.nodes[label].bits.bit_by_name('CE1CPS').on)
-        self.assertTrue(self.seg.nodes[label].bits.bit6.on)
-        # Check TM with BZ TS010010
-        label = '$$TS01$$.6'
-        self.assertEqual('TS010010', self.seg.nodes[label].goes)
-        self.assertEqual('BZ', self.seg.nodes[label].on)
-        self.assertSetEqual({'$$TS01$$.7', 'TS010010'}, self.seg.nodes[label].next_labels)
-        # Check fall down to label
-        label = '$$TS01$$.7'
-        self.assertEqual('TS010010', self.seg.nodes[label].fall_down)
-        # Check EQU *
-        label = 'TS010010'
-        self.assertEqual(label, self.seg.nodes[label].label)
-        self.assertEqual('EQU', self.seg.nodes[label].command)
-
     def test_reg_reg(self):
         seg_name = 'TS02'
         accepted_errors_list = [
             f"{Error.REG_INVALID} TS02E010:LR:R16,R15 {seg_name}",
             f"{Error.REG_INVALID} TS02E020:LR:R1,RBD {seg_name}",
         ]
-        self._common_checks(seg_name, accepted_errors_list)
+        self.old_common_checks(seg_name, accepted_errors_list)
         # Check R02,RDA
         label = 'TS020010'
         self.assertEqual(0x008, self.seg.macro.data_map[label].dsp)
@@ -144,7 +75,7 @@ class SegmentTest(AssemblyTest):
             f"{Error.FBD_INVALID_BASE} TS03E010.2:LA:R1,2(R1,R3,R4) {seg_name}",
             f"{Error.FX_INVALID_INDEX} TS03E010.3:LA:R1,2(ABC,R1) {seg_name}",
         ]
-        self._common_checks(seg_name, accepted_errors_list)
+        self.old_common_checks(seg_name, accepted_errors_list)
         # L     R1,CE1CR1
         label = '$$TS03$$.1'
         self.assertEqual('R1', self.seg.nodes[label].reg.reg)
@@ -267,7 +198,7 @@ class SegmentTest(AssemblyTest):
             f"{Error.FD_INVALID_DATA} TS04E300.1:MVI:EBW000,256 {seg_name}",
             f"{Error.FD_INVALID_DATA} TS04E300.2:MVI:EBW000,C'AB' {seg_name}",
         ]
-        self._common_checks(seg_name, accepted_errors_list)
+        self.old_common_checks(seg_name, accepted_errors_list)
         # Check FieldLenField
         # XC    CE1WKA,CE1WKA
         label = 'TS040100.1'
@@ -375,7 +306,7 @@ class SegmentTest(AssemblyTest):
             f"{Error.RDF_INVALID_DATA} TS05E300.4:STCM:R1,0,EBW000 {seg_name}",
             f"{Error.FBD_INVALID_DSP} TS05E300.5:ICM:R1,7,-1(R9) {seg_name}",
         ]
-        self._common_checks(seg_name, accepted_errors_list)
+        self.old_common_checks(seg_name, accepted_errors_list)
         self.assertRaises(ValueError, Instruction.from_line, Line.from_line(" AHI R1,1,3"), self.seg.macro)
         self.assertRaises(ValueError, Instruction.from_line, Line.from_line(" LHI R1"), self.seg.macro)
         self.assertRaises(ValueError, Instruction.from_line, Line.from_line(" STM R1,R2,B,C"), self.seg.macro)
@@ -456,7 +387,7 @@ class SegmentTest(AssemblyTest):
             f"{Error.BC_INVALID_BRANCH} TS06E100.5:BNZ:1000(R8) {seg_name}",
             f"{Error.FBD_INVALID_KEY} TS06E100.6:JE:TS061000 {seg_name}",
         ]
-        self._common_checks(seg_name, accepted_errors_list)
+        self.old_common_checks(seg_name, accepted_errors_list)
         self.assertRaises(ValueError, Instruction.from_line, Line.from_line(" BC TS060100"), self.seg.macro)
         self.assertRaises(ValueError, Instruction.from_line, Line.from_line(" JC A,TS060100"), self.seg.macro)
         # Check TS060100
@@ -617,7 +548,7 @@ class SegmentTest(AssemblyTest):
         accepted_errors_list = [
             f"{Error.EQU_LABEL_REQUIRED} None:EQU:23 {seg_name}",
         ]
-        self._common_checks(seg_name, accepted_errors_list)
+        self.old_common_checks(seg_name, accepted_errors_list)
         label = 'TS070010'
         self.assertEqual(0x008, self.seg.macro.data_map[label].dsp)
         self.assertEqual(1, self.seg.macro.data_map[label].length)
@@ -706,7 +637,7 @@ class SegmentTest(AssemblyTest):
         seg_name = 'TS08'
         accepted_errors_list = [
         ]
-        self._common_checks(seg_name, accepted_errors_list)
+        self.old_common_checks(seg_name, accepted_errors_list)
         self.assertEqual(48, self.seg.macro.data_map['TS08IND'].dsp)
         self.assertEqual('TS08BLK', self.seg.macro.data_map['TS08IND'].name)
         self.assertEqual(0x80, self.seg.macro.data_map['#ELIGIND'].dsp)

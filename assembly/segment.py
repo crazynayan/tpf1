@@ -3,10 +3,11 @@ from copy import copy
 from typing import Optional, List, Dict
 
 from assembly.directive import Directive
-from assembly.file_line import File, Line, LabelReference, Label, LabelSave
+from assembly.file_line import File, Line, Label, LabelSave
 from assembly.instruction import Instruction
 from assembly.instruction_type import DataMacroDeclaration, InstructionType
 from assembly.macro import SegmentMacro
+from assembly2.mac0_generic import LabelReference
 from utils.errors import Error
 
 
@@ -175,6 +176,6 @@ class Segment:
 
     @staticmethod
     def _update_index(lines: List[Line]) -> List[Line]:
-        for line in lines:
-            line.index = lines.index(line) + 1
+        for index, line in enumerate(lines):
+            line.index = index + 1
         return lines

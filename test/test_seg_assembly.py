@@ -13,7 +13,7 @@ class SegmentTest(AssemblyTest):
         self.seg_name = 'ETA5'
 
     def test_segment(self):
-        self._common_checks(self.seg_name)
+        self.old_common_checks(self.seg_name)
         # CLI   FQTUSH1-FQTUAAC(R14),C'*' with BNE   ETA9027X
         # node = self.seg.nodes['ETA9027X.7']
         # self.assertEqual('CLI', node.command)

@@ -41,3 +41,23 @@ class EquLabelRequiredError(TpfAnalyzerError):
 
 class EquDataTypeHasAmpersandError(TpfAnalyzerError):
     pass
+
+
+class RegisterInvalidError(TpfAnalyzerError):
+    pass
+
+
+class UsingInvalidError(TpfAnalyzerError):
+    pass
+
+
+class FieldDspInvalidError(TpfAnalyzerError):
+    pass
+
+
+class FieldLengthInvalidError(TpfAnalyzerError):
+    pass
+
+
+class BitsInvalidError(TpfAnalyzerError):
+    pass

@@ -1,7 +1,7 @@
 from typing import Optional
 
-from assembly.file_line import LabelReference
 from assembly.instruction_type import KeyValue
+from assembly2.mac0_generic import LabelReference
 from db.pnr import Pnr, PnrLocator
 from db.tpfdf import Tpfdf
 from execution.state import State

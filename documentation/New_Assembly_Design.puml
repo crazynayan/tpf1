@@ -54,6 +54,8 @@ abstract class MacroGeneric {
     -directives: Dict[command, callable]
     -location_counter: int
     -max_location_counter: int
+    +all_labels: property -> Dict[label, LabelReference]
+    +check(label: str) -> bool
     +lookup(label: str) -> LabelReference
     +evaluate(expression: str) -> int
     +get_value(expression: str) -> int
@@ -96,8 +98,6 @@ class Data {
     +literal: bytearray
     +next_constant: property -> int
     +next_literal: property -> int
-    +get_constant(start: int, end: int) -> bytearray
-    +get_literal(start: int, end: int) -> bytearray
 }
 
 
@@ -146,7 +146,7 @@ abstract class InstructionOperand {
     +bits(operand: str) -> Bits
 }
 
-InstructionOperand ---|> SegmentGeneric
+InstructionOperand ---|> DirectiveImplementation
 InstructionOperand::FieldBaseDsp *... FieldBaseDsp
 InstructionOperand::FieldIndex *... FieldIndex
 InstructionOperand::FieldLen *... FieldLen
@@ -436,14 +436,16 @@ class Segment {
 }
 
 Segment -|> ExecutableMacroImplementation
-Segment -|> DirectiveImplementation
 Segment::LabelSave *-- LabelSave
 
-class Assembly <<Singleton>> {
+class DataMacroCollection <<Singleton>> {
     +macros: Dict[name, DataMacro]
+}
+
+class SegmentCollection <<Singleton>> {
     +segments: Dict[name, Segment]
 }
 
-Assembly::DataMacro *-- DataMacro
-Assembly::Segment *- Segment
+DataMacroCollection::DataMacro *-- DataMacro
+SegmentCollection::Segment *- Segment
 @enduml

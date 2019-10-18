@@ -1,18 +1,21 @@
 import unittest
 
-from assembly.assembly import assembly, DataMacro
+from assembly2.mac1_data_macro import DataMacro, macros
 
 
 class MacroTest(unittest.TestCase):
     NUMBER_OF_FILES = 21
 
     def test_files(self):
-        self.assertEqual(self.NUMBER_OF_FILES, len(assembly.macros), 'Update number of files in MacroTest')
+        self.assertIn('EB0EB', macros)
+        self.assertIn('WA0AA', macros)
+        self.assertNotIn('ETA5', macros)
+        self.assertEqual(self.NUMBER_OF_FILES, len(macros), 'Update number of files in MacroTest')
 
     def _common_checks(self, macro_name, accepted_errors_list=None):
-        self.macro: DataMacro = assembly.macros[macro_name]
+        self.macro: DataMacro = macros[macro_name]
         self.macro.load()
-        self.assertTrue(assembly.macros[macro_name].loaded)
+        self.assertTrue(macros[macro_name].loaded)
         if accepted_errors_list is not None:
             for label in accepted_errors_list:
                 self.assertFalse(self.macro.check(label))
