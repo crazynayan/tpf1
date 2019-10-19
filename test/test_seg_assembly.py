@@ -1,10 +1,10 @@
 import unittest
 
 from assembly.directive import Directive
-from assembly.file_line import Line, File
 from assembly.instruction import Instruction
 from assembly.program import program
 from test.test_ts08_assembly import AssemblyTest
+from utils.file_line import Line, File
 from utils.test_data import T
 
 

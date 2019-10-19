@@ -1,11 +1,12 @@
 import re
 from typing import Dict, List, Tuple
 
-from assembly.file_line import Label, Line
 from assembly2.mac0_generic import LabelReference
+from assembly2.seg5_segment import Label
 from config import config
 from utils.data_type import DataType, Register
 from utils.errors import Error
+from utils.file_line import Line
 
 
 class DsDc:

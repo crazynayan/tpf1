@@ -1,7 +1,8 @@
 from typing import Optional, Tuple, Dict, List, Set
 
 from assembly2.mac0_generic import LabelReference
-from assembly2.mac1_data_macro import DataMacroImplementation, macros
+from assembly2.mac1_implementation import DataMacroImplementation
+from assembly2.mac2_data_macro import macros
 from config import config
 from utils.data_type import Register
 from utils.errors import RegisterInvalidError

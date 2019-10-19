@@ -61,3 +61,19 @@ class FieldLengthInvalidError(TpfAnalyzerError):
 
 class BitsInvalidError(TpfAnalyzerError):
     pass
+
+
+class RegisterIndexInvalidError(TpfAnalyzerError):
+    pass
+
+
+class BranchInvalidError(TpfAnalyzerError):
+    pass
+
+
+class BranchIndexError(TpfAnalyzerError):
+    pass
+
+
+class ConditionMaskError(TpfAnalyzerError):
+    pass

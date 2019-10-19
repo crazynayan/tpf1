@@ -3,13 +3,40 @@ import re
 from copy import copy
 from typing import Dict, Optional, List
 
-from assembly.file_line import Line, File, Label
 from assembly2.mac0_generic import LabelReference
-from assembly2.mac1_data_macro import macros
+from assembly2.mac2_data_macro import macros
 from assembly2.seg3_instruction import InstructionType
 from assembly2.seg4_exec_macro import ExecutableMacroImplementation
 from config import config
 from utils.data_type import Register
+from utils.file_line import Line, File
+
+
+class Label:
+    SEPARATOR = '.'
+
+    def __init__(self, name: str, separator: Optional[str] = None):
+        self.name: str = name
+        self.index: int = 0
+        self.separator: str = self.SEPARATOR if separator is None else separator
+
+    def __repr__(self) -> str:
+        return self.name if self.index == 0 else f"{self.name}{self.separator}{self.index}"
+
+
+class LabelSave:
+    def __init__(self):
+        self.labels: List = list()
+
+    def dumps(self, label: str) -> int:
+        self.labels.append(label)
+        return len(self.labels) << config.DSP_SHIFT
+
+    def loads(self, saved: int) -> str:
+        try:
+            return self.labels[(saved >> config.DSP_SHIFT) - 1]
+        except IndexError:
+            raise IndexError
 
 
 class Segment(ExecutableMacroImplementation):
@@ -18,6 +45,7 @@ class Segment(ExecutableMacroImplementation):
         super().__init__(name)
         self.file_name: str = file_name
         self.nodes: Dict[str, InstructionType] = dict()
+        self.bas: LabelSave = LabelSave()
 
     def __repr__(self) -> str:
         return f"{self.name}:{self.nodes != dict()}:{len(self.nodes)}"
@@ -62,7 +90,7 @@ class Segment(ExecutableMacroImplementation):
                     self._symbol_table[line.label] = LabelReference(line.label, self._location_counter, length,
                                                                     self.name)
                     self._symbol_table[line.label].set_instruction_branch()
-                self._location_counter += line.length
+                self._location_counter += length
         return
 
     def _assemble_instructions(self, lines: List[Line]) -> None:

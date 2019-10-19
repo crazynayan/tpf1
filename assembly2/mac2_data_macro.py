@@ -1,74 +1,11 @@
 import os
-import re
 from typing import Dict, List, Tuple, Set
 
-from assembly.file_line import Line, File
-from assembly2.mac0_generic import MacroGeneric, LabelReference, Dsdc
+from assembly2.mac0_generic import LabelReference
+from assembly2.mac1_implementation import DataMacroImplementation
 from config import config
-from utils.data_type import DataType
-from utils.errors import EquLabelRequiredError, EquDataTypeHasAmpersandError, NotFoundInSymbolTableError
-
-
-class DataMacroImplementation(MacroGeneric):
-
-    def __init__(self, name):
-        super().__init__(name)
-        self._command['DS'] = self.ds
-        self._command['EQU'] = self.equ
-        self._command['ORG'] = self.org
-        self._command['DSECT'] = self.dsect
-
-    def ds(self, line: Line) -> List[Dsdc]:
-        operands = line.split_operands()
-        dsdc: Dsdc = self._dsdc(operands[0])
-        dsdc_list: List[Dsdc] = [dsdc]
-        if line.label:
-            self._symbol_table[line.label] = LabelReference(line.label, dsdc.start, dsdc.length, self.name)
-        if len(operands) > 1:
-            for operand in operands[1:]:
-                dsdc_list.append(self._dsdc(operand))  # Increment location counter for multiple values
-        return dsdc_list
-
-    def equ(self, line: Line) -> None:
-        if line.label is None:
-            raise EquLabelRequiredError
-        operands = line.split_operands()
-        dsp_operand = operands[0]
-        length = 1
-        if dsp_operand == '*':
-            dsp = self._location_counter
-        elif not set("+-*").intersection(dsp_operand):
-            if dsp_operand.isdigit():
-                dsp = int(dsp_operand)
-            elif re.match(r"^[CXHFDBZPAY]'[^']+'$", dsp_operand) is not None:
-                if '&' in dsp_operand:
-                    raise EquDataTypeHasAmpersandError
-                dsp = DataType(dsp_operand[0], input=dsp_operand[2:-1]).value
-            else:
-                if dsp_operand[0] == '&':
-                    raise EquDataTypeHasAmpersandError
-                field = self.lookup(dsp_operand)
-                dsp = field.dsp
-                length = field.length
-        else:
-            dsp = self.get_value(dsp_operand)
-        if len(operands) > 1:
-            length = self.get_value(operands[1])
-        self._symbol_table[line.label] = LabelReference(line.label, dsp, length, self.name)
-        return
-
-    def org(self, line: Line) -> None:
-        if line.operand is None:
-            self._location_counter = self._max_counter
-        else:
-            self._location_counter = self.get_value(line.operand)
-        return
-
-    def dsect(self, line: Line) -> None:
-        self._location_counter = 0
-        self._max_counter = 0
-        self._symbol_table[line.label] = LabelReference(line.label, 0, 0, line.label)
-        return
+from utils.errors import EquDataTypeHasAmpersandError, NotFoundInSymbolTableError
+from utils.file_line import Line, File
 
 
 class DataMacro(DataMacroImplementation):

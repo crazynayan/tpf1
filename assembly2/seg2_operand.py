@@ -3,10 +3,12 @@ from typing import Optional, List
 
 from assembly2.seg1_directive import DirectiveImplementation
 from utils.data_type import Register
-from utils.errors import RegisterInvalidError, FieldDspInvalidError, FieldLengthInvalidError, BitsInvalidError
+from utils.errors import RegisterInvalidError, FieldDspInvalidError, FieldLengthInvalidError, BitsInvalidError, \
+    RegisterIndexInvalidError, BranchInvalidError, BranchIndexError
 
 
 class Bit:
+
     def __init__(self, name: str, value: int, on: bool = False):
         self.name = name
         self.value = value
@@ -50,10 +52,18 @@ class Bits:
 
 
 class FieldBaseDsp:
+
     def __init__(self, name: str, base: Register, dsp: int):
         self.name: str = name
         self.base: Register = base
         self.dsp: int = dsp
+
+
+class FieldIndex(FieldBaseDsp):
+
+    def __init__(self, field: FieldBaseDsp, index: Register):
+        super().__init__(field.name, field.base, field.dsp)
+        self.index: Register = index
 
 
 class InstructionOperand(DirectiveImplementation):
@@ -113,3 +123,40 @@ class InstructionOperand(DirectiveImplementation):
                 value = self.evaluate(expression)
                 bits.set_name(expression, value)
         return bits
+
+    def field_index(self, operand: str) -> FieldIndex:
+        operand1, operand2, operand3 = self.split_operand(operand)
+        index = Register('R0')
+        if not operand2 and not operand3:
+            # Single label like EBW000
+            field: FieldBaseDsp = self._get_field_by_name(name=operand1)
+        elif not operand3:
+            # Note: In TPF these types are with no base but with index register set.
+            # In our tool we have flipped this. So there would be no index but the base would be present.
+            if operand1.isdigit() or set("+-*").intersection(operand1):
+                # Base_dsp 34(R5) or expression with base EBW008-EBW000(R9)
+                field: FieldBaseDsp = self._get_field_by_base_dsp(base=operand2, dsp=operand1)
+            else:
+                # Label with index EBW000(R14) or EBW000(R14,)
+                field: FieldBaseDsp = self._get_field_by_name(name=operand1)
+                index = Register(operand2)
+                if not index.is_valid():
+                    raise RegisterIndexInvalidError
+        elif not operand2:
+            # Base_dsp with no index 10(,R5)
+            field: FieldBaseDsp = self._get_field_by_base_dsp(base=operand3, dsp=operand1)
+        else:
+            # Base_dsp with index 10(R3,R5)
+            field = self._get_field_by_base_dsp(base=operand3, dsp=operand1)
+            index = Register(operand2)
+            if not index.is_valid():
+                raise RegisterIndexInvalidError
+        return FieldIndex(field, index)
+
+    def get_branch(self, operand: str) -> FieldIndex:
+        field = self.field_index(operand)
+        if field.index.reg != 'R0':
+            raise BranchIndexError
+        if not self.is_branch(field.name):
+            raise BranchInvalidError
+        return field

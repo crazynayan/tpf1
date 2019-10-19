@@ -2,13 +2,14 @@ import re
 from typing import Tuple, TypeVar, Optional, Union, List, Set
 
 from assembly.directive import Literal
-from assembly.file_line import Label, Line
 from assembly.instruction_operand import FieldBaseDsp, Bits, FieldIndex, FieldLen
 from assembly.macro import SegmentMacro
+from assembly2.seg5_segment import Label
 from config import config
 from utils.command import cmd
 from utils.data_type import Register
 from utils.errors import Error
+from utils.file_line import Line
 
 InstructionType = TypeVar('InstructionType', bound='InstructionGeneric')
 

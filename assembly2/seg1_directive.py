@@ -1,10 +1,10 @@
 from typing import List
 
-from assembly.file_line import Line
-from assembly2.mac0_generic import Dsdc
+from assembly2.mac1_implementation import Dsdc
 from assembly2.seg0_generic import SegmentGeneric
 from utils.data_type import Register
 from utils.errors import UsingInvalidError
+from utils.file_line import Line
 
 
 class DirectiveImplementation(SegmentGeneric):

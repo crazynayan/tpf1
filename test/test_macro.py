@@ -1,6 +1,6 @@
 import unittest
 
-from assembly2.mac1_data_macro import DataMacro, macros
+from assembly2.mac2_data_macro import DataMacro, macros
 
 
 class MacroTest(unittest.TestCase):

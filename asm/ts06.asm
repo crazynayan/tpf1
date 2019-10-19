@@ -43,9 +43,9 @@ TS060140 DS    0H               ERROR PATHS
          BNO   TS060100
          JNOP  TS060130
 TS06E100 DS    0H               ERROR PATHS
-         JC    -1,TS06E100
-         BC    12,TS06E100
-         B     TS06E100(R14)
-         JC    14,TS06E100(-1)
-         BNZ   1000(R8)
-         JE    TS061000
+*         JC    -1,TS06E100
+*         BC    12,TS06E100
+*         B     TS06E100(R14)
+*         JC    14,TS06E100(-1)
+*         BNZ   1000(R8)
+*         JE    TS061000

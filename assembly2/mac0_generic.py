@@ -36,17 +36,6 @@ class LabelReference:
         self._branch = 2
 
 
-class Dsdc:
-
-    def __init__(self, duplication_factor: int, data_type: str, length: int, start: int,
-                 data: Optional[bytearray] = None):
-        self.duplication_factor: int = duplication_factor
-        self.data_type: str = data_type
-        self.length: int = length
-        self.start: int = start
-        self.data: Optional[bytearray] = data
-
-
 class MacroGeneric:
 
     def __init__(self, name):
@@ -106,54 +95,3 @@ class MacroGeneric:
                     value = self.evaluate(expression)
                 eval_list.append(str(value))
         return eval(''.join(eval_list))
-
-    def _dsdc(self, operand: str) -> Dsdc:
-        # (^\d*)([CXHFDBZPAY]D?)(?:L([\d]+))?(?:L[(]([^)]+)[)])?(?:[']([^']+)['])?(?:[(]([^)]+)[)])?
-        operands = next(iter(re.findall(
-            r"(^\d*)"  # 0 Duplication Factor - A number. (Optional)
-            r"([CXHFDBZPAY]D?)"  # 1 Data Type - Valid Single character Data type. (Note: FD is valid)
-            r"(?:L([\d]+))?"  # 2 Length - L followed by a number. (Optional)
-            r"(?:L[(]([^)]*)[)])?"  # 3 Length - L followed by a expression enclosed in paranthesis. (Optional)
-            r"(?:[']([^']*)['])?"  # 4 Data - Enclosed in quotes. (Optional)
-            r"(?:[(]([^)]*)[)])?",  # 5 Data - Enclosed in parenthesis. (Optional)
-            operand)))
-        # Duplication Factor
-        duplication_factor = int(operands[0]) if operands[0] else 1
-        # Data Type
-        data_type = operands[1]
-        # Align to boundary
-        align_to_boundary = 0
-        boundary = DataType(data_type).align_to_boundary
-        if boundary > 0 and self._location_counter % boundary > 0:
-            align_to_boundary = boundary - self._location_counter % boundary
-        # Length
-        if operands[2]:
-            length = int(operands[2])
-            align_to_boundary = 0
-        elif operands[3]:
-            length = self.get_value(operands[3])
-            align_to_boundary = 0
-        else:
-            length = None
-        # Data
-        if operands[4]:
-            data_type_object = DataType(data_type, input=operands[4])
-            length = length or data_type_object.length
-            data = data_type_object.to_bytes(length)
-        elif operands[5]:
-            data = bytearray()
-            for operand in operands[5].split(','):
-                number = self.get_value(operand)
-                data_type_object = DataType(data_type, input=str(number))
-                length = length or data_type_object.default_length
-                data.extend(data_type_object.to_bytes(length))
-        else:
-            data = None
-            length = length or DataType(data_type).default_length
-        # Start (after boundary alignment) and End (After duplication factor)
-        start = self._location_counter + align_to_boundary
-        self._location_counter = start + duplication_factor * length
-        if self._location_counter > self._max_counter:
-            self._max_counter = self._location_counter
-        dsdc = Dsdc(duplication_factor, data_type, length, start, data)
-        return dsdc

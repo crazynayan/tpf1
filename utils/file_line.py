@@ -1,7 +1,6 @@
 import re
 from typing import List, Optional
 
-from config import config
 from utils.command import cmd
 
 
@@ -164,28 +163,3 @@ class Line:
         return f'{self.label}:{self.command}:{self.operand}'
 
 
-class Label:
-    SEPARATOR = '.'
-
-    def __init__(self, name: str, separator: Optional[str] = None):
-        self.name: str = name
-        self.index: int = 0
-        self.separator: str = self.SEPARATOR if separator is None else separator
-
-    def __repr__(self) -> str:
-        return self.name if self.index == 0 else f"{self.name}{self.separator}{self.index}"
-
-
-class LabelSave:
-    def __init__(self):
-        self.labels: List = list()
-
-    def dumps(self, label: str) -> int:
-        self.labels.append(label)
-        return len(self.labels) << config.DSP_SHIFT
-
-    def loads(self, saved: int) -> str:
-        try:
-            return self.labels[(saved >> config.DSP_SHIFT) - 1]
-        except IndexError:
-            raise IndexError

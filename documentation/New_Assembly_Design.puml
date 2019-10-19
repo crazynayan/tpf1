@@ -142,6 +142,7 @@ abstract class InstructionOperand {
     -get_field_by_base_dsp(base: str, dsp: int, length) -> FieldBaseDsp
     +field_base_dsp(operand: str, length: int = 1) -> FieldBaseDsp
     +field_index(operand: str, length: int) -> FieldIndex
+    +get_branch(operand: str) -> FieldIndex
     +field_len(operand: str, max_len: int) -> FieldLen
     +bits(operand: str) -> Bits
 }
@@ -207,11 +208,11 @@ abstract class InstructionImplementation {
     +reg_data(line: Line) -> RegisterData
     +reg_reg_field(line: Line) -> RegisterRegisterField
     +reg_data_field(line: Line) -> RegisterDataField
+    -get_mask(line: Line) -> Tuple[mask: int, operand: str, command: str]
     +branch_condition(line: Line) -> BranchCondition
     +branch_condition_reg(line: Line) -> BranchConditionRegister
     +reg_branch(line: Line) -> RegisterBranch
     +reg_reg_branch(line: Line) -> RegisterRegisterBranch
-    -get_branch(operand: str) -> FieldIndex
 }
 
 InstructionImplementation::FieldBits *... FieldBits
@@ -437,6 +438,7 @@ class Segment {
 
 Segment -|> ExecutableMacroImplementation
 Segment::LabelSave *-- LabelSave
+Segment::InstructionGeneric *---InstructionGeneric
 
 class DataMacroCollection <<Singleton>> {
     +macros: Dict[name, DataMacro]

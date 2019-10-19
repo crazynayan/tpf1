@@ -1,8 +1,8 @@
 from typing import Tuple, Dict, Callable
 
 import assembly.instruction_type as ins
-from assembly.file_line import Line
 from assembly.macro import SegmentMacro
+from utils.file_line import Line
 
 
 class Instruction:

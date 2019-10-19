@@ -1,12 +1,12 @@
 import unittest
 
-from assembly.file_line import Line
 from assembly2.seg5_segment import Segment, segments
 from utils.errors import FieldLengthInvalidError, RegisterInvalidError, NotFoundInSymbolTableError, BitsInvalidError, \
     FieldDspInvalidError
+from utils.file_line import Line
 
 
-class TestFieldBits(unittest.TestCase):
+class FieldBits(unittest.TestCase):
     def test_field_bits(self):
         seg_name = 'TS01'
         self.seg: Segment = segments[seg_name]
@@ -56,14 +56,14 @@ class TestFieldBits(unittest.TestCase):
         self.assertEqual("#BITA - CE1SEW=0x80 - CE1CPS=0x40", str(self.seg.nodes[label].bits))
         self.assertEqual(0x3f, self.seg.nodes[label].bits.value)
         self.assertTrue(self.seg.nodes[label].bits.bit6.on)
-        # # Check TM with BZ TS010010  # TODO Uncomment when TM is ready
-        # label = '$$TS01$$.6'
-        # self.assertEqual('TS010010', self.seg.nodes[label].goes)
-        # self.assertEqual('BZ', self.seg.nodes[label].on)
-        # self.assertSetEqual({'$$TS01$$.7', 'TS010010'}, self.seg.nodes[label].next_labels)
-        # # Check fall down to label
-        # label = '$$TS01$$.7'
-        # self.assertEqual('TS010010', self.seg.nodes[label].fall_down)
+        # Check TM with BZ TS010010
+        label = '$$TS01$$.6'
+        self.assertEqual('TS010010', self.seg.nodes[label].goes)
+        self.assertEqual('BZ', self.seg.nodes[label].on)
+        self.assertSetEqual({'$$TS01$$.7', 'TS010010'}, self.seg.nodes[label].next_labels)
+        # Check fall down to label
+        label = '$$TS01$$.7'
+        self.assertEqual('TS010010', self.seg.nodes[label].fall_down)
         # Check EQU *
         label = 'TS010010'
         self.assertEqual(label, self.seg.nodes[label].label)
