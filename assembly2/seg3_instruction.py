@@ -1,9 +1,9 @@
 from typing import Optional, List, Set, TypeVar, Tuple
 
-from assembly2.seg2_operand import InstructionOperand, FieldBaseDsp, Bits, FieldIndex
+from assembly2.seg2_operand import InstructionOperand, FieldBaseDsp, Bits, FieldIndex, FieldLen
 from utils.command import cmd
 from utils.data_type import Register
-from utils.errors import RegisterInvalidError, ConditionMaskError
+from utils.errors import RegisterInvalidError, ConditionMaskError, FieldDataInvalidError
 from utils.file_line import Line
 
 InstructionType = TypeVar('InstructionType', bound='InstructionGeneric')
@@ -72,6 +72,33 @@ class RegisterFieldIndex(InstructionGeneric):
         self.field: FieldIndex = field
 
 
+class FieldLenField(InstructionGeneric):
+    MAX_LEN = 256
+
+    def __init__(self, line: Line, field_len: FieldLen, field: FieldBaseDsp):
+        super().__init__(line)
+        self.field_len: FieldLen = field_len
+        self.field: FieldBaseDsp = field
+
+
+class FieldLenFieldLen(InstructionGeneric):
+    MAX_LEN = 16
+
+    def __init__(self, line: Line, field_len1: FieldLen, field_len2: FieldLen):
+        super().__init__(line)
+        self.field_len1: FieldLen = field_len1
+        self.field_len2: FieldLen = field_len2
+
+
+class FieldData(InstructionGeneric):
+    MAX_VALUE = 255
+
+    def __init__(self, line: Line, field: FieldBaseDsp, data: int):
+        super().__init__(line)
+        self.field: FieldBaseDsp = field
+        self.data: int = data
+
+
 class BranchGeneric(InstructionGeneric):
 
     def __init__(self, line: Line, branch: Optional[FieldIndex]):
@@ -111,6 +138,15 @@ class InstructionImplementation(InstructionOperand):
         self._command['NI'] = self.field_bits
         self._command['XI'] = self.field_bits
         self._command['TM'] = self.field_bits
+        self._command['CLC'] = self.field_len_field
+        self._command['MVC'] = self.field_len_field
+        self._command['XC'] = self.field_len_field
+        self._command['OC'] = self.field_len_field
+        self._command['NC'] = self.field_len_field
+        self._command['PACK'] = self.field_len_field_len
+        self._command['UNPK'] = self.field_len_field_len
+        self._command['CLI'] = self.field_data
+        self._command['MVI'] = self.field_data
         self._command['LTR'] = self.reg_reg
         self._command['LR'] = self.reg_reg
         self._command['AR'] = self.reg_reg
@@ -183,6 +219,26 @@ class InstructionImplementation(InstructionOperand):
         field = self.field_base_dsp(operand1)
         bits = self.get_bits(operand2)
         return FieldBits(line, field, bits)
+
+    def field_len_field(self, line: Line) -> FieldLenField:
+        operand1, operand2 = line.split_operands()
+        field_len = self.field_len(operand1, FieldLenField.MAX_LEN)
+        field = self.field_base_dsp(operand2)
+        return FieldLenField(line, field_len, field)
+
+    def field_len_field_len(self, line: Line) -> FieldLenFieldLen:
+        operand1, operand2 = line.split_operands()
+        field_len1 = self.field_len(operand1, FieldLenFieldLen.MAX_LEN)
+        field_len2 = self.field_len(operand2, FieldLenFieldLen.MAX_LEN)
+        return FieldLenFieldLen(line, field_len1, field_len2)
+
+    def field_data(self, line: Line) -> FieldData:
+        operand1, operand2 = line.split_operands()
+        field = self.field_base_dsp(operand1)
+        data = self.get_value(operand2)
+        if not 0 <= data <= FieldData.MAX_VALUE:
+            raise FieldDataInvalidError
+        return FieldData(line, field, data)
 
     @staticmethod
     def reg_reg(line: Line) -> RegisterRegister:

@@ -66,6 +66,13 @@ class FieldIndex(FieldBaseDsp):
         self.index: Register = index
 
 
+class FieldLen(FieldBaseDsp):
+
+    def __init__(self, field: FieldBaseDsp, length: int):
+        super().__init__(field.name, field.base, field.dsp)
+        self.length: int = length
+
+
 class InstructionOperand(DirectiveImplementation):
     def __init__(self, name):
         super().__init__(name)
@@ -152,6 +159,28 @@ class InstructionOperand(DirectiveImplementation):
             if not index.is_valid():
                 raise RegisterIndexInvalidError
         return FieldIndex(field, index)
+
+    def field_len(self, operand: str, max_len: int) -> FieldLen:
+        operand1, operand2, operand3 = self.split_operand(operand)
+        if not operand3:
+            # EBW000 or EBW000(L'EBW000)
+            field = self._get_field_by_name(operand1)
+            if operand2:
+                length = self.get_value(operand2)
+            else:
+                length = self.lookup(field.name).length
+        elif not operand2:
+            raise FieldLengthInvalidError
+        else:
+            # 10(3,R10)
+            length = self.get_value(operand2)
+            field = self._get_field_by_base_dsp(base=operand3, dsp=operand1)
+        if 1 <= length <= max_len:
+            # Length in machine code is always saved as 1 less.
+            length = length - 1
+        else:
+            raise FieldLengthInvalidError
+        return FieldLen(field, length)
 
     def get_branch(self, operand: str) -> FieldIndex:
         field = self.field_index(operand)

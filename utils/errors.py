@@ -59,6 +59,10 @@ class FieldLengthInvalidError(TpfAnalyzerError):
     pass
 
 
+class FieldDataInvalidError(TpfAnalyzerError):
+    pass
+
+
 class BitsInvalidError(TpfAnalyzerError):
     pass
 
