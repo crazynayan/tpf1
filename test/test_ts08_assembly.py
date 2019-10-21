@@ -1,9 +1,7 @@
 import unittest
 
-from assembly.instruction import Instruction
 from assembly.program import program
 from utils.errors import Error
-from utils.file_line import Line
 
 
 class AssemblyTest(unittest.TestCase):
@@ -24,93 +22,6 @@ class SegmentTest(AssemblyTest):
         self.assertTrue('TS01' in program.segments)
         self.assertFalse('EB0EB' in program.segments)
         self.assertEqual(self.NUMBER_OF_FILES, len(program.segments), 'Update number of files in SegmentTest')
-
-    def test_reg_variants(self):
-        seg_name = 'TS05'
-        accepted_errors_list = [
-            f"{Error.REG_INVALID} TS05E100.1:LHI:RAB,1 {seg_name}",
-            f"{Error.RD_INVALID_NUMBER} TS05E100.3:LHI:R1,X'10000' {seg_name}",
-            f"{Error.RD_INVALID_NUMBER} TS05E100.4:LHI:R1,65536 {seg_name}",
-            f"{Error.REG_INVALID} TS05E200.1:STM:R14,R16,EBW000 {seg_name}",
-            f"{Error.REG_INVALID} TS05E200.2:LM:RDC,R7,EBW000 {seg_name}",
-            f"{Error.FBD_INVALID_KEY} TS05E200.3:LM:R0,R1,PD0_C_ITM {seg_name}",
-            f"{Error.FBD_INVALID_DSP} TS05E200.4:STM:R3,R4,4096(R7) {seg_name}",
-            f"{Error.REG_INVALID} TS05E300.1:ICM:R16,1,EBW000 {seg_name}",
-            f"{Error.RDF_INVALID_DATA} TS05E300.2:STCM:R1,-1,EBW000 {seg_name}",
-            f"{Error.RDF_INVALID_DATA} TS05E300.3:ICM:R1,16,EBW000 {seg_name}",
-            f"{Error.RDF_INVALID_DATA} TS05E300.4:STCM:R1,0,EBW000 {seg_name}",
-            f"{Error.FBD_INVALID_DSP} TS05E300.5:ICM:R1,7,-1(R9) {seg_name}",
-        ]
-        self.old_common_checks(seg_name, accepted_errors_list)
-        self.assertRaises(ValueError, Instruction.from_line, Line.from_line(" AHI R1,1,3"), self.seg.macro)
-        self.assertRaises(ValueError, Instruction.from_line, Line.from_line(" LHI R1"), self.seg.macro)
-        self.assertRaises(ValueError, Instruction.from_line, Line.from_line(" STM R1,R2,B,C"), self.seg.macro)
-        self.assertRaises(ValueError, Instruction.from_line, Line.from_line(" LM R1,R2"), self.seg.macro)
-        self.assertRaises(ValueError, Instruction.from_line, Line.from_line(" ICM R1,1"), self.seg.macro)
-        self.assertRaises(ValueError, Instruction.from_line, Line.from_line(" STCM R1"), self.seg.macro)
-        # Check RegisterData
-        # AHI   R15,SUIFF with BP    TS050110
-        label = 'TS050100.1'
-        self.assertEqual('R15', self.seg.nodes[label].reg.reg)
-        self.assertEqual(0xff, self.seg.nodes[label].data)
-        self.assertEqual('BP', self.seg.nodes[label].on)
-        self.assertEqual('TS050110', self.seg.nodes[label].goes)
-        # AHI   R15,X'00'
-        label = 'TS050100.2'
-        self.assertEqual('R15', self.seg.nodes[label].reg.reg)
-        self.assertEqual(0, self.seg.nodes[label].data)
-        self.assertEqual('TS050110', self.seg.nodes[label].fall_down)
-        # LHI   R13,-1
-        label = 'TS050110.1'
-        self.assertEqual('R13', self.seg.nodes[label].reg.reg)
-        self.assertEqual(-1, self.seg.nodes[label].data)
-        # LHI   R05,X'7FFF'+1
-        label = 'TS050110.2'
-        self.assertEqual('R5', self.seg.nodes[label].reg.reg)
-        self.assertEqual(-32768, self.seg.nodes[label].data)
-        # LHI   RG1,32767
-        label = 'TS050110.3'
-        self.assertEqual('R1', self.seg.nodes[label].reg.reg)
-        self.assertEqual(32767, self.seg.nodes[label].data)
-        # Check RegisterRegisterField
-        # STM   R14,R7,656(R9)
-        label = 'TS050200.1'
-        self.assertEqual('R14', self.seg.nodes[label].reg1.reg)
-        self.assertEqual('R7', self.seg.nodes[label].reg2.reg)
-        self.assertEqual('R9', self.seg.nodes[label].field.base.reg)
-        self.assertEqual(0x290, self.seg.nodes[label].field.dsp)
-        self.assertEqual('CE1CTRS', self.seg.nodes[label].field.name)
-        # LM    RDB,RGF,CE1DSTMP
-        label = 'TS050200.2'
-        self.assertEqual('R14', self.seg.nodes[label].reg1.reg)
-        self.assertEqual('R7', self.seg.nodes[label].reg2.reg)
-        self.assertEqual('R9', self.seg.nodes[label].field.base.reg)
-        self.assertEqual(0x290, self.seg.nodes[label].field.dsp)
-        self.assertEqual('CE1DSTMP', self.seg.nodes[label].field.name)
-        # Check RegisterDataField
-        # ICM   R3,B'1001',EBW000
-        label = 'TS050300.1'
-        self.assertEqual('R3', self.seg.nodes[label].reg.reg)
-        self.assertEqual(9, self.seg.nodes[label].data)
-        self.assertEqual('EBW000', self.seg.nodes[label].field.name)
-        self.assertEqual('R9', self.seg.nodes[label].field.base.reg)
-        self.assertEqual(8, self.seg.nodes[label].field.dsp)
-        # STCM  R3,B'1111',10(R9)
-        label = 'TS050300.2'
-        self.assertEqual(15, self.seg.nodes[label].data)
-        self.assertEqual('EBW002', self.seg.nodes[label].field.name)
-        self.assertEqual('R9', self.seg.nodes[label].field.base.reg)
-        self.assertEqual(10, self.seg.nodes[label].field.dsp)
-        # ICM   R3,3,=H'-3'
-        label = 'TS050300.3'
-        self.assertEqual(3, self.seg.nodes[label].data)
-        self.assertEqual('R8', self.seg.nodes[label].field.base.reg)
-        literal = self.seg.nodes[label].field.name
-        self.assertTrue(self.seg.macro.data_map[literal].is_literal)
-        self.assertEqual(bytearray([0xFF, 0xFD]), self.seg.get_constant_bytes(literal))
-        # STCM  R3,B'1000',EBW000
-        label = 'TS050300.4'
-        self.assertEqual(8, self.seg.nodes[label].data)
 
     def test_constant(self):
         seg_name = 'TS07'

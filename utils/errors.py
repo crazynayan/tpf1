@@ -59,7 +59,7 @@ class FieldLengthInvalidError(TpfAnalyzerError):
     pass
 
 
-class FieldDataInvalidError(TpfAnalyzerError):
+class DataInvalidError(TpfAnalyzerError):
     pass
 
 

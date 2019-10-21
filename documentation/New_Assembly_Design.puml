@@ -144,7 +144,7 @@ abstract class InstructionOperand {
     +field_index(operand: str, length: int) -> FieldIndex
     +get_branch(operand: str) -> FieldIndex
     +field_len(operand: str, max_len: int) -> FieldLen
-    +bits(operand: str) -> Bits
+    +get_bits(operand: str) -> Bits
 }
 
 InstructionOperand ---|> DirectiveImplementation

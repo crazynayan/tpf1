@@ -3,7 +3,7 @@ from typing import Optional, List, Set, TypeVar, Tuple
 from assembly2.seg2_operand import InstructionOperand, FieldBaseDsp, Bits, FieldIndex, FieldLen
 from utils.command import cmd
 from utils.data_type import Register
-from utils.errors import RegisterInvalidError, ConditionMaskError, FieldDataInvalidError
+from utils.errors import RegisterInvalidError, ConditionMaskError, DataInvalidError
 from utils.file_line import Line
 
 InstructionType = TypeVar('InstructionType', bound='InstructionGeneric')
@@ -56,22 +56,6 @@ class FieldBits(InstructionGeneric):
         self.bits: Bits = bits
 
 
-class RegisterRegister(InstructionGeneric):
-
-    def __init__(self, line: Line, reg1: Register, reg2: Register):
-        super().__init__(line)
-        self.reg1: Register = reg1
-        self.reg2: Register = reg2
-
-
-class RegisterFieldIndex(InstructionGeneric):
-
-    def __init__(self, line: Line, reg: Register, field: FieldIndex):
-        super().__init__(line)
-        self.reg: Register = reg
-        self.field: FieldIndex = field
-
-
 class FieldLenField(InstructionGeneric):
     MAX_LEN = 256
 
@@ -97,6 +81,50 @@ class FieldData(InstructionGeneric):
         super().__init__(line)
         self.field: FieldBaseDsp = field
         self.data: int = data
+
+
+class RegisterRegister(InstructionGeneric):
+
+    def __init__(self, line: Line, reg1: Register, reg2: Register):
+        super().__init__(line)
+        self.reg1: Register = reg1
+        self.reg2: Register = reg2
+
+
+class RegisterFieldIndex(InstructionGeneric):
+
+    def __init__(self, line: Line, reg: Register, field: FieldIndex):
+        super().__init__(line)
+        self.reg: Register = reg
+        self.field: FieldIndex = field
+
+
+class RegisterData(InstructionGeneric):
+    DATA_LENGTH = 16  # 16 bits
+
+    def __init__(self, line: Line, reg: Register, data: int):
+        super().__init__(line)
+        self.reg: Register = reg
+        self.data: int = data
+
+
+class RegisterRegisterField(InstructionGeneric):
+
+    def __init__(self, line: Line, reg1: Register, reg2: Register, field: FieldBaseDsp):
+        super().__init__(line)
+        self.reg1: Register = reg1
+        self.reg2: Register = reg2
+        self.field: FieldBaseDsp = field
+
+
+class RegisterDataField(InstructionGeneric):
+    MAX_VALUE = 15  # 4 bits can only store from 0 to 15
+
+    def __init__(self, line: Line, reg: Register, data: int, field: FieldBaseDsp):
+        super().__init__(line)
+        self.reg: Register = reg
+        self.data: int = data
+        self.field: FieldBaseDsp = field
 
 
 class BranchGeneric(InstructionGeneric):
@@ -162,6 +190,13 @@ class InstructionImplementation(InstructionOperand):
         self._command['CVB'] = self.reg_field_index
         self._command['CVD'] = self.reg_field_index
         self._command['CH'] = self.reg_field_index
+        self._command['AHI'] = self.reg_data
+        self._command['LHI'] = self.reg_data
+        self._command['CHI'] = self.reg_data
+        self._command['LM'] = self.reg_reg_field
+        self._command['STM'] = self.reg_reg_field
+        self._command['ICM'] = self.reg_data_field
+        self._command['STCM'] = self.reg_data_field
         self._command['BC'] = self.branch_condition
         self._command['B'] = self.branch_condition
         self._command['NOP'] = self.branch_condition
@@ -237,7 +272,7 @@ class InstructionImplementation(InstructionOperand):
         field = self.field_base_dsp(operand1)
         data = self.get_value(operand2)
         if not 0 <= data <= FieldData.MAX_VALUE:
-            raise FieldDataInvalidError
+            raise DataInvalidError
         return FieldData(line, field, data)
 
     @staticmethod
@@ -256,6 +291,41 @@ class InstructionImplementation(InstructionOperand):
             raise RegisterInvalidError
         field = self.field_index(operand2)
         return RegisterFieldIndex(line, reg, field)
+
+    def reg_data(self, line: Line) -> RegisterData:
+        operand1, operand2 = line.split_operands()
+        reg = Register(operand1)
+        if not reg.is_valid():
+            raise RegisterInvalidError
+        data = self.get_value(operand2)
+        max_unsigned_value = (1 << RegisterData.DATA_LENGTH) - 1
+        min_signed_value = -1 << RegisterData.DATA_LENGTH - 1
+        max_signed_value = (1 << RegisterData.DATA_LENGTH - 1) - 1
+        if not min_signed_value <= data <= max_unsigned_value:
+            raise DataInvalidError
+        if data > max_signed_value:
+            data -= max_unsigned_value + 1  # Two's complement negative number
+        return RegisterData(line, reg, data)
+
+    def reg_reg_field(self, line: Line) -> RegisterRegisterField:
+        operand1, operand2, operand3 = line.split_operands()
+        reg1 = Register(operand1)
+        reg2 = Register(operand2)
+        if not reg1.is_valid() or not reg2.is_valid():
+            raise RegisterInvalidError
+        field = self.field_base_dsp(operand3)
+        return RegisterRegisterField(line, reg1, reg2, field)
+
+    def reg_data_field(self, line: Line) -> RegisterDataField:
+        operand1, operand2, operand3 = line.split_operands()
+        reg = Register(operand1)
+        if not reg.is_valid():
+            raise RegisterInvalidError
+        data = self.get_value(operand2)
+        if not 0 <= data <= RegisterDataField.MAX_VALUE:
+            raise DataInvalidError
+        field = self.field_base_dsp(operand3)
+        return RegisterDataField(line, reg, data, field)
 
     @staticmethod
     def _get_mask(line: Line) -> Tuple[int, str, str]:
