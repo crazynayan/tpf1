@@ -140,11 +140,12 @@ DirectiveImplementation::Line *... Line
 abstract class InstructionOperand {
     -get_field_by_name(field_name: str) -> FieldBaseDsp
     -get_field_by_base_dsp(base: str, dsp: int, length) -> FieldBaseDsp
+    -literal(operand: str) -> LabelReference
     +field_base_dsp(operand: str, length: int = 1) -> FieldBaseDsp
-    +field_index(operand: str, length: int) -> FieldIndex
-    +get_branch(operand: str) -> FieldIndex
-    +field_len(operand: str, max_len: int) -> FieldLen
     +get_bits(operand: str) -> Bits
+    +field_index(operand: str, length: int) -> FieldIndex
+    +field_len(operand: str, max_len: int) -> FieldLen
+    +get_branch(operand: str) -> FieldIndex
 }
 
 InstructionOperand ---|> DirectiveImplementation
@@ -152,6 +153,7 @@ InstructionOperand::FieldBaseDsp *... FieldBaseDsp
 InstructionOperand::FieldIndex *... FieldIndex
 InstructionOperand::FieldLen *... FieldLen
 InstructionOperand::Bits *... Bits
+InstructionOperand::LabelReference *... LabelReference
 
 class FieldBaseDsp {
     +name: str
@@ -363,14 +365,13 @@ class BranchConditionRegister {
     reg: Register
 }
 
-BranchConditionRegister::Register *--- Register
 BranchConditionRegister -|> BranchCondition
 
 class RegisterBranch {
     reg:Register
 }
 
-RegisterBranch::Register *--- Register
+RegisterBranch::Register *---- Register
 RegisterBranch -|> BranchGeneric
 
 class RegisterRegisterBranch {
@@ -382,7 +383,7 @@ RegisterRegisterBranch::Register *--- Register
 RegisterRegisterBranch -|> BranchGeneric
 
 
-abstract class ExecutableMacroImplementation {
+abstract class RealtimeMacroImplementation {
     +seg_call(line: Line) -> SegmentCall
     +key_value(line: Line) -> KeyValue
     +dbred(line: Line) -> KeyValue
@@ -390,17 +391,14 @@ abstract class ExecutableMacroImplementation {
     +data_macro(line: Line)
 }
 
-ExecutableMacroImplementation --|> InstructionImplementation
-ExecutableMacroImplementation::SegmentCall *... SegmentCall
-ExecutableMacroImplementation::KeyValue *... KeyValue
-ExecutableMacroImplementation::Line *... Line
+RealtimeMacroImplementation --|> InstructionImplementation
+RealtimeMacroImplementation::SegmentCall *... SegmentCall
+RealtimeMacroImplementation::KeyValue *... KeyValue
+RealtimeMacroImplementation::Line *... Line
 
+abstract class UserDefinedMacroImplementation
 
-class SegmentCall {
-    seg_name: str
-}
-
-SegmentCall -|> BranchGeneric
+UserDefinedMacroImplementation --|> RealtimeMacroImplementation
 
 class KeyValue {
     -operands: List[Tuple[str, Union[Optional[str], List[Tuple[str, Optional[str]]]]]]
@@ -415,6 +413,12 @@ class KeyValue {
 }
 
 KeyValue -|> InstructionGeneric
+
+class SegmentCall {
+    seg_name: str
+}
+
+SegmentCall --|> KeyValue
 
 class LabelSave {
     -labels: List[str]
@@ -436,7 +440,7 @@ class Segment {
     +get_constant_bytes(label: str, length: int) -> bytearray
 }
 
-Segment -|> ExecutableMacroImplementation
+Segment -|> UserDefinedMacroImplementation
 Segment::LabelSave *-- LabelSave
 Segment::InstructionGeneric *---InstructionGeneric
 
@@ -449,5 +453,5 @@ class SegmentCollection <<Singleton>> {
 }
 
 DataMacroCollection::DataMacro *-- DataMacro
-SegmentCollection::Segment *- Segment
+SegmentCollection::Segment *-- Segment
 @enduml

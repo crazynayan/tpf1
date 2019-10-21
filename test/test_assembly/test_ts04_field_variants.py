@@ -1,6 +1,6 @@
 import unittest
 
-from assembly2.seg5_segment import segments, Segment
+from assembly2.seg6_segment import segments, Segment
 from utils.errors import FieldLengthInvalidError
 from utils.file_line import Line
 

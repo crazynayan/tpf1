@@ -2,7 +2,7 @@ import re
 from typing import Dict, List, Tuple
 
 from assembly2.mac0_generic import LabelReference
-from assembly2.seg2_operand import Label
+from assembly2.seg2_ins_operand import Label
 from config import config
 from utils.data_type import DataType, Register
 from utils.errors import Error

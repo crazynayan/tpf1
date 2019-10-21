@@ -1,7 +1,8 @@
 import re
 from typing import List, Tuple, Union, Optional
 
-from assembly2.seg3_instruction import InstructionImplementation, InstructionGeneric
+from assembly2.seg3_ins_type import InstructionGeneric
+from assembly2.seg4_ins_implementation import InstructionImplementation
 from utils.file_line import Line
 
 
@@ -61,12 +62,28 @@ class SegmentCall(KeyValue):
         return f"{super().__repr__()}:{self._operands}"
 
 
-class ExecutableMacroImplementation(InstructionImplementation):
+class RealtimeMacroImplementation(InstructionImplementation):
     def __init__(self, name: str):
         super().__init__(name)
         self._command['ENTRC'] = self.seg_call
         self._command['ENTNC'] = self.seg_call
         self._command['ENTDC'] = self.seg_call
+        self._command['BACKC'] = self.instruction_generic
+        self._command['EXITC'] = self.instruction_generic
+        self._command['GETCC'] = self.key_value
+        self._command['RELCC'] = self.key_value
+        self._command['CRUSA'] = self.key_value
+        self._command['DETAC'] = self.key_value
+        self._command['ATTAC'] = self.key_value
+        self._command['MODEC'] = self.key_value
+        self._command['GLOBZ'] = self.key_value
+        self._command['SYSRA'] = self.key_value
+        self._command['SERRC'] = self.key_value
+        self._command['SENDA'] = self.key_value
+        self._command['DBOPN'] = self.key_value
+        self._command['DBRED'] = self.key_value
+        self._command['DBCLS'] = self.key_value
+        self._command['DBIFB'] = self.key_value
 
     def key_value(self, line: Line) -> KeyValue:
         operands_list: List[str] = line.split_operands()
@@ -103,3 +120,13 @@ class ExecutableMacroImplementation(InstructionImplementation):
         suffix = macro_key_value.get_value('SUFFIX')
         self.load_macro(macro_name, reg, suffix)
         return
+
+
+class UserDefinedMacroImplementation(RealtimeMacroImplementation):
+    def __init__(self, name: str):
+        super().__init__(name)
+        self._command['AAGET'] = self.key_value
+        self._command['PNRCC'] = self.key_value
+        self._command['PDRED'] = self.key_value
+        self._command['PDCLS'] = self.key_value
+        self._command['CFCMA'] = self.key_value

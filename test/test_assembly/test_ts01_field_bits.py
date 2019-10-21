@@ -1,6 +1,6 @@
 import unittest
 
-from assembly2.seg5_segment import Segment, segments
+from assembly2.seg6_segment import Segment, segments
 from utils.errors import FieldLengthInvalidError, RegisterInvalidError, NotFoundInSymbolTableError, BitsInvalidError, \
     FieldDspInvalidError
 from utils.file_line import Line

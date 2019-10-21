@@ -5,9 +5,9 @@ from typing import Dict, Optional, List
 
 from assembly2.mac0_generic import LabelReference
 from assembly2.mac2_data_macro import macros
-from assembly2.seg2_operand import Label
-from assembly2.seg3_instruction import InstructionType
-from assembly2.seg4_exec_macro import ExecutableMacroImplementation
+from assembly2.seg2_ins_operand import Label
+from assembly2.seg3_ins_type import InstructionType
+from assembly2.seg5_exec_macro import UserDefinedMacroImplementation
 from config import config
 from utils.data_type import Register
 from utils.file_line import Line, File
@@ -28,7 +28,7 @@ class LabelSave:
             raise IndexError
 
 
-class Segment(ExecutableMacroImplementation):
+class Segment(UserDefinedMacroImplementation):
 
     def __init__(self, name: str, file_name: str):
         super().__init__(name)
