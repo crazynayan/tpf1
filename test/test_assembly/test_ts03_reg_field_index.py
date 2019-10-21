@@ -96,34 +96,34 @@ class RegFieldIndex(unittest.TestCase):
         self.assertEqual('R0', node.field.base.reg)
         self.assertEqual(12, node.field.dsp)
         self.assertEqual('R0', node.field.index.reg)
-        # # CH    R15,=H'99'        # TODO To be uncommented when suffix and literal are done
-        # node = seg.nodes['$$TS03$$.13']
-        # self.assertEqual('R15', node.reg.reg)
-        # self.assertEqual('R8', node.field.base.reg)
-        # literal = node.field.name
-        # self.assertTrue(seg.lookup(literal).is_literal)
-        # self.assertEqual(bytearray([0x00, 0x63]), seg.get_constant_bytes(literal))
-        # # N     R0,=A(X'1F')
-        # node = seg.nodes['$$TS03$$.14']
-        # self.assertEqual('R0', node.reg.reg)
-        # self.assertEqual('R8', node.field.base.reg)
-        # literal = node.field.name
-        # self.assertTrue(seg.lookup(literal).is_literal)
-        # self.assertEqual(bytearray([0x00, 0x00, 0x00, 0x1F]), seg.get_constant_bytes(literal))
-        # # L     R6,PD0_RT_ADR
-        # node = seg.nodes['$$TS03$$.15']
-        # self.assertEqual('R4', node.field.base.reg)
-        # self.assertEqual(0x078, node.field.dsp)
-        # field_name = node.field.name
-        # self.assertEqual(4, seg.lookup(field_name).length)
-        # self.assertEqual('PD0WRK', seg.lookup(field_name).name)
-        # # L     R6,PD0_RT_ADRX
-        # node = seg.nodes['$$TS03$$.16']
-        # self.assertEqual('R5', node.field.base.reg)
-        # self.assertEqual(0x078, node.field.dsp)
-        # field_name = node.field.name
-        # self.assertEqual(4, seg.lookup(field_name).length)
-        # self.assertEqual('PD0WRKX', seg.lookup(field_name).name)
+        # CH    R15,=H'99'
+        node = seg.nodes['$$TS03$$.13']
+        self.assertEqual('R15', node.reg.reg)
+        self.assertEqual('R8', node.field.base.reg)
+        literal = node.field.name
+        self.assertTrue(seg.lookup(literal).is_literal)
+        self.assertEqual(bytearray([0x00, 0x63]), seg.get_constant_bytes(literal))
+        # N     R0,=A(X'1F')
+        node = seg.nodes['$$TS03$$.14']
+        self.assertEqual('R0', node.reg.reg)
+        self.assertEqual('R8', node.field.base.reg)
+        literal = node.field.name
+        self.assertTrue(seg.lookup(literal).is_literal)
+        self.assertEqual(bytearray([0x00, 0x00, 0x00, 0x1F]), seg.get_constant_bytes(literal))
+        # L     R6,PD0_RT_ADR
+        node = seg.nodes['$$TS03$$.15']
+        self.assertEqual('R4', node.field.base.reg)
+        self.assertEqual(0x078, node.field.dsp)
+        field_name = node.field.name
+        self.assertEqual(4, seg.lookup(field_name).length)
+        self.assertEqual('PD0WRK', seg.lookup(field_name).name)
+        # L     R6,PD0_RT_ADRX
+        node = seg.nodes['$$TS03$$.16']
+        self.assertEqual('R5', node.field.base.reg)
+        self.assertEqual(0x078, node.field.dsp)
+        field_name = node.field.name
+        self.assertEqual(4, seg.lookup(field_name).length)
+        self.assertEqual('PD0WRKX', seg.lookup(field_name).name)
 
 
 if __name__ == '__main__':

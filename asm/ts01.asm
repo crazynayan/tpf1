@@ -13,9 +13,9 @@ TS010010 EQU   *
          OI    EBT000,1
          ENTNC TS02
          OI    C'A'(R2),1              NO ERROR SINCE C'A' IS X'D5'
-*         PD0WRK                       TODO Uncomment later
-*         OI    PD0_C_ITM,1
-*         OI    EBW000,#PD0_FLDEMP      NO ERROR SINCE #PD0_FLDEMP = 03
+         PD0WRK
+         OI    PD0_C_ITM,1
+         OI    EBW000,#PD0_FLDEMP      NO ERROR SINCE #PD0_FLDEMP = 03
 TS01E000 EQU   *
 *         OI    23(2,R9),1
 *         OI    EBW000(L'EBW001),1

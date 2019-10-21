@@ -4,7 +4,7 @@ from typing import Tuple, TypeVar, Optional, Union, List, Set
 from assembly.directive import Literal
 from assembly.instruction_operand import FieldBaseDsp, Bits, FieldIndex, FieldLen
 from assembly.macro import SegmentMacro
-from assembly2.seg5_segment import Label
+from assembly2.seg2_operand import Label
 from config import config
 from utils.command import cmd
 from utils.data_type import Register

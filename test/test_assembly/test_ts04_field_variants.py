@@ -38,30 +38,30 @@ class FieldVariants(unittest.TestCase):
         self.assertEqual('EBW001', node.field.name)
         self.assertEqual(0x9, node.field.dsp)
         self.assertEqual('TS040100.4', node.fall_down)
-        # # CLC   2(2,R2),=C'I/' with BE    TS040110        TODO Uncomment when literal ready
-        # node = seg.nodes['TS040100.4']
-        # self.assertEqual('R2_AREA', node.field_len.name)
-        # self.assertEqual('R2', node.field_len.base.reg)
-        # self.assertEqual(2, node.field_len.dsp)
-        # self.assertEqual(1, node.field_len.length)
-        # self.assertEqual('R8', node.field.base.reg)
-        # literal = node.field.name
-        # self.assertTrue(self.seg.macro.data_map[literal].is_literal)
-        # self.assertEqual('I/', self.seg.get_constant_bytes(literal).decode(encoding='cp037'))
-        # self.assertEqual('TS040110', node.goes)
-        # self.assertEqual('BE', node.on)
-        # # CLC   =C'C/',2(R2) with BL    TS040110
-        # node = seg.nodes['TS040100.5']
-        # self.assertEqual('R2_AREA', node.field.name)
-        # self.assertEqual('R2', node.field.base.reg)
-        # self.assertEqual(2, node.field.dsp)
-        # self.assertEqual('R8', node.field_len.base.reg)
-        # self.assertEqual(1, node.field_len.length)
-        # literal = node.field_len.name
-        # self.assertTrue(self.seg.macro.data_map[literal].is_literal)
-        # self.assertEqual('C/', self.seg.get_constant_bytes(literal).decode(encoding='cp037'))
-        # self.assertEqual('TS040110', node.goes)
-        # self.assertEqual('BL', node.on)
+        # CLC   2(2,R2),=C'I/' with BE    TS040110
+        node = seg.nodes['TS040100.4']
+        self.assertEqual('R2_AREA', node.field_len.name)
+        self.assertEqual('R2', node.field_len.base.reg)
+        self.assertEqual(2, node.field_len.dsp)
+        self.assertEqual(1, node.field_len.length)
+        self.assertEqual('R8', node.field.base.reg)
+        literal = node.field.name
+        self.assertTrue(seg.lookup(literal).is_literal)
+        self.assertEqual('I/', seg.get_constant_bytes(literal).decode(encoding='cp037'))
+        self.assertEqual('TS040110', node.goes)
+        self.assertEqual('BE', node.on)
+        # CLC   =C'C/',2(R2) with BL    TS040110
+        node = seg.nodes['TS040100.5']
+        self.assertEqual('R2_AREA', node.field.name)
+        self.assertEqual('R2', node.field.base.reg)
+        self.assertEqual(2, node.field.dsp)
+        self.assertEqual('R8', node.field_len.base.reg)
+        self.assertEqual(1, node.field_len.length)
+        literal = node.field_len.name
+        self.assertTrue(seg.lookup(literal).is_literal)
+        self.assertEqual('C/', seg.get_constant_bytes(literal).decode(encoding='cp037'))
+        self.assertEqual('TS040110', node.goes)
+        self.assertEqual('BL', node.on)
         # MVC   23(L'CE1WKA,R3),26(R4)
         node = seg.nodes['TS040110.1']
         self.assertEqual('R3_AREA', node.field_len.name)

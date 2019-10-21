@@ -5,23 +5,12 @@ from typing import Dict, Optional, List
 
 from assembly2.mac0_generic import LabelReference
 from assembly2.mac2_data_macro import macros
+from assembly2.seg2_operand import Label
 from assembly2.seg3_instruction import InstructionType
 from assembly2.seg4_exec_macro import ExecutableMacroImplementation
 from config import config
 from utils.data_type import Register
 from utils.file_line import Line, File
-
-
-class Label:
-    SEPARATOR = '.'
-
-    def __init__(self, name: str, separator: Optional[str] = None):
-        self.name: str = name
-        self.index: int = 0
-        self.separator: str = self.SEPARATOR if separator is None else separator
-
-    def __repr__(self) -> str:
-        return self.name if self.index == 0 else f"{self.name}{self.separator}{self.index}"
 
 
 class LabelSave:

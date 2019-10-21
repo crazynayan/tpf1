@@ -70,7 +70,7 @@ class SegmentGeneric(DataMacroImplementation):
         return next((name for name, reg in self._using.items() if reg.reg == base.reg), None)
 
     def get_base(self, macro_name: str) -> Register:
-        return self._using[macro_name]
+        return self._using[macro_name] if macro_name in self._using else None
 
     def get_field_name(self, base: Register, dsp: int, length: Optional[int]) -> Optional[str]:
         length = 1 if length is None else length

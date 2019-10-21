@@ -82,7 +82,7 @@ class SegmentMacro:
     def load(self, macro_name, base=None, suffix=None):
         self.global_program.macros[macro_name].load()
         # if self.global_program.macros[macro_name].errors:
-        #     raise TypeError     # TODO Fix Design DataMacro.load() cannot use an instance of SegmentMacro.
+        #     raise TypeError
         if suffix is not None:
             original_name = macro_name
             macro_name = macro_name + suffix

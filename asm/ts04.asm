@@ -6,12 +6,12 @@ TS040100 DS    0H               VALID FOR FIELD LEN
          CLC   L'CE1WKA+EBW000+4(CE1FA1-CE1FA0,R9),CE1FA1(R9)
          BNE   TS040110
          MVC   EBW000(L'CE1WKA-1),EBW001
-*         CLC   2(2,R2),=C'I/'  TODO Uncomment when Literal ready
-*         BE    TS040110
-*         CLC   =C'C/',2(R2)
-*         BL    TS040110
-*         UI2PF REG=R7
-*         MVC   UI2INC(3),=AL1(#UI2XUI+#UI2CAN,#UI2NXT,#UI2NXT)
+         CLC   2(2,R2),=C'I/'
+         BE    TS040110
+         CLC   =C'C/',2(R2)
+         BL    TS040110
+         UI2PF REG=R7
+         MVC   UI2INC(3),=AL1(#UI2XUI+#UI2CAN,#UI2NXT,#UI2NXT)
          XC    CE1WKA(#$BCLASS),CE1WKA  NO ERROR SINCE C'B' is X'C2'
 TS040110 DS    0H
          MVC   23(L'CE1WKA,R3),26(R4)

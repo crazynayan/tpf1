@@ -22,13 +22,13 @@ class RegReg(unittest.TestCase):
         self.assertEqual(0x00A, seg.lookup('TS020020').dsp)
         self.assertEqual('R2', node.reg1.reg)
         self.assertEqual('R2', node.reg2.reg)
-        # self.assertEqual('JNZ', node.on) # TODO Uncomment after completing branch condition
-        # self.assertSetEqual({'TS020030', 'TS020040'}, node.next_labels)
-        # self.assertEqual(5, len(node.conditions))
-        # for condition in node.conditions:
-        #     if not condition.is_check_cc:
-        #         self.assertEqual('R6', condition.reg1.reg)
-        #         self.assertIsNone(condition.fall_down)
+        self.assertEqual('JNZ', node.on)
+        self.assertSetEqual({'TS020030', 'TS020040'}, node.next_labels)
+        self.assertEqual(5, len(node.conditions))
+        for condition in node.conditions:
+            if not condition.is_check_cc:
+                self.assertEqual('R6', condition.reg1.reg)
+                self.assertIsNone(condition.fall_down)
         # Check 4,R04
         node = seg.nodes['TS020030']
         self.assertEqual(0x018, seg.lookup('TS020030').dsp)

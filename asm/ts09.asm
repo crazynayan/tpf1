@@ -19,5 +19,5 @@ TS09S200 DS    0H
          BCR   8,R2
          BACKC
 TS09E100 EQU   *
-         BAS   R16,TS09S100
-         BR    -1
+*         BAS   R16,TS09S100
+*         BR    -1

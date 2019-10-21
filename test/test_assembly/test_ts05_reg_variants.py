@@ -78,13 +78,13 @@ class FieldVariants(unittest.TestCase):
         self.assertEqual('EBW002', node.field.name)
         self.assertEqual('R9', node.field.base.reg)
         self.assertEqual(10, node.field.dsp)
-        # # ICM   R3,3,=H'-3'   TODO Uncomment when literal is ready
-        # node = seg.nodes['TS050300.3']
-        # self.assertEqual(3, node.data)
-        # self.assertEqual('R8', node.field.base.reg)
-        # literal = node.field.name
-        # self.assertTrue(self.seg.macro.data_map[literal].is_literal)
-        # self.assertEqual(bytearray([0xFF, 0xFD]), self.seg.get_constant_bytes(literal))
+        # ICM   R3,3,=H'-3'
+        node = seg.nodes['TS050300.3']
+        self.assertEqual(3, node.data)
+        self.assertEqual('R8', node.field.base.reg)
+        literal = node.field.name
+        self.assertTrue(seg.lookup(literal).is_literal)
+        self.assertEqual(bytearray([0xFF, 0xFD]), seg.get_constant_bytes(literal))
         # STCM  R3,B'1000',EBW000
         node = seg.nodes['TS050300.4']
         self.assertEqual(8, node.data)

@@ -55,6 +55,9 @@ class FieldBits(InstructionGeneric):
         self.field: FieldBaseDsp = field
         self.bits: Bits = bits
 
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}:{self.field},{self.bits}"
+
 
 class FieldLenField(InstructionGeneric):
     MAX_LEN = 256
@@ -63,6 +66,9 @@ class FieldLenField(InstructionGeneric):
         super().__init__(line)
         self.field_len: FieldLen = field_len
         self.field: FieldBaseDsp = field
+
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}:{self.field_len},{self.field}"
 
 
 class FieldLenFieldLen(InstructionGeneric):
@@ -73,6 +79,9 @@ class FieldLenFieldLen(InstructionGeneric):
         self.field_len1: FieldLen = field_len1
         self.field_len2: FieldLen = field_len2
 
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}:{self.field_len1},{self.field_len2}"
+
 
 class FieldData(InstructionGeneric):
     MAX_VALUE = 255
@@ -82,6 +91,9 @@ class FieldData(InstructionGeneric):
         self.field: FieldBaseDsp = field
         self.data: int = data
 
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}:{self.field},{self.data}"
+
 
 class RegisterRegister(InstructionGeneric):
 
@@ -90,6 +102,9 @@ class RegisterRegister(InstructionGeneric):
         self.reg1: Register = reg1
         self.reg2: Register = reg2
 
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}:{self.reg1},{self.reg2}"
+
 
 class RegisterFieldIndex(InstructionGeneric):
 
@@ -97,6 +112,9 @@ class RegisterFieldIndex(InstructionGeneric):
         super().__init__(line)
         self.reg: Register = reg
         self.field: FieldIndex = field
+
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}:{self.reg},{self.field}"
 
 
 class RegisterData(InstructionGeneric):
@@ -107,6 +125,9 @@ class RegisterData(InstructionGeneric):
         self.reg: Register = reg
         self.data: int = data
 
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}:{self.reg},{self.data}"
+
 
 class RegisterRegisterField(InstructionGeneric):
 
@@ -115,6 +136,9 @@ class RegisterRegisterField(InstructionGeneric):
         self.reg1: Register = reg1
         self.reg2: Register = reg2
         self.field: FieldBaseDsp = field
+
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}:{self.reg1},{self.reg2},{self.field}"
 
 
 class RegisterDataField(InstructionGeneric):
@@ -125,6 +149,9 @@ class RegisterDataField(InstructionGeneric):
         self.reg: Register = reg
         self.data: int = data
         self.field: FieldBaseDsp = field
+
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}:{self.reg},{self.data},{self.field}"
 
 
 class BranchGeneric(InstructionGeneric):
@@ -156,6 +183,27 @@ class BranchCondition(BranchGeneric):
     def __init__(self, line: Line, branch: Optional[FieldIndex], mask: int):
         super().__init__(line, branch)
         self.mask: int = mask
+
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}:{self.mask},{self.branch}"
+
+
+class BranchConditionRegister(BranchCondition):
+    def __init__(self, line: Line, mask: int, reg: Register):
+        super().__init__(line, None, mask)
+        self.reg: Register = reg
+
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}:{self.mask},{self.reg}"
+
+
+class RegisterBranch(BranchGeneric):
+    def __init__(self, line: Line, reg: Register, branch: FieldIndex):
+        super().__init__(line, branch)
+        self.reg: Register = reg
+
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}:{self.reg},{self.branch}"
 
 
 class InstructionImplementation(InstructionOperand):
@@ -197,7 +245,11 @@ class InstructionImplementation(InstructionOperand):
         self._command['STM'] = self.reg_reg_field
         self._command['ICM'] = self.reg_data_field
         self._command['STCM'] = self.reg_data_field
+        self._command['BAS'] = self.reg_branch
+        self._command['JAS'] = self.reg_branch
+        self._command['BCT'] = self.reg_branch
         self._command['BC'] = self.branch_condition
+        self._command['BCRY'] = self.branch_condition
         self._command['B'] = self.branch_condition
         self._command['NOP'] = self.branch_condition
         self._command['BZ'] = self.branch_condition
@@ -231,6 +283,23 @@ class InstructionImplementation(InstructionOperand):
         self._command['JNH'] = self.branch_condition
         self._command['JL'] = self.branch_condition
         self._command['JNL'] = self.branch_condition
+        self._command['BCR'] = self.branch_condition_reg
+        self._command['BR'] = self.branch_condition_reg
+        self._command['NOPR'] = self.branch_condition_reg
+        self._command['BER'] = self.branch_condition_reg
+        self._command['BNER'] = self.branch_condition_reg
+        self._command['BHR'] = self.branch_condition_reg
+        self._command['BNHR'] = self.branch_condition_reg
+        self._command['BLR'] = self.branch_condition_reg
+        self._command['BNLR'] = self.branch_condition_reg
+        self._command['BZR'] = self.branch_condition_reg
+        self._command['BNZR'] = self.branch_condition_reg
+        self._command['BOR'] = self.branch_condition_reg
+        self._command['BNOR'] = self.branch_condition_reg
+        self._command['BPR'] = self.branch_condition_reg
+        self._command['BNPR'] = self.branch_condition_reg
+        self._command['BMR'] = self.branch_condition_reg
+        self._command['BNMR'] = self.branch_condition_reg
         self._command['ENTNC'] = self.instruction_generic
         self._command['BACKC'] = self.instruction_generic
         self._command['EXITC'] = self.instruction_generic
@@ -355,3 +424,19 @@ class InstructionImplementation(InstructionOperand):
         else:
             branch = self.get_branch(operand)
         return BranchCondition(line, branch, mask)
+
+    def reg_branch(self, line: Line) -> RegisterBranch:
+        operand1, operand2 = line.split_operands()
+        reg = Register(operand1)
+        if not reg.is_valid():
+            raise RegisterInvalidError
+        branch = self.get_branch(operand2)
+        return RegisterBranch(line, reg, branch)
+
+    def branch_condition_reg(self, line: Line) -> BranchConditionRegister:
+        mask, operand, command = self._get_mask(line)
+        line.command = command
+        reg = Register(operand)
+        if not reg.is_valid():
+            raise RegisterInvalidError
+        return BranchConditionRegister(line, mask, reg)

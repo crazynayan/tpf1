@@ -13,12 +13,12 @@
          CH    R15,4(R15)
          L     R1,CE1CR1(R3)
          L     R1,12
-*         CH    R15,=H'99'          TODO UNCOMMENTED LATER
-*         N     R0,=A(X'1F')        WHEN SUFFIX AND LITERAL
-*         PD0WRK REG=R4
-*         PD0WRK REG=R5,SUFFIX=X
-*         L     R6,PD0_RT_ADR
-*         L     R6,PD0_RT_ADRX
+         CH    R15,=H'99'
+         N     R0,=A(X'1F')
+         PD0WRK REG=R4
+         PD0WRK REG=R5,SUFFIX=X
+         L     R6,PD0_RT_ADR
+         L     R6,PD0_RT_ADRX
          EXITC
 TS03E010 DS    0H                   ERROR PATHS
 *         L     R16,EBW000

@@ -2,7 +2,7 @@ import re
 from typing import Dict, List, Tuple
 
 from assembly2.mac0_generic import LabelReference
-from assembly2.seg5_segment import Label
+from assembly2.seg2_operand import Label
 from config import config
 from utils.data_type import DataType, Register
 from utils.errors import Error
@@ -103,7 +103,7 @@ class DirectiveImplementation:
     def dc(line, macro, name):
         data = macro.global_program.segments[macro.seg_name].data if macro.global_program else None
         if data is None:
-            raise TypeError  # TODO Fix in redesign
+            raise TypeError
         operands = line.split_operands()
         dc, result = DsDc.from_operand(operands[0], macro)
         if result != Error.NO_ERROR:

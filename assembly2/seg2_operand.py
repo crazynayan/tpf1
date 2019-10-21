@@ -1,10 +1,24 @@
 import re
 from typing import Optional, List
 
+from assembly2.mac0_generic import LabelReference
 from assembly2.seg1_directive import DirectiveImplementation
+from config import config
 from utils.data_type import Register
 from utils.errors import RegisterInvalidError, FieldDspInvalidError, FieldLengthInvalidError, BitsInvalidError, \
     RegisterIndexInvalidError, BranchInvalidError, BranchIndexError
+
+
+class Label:
+    SEPARATOR = '.'
+
+    def __init__(self, name: str, separator: Optional[str] = None):
+        self.name: str = name
+        self.index: int = 0
+        self.separator: str = self.SEPARATOR if separator is None else separator
+
+    def __repr__(self) -> str:
+        return self.name if self.index == 0 else f"{self.name}{self.separator}{self.index}"
 
 
 class Bit:
@@ -61,6 +75,9 @@ class FieldBaseDsp:
         self.base: Register = base
         self.dsp: int = dsp
 
+    def __repr__(self) -> str:
+        return f"{self.name}({self.base}+{self.dsp})"
+
 
 class FieldIndex(FieldBaseDsp):
 
@@ -68,12 +85,18 @@ class FieldIndex(FieldBaseDsp):
         super().__init__(field.name, field.base, field.dsp)
         self.index: Register = index
 
+    def __repr__(self) -> str:
+        return f"{self.name}({self.base}+{self.dsp}+{self.index})"
+
 
 class FieldLen(FieldBaseDsp):
 
     def __init__(self, field: FieldBaseDsp, length: int):
         super().__init__(field.name, field.base, field.dsp)
         self.length: int = length
+
+    def __repr__(self) -> str:
+        return f"{self.name}({self.base}+{self.dsp},{self.length + 1})"
 
 
 class InstructionOperand(DirectiveImplementation):
@@ -111,11 +134,25 @@ class InstructionOperand(DirectiveImplementation):
         name = base.reg + '_AREA' if possible_name is None else possible_name
         return FieldBaseDsp(name, base, dsp)
 
+    def _literal(self, operand: str) -> LabelReference:
+        literal = self._dsdc(operand)
+        dsp = self.data.next_literal + config.F4K
+        self.data.literal.extend(literal.data * literal.duplication_factor)
+        label = f"L{Label.SEPARATOR * 2}{dsp:05X}"
+        label_ref = LabelReference(label, dsp, literal.length, self.name)
+        self._symbol_table[label] = label_ref
+        return label_ref
+
     def field_base_dsp(self, operand: str) -> FieldBaseDsp:
+        if operand.startswith('='):
+            label_ref = self._literal(operand[1:])
+            return FieldBaseDsp(label_ref.label, self.get_base(self.name), label_ref.dsp)
         operand1, operand2, error = self.split_operand(operand)
         if error:
             raise FieldLengthInvalidError
-        return self._get_field_by_name(operand1) if not operand2 else self._get_field_by_base_dsp(operand2, operand1)
+        if operand2:
+            return self._get_field_by_base_dsp(base=operand2, dsp=operand1)
+        return self._get_field_by_name(operand1)
 
     def get_bits(self, operand: str) -> Bits:
         number = self.get_value(operand)
@@ -135,8 +172,12 @@ class InstructionOperand(DirectiveImplementation):
         return bits
 
     def field_index(self, operand: str) -> FieldIndex:
-        operand1, operand2, operand3 = self.split_operand(operand)
         index = Register('R0')
+        if operand.startswith('='):
+            label_ref = self._literal(operand[1:])
+            field = FieldBaseDsp(label_ref.label, self.get_base(self.name), label_ref.dsp)
+            return FieldIndex(field, index)
+        operand1, operand2, operand3 = self.split_operand(operand)
         if not operand2 and not operand3:
             # Single label like EBW000
             field: FieldBaseDsp = self._get_field_by_name(name=operand1)
@@ -164,6 +205,10 @@ class InstructionOperand(DirectiveImplementation):
         return FieldIndex(field, index)
 
     def field_len(self, operand: str, max_len: int) -> FieldLen:
+        if operand.startswith('='):
+            label_ref = self._literal(operand[1:])
+            field = FieldBaseDsp(label_ref.label, self.get_base(self.name), label_ref.dsp)
+            return FieldLen(field, label_ref.length - 1)
         operand1, operand2, operand3 = self.split_operand(operand)
         if not operand3:
             # EBW000 or EBW000(L'EBW000)

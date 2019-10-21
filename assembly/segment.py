@@ -7,7 +7,8 @@ from assembly.instruction import Instruction
 from assembly.instruction_type import DataMacroDeclaration, InstructionType
 from assembly.macro import SegmentMacro
 from assembly2.mac0_generic import LabelReference
-from assembly2.seg5_segment import Label, LabelSave
+from assembly2.seg2_operand import Label
+from assembly2.seg5_segment import LabelSave
 from utils.errors import Error
 from utils.file_line import File, Line
 

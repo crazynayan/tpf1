@@ -13,6 +13,9 @@ class KeyValue(InstructionGeneric):
         self._operands: List[Tuple[str, Union[Optional[str], List[Tuple[str, Optional[str]]]]]] = operands
         self.branches: List[str] = branches
 
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}:{self._operands}"
+
     @property
     def keys(self) -> List[str]:
         return [key_value[0] for key_value in self._operands]
