@@ -2,16 +2,16 @@
 *        DEFINE CONSTANTS
 **********************************************************************
          PGMID 'TS0700'
-TS070010 EQU   *
-         CLC   EBW000,EBW010
-         BNE   TS070020
-         LHI   R14,1
-TS070020 DS    0F
-NAME     DC    C'CLASS'             000
-EXAM     DC    2C'NAM'              005
-ADR1     DC    A(EXAM)              00c
-ADR2     DC    Y(ADR1-EXAM)         010
-CHAR1    DC    C'ASDC'              012
+TS070010 EQU   *                    008
+         CLC   EBW000,EBW010        008
+         BNE   TS070020             00E
+         LHI   R14,1                012
+TS070020 DS    0F                   018
+NAME     DC    C'CLASS'             018 + 000
+EXAM     DC    2C'NAM'              018 + 005
+ADR1     DC    A(EXAM)              018 + 00C
+ADR2     DC    Y(ADR1-EXAM)         018 + 010
+CHAR1    DC    C'ASDC'              018 + 012
 CHAR2    DC    CL6'ASDC'
 CHAR3    DC    CL2'ASDC'
 HEX1     DC    X'E'
@@ -36,4 +36,4 @@ FLZ      DC    ZL2'-29''
 FLU      DC    C'-29'
 BIG      DC    Y(ADR1-EXAM,L'ADR1-L'EXAM),X'23',YL1(EXAM+ADR1,L'ZON3+L'X
                HALF1-EXAM+#UI2NXT)
-         EQU   23
+*         EQU   23          ERRORS ARE CODED INLINE

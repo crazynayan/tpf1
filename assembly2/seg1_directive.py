@@ -22,9 +22,11 @@ class DirectiveImplementation(SegmentGeneric):
         self._command['END'] = self.no_operation
 
     def dc(self, line: Line) -> None:
+        if line.label == 'BIG':
+            a = 1
         dsdc_list: List[Dsdc] = super().ds(line)
         for dsdc in dsdc_list:
-            self.data.set_constant(dsdc.data, dsdc.start)
+            self.data.set_constant(dsdc.data * dsdc.duplication_factor, dsdc.start)
         return
 
     def ds(self, line: Line) -> List[Dsdc]:

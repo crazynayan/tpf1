@@ -56,12 +56,14 @@ class DataMacroImplementation(MacroGeneric):
         else:
             length = None
         # Data
+        number_of_data_operands = 1
         if operands[4]:
             data_type_object = DataType(data_type, input=operands[4])
             length = length or data_type_object.length
             data = data_type_object.to_bytes(length)
         elif operands[5]:
             data = bytearray()
+            number_of_data_operands = len(operands[5].split(','))
             for operand in operands[5].split(','):
                 number = self.get_value(operand)
                 data_type_object = DataType(data_type, input=str(number))
@@ -72,7 +74,7 @@ class DataMacroImplementation(MacroGeneric):
             length = length or DataType(data_type).default_length
         # Start (after boundary alignment) and End (After duplication factor)
         start = self._location_counter + align_to_boundary
-        self._location_counter = start + duplication_factor * length
+        self._location_counter = start + duplication_factor * length * number_of_data_operands
         if self._location_counter > self._max_counter:
             self._max_counter = self._location_counter
         dsdc = Dsdc(duplication_factor, data_type, length, start, data)
