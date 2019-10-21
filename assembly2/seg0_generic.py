@@ -61,7 +61,7 @@ class SegmentGeneric(DataMacroImplementation):
         return
 
     def set_using(self, dsect: str, reg: Register) -> None:
-        using_name = next((name for name, using_reg in self._using.items() if using_reg == reg), None)
+        using_name = next((name for name, using_reg in self._using.items() if using_reg.reg == reg.reg), None)
         if using_name is not None:
             del self._using[using_name]
         self._using[dsect] = reg

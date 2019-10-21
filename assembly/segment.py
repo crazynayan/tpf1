@@ -106,7 +106,7 @@ class Segment:
     def _build_symbol_table(self, lines: List[Line]) -> None:
         Directive.update(self.root_line, self.macro, self.name)
         for line in lines:
-            length = line.length if line.length else 1
+            length = line.length if line.length is not None else 1
             if line.is_first_pass:
                 name = self.name if self.macro.dsect is None else self.macro.dsect[1]
                 result = Directive.update(line, self.macro, name)
@@ -117,7 +117,7 @@ class Segment:
                     self.macro.data_map[line.label] = LabelReference(line.label, self.macro.location_counter,
                                                                      length, self.name)
                     self.macro.data_map[line.label].set_instruction_branch()
-                self.macro.location_counter += line.length
+                self.macro.location_counter += length
 
     def _assemble_instructions(self, lines: List[Line]) -> None:
         prior_label = Label(self.root_label)

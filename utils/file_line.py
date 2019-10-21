@@ -152,8 +152,8 @@ class Line:
 
     @property
     def length(self) -> int:
-        length = cmd.check(self.command, 'len')
-        return 0 if length is None else length
+        return cmd.check(self.command, 'len')
+        # return 0 if length is None else length
 
     def split_operands(self) -> List[str]:
         # Split operands separated by commas. Ignore commas enclosed in parenthesis.

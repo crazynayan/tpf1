@@ -82,7 +82,12 @@ class Segment(ExecutableMacroImplementation):
     def _build_symbol_table(self, lines: List[Line]) -> None:
         self.equ(self.root_line)
         for line in lines:
-            length = line.length if line.length else config.DEFAULT_INSTRUCTION_LENGTH
+            length = line.length
+            if length is None:
+                if line.command in macros:
+                    length = 0
+                else:
+                    length = config.DEFAULT_INSTRUCTION_LENGTH
             if line.is_first_pass:
                 self._command[line.command](line)
             else:
@@ -127,16 +132,16 @@ class Segment(ExecutableMacroImplementation):
     def _process_assembler_directive(self, line: Line) -> bool:
         # return True -> skip creating node.
         # return False -> continue creating the node.
-        # if line.is_sw00sr:
-        #     DataMacroDeclaration(Line.from_line(" SW00SR REG=R3"), self.macro)
-        #     return False
+        if line.is_sw00sr:
+            self.load_macro('SW00SR', 'R3')
+            return False
         if line.label and self.is_branch(line.label):
             return False
         if line.is_first_pass:
             return True
-        # if self.macro.is_present(line.command):
-        #     DataMacroDeclaration(line, self.macro)
-        #     return True
+        if line.command in macros:
+            self.load_macro_from_line(line)
+            return True
         if not line.is_assembler_directive:
             return False
         # Second pass assembler directive like USING, PUSH, POP

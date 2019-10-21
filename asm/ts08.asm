@@ -19,23 +19,23 @@ TS08AWD  DSECT
 TS08PGR  DS    CL4
 TS08ERR  DS    XL1
 $IS$     CSECT
-         L     R1,CE1CR1
-         LA    R7,EBW040
-         TM    WA0ET4,#WA0TTY
-         BO    TS080010
+         L     R1,CE1CR1             8
+         LA    R7,EBW040            12
+         TM    WA0ET4,#WA0TTY       16
+         BO    TS080010             20
          WI0BS REG=R14
-         MVC   WI0ARC,$C_AA
-TS080010 DS    0H
+         MVC   WI0ARC,$C_AA         24
+TS080010 DS    0H                   30
          PUSH  USING
          USING TS08BLK,R14
          USING TS08AWD,R1
          MVC   TS08AAC-TS08REGS(L'TS08AAC,R14),TS08PGR
-         MVC   TS08REC,$X_00
-         LA    R2,PD0_C_ITM
+         MVC   TS08REC,$X_00        36
+         LA    R2,PD0_C_ITM         42
          POP   USING
-         OI    WA0ET4,#WA0TTY
-         MVC   EBW000(2),WI0ARC
-         BACKC
-$C_AA    DC    C'AA'
-$X_00    DS    0XL256
-         DC    256X'0'
+         OI    WA0ET4,#WA0TTY       46
+         MVC   EBW000(2),WI0ARC     50
+         BACKC                      56
+$C_AA    DC    C'AA'                60
+$X_00    DS    0XL256               62
+         DC    256X'0'              62

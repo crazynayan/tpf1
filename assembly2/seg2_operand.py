@@ -50,6 +50,9 @@ class Bits:
             bit.name = name
         return
 
+    def bit_by_name(self, name: str) -> Optional[Bit]:
+        return next((bit for _, bit in self.__dict__.items() if bit.name == name), None)
+
 
 class FieldBaseDsp:
 

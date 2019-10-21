@@ -756,11 +756,13 @@
     },
     "POP": {
         "create": "pop",
-        "directive": 1
+        "directive": 1,
+        "len": 0
     },
     "PUSH": {
         "create": "Push",
-        "directive": 1
+        "directive": 1,
+        "len": 0
     },
     "RELCC": {
         "create": "KeyValue",
@@ -905,7 +907,8 @@
     },
     "USING": {
         "create": "using",
-        "directive": 1
+        "directive": 1,
+        "len": 0
     },
     "X": {
         "create": "RegisterFieldIndex",
