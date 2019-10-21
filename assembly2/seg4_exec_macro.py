@@ -52,10 +52,21 @@ class KeyValue(InstructionGeneric):
                      if key_value[0] == key and sub_key_value[0] == sub_key), None)
 
 
+class SegmentCall(KeyValue):
+
+    def __init__(self, line, key_value: KeyValue):
+        super().__init__(line, key_value._operands, key_value.branches)
+
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}:{self._operands}"
+
+
 class ExecutableMacroImplementation(InstructionImplementation):
     def __init__(self, name: str):
         super().__init__(name)
-        self._command['GETCC'] = self.key_value
+        self._command['ENTRC'] = self.seg_call
+        self._command['ENTNC'] = self.seg_call
+        self._command['ENTDC'] = self.seg_call
 
     def key_value(self, line: Line) -> KeyValue:
         operands_list: List[str] = line.split_operands()
@@ -78,6 +89,12 @@ class ExecutableMacroImplementation(InstructionImplementation):
                 if self.is_branch(value):
                     branches.append(value)
         return KeyValue(line, operands, branches)
+
+    def seg_call(self, line: Line) -> SegmentCall:
+        entxc = self.key_value(line)
+        seg = entxc.keys[0]
+        entxc.branches.append(self.root_label(seg))
+        return SegmentCall(line, entxc)
 
     def load_macro_from_line(self, line: Line) -> None:
         macro_key_value: KeyValue = self.key_value(line)

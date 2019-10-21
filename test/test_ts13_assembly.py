@@ -1,50 +1,12 @@
 import unittest
 
 from assembly.instruction_type import KeyValue, RegisterData
-from assembly.program import program
 from config import config
 from test.test_ts08_assembly import AssemblyTest
 from utils.errors import Error
 
 
 class SegmentTest(AssemblyTest):
-
-    def test_seg_calls(self):
-        seg_name = 'TS10'
-        accepted_errors_list = [
-            f"{Error.SC_INVALID_SEGMENT} TS10E100.1:ENTRC:A000 {seg_name}",
-        ]
-        self.old_common_checks(seg_name, accepted_errors_list)
-        # ENTRC TS01
-        node = self.seg.nodes['$$TS10$$.1']
-        seg = program.segments[node.seg_name]
-        self.assertEqual('ENTRC', node.command)
-        self.assertEqual('TS01', node.seg_name)
-        self.assertEqual('$$TS01$$', node.branch.name)
-        self.assertIn('$$TS01$$', seg.macro.data_map)
-        self.assertIn('OI', seg.nodes['$$TS01$$.1'].command)
-        self.assertEqual('$$TS01$$', node.goes)
-        self.assertSetEqual({'$$TS01$$', '$$TS10$$.2'}, node.next_labels)
-        # ENTNC TS02
-        node = self.seg.nodes['$$TS10$$.3']
-        seg = program.segments[node.seg_name]
-        self.assertEqual('ENTNC', node.command)
-        self.assertEqual('TS02', node.seg_name)
-        self.assertEqual('$$TS02$$', node.branch.name)
-        self.assertIn('$$TS02$$', seg.macro.data_map)
-        self.assertIn('SR', seg.nodes['TS020010'].command)
-        self.assertEqual('$$TS02$$', node.goes)
-        self.assertSetEqual({'$$TS02$$'}, node.next_labels)
-        # ENTDC TS13
-        node = self.seg.nodes['$$TS10$$.2']
-        seg = program.segments[node.seg_name]
-        self.assertEqual('ENTDC', node.command)
-        self.assertEqual('TS13', node.seg_name)
-        self.assertEqual('$$TS13$$', node.branch.name)
-        self.assertIn('$$TS13$$', seg.macro.data_map)
-        self.assertIn('EQU', seg.nodes['$$TS13$$'].command)
-        self.assertEqual('$$TS13$$', node.goes)
-        self.assertSetEqual({'$$TS13$$'}, node.next_labels)
 
     def test_key_value(self):
         seg_name = 'TS11'

@@ -40,12 +40,8 @@ class Segment(ExecutableMacroImplementation):
         return f"{self.name}:{self.nodes != dict()}:{len(self.nodes)}"
 
     @property
-    def root_label(self) -> str:
-        return '$$' + self.seg_name + '$$'
-
-    @property
     def root_line(self) -> Line:
-        line = Line.from_line(f"{self.root_label} EQU *")
+        line = Line.from_line(f"{self.root_label()} EQU *")
         line.index = 0
         return line
 
@@ -88,8 +84,8 @@ class Segment(ExecutableMacroImplementation):
         return
 
     def _assemble_instructions(self, lines: List[Line]) -> None:
-        prior_label = Label(self.root_label)
-        self.nodes[self.root_label] = self.equ(self.root_line)
+        prior_label = Label(self.root_label())
+        self.nodes[self.root_label()] = self.equ(self.root_line)
         for ins_line in Line.yield_lines(lines):
             line = ins_line[0]
             # Process data macro declarations and second pass assembler directives like USING, PUSH, POP
