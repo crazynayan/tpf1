@@ -3,12 +3,8 @@ from config import config
 from execution.execute import Execute
 from utils.data_type import DataType
 
-macros['EB0EB'].load()
-macros['WA0AA'].load()
-macros['UI2PF'].load()
 
-
-class T:
+class TD:
     state: Execute = Execute()
     state.init_debug(['ETA5'])
     ebsw01 = config.ECB + macros['EB0EB'].evaluate('EBSW01')

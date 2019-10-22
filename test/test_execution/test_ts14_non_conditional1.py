@@ -1,12 +1,12 @@
 import unittest
 
 from config import config
-from utils.test_data import T
+from test.input_td import TD
 
 
 class NonConditional1(unittest.TestCase):
     def setUp(self) -> None:
-        self.state = T.state
+        self.state = TD.state
         self.state.init_run()
 
     def test_ts14(self):
