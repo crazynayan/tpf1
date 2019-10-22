@@ -140,7 +140,6 @@ class StateTest(unittest.TestCase):
 
     def test_ts14(self):
         self.state.run('TS14')
-        self.assertListEqual(list(), self.state.seg.errors)
         aaa = self.state.regs.get_value('R1')
         self.assertEqual(0xFFFFC1C1 - 0x100000000, self.state.regs.get_value('R2'))
         self.assertEqual(bytearray([0xC1, 0xC1]), self.state.vm.get_bytes(aaa + 0x344, 2))
@@ -170,7 +169,6 @@ class StateTest(unittest.TestCase):
 
     def test_ts15(self):
         self.state.run('TS15')
-        self.assertListEqual(list(), self.state.seg.errors)
         self.assertEqual(23, self.state.regs.get_value('R2'))
         self.assertEqual(bytearray([0x00, 0x00, 0x00, 0x17]), self.state.vm.get_bytes(config.ECB + 8, 4))
         self.assertEqual(-2, self.state.regs.get_value('R3'))

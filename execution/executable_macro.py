@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Optional
 
-from assembly.instruction_type import KeyValue, SegmentCall
+from assembly2.seg5_exec_macro import KeyValue, SegmentCall
 from config import config
 from db.pnr import PnrLocator
 from execution.state import State
@@ -69,18 +69,18 @@ class RealTimeMacro(State):
 
     def entrc(self, node: SegmentCall) -> str:
         self.call_stack.append((node.fall_down, self.seg.name))
-        self.init_seg(node.seg_name)
-        return node.branch.name
+        self.init_seg(node.keys[0])
+        return node.goes
 
     def entnc(self, node: SegmentCall) -> str:
-        self.init_seg(node.seg_name)
-        return node.branch.name
+        self.init_seg(node.keys[0])
+        return node.goes
 
     def entdc(self, node: SegmentCall) -> str:
-        self.init_seg(node.seg_name)
+        self.init_seg(node.keys[0])
         del self.call_stack[:]
-        self.init_seg(node.seg_name)
-        return node.branch.name
+        self.init_seg(node.keys[0])
+        return node.goes
 
     def backc(self, _) -> str:
         branch, seg_name = self.call_stack.pop()
@@ -141,17 +141,17 @@ class UserDefinedMacro(State):
         if not reg.is_valid():
             raise TypeError
         pnrcm_base = self.regs.get_value(reg)
-        self.seg.macro.load('PNRCM')
+        self.seg.load_macro('PNRCM')
         if self.is_error(node.label):
-            error_code = self.seg.macro.data_map['#PM1ER5'].dsp
-            self.vm.set_value(error_code, pnrcm_base + self.seg.macro.data_map['PM1ERR'].dsp, 1)
+            error_code = self.seg.evaluate('#PM1ER5')
+            self.vm.set_value(error_code, pnrcm_base + self.seg.evaluate('PM1ERR'), 1)
             return node.fall_down
         if action in ['CRLON']:
-            pnr_locator_bytes = self.vm.get_bytes(pnrcm_base + self.seg.macro.data_map['PM1LOC'].dsp, 6)
+            pnr_locator_bytes = self.vm.get_bytes(pnrcm_base + self.seg.evaluate('PM1LOC'), 6)
             pnr_locator = DataType('X', bytes=pnr_locator_bytes).decode
             ordinal = PnrLocator.to_ordinal(pnr_locator)
-            self.vm.set_value(ordinal, pnrcm_base + self.seg.macro.data_map['PM1ORN'].dsp)
-            self.vm.set_value(ordinal, pnrcm_base + self.seg.macro.data_map['PM1FAD'].dsp)
+            self.vm.set_value(ordinal, pnrcm_base + self.seg.evaluate('PM1ORN'))
+            self.vm.set_value(ordinal, pnrcm_base + self.seg.evaluate('PM1FAD'))
         return node.fall_down
 
     def pars_date(self, node: KeyValue) -> str:
@@ -195,7 +195,7 @@ class UserDefinedMacro(State):
         if self.is_error(node.label):
             field_name = node.get_value('FIELD')
             reg = Register(node.get_value('BASE'))
-            address = self.regs.get_unsigned_value(reg) + self.seg.macro.data_map[field_name].dsp
+            address = self.regs.get_unsigned_value(reg) + self.seg.evaluate(field_name)
             byte_array = DataType('X', input=node.get_value('XVALUE')).to_bytes()
             self.vm.set_bytes(byte_array, address, len(byte_array))
         return node.fall_down

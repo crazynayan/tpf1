@@ -1,6 +1,6 @@
 from typing import Dict, Callable
 
-from assembly.instruction_type import InstructionGeneric
+from assembly2.seg3_ins_type import InstructionType
 from execution.db_macro import DbMacro
 from execution.executable_macro import ExecutableMacro
 from execution.instruction import Instruction
@@ -146,5 +146,5 @@ class Execute(Instruction, ExecutableMacro, DbMacro):
             'EXITC': self.no_operation,
         }
 
-    def no_operation(self, node: InstructionGeneric) -> str:
+    def no_operation(self, node: InstructionType) -> str:
         return self.next_label(node)

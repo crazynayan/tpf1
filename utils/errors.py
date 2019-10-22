@@ -85,3 +85,7 @@ class BranchIndexError(TpfAnalyzerError):
 
 class ConditionMaskError(TpfAnalyzerError):
     pass
+
+
+class PackExecutionError(TpfAnalyzerError):
+    pass

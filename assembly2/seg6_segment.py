@@ -43,6 +43,10 @@ class Segment(UserDefinedMacroImplementation):
         line.index = 0
         return line
 
+    @property
+    def all_commands(self) -> List[str]:
+        return list(self._command)
+
     def assemble(self) -> None:
         if self.nodes:
             return

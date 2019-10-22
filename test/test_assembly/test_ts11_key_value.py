@@ -1,7 +1,9 @@
 import unittest
 
+from assembly2.seg3_ins_type import RegisterData
 from assembly2.seg5_exec_macro import KeyValue
 from assembly2.seg6_segment import segments, Segment
+from config import config
 
 
 class KeyValueTest(unittest.TestCase):
@@ -40,13 +42,13 @@ class KeyValueTest(unittest.TestCase):
         self.assertEqual('31', node.get_value('MODE'))
         self.assertEqual('R14', node.get_value('REG'))
         self.assertSetEqual({'TS110020.2'}, node.next_labels)
-        # # GLOBZ REGR=R15  TODO Do Globz later
-        # node: RegisterData = seg.nodes['TS110020.2']
-        # self.assertEqual('LHI', node.command)
-        # self.assertEqual('R15', node.reg.reg)
-        # self.assertEqual(config.GLOBAL, node.data)
-        # self.assertEqual('GLOBAL', seg.macro.data_map['@HAALC'].name)
-        # self.assertEqual('R15', seg.macro.get_base('GLOBAL'))
+        # # GLOBZ REGR=R15
+        node: RegisterData = seg.nodes['TS110020.2']
+        self.assertEqual('LHI', node.command)
+        self.assertEqual('R15', node.reg.reg)
+        self.assertEqual(config.GLOBAL, node.data)
+        self.assertEqual('GLOBAL', seg.lookup('@HAALC').name)
+        self.assertEqual('R15', seg.get_base('GLOBAL').reg)
         # DETAC D8,CHECK=NO
         node: KeyValue = seg.nodes['TS110020.3']
         self.assertEqual('D8', node.keys[0])
@@ -61,7 +63,7 @@ class KeyValueTest(unittest.TestCase):
         self.assertEqual('TS110020', node.get_value('ERRORA'))
         self.assertListEqual(['REF', 'REG', 'BEGIN', 'KEY1', 'KEY2', 'KEY3', 'KEY4', 'KEY5', 'ERRORA'], node.keys)
         self.assertEqual('TR1G_40_ACSTIERCODE', node.get_sub_value('KEY3', 'R'))
-        # self.assertEqual('$C_AA', node.get_sub_value('KEY2', 'S').name) # TODO S= parameter later
+        self.assertEqual('$C_AA', node.get_sub_value('KEY2', 'S').name)
         self.assertEqual('LE', node.get_sub_value('KEY4', 'C'))
         self.assertSetEqual({'TS110030.3', 'TS110020'}, node.next_labels)
         self.assertEqual('TS110020', node.goes)

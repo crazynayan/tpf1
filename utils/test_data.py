@@ -1,40 +1,39 @@
-from assembly.program import program
+from assembly2.mac2_data_macro import macros
 from config import config
 from execution.execute import Execute
 from utils.data_type import DataType
 
-
-program.macros['EB0EB'].load()
-program.macros['WA0AA'].load()
-program.macros['UI2PF'].load()
+macros['EB0EB'].load()
+macros['WA0AA'].load()
+macros['UI2PF'].load()
 
 
 class T:
     state: Execute = Execute()
     state.init_debug(['ETA5'])
-    ebsw01 = config.ECB + program.macros['EB0EB'].symbol_table['EBSW01'].dsp
-    ebw000 = config.ECB + program.macros['EB0EB'].symbol_table['EBW000'].dsp
-    ebx000 = config.ECB + program.macros['EB0EB'].symbol_table['EBX000'].dsp
-    ebrs01 = config.ECB + program.macros['EB0EB'].symbol_table['EBRS01'].dsp
-    wa0et4 = program.macros['WA0AA'].symbol_table['WA0ET4'].dsp
-    wa0et5 = program.macros['WA0AA'].symbol_table['WA0ET5'].dsp
-    wa0etg = program.macros['WA0AA'].symbol_table['WA0ETG'].dsp
-    wa0pty = program.macros['WA0AA'].symbol_table['WA0PTY'].dsp
-    wa0pti = program.macros['WA0AA'].symbol_table['WA0PTI'].dsp
-    wa0ext = program.macros['WA0AA'].symbol_table['WA0EXT'].dsp
-    wa0pn2 = program.macros['WA0AA'].symbol_table['#WA0PN2'].dsp
-    wa0any = program.macros['WA0AA'].symbol_table['#WA0ANY'].dsp
-    wa0tty = program.macros['WA0AA'].symbol_table['#WA0TTY'].dsp
-    wa0hfx = program.macros['WA0AA'].symbol_table['#WA0HFX'].dsp
-    wa0tkv = program.macros['WA0AA'].symbol_table['#WA0TKV'].dsp
-    wa0itn = program.macros['WA0AA'].symbol_table['#WA0ITN'].dsp
-    wa0ftn = program.macros['WA0AA'].symbol_table['#WA0FTN'].dsp
-    wa0ftd = program.macros['WA0AA'].symbol_table['#WA0FTD'].dsp
-    wa0afu = program.macros['WA0AA'].symbol_table['#WA0AFU'].dsp
-    ui2cnn = program.macros['UI2PF'].symbol_table['UI2CNN'].dsp
-    ui2097 = program.macros['UI2PF'].symbol_table['#UI2097'].dsp
-    ui2098 = program.macros['UI2PF'].symbol_table['#UI2098'].dsp
-    ui2214 = program.macros['UI2PF'].symbol_table['#UI2214'].dsp
+    ebsw01 = config.ECB + macros['EB0EB'].evaluate('EBSW01')
+    ebw000 = config.ECB + macros['EB0EB'].evaluate('EBW000')
+    ebx000 = config.ECB + macros['EB0EB'].evaluate('EBX000')
+    ebrs01 = config.ECB + macros['EB0EB'].evaluate('EBRS01')
+    wa0et4 = macros['WA0AA'].evaluate('WA0ET4')
+    wa0et5 = macros['WA0AA'].evaluate('WA0ET5')
+    wa0etg = macros['WA0AA'].evaluate('WA0ETG')
+    wa0pty = macros['WA0AA'].evaluate('WA0PTY')
+    wa0pti = macros['WA0AA'].evaluate('WA0PTI')
+    wa0ext = macros['WA0AA'].evaluate('WA0EXT')
+    wa0pn2 = macros['WA0AA'].evaluate('#WA0PN2')
+    wa0any = macros['WA0AA'].evaluate('#WA0ANY')
+    wa0tty = macros['WA0AA'].evaluate('#WA0TTY')
+    wa0hfx = macros['WA0AA'].evaluate('#WA0HFX')
+    wa0tkv = macros['WA0AA'].evaluate('#WA0TKV')
+    wa0itn = macros['WA0AA'].evaluate('#WA0ITN')
+    wa0ftn = macros['WA0AA'].evaluate('#WA0FTN')
+    wa0ftd = macros['WA0AA'].evaluate('#WA0FTD')
+    wa0afu = macros['WA0AA'].evaluate('#WA0AFU')
+    ui2cnn = macros['UI2PF'].evaluate('UI2CNN')
+    ui2097 = macros['UI2PF'].evaluate('#UI2097')
+    ui2098 = macros['UI2PF'].evaluate('#UI2098')
+    ui2214 = macros['UI2PF'].evaluate('#UI2214')
     # Database
     hfax_2812_gld = [
         'SSRFQTUBA2811Y20OCTDFW  ORD  0510GLD/DGHWCL RR    ',

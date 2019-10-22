@@ -1,8 +1,8 @@
 from typing import Callable, Optional, Tuple, Dict, List, Set
 
-from assembly.instruction_type import InstructionGeneric, InstructionType
-from assembly.program import program
-from assembly.segment import Segment
+from assembly2.mac2_data_macro import macros
+from assembly2.seg3_ins_type import InstructionType
+from assembly2.seg6_segment import Segment, segments
 from config import config
 from execution.debug import Debug
 from execution.regs_store import Registers, Storage
@@ -35,10 +35,10 @@ class State:
             self.regs.R8 = self.loaded_seg[seg_name][1]
             self.seg = self.loaded_seg[seg_name][0]
         else:
-            program.load(seg_name)
+            self.seg = segments[seg_name]
+            self.seg.assemble()
             self.regs.R8 = self.vm.allocate()   # Constant
             literal = self.vm.allocate()        # Literal is immediately the next frame
-            self.seg = program.segments[seg_name]
             self.vm.set_bytes(self.seg.data.constant, self.regs.R8, len(self.seg.data.constant))
             self.vm.set_bytes(self.seg.data.literal, literal, len(self.seg.data.literal))
             self.loaded_seg[seg_name] = (self.seg, self.regs.R8)
@@ -46,8 +46,8 @@ class State:
     def init_debug(self, seg_list: List[str]) -> None:
         nodes = dict()
         for seg_name in seg_list:
-            program.segments[seg_name].load()
-            nodes = {**nodes, **program.segments[seg_name].nodes}
+            segments[seg_name].assemble()
+            nodes = {**nodes, **segments[seg_name].nodes}
         self.DEBUG.init_trace(nodes, seg_list)
 
     @staticmethod
@@ -57,7 +57,7 @@ class State:
             # For DECB=(R1) DECB=L1ADR
             raise TypeError
         level = f"{ecb_label}{level[1]}"
-        dsp = program.macros['EB0EB'].symbol_table[level].dsp
+        dsp = macros['EB0EB'].evaluate(level)
         return config.ECB + dsp
 
     def _setup(self) -> None:
@@ -78,7 +78,7 @@ class State:
         if aaa:
             self.vm.set_value(config.AAA, config.ECB + 0x170)  # Save AAA address in CE1CR1
         self._setup()
-        label = self.seg.root_label
+        label = self.seg.root_label()
         while True:
             node = self.seg.nodes[label]
             label = self.ex_command(node)
@@ -97,7 +97,7 @@ class State:
     def branch_return(self, _) -> str:
         pass
 
-    def next_label(self, node: InstructionGeneric) -> Optional[str]:
+    def next_label(self, node: InstructionType) -> Optional[str]:
         for condition in node.conditions:
             if condition.is_check_cc:
                 if condition.mask & (1 << 3 - self.cc) != 0:
@@ -121,8 +121,8 @@ class State:
         self.cc = 1 if number else 0
 
     def set_partition(self, partition: str) -> None:
-        haalc = config.GLOBAL + program.macros['GLOBAL'].symbol_table['@HAALC'].dsp
-        ce1uid = config.ECB + program.macros['EB0EB'].symbol_table['CE1$UID'].dsp
+        haalc = config.GLOBAL + macros['GLOBAL'].evaluate('@HAALC')
+        ce1uid = config.ECB + macros['EB0EB'].evaluate('CE1$UID')
         self.vm.set_bytes(DataType('C', input=partition).to_bytes(), haalc, 2)
         self.vm.set_value(config.PARTITION[partition], ce1uid, 1)
 
@@ -139,11 +139,11 @@ class Setup:
 
     def yield_data(self) -> Tuple[bytearray, int]:
         for label, byte_array in self.ecb.items():
-            dsp = program.macros['EB0EB'].symbol_table[label].dsp
+            dsp = macros['EB0EB'].evaluate(label)
             yield byte_array, config.ECB + dsp
         for label, byte_array in self.img.items():
-            dsp = program.macros['MI0MI'].symbol_table[label].dsp
+            dsp = macros['MI0MI'].evaluate(label)
             yield byte_array, config.IMG + dsp
         for label, byte_array in self.aaa.items():
-            dsp = program.macros['WA0AA'].symbol_table[label].dsp
+            dsp = macros['WA0AA'].evaluate(label)
             yield byte_array, config.AAA + dsp

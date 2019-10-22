@@ -335,7 +335,9 @@ class InstructionImplementation(InstructionOperand):
                 label = operand2 + Label.SEPARATOR + '1'
         else:
             if operand2.startswith('*-'):
-                prior_ins = next(node for _, node in self.nodes.items() if node.fall_down == line.label)
+                prior_ins = next((node for _, node in self.nodes.items() if node.fall_down == line.label), None)
+                if prior_ins is None:
+                    raise RegisterLabelInvalidError
                 prior_ins_len = self.get_value(operand2[2:])
                 if prior_ins.get_attribute('len') == prior_ins_len:
                     label = prior_ins.label

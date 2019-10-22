@@ -1,10 +1,11 @@
 import unittest
 
-from assembly.program import program
+from assembly2.mac2_data_macro import macros
 from config import config
 from db.pnr import Pnr
 from db.tpfdf import Tpfdf
 from utils.data_type import DataType
+from utils.errors import PackExecutionError
 from utils.test_data import T
 
 
@@ -36,7 +37,7 @@ class NameSuccessETAW(unittest.TestCase):
 
     def test_WA0NAD_ETAW(self) -> None:
         Pnr.add_names(config.AAAPNR, ['1ZAVERI', '3SHAH'])
-        T.wa0nad = program.macros['WA0AA'].symbol_table['#WA0NAD'].dsp
+        T.wa0nad = macros['WA0AA'].evaluate('#WA0NAD')
         T.state.setup.aaa['WA0ETG'] = bytearray([T.wa0nad])
         label = T.state.run('ETA5', aaa=True)
         self.assertEqual('$$ETAW$$.1', label)
@@ -48,7 +49,7 @@ class NameSuccessETAW(unittest.TestCase):
 
     def test_WA0CDI_ETAW(self) -> None:
         Pnr.add_names(config.AAAPNR, ['33ZAVERI'])
-        T.wa0cdi = program.macros['WA0AA'].symbol_table['#WA0CDI'].dsp
+        T.wa0cdi = macros['WA0AA'].evaluate('#WA0CDI')
         T.state.setup.aaa['WA0US4'] = bytearray([T.wa0cdi])
         label = T.state.run('ETA5', aaa=True)
         self.assertEqual('$$ETAW$$.1', label)
@@ -392,10 +393,10 @@ class NameFailUIO1(unittest.TestCase):
         label = T.state.run('ETA5', aaa=True)
         self.assertEqual('$$UIO1$$.1', label)
         self.assertTrue(T.state.vm.all_bits_on(T.state.regs.R1 + T.wa0et4, 0x20))
-        ui2inc = program.macros['UI2PF'].symbol_table['UI2INC'].dsp
-        ui2xui = program.macros['UI2PF'].symbol_table['#UI2XUI'].dsp
-        ui2can = program.macros['UI2PF'].symbol_table['#UI2CAN'].dsp
-        ui2nxt = program.macros['AASEQ'].symbol_table['#UI2NXT'].dsp
+        ui2inc = macros['UI2PF'].evaluate('UI2INC')
+        ui2xui = macros['UI2PF'].evaluate('#UI2XUI')
+        ui2can = macros['UI2PF'].evaluate('#UI2CAN')
+        ui2nxt = macros['AASEQ'].evaluate('#UI2NXT')
         ui2inc_bytes = bytearray([ui2xui + ui2can, ui2nxt, ui2nxt])
         self.assertEqual(ui2inc_bytes, T.state.vm.get_bytes(T.state.regs.R7 + ui2inc, 3))
         self.assertTrue(T.state.vm.all_bits_off(T.state.regs.R1 + T.wa0et5, 0x02))
@@ -494,14 +495,14 @@ class NameException(unittest.TestCase):
         # Both C/ and Z/ will give an exception.
         # I/ will NOT give an exception.
         Pnr.add_names(config.AAAPNR, ['Z/SABRE', '1ZAVERI'])
-        self.assertRaises(ValueError, T.state.run, 'ETA5', True)
+        self.assertRaises(PackExecutionError, T.state.run, 'ETA5', True)
         self.assertEqual('Z', DataType('X', bytes=T.state.vm.get_bytes(T.ebw000 + 14)).decode)
 
     def test_invalid_group_C_not_at_start_Exception(self):
         # Preceding adult for invalid C/  will give an exception.
         # Preceding adult for invalid Z/ will NOT give an exception.
         Pnr.add_names(config.AAAPNR, ['1ZAVERI', 'C/TOURS'])
-        self.assertRaises(ValueError, T.state.run, 'ETA5', True)
+        self.assertRaises(PackExecutionError, T.state.run, 'ETA5', True)
         self.assertEqual('C', DataType('X', bytes=T.state.vm.get_bytes(T.ebw000 + 14)).decode)
 
 

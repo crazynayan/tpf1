@@ -16,7 +16,6 @@ class DbTest(unittest.TestCase):
         names = ['C/21TOURS', '2ZAVERI',  'I/2ZAVERI/S']
         Pnr.add_names(config.AAAPNR, names)
         T.state.run('TS18', aaa=True)
-        self.assertListEqual(list(), T.state.seg.errors)
         self.assertIsNone(T.state.message)
         self.assertEqual(25, T.state.regs.R1)
         # Check for another corporate
@@ -38,7 +37,6 @@ class DbTest(unittest.TestCase):
         Pnr.add_fqtv('DGHWCL', T.fqtv_gld)
         Pnr.add_itin(config.AAAPNR, T.itin_2811_2812)
         T.state.run('TS19', aaa=True)
-        self.assertListEqual(list(), T.state.seg.errors)
         self.assertEqual(0xF2F8F1F2, T.state.regs.get_unsigned_value('R1'))
         self.assertEqual(0xF9F0F8F7, T.state.regs.get_unsigned_value('R2'))
         self.assertEqual(0x00D6D9C4, T.state.regs.get_unsigned_value('R3'))

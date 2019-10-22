@@ -58,6 +58,11 @@ class Bits:
     def value(self) -> int:
         return sum(bit.value for _, bit in self.__dict__.items() if bit.on)
 
+    def set_value(self, value: int) -> None:
+        for index, bit in enumerate(f'{value:08b}'):
+            bit_n = getattr(self, 'bit' + str(index))
+            bit_n.on = True if bit == '1' else False
+
     def set_name(self, name: str, value: int) -> None:
         bit = next((bit for _, bit in self.__dict__.items() if bit.value == value), None)
         if bit is not None:
@@ -160,10 +165,7 @@ class InstructionOperand(DirectiveImplementation):
             raise BitsInvalidError
         # Initialize bits and turn ON relevant bits
         bits = Bits()
-        for index, bit in enumerate(f'{number:08b}'):
-            if bit == '1':
-                bit_n = getattr(bits, 'bit' + str(index))
-                bit_n.on = True
+        bits.set_value(number)
         # Set the name
         for expression in re.split(f"[+-]", operand):
             if self.check(expression):
@@ -223,9 +225,9 @@ class InstructionOperand(DirectiveImplementation):
             # 10(3,R10)
             length = self.get_value(operand2)
             field = self._get_field_by_base_dsp(base=operand3, dsp=operand1)
-        if 1 <= length <= max_len:
+        if 0 <= length <= max_len:
             # Length in machine code is always saved as 1 less.
-            length = length - 1
+            length = length - 1 if length else 0
         else:
             raise FieldLengthInvalidError
         return FieldLen(field, length)

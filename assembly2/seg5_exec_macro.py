@@ -1,14 +1,19 @@
 import re
 from typing import List, Tuple, Union, Optional
 
-from assembly2.seg3_ins_type import InstructionGeneric
+from assembly2.seg2_ins_operand import FieldBaseDsp
+from assembly2.seg3_ins_type import InstructionGeneric, RegisterData
 from assembly2.seg4_ins_implementation import InstructionImplementation
+from config import config
+from utils.data_type import Register
+from utils.errors import RegisterInvalidError
 from utils.file_line import Line
 
 
 class KeyValue(InstructionGeneric):
 
-    def __init__(self, line: Line, operands: List[Tuple[str, Union[Optional[str], List[Tuple[str, Optional[str]]]]]],
+    def __init__(self, line: Line,
+                 operands: List[Tuple[str, Union[Optional[str], List[Tuple[str, Optional[str]]]]]],
                  branches: List[str]):
         super().__init__(line)
         self._operands: List[Tuple[str, Union[Optional[str], List[Tuple[str, Optional[str]]]]]] = operands
@@ -37,7 +42,7 @@ class KeyValue(InstructionGeneric):
     def goes(self) -> str:
         return next(iter(self.branches), None)
 
-    def get_value(self, key: str) -> Union[Optional[str], List[Tuple[str, Optional[str]]]]:
+    def get_value(self, key: str) -> Union[Optional[str], List[Tuple[str, Union[Optional[str], FieldBaseDsp]]]]:
         # Returns
         # None - For key not found
         # value: str - For KEY=VALUE
@@ -48,9 +53,14 @@ class KeyValue(InstructionGeneric):
             value = [sub_key_value[0] for sub_key_value in value]
         return value
 
-    def get_sub_value(self, key: str, sub_key: str) -> Optional[str]:
+    def get_sub_value(self, key: str, sub_key: str) -> Union[Optional[str], FieldBaseDsp]:
         return next((sub_key_value[1] for key_value in self.sub_key_value for sub_key_value in key_value[1]
                      if key_value[0] == key and sub_key_value[0] == sub_key), None)
+
+    def set_sub_value(self, value: FieldBaseDsp, original_value: str, key: str, sub_key: str) -> None:
+        key_value_list = self.get_value(key)
+        key_value_list.remove((sub_key, original_value))
+        key_value_list.append((sub_key, value))
 
 
 class SegmentCall(KeyValue):
@@ -76,12 +86,13 @@ class RealtimeMacroImplementation(InstructionImplementation):
         self._command['DETAC'] = self.key_value
         self._command['ATTAC'] = self.key_value
         self._command['MODEC'] = self.key_value
-        self._command['GLOBZ'] = self.key_value
+        self._command['GLOBZ'] = self.globz
+        self._command['FINWC'] = self.key_value
         self._command['SYSRA'] = self.key_value
         self._command['SERRC'] = self.key_value
         self._command['SENDA'] = self.key_value
         self._command['DBOPN'] = self.key_value
-        self._command['DBRED'] = self.key_value
+        self._command['DBRED'] = self.dbred
         self._command['DBCLS'] = self.key_value
         self._command['DBIFB'] = self.key_value
 
@@ -113,6 +124,30 @@ class RealtimeMacroImplementation(InstructionImplementation):
         entxc.branches.append(self.root_label(seg))
         return SegmentCall(line, entxc)
 
+    def globz(self, line: Line) -> RegisterData:
+        globc = self.key_value(line)
+        reg = globc.get_value('REGR')
+        reg = reg or globc.get_value('REGS')
+        base = Register(reg)
+        if not base.is_valid():
+            raise RegisterInvalidError
+        self.load_macro('GLOBAL', base=reg)
+        line.command = 'LHI'
+        return RegisterData(line, base, config.GLOBAL)
+
+    def dbred(self, line: Line) -> KeyValue:
+        dbred_key = self.key_value(line)
+        for key_number in range(2, 7):
+            key_n = f"KEY{key_number}"
+            if dbred_key.get_value(key_n) is None:
+                break
+            field_name = dbred_key.get_sub_value(key_n, 'S')
+            if not field_name:
+                break
+            field: FieldBaseDsp = self.field_base_dsp(field_name)
+            dbred_key.set_sub_value(field, field_name, key_n, 'S')
+        return dbred_key
+
     def load_macro_from_line(self, line: Line) -> None:
         macro_key_value: KeyValue = self.key_value(line)
         macro_name = line.command
@@ -130,3 +165,8 @@ class UserDefinedMacroImplementation(RealtimeMacroImplementation):
         self._command['PDRED'] = self.key_value
         self._command['PDCLS'] = self.key_value
         self._command['CFCMA'] = self.key_value
+        self._command['HEAPA'] = self.key_value
+        self._command['LOCAA'] = self.key_value
+        # Tool specific commands
+        self._command['ERROR_CHECK'] = self.key_value
+        self._command['PARS_DATE'] = self.key_value

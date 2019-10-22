@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Union, Optional, Tuple, Dict
 
-from assembly.program import program
+from assembly2.mac2_data_macro import macros
 from config import config
 from utils.data_type import DataType, Register
 
@@ -109,9 +109,9 @@ class Storage:
         self._frame[base_address] = bytearray()
 
     def _setup_global(self):
-        haalc = config.GLOBAL + program.macros['GLOBAL'].symbol_table['@HAALC'].dsp
+        haalc = config.GLOBAL + macros['GLOBAL'].evaluate('@HAALC')
         self.set_bytes(bytearray([0xC1, 0xC1]), haalc, 2)
-        u1dmo = config.GLOBAL + program.macros['GLOBAL'].symbol_table['@U1DMO'].dsp
+        u1dmo = config.GLOBAL + macros['GLOBAL'].evaluate('@U1DMO')
         today = datetime.today()
         today = datetime(year=today.year, month=today.month, day=today.day)
         pars_today = (today - config.START).days

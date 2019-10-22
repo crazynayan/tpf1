@@ -1,6 +1,6 @@
 from typing import List, Dict, Union, Tuple, Optional
 
-from assembly.program import program
+from assembly2.mac2_data_macro import macros
 from config import config
 from db.stream import Stream
 from utils.data_type import DataType
@@ -99,16 +99,16 @@ class Pnr:
     @staticmethod
     def add_fqtv(pnr_locator: str, frequent_travellers: List[Dict[str, bytearray]]) -> None:
         pnr_doc = Pnr.get_pnr_doc(pnr_locator)
-        program.macros['PR001W'].load()
-        frequent_travellers: List[bytearray] = [Stream.to_bytes(fqtv, program.macros['PR001W'])
+        macros['PR001W'].load()
+        frequent_travellers: List[bytearray] = [Stream.to_bytes(fqtv, macros['PR001W'])
                                                 for fqtv in frequent_travellers]
         Pnr.add_elements(pnr_doc, frequent_travellers, '60', packed=True)
 
     @staticmethod
     def add_itin(pnr_locator: str, itineraries: List[Dict[str, bytearray]]) -> None:
         pnr_doc = Pnr.get_pnr_doc(pnr_locator)
-        program.macros['WI0BS'].load()
-        itineraries: List[bytearray] = [Stream.to_bytes(itin, program.macros['WI0BS']) for itin in itineraries]
+        macros['WI0BS'].load()
+        itineraries: List[bytearray] = [Stream.to_bytes(itin, macros['WI0BS']) for itin in itineraries]
         Pnr.add_elements(pnr_doc, itineraries, '30')
 
     @staticmethod

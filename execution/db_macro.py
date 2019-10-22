@@ -1,7 +1,8 @@
 from typing import Optional
 
-from assembly.instruction_type import KeyValue
 from assembly2.mac0_generic import LabelReference
+from assembly2.seg2_ins_operand import FieldBaseDsp
+from assembly2.seg5_exec_macro import KeyValue
 from db.pnr import Pnr, PnrLocator
 from db.tpfdf import Tpfdf
 from execution.state import State
@@ -27,9 +28,9 @@ class UserDefinedDbMacro(State):
         return pd0_base
 
     def _get_pnr_locator(self):
-        aaa_address = self.vm.get_value(self.regs.R9 + self.seg.macro.data_map['CE1CR1'].dsp)
-        self.seg.macro.load('WA0AA')
-        pnr_ordinal = self.vm.get_value(aaa_address + self.seg.macro.data_map['WA0PWR'].dsp)
+        aaa_address = self.vm.get_value(self.regs.R9 + self.seg.evaluate('CE1CR1'))
+        self.seg.load_macro('WA0AA')
+        pnr_ordinal = self.vm.get_value(aaa_address + self.seg.evaluate('WA0PWR'))
         return PnrLocator.to_locator(pnr_ordinal)
 
     def pdcls(self, node: KeyValue) -> str:
@@ -42,11 +43,11 @@ class UserDefinedDbMacro(State):
         pd0_base = self._pd0_base(node)
 
         # Get the key from FIELD= or INDEX=
-        self.seg.macro.load('PDEQU')
-        self.seg.macro.load('PD0WRK')
+        self.seg.load_macro('PDEQU')
+        self.seg.load_macro('PD0WRK')
         key_label = f"#PD_{node.get_value('FIELD')}_K"
         try:
-            key_number = self.seg.macro.data_map[key_label].dsp
+            key_number = self.seg.evaluate(key_label)
             key = f"{key_number:2x}"
         except KeyError:
             # TODO Code for INDEX= Not in ETA5
@@ -69,8 +70,8 @@ class UserDefinedDbMacro(State):
                 return node.fall_down
 
         # Get the item number to read (Item numbers start from 1)
-        pd0_ctl_key: LabelReference = self.seg.macro.data_map['PD0_CTL_KEY']
-        pd0_mc_cin: LabelReference = self.seg.macro.data_map['PD0_MC_CIN']
+        pd0_ctl_key: LabelReference = self.seg.lookup('PD0_CTL_KEY')
+        pd0_mc_cin: LabelReference = self.seg.lookup('PD0_MC_CIN')
         last_key = self.vm.get_unsigned_value(pd0_base + pd0_ctl_key.dsp, pd0_ctl_key.length)
         item_number = self.vm.get_value(pd0_base + pd0_mc_cin.dsp, pd0_mc_cin.length) + 1 \
             if last_key == key_number else 1
@@ -100,14 +101,13 @@ class UserDefinedDbMacro(State):
                 raise IndexError
             return not_found
         elif item_number == Pnr.get_len(pnr_locator, key):
-            last_item_bit: int = self.seg.macro.data_map['#PD0_RT_LST'].dsp
-            pd0_rt_id1: LabelReference = self.seg.macro.data_map['PD0_RT_ID1']
+            last_item_bit: int = self.seg.evaluate('#PD0_RT_LST')
+            pd0_rt_id1: LabelReference = self.seg.lookup('PD0_RT_ID1')
             self.vm.or_bit(pd0_base + pd0_rt_id1.dsp, last_item_bit)
 
         # Update the data in PD0WRK
-        pd0_itm: LabelReference = self.seg.macro.data_map['PD0_P_DATA'] if packed else \
-            self.seg.macro.data_map['PD0_C_ITM']
-        pd0_rt_adr: LabelReference = self.seg.macro.data_map['PD0_RT_ADR']
+        pd0_itm: LabelReference = self.seg.lookup('PD0_P_DATA') if packed else self.seg.lookup('PD0_C_ITM')
+        pd0_rt_adr: LabelReference = self.seg.lookup('PD0_RT_ADR')
         if len(data) > pd0_itm.length:
             raise ValueError
         self.vm.set_bytes(data, pd0_base + pd0_itm.dsp, len(data))
@@ -130,7 +130,7 @@ class TpfdfMacro(State):
 
     def _base_sw00sr(self) -> None:
         self.regs.R3 = self.vm.valid_address(self.regs.R3)
-        self.seg.macro.load('SW00SR')
+        self.seg.load_macro('SW00SR')
 
     def dbopn(self, node: KeyValue) -> str:
         self.tpfdf_ref[node.get_value('REF')] = 0
@@ -162,46 +162,46 @@ class TpfdfMacro(State):
         # Setup KEY1 Primary key
         pky = node.get_sub_value('KEY1', 'PKY')
         if pky is not None:
-            key = f'{self.seg.macro.data_map[pky].dsp:02X}'
+            key = f'{self.seg.evaluate(pky):02X}'
         else:
-            key = f"{self.seg.macro.data_map[node.get_sub_value('KEY1', 'S')].dsp:02X}"
+            key = f"{self.seg.evaluate(node.get_sub_value('KEY1', 'S')):02X}"
 
         # Set up KEY2 to KEY6
         other_keys = dict()
         for key_number in range(2, 7):
             key_n = f'KEY{key_number}'
-            if not node.is_key(key_n):
+            if node.get_value(key_n) is None:
                 break
             df_field_name = node.get_sub_value(key_n, 'R')
             condition = node.get_sub_value(key_n, 'C')
             sign = self.C[condition] if condition is not None else '=='
-            field = node.get_sub_value(key_n, 'S')
+            field: FieldBaseDsp = node.get_sub_value(key_n, 'S')
             if field is None:
                 # TODO For M, D, L types
                 raise TypeError
             base_address = self.regs.get_value(field.base)
-            length = self.seg.macro.data_map[df_field_name].length
+            length = self.seg.lookup(df_field_name).length
             byte_array = self.vm.get_bytes(base_address + field.dsp, length)
             other_keys[df_field_name] = (f'{sign} {byte_array}', length)
 
         # Get the lrec
         ref_name = node.get_value('REF')
-        item_number = 0 if node.is_key('BEGIN') else self.tpfdf_ref[ref_name]
+        item_number = 0 if node.get_value('BEGIN') else self.tpfdf_ref[ref_name]
         item_number += 1
         lrec, item_number = Tpfdf.get_lrec(ref_name, key, item_number, other_keys)
         self.tpfdf_ref[ref_name] = item_number
 
         # Update error_code and REG=
         if lrec is None or self.is_error(node.label):
-            error_code = self.seg.macro.data_map['#TPFDBER'].dsp
+            error_code = self.seg.evaluate('#TPFDBER')
         else:
-            error_code = self.seg.macro.data_map['#TPFDBOK'].dsp
-            data_address = self.regs.R3 + self.seg.macro.data_map['SW00KL1'].dsp
+            error_code = self.seg.evaluate('#TPFDBOK')
+            data_address = self.regs.R3 + self.seg.evaluate('SW00KL1')
             self.vm.set_bytes(lrec, data_address, len(lrec))
             reg = Register(node.get_value('REG'))
             if reg.is_valid():
                 self.regs.set_value(data_address, reg)
-        self.vm.set_byte(error_code, self.regs.R3 + self.seg.macro.data_map['SW00RTN'].dsp)
+        self.vm.set_byte(error_code, self.regs.R3 + self.seg.evaluate('SW00RTN'))
 
         # ERROR=
         error_label = node.get_value('ERRORA')

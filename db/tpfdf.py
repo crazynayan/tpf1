@@ -1,6 +1,6 @@
 from typing import List, Dict, Union, Tuple, Optional
 
-from assembly.program import program
+from assembly2.mac2_data_macro import macros
 from db.stream import Stream
 
 
@@ -18,7 +18,7 @@ class Tpfdf:
             return None, item_number
         for item_number in range(item_number, len(lrec_list) + 1):
             lrec = lrec_list[item_number - 1]
-            symbol_table = program.macros[ref_name].symbol_table
+            symbol_table = macros[ref_name].all_labels
             if all(eval(f'{lrec[symbol_table[field_name].dsp: symbol_table[field_name].dsp + length]} {expression}')
                    for field_name, (expression, length) in other_keys.items()):
                 return lrec, item_number
@@ -35,12 +35,12 @@ class Tpfdf:
     @staticmethod
     def add(data: List[Dict[str, bytearray]], ref_name: str, key: str) -> None:
         ref = Tpfdf.get_ref(ref_name)
-        program.macros[ref_name].load()
+        macros[ref_name].load()
         for lrec_dict in data:
             lrec = dict()
             lrec['key'] = key
             lrec['data'] = bytearray()
-            lrec['data'].extend(Stream.to_bytes(lrec_dict, program.macros[ref_name]))
+            lrec['data'].extend(Stream.to_bytes(lrec_dict, macros[ref_name]))
             ref.append(lrec)
 
     @staticmethod

@@ -14,7 +14,7 @@ TS130030 PACK  EBW088(8),4(1,R2)
 TS130040 DS    0H
          MVC   EBW000,EBT000
          EXITC
-TS13E000 EQU   *
-         EX    R16,TS130010
-         EX    R15,*-1
-         EX    R15,TS13INVALID
+TS13E000 EQU   *    ERRORS ARE TESTED INLINE
+*         EX    R16,TS130010
+*         EX    R15,*-1
+*         EX    R15,TS13INVALID
