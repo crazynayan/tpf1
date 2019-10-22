@@ -1,8 +1,8 @@
 from typing import Optional
 
-from assembly2.mac0_generic import LabelReference
-from assembly2.seg2_ins_operand import FieldBaseDsp
-from assembly2.seg5_exec_macro import KeyValue
+from assembly.mac0_generic import LabelReference
+from assembly.seg2_ins_operand import FieldBaseDsp
+from assembly.seg5_exec_macro import KeyValue
 from db.pnr import Pnr, PnrLocator
 from db.tpfdf import Tpfdf
 from execution.state import State

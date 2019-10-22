@@ -1,9 +1,9 @@
 import re
 from typing import List, Tuple, Union, Optional
 
-from assembly2.seg2_ins_operand import FieldBaseDsp
-from assembly2.seg3_ins_type import InstructionGeneric, RegisterData
-from assembly2.seg4_ins_implementation import InstructionImplementation
+from assembly.seg2_ins_operand import FieldBaseDsp
+from assembly.seg3_ins_type import InstructionGeneric, RegisterData
+from assembly.seg4_ins_implementation import InstructionImplementation
 from config import config
 from utils.data_type import Register
 from utils.errors import RegisterInvalidError

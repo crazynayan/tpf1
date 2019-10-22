@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Union, Optional, Tuple, Dict
 
-from assembly2.mac2_data_macro import macros
+from assembly.mac2_data_macro import macros
 from config import config
 from utils.data_type import DataType, Register
 

@@ -1,6 +1,6 @@
 from copy import deepcopy
 
-from assembly2.seg3_ins_type import RegisterRegister, RegisterFieldIndex, RegisterData, RegisterDataField, \
+from assembly.seg3_ins_type import RegisterRegister, RegisterFieldIndex, RegisterData, RegisterDataField, \
     RegisterRegisterField, FieldLenField, FieldData, BranchCondition, RegisterBranch, BranchConditionRegister, \
     FieldBits, RegisterLabel, FieldLenFieldLen
 from execution.state import State

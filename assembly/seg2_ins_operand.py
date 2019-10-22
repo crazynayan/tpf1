@@ -1,8 +1,8 @@
 import re
 from typing import Optional, List
 
-from assembly2.mac0_generic import LabelReference
-from assembly2.seg1_directive import DirectiveImplementation
+from assembly.mac0_generic import LabelReference
+from assembly.seg1_directive import DirectiveImplementation
 from config import config
 from utils.data_type import Register
 from utils.errors import RegisterInvalidError, FieldDspInvalidError, FieldLengthInvalidError, BitsInvalidError, \

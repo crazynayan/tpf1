@@ -1,6 +1,6 @@
 from typing import List, Dict, Union, Tuple, Optional
 
-from assembly2.mac2_data_macro import macros
+from assembly.mac2_data_macro import macros
 from db.stream import Stream
 
 

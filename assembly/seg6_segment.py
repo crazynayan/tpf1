@@ -3,10 +3,10 @@ import re
 from copy import copy
 from typing import Dict, Optional, List
 
-from assembly2.mac0_generic import LabelReference
-from assembly2.mac2_data_macro import macros
-from assembly2.seg2_ins_operand import Label
-from assembly2.seg5_exec_macro import UserDefinedMacroImplementation
+from assembly.mac0_generic import LabelReference
+from assembly.mac2_data_macro import macros
+from assembly.seg2_ins_operand import Label
+from assembly.seg5_exec_macro import UserDefinedMacroImplementation
 from config import config
 from utils.data_type import Register
 from utils.file_line import Line, File

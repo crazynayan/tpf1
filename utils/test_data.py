@@ -1,4 +1,4 @@
-from assembly2.mac2_data_macro import macros
+from assembly.mac2_data_macro import macros
 from config import config
 from execution.execute import Execute
 from utils.data_type import DataType

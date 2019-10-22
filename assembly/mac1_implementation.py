@@ -1,7 +1,7 @@
 import re
 from typing import List, Optional
 
-from assembly2.mac0_generic import MacroGeneric, LabelReference
+from assembly.mac0_generic import MacroGeneric, LabelReference
 from utils.data_type import DataType
 from utils.errors import EquLabelRequiredError, EquDataTypeHasAmpersandError
 from utils.file_line import Line

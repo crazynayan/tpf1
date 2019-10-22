@@ -1,8 +1,8 @@
 import os
 from typing import Dict, List, Tuple, Set
 
-from assembly2.mac0_generic import LabelReference
-from assembly2.mac1_implementation import DataMacroImplementation
+from assembly.mac0_generic import LabelReference
+from assembly.mac1_implementation import DataMacroImplementation
 from config import config
 from utils.errors import EquDataTypeHasAmpersandError, NotFoundInSymbolTableError
 from utils.file_line import Line, File

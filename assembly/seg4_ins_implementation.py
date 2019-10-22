@@ -1,7 +1,7 @@
 from typing import Tuple, Dict
 
-from assembly2.seg2_ins_operand import InstructionOperand, Label
-from assembly2.seg3_ins_type import InstructionGeneric, FieldBits, FieldLenField, FieldLenFieldLen, FieldData, \
+from assembly.seg2_ins_operand import InstructionOperand, Label
+from assembly.seg3_ins_type import InstructionGeneric, FieldBits, FieldLenField, FieldLenFieldLen, FieldData, \
     RegisterRegister, RegisterFieldIndex, RegisterData, RegisterRegisterField, RegisterDataField, BranchCondition, \
     RegisterBranch, BranchConditionRegister, FieldSingle, RegisterRegisterBranch, RegisterLabel, InstructionType, \
     FieldLenFieldData

@@ -1,6 +1,6 @@
 from typing import Optional, List, Set, TypeVar
 
-from assembly2.seg2_ins_operand import FieldBaseDsp, Bits, FieldIndex, FieldLen
+from assembly.seg2_ins_operand import FieldBaseDsp, Bits, FieldIndex, FieldLen
 from utils.command import cmd
 from utils.data_type import Register
 from utils.file_line import Line

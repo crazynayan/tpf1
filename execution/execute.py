@@ -1,6 +1,6 @@
 from typing import Dict, Callable
 
-from assembly2.seg3_ins_type import InstructionType
+from assembly.seg3_ins_type import InstructionType
 from execution.db_macro import DbMacro
 from execution.executable_macro import ExecutableMacro
 from execution.instruction import Instruction

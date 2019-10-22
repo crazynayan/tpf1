@@ -1,6 +1,6 @@
 import unittest
 
-from assembly2.seg6_segment import segments, Segment
+from assembly.seg6_segment import segments, Segment
 from utils.errors import RegisterInvalidError, RegisterLabelInvalidError
 from utils.file_line import Line
 

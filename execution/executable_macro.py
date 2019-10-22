@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Optional
 
-from assembly2.seg5_exec_macro import KeyValue, SegmentCall
+from assembly.seg5_exec_macro import KeyValue, SegmentCall
 from config import config
 from db.pnr import PnrLocator
 from execution.state import State

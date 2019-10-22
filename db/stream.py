@@ -1,6 +1,6 @@
 from typing import Dict
 
-from assembly2.mac2_data_macro import DataMacro
+from assembly.mac2_data_macro import DataMacro
 from execution.state import Storage
 
 

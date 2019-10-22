@@ -1,7 +1,7 @@
 from typing import List
 
-from assembly2.mac1_implementation import Dsdc
-from assembly2.seg0_generic import SegmentGeneric
+from assembly.mac1_implementation import Dsdc
+from assembly.seg0_generic import SegmentGeneric
 from utils.data_type import Register
 from utils.errors import UsingInvalidError
 from utils.file_line import Line

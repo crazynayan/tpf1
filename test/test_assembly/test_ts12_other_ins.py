@@ -1,6 +1,6 @@
 import unittest
 
-from assembly2.seg6_segment import Segment, segments
+from assembly.seg6_segment import Segment, segments
 
 
 class OtherInstruction(unittest.TestCase):

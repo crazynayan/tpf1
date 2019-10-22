@@ -1,7 +1,7 @@
 import unittest
 
-from assembly2.mac2_data_macro import macros
-from assembly2.seg6_segment import segments, Segment
+from assembly.mac2_data_macro import macros
+from assembly.seg6_segment import segments, Segment
 from utils.file_line import Line, File
 from utils.test_data import T
 

@@ -1,8 +1,8 @@
 from typing import Callable, Optional, Tuple, Dict, List, Set
 
-from assembly2.mac2_data_macro import macros
-from assembly2.seg3_ins_type import InstructionType
-from assembly2.seg6_segment import Segment, segments
+from assembly.mac2_data_macro import macros
+from assembly.seg3_ins_type import InstructionType
+from assembly.seg6_segment import Segment, segments
 from config import config
 from execution.debug import Debug
 from execution.regs_store import Registers, Storage

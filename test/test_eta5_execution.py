@@ -1,6 +1,6 @@
 import unittest
 
-from assembly2.mac2_data_macro import macros
+from assembly.mac2_data_macro import macros
 from config import config
 from db.pnr import Pnr
 from db.tpfdf import Tpfdf

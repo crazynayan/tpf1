@@ -1,8 +1,8 @@
 import unittest
 
-from assembly2.seg3_ins_type import RegisterData
-from assembly2.seg5_exec_macro import KeyValue
-from assembly2.seg6_segment import segments, Segment
+from assembly.seg3_ins_type import RegisterData
+from assembly.seg5_exec_macro import KeyValue
+from assembly.seg6_segment import segments, Segment
 from config import config
 
 

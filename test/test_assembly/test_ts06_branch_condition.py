@@ -1,6 +1,6 @@
 import unittest
 
-from assembly2.seg6_segment import Segment, segments
+from assembly.seg6_segment import Segment, segments
 from utils.errors import RegisterInvalidError, ConditionMaskError, BranchIndexError, \
     BranchInvalidError, NotFoundInSymbolTableError
 from utils.file_line import Line

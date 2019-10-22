@@ -1,6 +1,6 @@
 from typing import Dict, List, Optional
 
-from assembly2.seg3_ins_type import InstructionType
+from assembly.seg3_ins_type import InstructionType
 
 
 class Trace:
