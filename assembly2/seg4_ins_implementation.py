@@ -1,12 +1,13 @@
-from typing import Tuple
+from typing import Tuple, Dict
 
-from assembly2.seg2_ins_operand import InstructionOperand
+from assembly2.seg2_ins_operand import InstructionOperand, Label
 from assembly2.seg3_ins_type import InstructionGeneric, FieldBits, FieldLenField, FieldLenFieldLen, FieldData, \
     RegisterRegister, RegisterFieldIndex, RegisterData, RegisterRegisterField, RegisterDataField, BranchCondition, \
-    RegisterBranch, BranchConditionRegister
+    RegisterBranch, BranchConditionRegister, FieldSingle, RegisterRegisterBranch, RegisterLabel, InstructionType, \
+    FieldLenFieldData
 from utils.command import cmd
 from utils.data_type import Register
-from utils.errors import DataInvalidError, RegisterInvalidError, ConditionMaskError
+from utils.errors import DataInvalidError, RegisterInvalidError, ConditionMaskError, RegisterLabelInvalidError
 from utils.file_line import Line
 
 
@@ -14,6 +15,7 @@ class InstructionImplementation(InstructionOperand):
 
     def __init__(self, name: str):
         super().__init__(name)
+        self.nodes: Dict[str, InstructionType] = dict()
         self._command['OI'] = self.field_bits
         self._command['NI'] = self.field_bits
         self._command['XI'] = self.field_bits
@@ -23,35 +25,92 @@ class InstructionImplementation(InstructionOperand):
         self._command['XC'] = self.field_len_field
         self._command['OC'] = self.field_len_field
         self._command['NC'] = self.field_len_field
+        self._command['MVZ'] = self.field_len_field
+        self._command['MVN'] = self.field_len_field
+        self._command['TRT'] = self.field_len_field
+        self._command['TR'] = self.field_len_field
+        self._command['ED'] = self.field_len_field
+        self._command['EDMK'] = self.field_len_field
         self._command['PACK'] = self.field_len_field_len
         self._command['UNPK'] = self.field_len_field_len
+        self._command['MVO'] = self.field_len_field_len
+        self._command['ZAP'] = self.field_len_field_len
+        self._command['AP'] = self.field_len_field_len
+        self._command['SP'] = self.field_len_field_len
+        self._command['DP'] = self.field_len_field_len
+        self._command['MP'] = self.field_len_field_len
+        self._command['CP'] = self.field_len_field_len
+        self._command['SRP'] = self.field_len_field_data
+        self._command['TP'] = self.field_single
         self._command['CLI'] = self.field_data
         self._command['MVI'] = self.field_data
         self._command['LTR'] = self.reg_reg
         self._command['LR'] = self.reg_reg
         self._command['AR'] = self.reg_reg
         self._command['SR'] = self.reg_reg
+        self._command['MR'] = self.reg_reg
+        self._command['DR'] = self.reg_reg
+        self._command['ALR'] = self.reg_reg
+        self._command['SLR'] = self.reg_reg
         self._command['BCTR'] = self.reg_reg
+        self._command['LPR'] = self.reg_reg
+        self._command['LNR'] = self.reg_reg
+        self._command['LCR'] = self.reg_reg
+        self._command['MVCL'] = self.reg_reg
+        self._command['CLCL'] = self.reg_reg
+        self._command['CLR'] = self.reg_reg
+        self._command['CR'] = self.reg_reg
+        self._command['NR'] = self.reg_reg
+        self._command['OR'] = self.reg_reg
+        self._command['XR'] = self.reg_reg
+        self._command['BASR'] = self.reg_reg
         self._command['L'] = self.reg_field_index
+        self._command['LH'] = self.reg_field_index
         self._command['LA'] = self.reg_field_index
         self._command['IC'] = self.reg_field_index
         self._command['STH'] = self.reg_field_index
         self._command['N'] = self.reg_field_index
+        self._command['O'] = self.reg_field_index
+        self._command['X'] = self.reg_field_index
         self._command['ST'] = self.reg_field_index
         self._command['STC'] = self.reg_field_index
         self._command['CVB'] = self.reg_field_index
         self._command['CVD'] = self.reg_field_index
         self._command['CH'] = self.reg_field_index
+        self._command['C'] = self.reg_field_index
+        self._command['CL'] = self.reg_field_index
+        self._command['A'] = self.reg_field_index
+        self._command['AH'] = self.reg_field_index
+        self._command['AL'] = self.reg_field_index
+        self._command['S'] = self.reg_field_index
+        self._command['SH'] = self.reg_field_index
+        self._command['SL'] = self.reg_field_index
+        self._command['MH'] = self.reg_field_index
+        self._command['M'] = self.reg_field_index
+        self._command['D'] = self.reg_field_index
+        self._command['SLA'] = self.reg_field_index
+        self._command['SRDA'] = self.reg_field_index
+        self._command['SRA'] = self.reg_field_index
+        self._command['SLDA'] = self.reg_field_index
+        self._command['SLL'] = self.reg_field_index
+        self._command['SRL'] = self.reg_field_index
+        self._command['SLDL'] = self.reg_field_index
+        self._command['SRDL'] = self.reg_field_index
         self._command['AHI'] = self.reg_data
         self._command['LHI'] = self.reg_data
         self._command['CHI'] = self.reg_data
+        self._command['MHI'] = self.reg_data
         self._command['LM'] = self.reg_reg_field
         self._command['STM'] = self.reg_reg_field
         self._command['ICM'] = self.reg_data_field
         self._command['STCM'] = self.reg_data_field
+        self._command['CLM'] = self.reg_data_field
         self._command['BAS'] = self.reg_branch
         self._command['JAS'] = self.reg_branch
         self._command['BCT'] = self.reg_branch
+        self._command['BXH'] = self.reg_reg_branch
+        self._command['BXLE'] = self.reg_reg_branch
+        self._command['EX'] = self.reg_label
         self._command['BC'] = self.branch_condition
         self._command['BCRY'] = self.branch_condition
         self._command['B'] = self.branch_condition
@@ -145,6 +204,19 @@ class InstructionImplementation(InstructionOperand):
             raise DataInvalidError
         return FieldData(line, field, data)
 
+    def field_single(self, line: Line) -> FieldSingle:
+        field = self.field_len(line.operand, FieldSingle.MAX_LEN)
+        return FieldSingle(line, field)
+
+    def field_len_field_data(self, line: Line) -> FieldLenFieldData:
+        operand1, operand2, operand3 = line.split_operands()
+        field_len = self.field_len(operand1, FieldLenFieldData.MAX_LEN)
+        field = self.field_base_dsp(operand2)
+        data = self.get_value(operand3)
+        if not 0 <= data <= FieldLenFieldData.MAX_VALUE:
+            raise DataInvalidError
+        return FieldLenFieldData(line, field_len, field, data)
+
     @staticmethod
     def reg_reg(line: Line) -> RegisterRegister:
         operand1, operand2 = line.split_operands()
@@ -226,6 +298,14 @@ class InstructionImplementation(InstructionOperand):
             branch = self.get_branch(operand)
         return BranchCondition(line, branch, mask)
 
+    def branch_condition_reg(self, line: Line) -> BranchConditionRegister:
+        mask, operand, command = self._get_mask(line)
+        line.command = command
+        reg = Register(operand)
+        if not reg.is_valid():
+            raise RegisterInvalidError
+        return BranchConditionRegister(line, mask, reg)
+
     def reg_branch(self, line: Line) -> RegisterBranch:
         operand1, operand2 = line.split_operands()
         reg = Register(operand1)
@@ -234,10 +314,33 @@ class InstructionImplementation(InstructionOperand):
         branch = self.get_branch(operand2)
         return RegisterBranch(line, reg, branch)
 
-    def branch_condition_reg(self, line: Line) -> BranchConditionRegister:
-        mask, operand, command = self._get_mask(line)
-        line.command = command
-        reg = Register(operand)
+    def reg_reg_branch(self, line: Line) -> RegisterRegisterBranch:
+        operand1, operand2, operand3 = line.split_operands()
+        reg1 = Register(operand1)
+        reg2 = Register(operand2)
+        if not reg1.is_valid() or not reg2.is_valid():
+            raise RegisterInvalidError
+        branch = self.get_branch(operand3)
+        return RegisterRegisterBranch(line, reg1, reg2, branch)
+
+    def reg_label(self, line: Line) -> RegisterLabel:
+        operand1, operand2 = line.split_operands()
+        reg = Register(operand1)
         if not reg.is_valid():
             raise RegisterInvalidError
-        return BranchConditionRegister(line, mask, reg)
+        if self.is_branch(operand2):
+            if self.is_instruction_branch(operand2):
+                label = operand2
+            else:
+                label = operand2 + Label.SEPARATOR + '1'
+        else:
+            if operand2.startswith('*-'):
+                prior_ins = next(node for _, node in self.nodes.items() if node.fall_down == line.label)
+                prior_ins_len = self.get_value(operand2[2:])
+                if prior_ins.get_attribute('len') == prior_ins_len:
+                    label = prior_ins.label
+                else:
+                    raise RegisterLabelInvalidError
+            else:
+                raise RegisterLabelInvalidError
+        return RegisterLabel(line, reg, label)

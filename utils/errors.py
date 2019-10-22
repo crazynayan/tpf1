@@ -71,6 +71,10 @@ class RegisterIndexInvalidError(TpfAnalyzerError):
     pass
 
 
+class RegisterLabelInvalidError(TpfAnalyzerError):
+    pass
+
+
 class BranchInvalidError(TpfAnalyzerError):
     pass
 

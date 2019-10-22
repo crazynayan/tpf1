@@ -94,6 +94,31 @@ class FieldData(InstructionGeneric):
         return f"{super().__repr__()}:{self.field},{self.data}"
 
 
+class FieldSingle(InstructionGeneric):
+    MAX_LEN = 16
+
+    def __init__(self, line: Line, field: FieldBaseDsp):
+        super().__init__(line)
+        self.field: FieldBaseDsp = field
+
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}:{self.field}"
+
+
+class FieldLenFieldData(InstructionGeneric):
+    MAX_LEN = 16
+    MAX_VALUE = 9
+
+    def __init__(self, line: Line, field_len: FieldLen, field: FieldBaseDsp, data: int):
+        super().__init__(line)
+        self.field_len: FieldLen = field_len
+        self.field: FieldBaseDsp = field
+        self.data: int = data
+
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}:{self.field_len},{self.field},{self.data}"
+
+
 class RegisterRegister(InstructionGeneric):
 
     def __init__(self, line: Line, reg1: Register, reg2: Register):
@@ -203,3 +228,23 @@ class RegisterBranch(BranchGeneric):
 
     def __repr__(self) -> str:
         return f"{super().__repr__()}:{self.reg},{self.branch}"
+
+
+class RegisterRegisterBranch(BranchGeneric):
+    def __init__(self, line: Line, reg1: Register, reg2: Register, branch: FieldIndex):
+        super().__init__(line, branch)
+        self.reg1: Register = reg1
+        self.reg2: Register = reg2
+
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}:{self.reg1},{self.reg2},{self.branch}"
+
+
+class RegisterLabel(InstructionGeneric):
+    def __init__(self, line: Line, reg: Register, label: str):
+        super().__init__(line)
+        self.reg: Register = reg
+        self.ex_label: str = label
+
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}:{self.reg},{self.ex_label}"
