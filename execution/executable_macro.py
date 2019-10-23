@@ -1,4 +1,3 @@
-from datetime import datetime, timedelta
 from typing import Optional
 
 from assembly.seg5_exec_macro import KeyValue, SegmentCall
@@ -6,6 +5,7 @@ from config import config
 from db.pnr import PnrLocator
 from execution.state import State
 from utils.data_type import DataType, Register
+from utils.ucdr import pars_to_date, date_to_pars
 
 
 class RealTimeMacro(State):
@@ -13,14 +13,32 @@ class RealTimeMacro(State):
         address = self.vm.allocate()
         level_address = self.get_ecb_address(node.keys[0], 'CE1CR')
         control_address = self.get_ecb_address(node.keys[0], 'CE1CT')
+        size_address = self.get_ecb_address(node.keys[0], 'CE1CC')
+        block_type = node.keys[1]
+        control_value = config.BLOCK_TYPE[block_type] if block_type in config.BLOCK_TYPE else config.BLOCK_TYPE['L4']
+        size_value = config.BLOCK_SIZE[block_type] if block_type in config.BLOCK_SIZE else config.BLOCK_TYPE['L4']
         self.vm.set_value(address, level_address)
-        self.vm.set_value(1, control_address, 2)
+        self.vm.set_value(control_value, control_address, 2)
+        self.vm.set_value(size_value, size_address, 2)
         self.regs.R14 = address
         return node.fall_down
 
     def relcc(self, node: KeyValue) -> str:
         control_address = self.get_ecb_address(node.keys[0], 'CE1CT')
-        self.vm.set_value(0, control_address, 2)
+        size_address = self.get_ecb_address(node.keys[0], 'CE1CC')
+        self.vm.set_value(0x01, control_address, 2)
+        self.vm.set_value(0, size_address, 2)
+        return node.fall_down
+
+    def crusa(self, node: KeyValue) -> str:
+        for index in range(16):
+            level = node.get_value(f"S{index}")
+            if level is None:
+                break
+            control_address = self.get_ecb_address(f"D{level}", 'CE1CT')
+            size_address = self.get_ecb_address(f"D{level}", 'CE1CC')
+            self.vm.set_value(0x01, control_address, 2)
+            self.vm.set_value(0, size_address, 2)
         return node.fall_down
 
     def detac(self, node: KeyValue) -> str:
@@ -77,7 +95,6 @@ class RealTimeMacro(State):
         return node.goes
 
     def entdc(self, node: SegmentCall) -> str:
-        self.init_seg(node.keys[0])
         del self.call_stack[:]
         self.init_seg(node.keys[0])
         return node.goes
@@ -155,37 +172,25 @@ class UserDefinedMacro(State):
         return node.fall_down
 
     def pars_date(self, node: KeyValue) -> str:
-        # Some constants
-        gross_days = 333
-        today = datetime.today()
-        today = datetime(year=today.year, month=today.month, day=today.day)
         # Get the option_byte and do the conversion
         option_byte = self.vm.get_byte(self.regs.R6)
         if option_byte == 0x00:
             # Date to PARS day number. 03OCT (2019) -> 4CB0
             date_bytes = self.vm.get_bytes(self.regs.R7, 5)
-            date_str = DataType('X', bytes=date_bytes).decode
             try:
-                date = datetime.strptime(date_str, '%d%b')
-                date = date.replace(year=today.year)
-                days_from_today = (date - today).days
-                past_days_allowed = gross_days - (datetime(today.year, 12, 31) - datetime(today.year, 1, 1)).days
-                if days_from_today < past_days_allowed:
-                    date = date.replace(year=date.year + 1)
-                self.regs.R6 = (date - config.START).days
-                self.regs.R7 = (date - today).days
+                days_from_start, days_from_today = date_to_pars(date_bytes)
+                self.regs.R6 = days_from_start
+                self.regs.R7 = days_from_today
             except ValueError:
                 self.regs.R6 = 0
         elif option_byte == 0xFF:
             # PARS day number to Date. 4CB0 -> 03OCT
             days_from_start = self.regs.R7
-            if 0 <= days_from_start <= 0x7FFF:
-                date = config.START + timedelta(days=days_from_start)
-                date_str = date.strftime('%d%b').upper()
-                date_bytes = DataType('C', input=date_str).to_bytes()
+            try:
+                date_bytes = pars_to_date(days_from_start)
                 self.regs.R7 = self.regs.R6
                 self.vm.set_bytes(date_bytes, self.regs.R7, len(date_bytes))
-            else:
+            except ValueError:
                 self.regs.R6 = 0
         else:
             self.regs.R6 = 0

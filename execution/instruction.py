@@ -5,7 +5,7 @@ from assembly.seg3_ins_type import RegisterRegister, RegisterFieldIndex, Registe
     FieldBits, RegisterLabel, FieldLenFieldLen
 from execution.state import State
 from utils.data_type import DataType
-from utils.errors import PackExecutionError
+from utils.errors import PackExecutionError, BctExecutionError
 
 
 class LoadStore(State):
@@ -112,6 +112,13 @@ class ArithmeticShiftAlgebraic(State):
         self.set_number_cc(value)
         return self.next_label(node)
 
+    def add_halfword(self, node: RegisterFieldIndex) -> str:
+        address = self.regs.get_address(node.field.base, node.field.dsp, node.field.index)
+        value = self.regs.get_value(node.reg) + self.vm.get_value(address, 2)
+        self.regs.set_value(value, node.reg)
+        self.set_number_cc(value)
+        return self.next_label(node)
+
     def add_halfword_immediate(self, node: RegisterData) -> str:
         value = self.regs.get_value(node.reg) + node.data
         self.regs.set_value(value, node.reg)
@@ -150,6 +157,16 @@ class MoveLogicControl(State):
         self.regs.set_value(value, node.reg1)
         return self.next_label(node)
 
+    def branch_on_count(self, node: RegisterBranch) -> str:
+        value = self.regs.get_value(node.reg)
+        if value <= 0:
+            raise BctExecutionError
+        value -= 1
+        self.regs.set_value(value, node.reg)
+        if value > 0:
+            return node.branch.name
+        return self.next_label(node)
+
     def branch_and_save(self, node: RegisterBranch) -> str:
         bas = self.seg.bas
         value = bas.dumps(node.fall_down)
@@ -182,6 +199,19 @@ class CompareLogical(State):
         value = self.vm.get_value(address, 2)
         reg_value = self.regs.get_value(node.reg)
         self.set_number_cc(reg_value - value)
+        return self.next_label(node)
+
+    def compare_fullword(self, node: RegisterFieldIndex) -> str:
+        address = self.regs.get_address(node.field.base, node.field.dsp, node.field.index)
+        value = self.vm.get_value(address, 4)
+        reg_value = self.regs.get_value(node.reg)
+        self.set_number_cc(reg_value - value)
+        return self.next_label(node)
+
+    def compare_register(self, node: RegisterRegister) -> str:
+        reg_value1 = self.regs.get_value(node.reg1)
+        reg_value2 = self.regs.get_value(node.reg2)
+        self.set_number_cc(reg_value1 - reg_value2)
         return self.next_label(node)
 
 

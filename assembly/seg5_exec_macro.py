@@ -68,9 +68,6 @@ class SegmentCall(KeyValue):
     def __init__(self, line, key_value: KeyValue):
         super().__init__(line, key_value._operands, key_value.branches)
 
-    def __repr__(self) -> str:
-        return f"{super().__repr__()}:{self._operands}"
-
 
 class RealtimeMacroImplementation(InstructionImplementation):
     def __init__(self, name: str):

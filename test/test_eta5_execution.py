@@ -745,8 +745,10 @@ class BeforeNameETAW(unittest.TestCase):
 
 # noinspection PyPep8Naming
 def tearDownModule():
-    with open('trace_log.txt', 'w') as trace_log:
-        trace_log.write('\n'.join([str(trace) for trace in TD.state.DEBUG.get_no_hit()]))
+    if 'ETA5' in TD.state.DEBUG.seg_list:
+        with open('trace_log.txt', 'w') as trace_log:
+            trace_log.write('\n'.join([str(trace) for trace in TD.state.DEBUG.get_no_hit()]))
+    return
 
 
 if __name__ == '__main__':

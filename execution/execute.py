@@ -33,7 +33,7 @@ class Execute(Instruction, ExecutableMacro, DbMacro):
             # S04 - Arithmetic & Shift Algebraic
             'AR': self.add_register,
             # A - Not in ETA5
-            # AH - Not in ETA5
+            'AH': self.add_halfword,
             'AHI': self.add_halfword_immediate,
             'SR': self.subtract_register,
             # S - Not in ETA5
@@ -48,7 +48,7 @@ class Execute(Instruction, ExecutableMacro, DbMacro):
             # MVZ, MVO, MVN - Not in ETA5
             'B': self.branch,
             'J': self.branch,
-            # BCT - Not in ETA5
+            'BCT': self.branch_on_count,
             'BCTR': self.branch_on_count_register,
             # BXH, BXLE - Not in ETA5
             'BAS': self.branch_and_save,
@@ -56,8 +56,8 @@ class Execute(Instruction, ExecutableMacro, DbMacro):
             # BASR - Not in ETA5
 
             # S06 -  Compare & Logical
-            # CR - Not in ETA5
-            # C - Not in ETA5
+            'CR': self.compare_register,
+            'C': self.compare_fullword,
             'CH': self.compare_halfword,
             # CHI - Not in ETA5
             # CL, CLR - Not in ETA5
@@ -105,7 +105,7 @@ class Execute(Instruction, ExecutableMacro, DbMacro):
             'DETAC': self.detac,
             'ATTAC': self.attac,
             'RELCC': self.relcc,
-            'CRUSA': self.no_operation,
+            'CRUSA': self.crusa,
             'SENDA': self.senda,
             'SYSRA': self.sysra,
             'SERRC': self.serrc,
@@ -125,6 +125,7 @@ class Execute(Instruction, ExecutableMacro, DbMacro):
             'ERROR_CHECK': self.error_check,
 
             # Realtime Db Macros - Not in ETA5
+            'FINWC': self.finwc,
             # FINWC, FIWHC, FINDC, FINHC
             # FILEC, FILNC
 

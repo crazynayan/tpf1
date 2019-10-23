@@ -30,6 +30,10 @@ class Pnr:
             'std_fix': bytearray(),
             'std_var': bytearray(),
         },
+        'A0': {  # GROUP_PLAN
+            'std_fix': bytearray(),
+            'std_var': bytearray([0x02, 0x01]),
+        },
     }
 
     @staticmethod
@@ -89,6 +93,12 @@ class Pnr:
         pnr_doc = Pnr.get_pnr_doc(pnr_locator)
         names: List[bytearray] = [DataType('C', input=name).to_bytes() for name in names]
         Pnr.add_elements(pnr_doc, names, '50')
+
+    @staticmethod
+    def add_group_plan(pnr_locator: str, group_plans: List[str]) -> None:
+        pnr_doc = Pnr.get_pnr_doc(pnr_locator)
+        group_plans: List[bytearray] = [DataType('C', input=group_plan).to_bytes() for group_plan in group_plans]
+        Pnr.add_elements(pnr_doc, group_plans, 'A0')
 
     @staticmethod
     def add_hfax(pnr_locator: str, hfax: List[str]) -> None:

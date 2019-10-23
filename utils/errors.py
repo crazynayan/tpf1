@@ -2,61 +2,73 @@ class TpfAnalyzerError(Exception):
     pass
 
 
-class NotFoundInSymbolTableError(TpfAnalyzerError):
+class AssemblyError(TpfAnalyzerError):
     pass
 
 
-class EquLabelRequiredError(TpfAnalyzerError):
+class ExecutionError(TpfAnalyzerError):
     pass
 
 
-class EquDataTypeHasAmpersandError(TpfAnalyzerError):
+class NotFoundInSymbolTableError(AssemblyError):
     pass
 
 
-class RegisterInvalidError(TpfAnalyzerError):
+class EquLabelRequiredError(AssemblyError):
     pass
 
 
-class UsingInvalidError(TpfAnalyzerError):
+class EquDataTypeHasAmpersandError(AssemblyError):
     pass
 
 
-class FieldDspInvalidError(TpfAnalyzerError):
+class RegisterInvalidError(AssemblyError):
     pass
 
 
-class FieldLengthInvalidError(TpfAnalyzerError):
+class UsingInvalidError(AssemblyError):
     pass
 
 
-class DataInvalidError(TpfAnalyzerError):
+class FieldDspInvalidError(AssemblyError):
     pass
 
 
-class BitsInvalidError(TpfAnalyzerError):
+class FieldLengthInvalidError(AssemblyError):
     pass
 
 
-class RegisterIndexInvalidError(TpfAnalyzerError):
+class DataInvalidError(AssemblyError):
     pass
 
 
-class RegisterLabelInvalidError(TpfAnalyzerError):
+class BitsInvalidError(AssemblyError):
     pass
 
 
-class BranchInvalidError(TpfAnalyzerError):
+class RegisterIndexInvalidError(AssemblyError):
     pass
 
 
-class BranchIndexError(TpfAnalyzerError):
+class RegisterLabelInvalidError(AssemblyError):
     pass
 
 
-class ConditionMaskError(TpfAnalyzerError):
+class BranchInvalidError(AssemblyError):
     pass
 
 
-class PackExecutionError(TpfAnalyzerError):
+class BranchIndexError(AssemblyError):
+    pass
+
+
+class ConditionMaskError(AssemblyError):
+    pass
+
+
+class PackExecutionError(ExecutionError):
+    pass
+
+
+class BctExecutionError(ExecutionError):
     pass

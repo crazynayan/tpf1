@@ -48,7 +48,7 @@ class UserDefinedDbMacro(State):
         key_label = f"#PD_{node.get_value('FIELD')}_K"
         try:
             key_number = self.seg.evaluate(key_label)
-            key = f"{key_number:2x}"
+            key = f"{key_number:2X}"
         except KeyError:
             # TODO Code for INDEX= Not in ETA5
             raise TypeError
@@ -121,7 +121,12 @@ class UserDefinedDbMacro(State):
 
 
 class RealTimeDbMacro(State):
-    pass
+
+    def finwc(self, node: KeyValue) -> str:
+        address = self.vm.allocate()
+        level_address = self.get_ecb_address(node.keys[0], 'CE1CR')
+        self.vm.set_value(address, level_address)
+        return node.fall_down
 
 
 class TpfdfMacro(State):
