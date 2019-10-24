@@ -5,8 +5,8 @@ from utils.errors import RegisterInvalidError, DataInvalidError, NotFoundInSymbo
 from utils.file_line import Line
 
 
-class FieldVariants(unittest.TestCase):
-    def test_field_variants(self):
+class RegisterVariants(unittest.TestCase):
+    def test_reg_variants(self):
         seg: Segment = segments['TS05']
         self.assertRaises(RegisterInvalidError, seg.reg_data, Line.from_line(" LHI RAB,1"))
         self.assertRaises(DataInvalidError, seg.reg_data, Line.from_line(" LHI R1,X'10000'"))
@@ -33,7 +33,7 @@ class FieldVariants(unittest.TestCase):
         self.assertEqual('BP', node.on)
         self.assertEqual('TS050110', node.goes)
         # AHI   R15,X'00'
-        node = seg.nodes['TS050100.2']
+        node = seg.nodes['TS050100.3']
         self.assertEqual('R15', node.reg.reg)
         self.assertEqual(0, node.data)
         self.assertEqual('TS050110', node.fall_down)

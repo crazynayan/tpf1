@@ -60,9 +60,9 @@ class FieldBits(unittest.TestCase):
         node = seg.nodes['$$TS01$$.6']
         self.assertEqual('TS010010', node.goes)
         self.assertEqual('BZ', node.on)
-        self.assertSetEqual({'$$TS01$$.7', 'TS010010'}, node.next_labels)
+        self.assertSetEqual({'$$TS01$$.8', 'TS010010'}, node.next_labels)
         # Check fall down to label
-        node = seg.nodes['$$TS01$$.7']
+        node = seg.nodes['$$TS01$$.8']
         self.assertEqual('TS010010', node.fall_down)
         # Check TS010010 EQU *
         node = seg.nodes['TS010010']

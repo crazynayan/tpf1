@@ -1,9 +1,9 @@
 from typing import Dict, Callable
 
 from assembly.seg3_ins_type import InstructionType
-from execution.db_macro import DbMacro
-from execution.executable_macro import ExecutableMacro
-from execution.instruction import Instruction
+from execution.ex2_instruction import Instruction
+from execution.ex3_executable_macro import ExecutableMacro
+from execution.ex4_db_macro import DbMacro
 
 
 class Execute(Instruction, ExecutableMacro, DbMacro):

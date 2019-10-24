@@ -30,16 +30,16 @@ class FieldVariants(unittest.TestCase):
         self.assertEqual('BNE', node.on)
         self.assertEqual('TS040110', node.goes)
         # MVC   EBW000(L'CE1WKA-1),EBW001
-        node = seg.nodes['TS040100.3']
+        node = seg.nodes['TS040100.4']
         self.assertEqual('EBW000', node.field_len.name)
         self.assertEqual('R9', node.field_len.base.reg)
         self.assertEqual(0x8, node.field_len.dsp)
         self.assertEqual(210, node.field_len.length)
         self.assertEqual('EBW001', node.field.name)
         self.assertEqual(0x9, node.field.dsp)
-        self.assertEqual('TS040100.4', node.fall_down)
+        self.assertEqual('TS040100.5', node.fall_down)
         # CLC   2(2,R2),=C'I/' with BE    TS040110
-        node = seg.nodes['TS040100.4']
+        node = seg.nodes['TS040100.5']
         self.assertEqual('R2_AREA', node.field_len.name)
         self.assertEqual('R2', node.field_len.base.reg)
         self.assertEqual(2, node.field_len.dsp)
@@ -51,7 +51,7 @@ class FieldVariants(unittest.TestCase):
         self.assertEqual('TS040110', node.goes)
         self.assertEqual('BE', node.on)
         # CLC   =C'C/',2(R2) with BL    TS040110
-        node = seg.nodes['TS040100.5']
+        node = seg.nodes['TS040100.7']
         self.assertEqual('R2_AREA', node.field.name)
         self.assertEqual('R2', node.field.base.reg)
         self.assertEqual(2, node.field.dsp)
@@ -97,7 +97,7 @@ class FieldVariants(unittest.TestCase):
         self.assertEqual('BNE', node.on)
         self.assertEqual('TS040310', node.goes)
         # MVI   23(R4),L'CE1WKA
-        node = seg.nodes['TS040300.2']
+        node = seg.nodes['TS040300.3']
         self.assertEqual('R4_AREA', node.field.name)
         self.assertEqual('R4', node.field.base.reg)
         self.assertEqual(23, node.field.dsp)

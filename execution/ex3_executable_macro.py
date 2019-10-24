@@ -3,7 +3,7 @@ from typing import Optional
 from assembly.seg5_exec_macro import KeyValue, SegmentCall
 from config import config
 from db.pnr import PnrLocator
-from execution.state import State
+from execution.ex1_state import State
 from utils.data_type import DataType, Register
 from utils.ucdr import pars_to_date, date_to_pars
 

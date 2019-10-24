@@ -5,7 +5,7 @@ from assembly.seg3_ins_type import InstructionType
 from assembly.seg6_segment import Segment, segments
 from config import config
 from execution.debug import Debug
-from execution.regs_store import Registers, Storage
+from execution.ex0_regs_store import Registers, Storage
 from utils.data_type import DataType
 
 

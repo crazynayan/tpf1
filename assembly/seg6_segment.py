@@ -1,6 +1,5 @@
 import os
 import re
-from copy import copy
 from typing import Dict, Optional, List
 
 from assembly.mac0_generic import LabelReference
@@ -67,45 +66,41 @@ class Segment(UserDefinedMacroImplementation):
         return
 
     def _build_symbol_table(self, lines: List[Line]) -> None:
+        prior_label: Label = Label(self.root_label())
         self.equ(self.root_line)
         for line in lines:
-            length = line.length
-            if length is None:
-                if line.command in macros:
-                    length = 0
-                else:
-                    length = config.DEFAULT_INSTRUCTION_LENGTH
+            if line.command in macros:
+                continue
+            length = line.length if line.length is not None else config.DEFAULT_INSTRUCTION_LENGTH
             if line.is_first_pass:
                 self._command[line.command](line)
+            if line.is_assembler_directive and not self.is_branch(line.label):
+                continue
+            if line.label:
+                prior_label: Label = Label(line.label)
             else:
-                if line.label:
-                    self._symbol_table[line.label] = LabelReference(line.label, self._location_counter, length,
-                                                                    self.name)
-                    self._symbol_table[line.label].set_instruction_branch()
+                prior_label.index += 1
+                line.label = str(prior_label)
+            if not line.is_assembler_directive:
+                self._symbol_table[line.label] = LabelReference(line.label, self._location_counter, length, self.name)
+                self._symbol_table[line.label].set_instruction_branch()
                 self._location_counter += length
         return
 
     def _assemble_instructions(self, lines: List[Line]) -> None:
-        prior_label = Label(self.root_label())
+        prior_label: str = self.root_label()
         self.nodes[self.root_label()] = self.equ(self.root_line)
         for ins_line in Line.yield_lines(lines):
             line = ins_line[0]
             # Process data macro declarations and second pass assembler directives like USING, PUSH, POP
             if self._process_assembler_directive(line):
                 continue
-            # Set the current label
-            if not line.label:
-                current_label = copy(prior_label)
-                current_label.index += 1
-            else:
-                current_label = Label(line.label)
             # Update the prior label with fall down
             prior_node = self.nodes[str(prior_label)]
             if prior_node.is_fall_down:
-                prior_node.fall_down = str(current_label)
+                prior_node.fall_down = line.label
             # Update labels
-            prior_label = current_label
-            line.label = str(current_label)
+            prior_label = line.label
             # Create the node based on type of instruction
             self.nodes[line.label] = self._command[line.command](line)
             # Other lines contain one or more conditions (like BNE, JL) and instruction that don't change cc.
@@ -122,12 +117,12 @@ class Segment(UserDefinedMacroImplementation):
         if line.is_sw00sr:
             self.load_macro('SW00SR', 'R3')
             return False
-        if line.label and self.is_branch(line.label):
-            return False
-        if line.is_first_pass:
-            return True
         if line.command in macros:
             self.load_macro_from_line(line)
+            return True
+        if line.create_node_for_directive and self.is_branch(line.label):
+            return False
+        if line.is_first_pass:
             return True
         if not line.is_assembler_directive:
             return False

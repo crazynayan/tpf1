@@ -1,6 +1,5 @@
 import unittest
 
-from config import config
 from db.pnr import Pnr
 from test.input_td import TD
 
@@ -11,7 +10,7 @@ class EtajTest(unittest.TestCase):
         TD.state.init_run()
 
     def test_branch_validation_fail(self):
-        Pnr.add_group_plan(config.AAAPNR, ['BTS-B4T0/108/11-FINANCIAL SERVICES'])
+        # Pnr.add_group_plan(config.AAAPNR, ['BTS-B4T0/108/11-FINANCIAL SERVICES'])
         label = TD.state.run('TS21', aaa=True)
         self.assertEqual('TS21EXIT.1', label)
 

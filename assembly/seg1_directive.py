@@ -20,6 +20,9 @@ class DirectiveImplementation(SegmentGeneric):
         self._command['LTORG'] = self.no_operation
         self._command['FINIS'] = self.no_operation
         self._command['END'] = self.no_operation
+        self._command['EJECT'] = self.no_operation
+        self._command['PRINT'] = self.no_operation
+        self._command['SPACE'] = self.no_operation
 
     def dc(self, line: Line) -> None:
         dsdc_list: List[Dsdc] = super().ds(line)

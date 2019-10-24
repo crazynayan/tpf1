@@ -271,7 +271,7 @@ class OtherInstruction(unittest.TestCase):
         self.assertEqual('TS120400', node.goes)
         self.assertEqual('BCRY', node.on)
         # AL    R5,ONE
-        node = seg.nodes['TS120400.13']
+        node = seg.nodes['TS120400.14']
         self.assertEqual('AL', node.command)
         self.assertEqual('R5', node.reg.reg)
         self.assertEqual('ONE', node.field.name)
@@ -279,14 +279,14 @@ class OtherInstruction(unittest.TestCase):
         self.assertEqual(0x008, node.field.dsp)
         # SLR   R1,R3
         # BC    4,TS120400
-        node = seg.nodes['TS120400.14']
+        node = seg.nodes['TS120400.15']
         self.assertEqual('SLR', node.command)
         self.assertEqual('R1', node.reg1.reg)
         self.assertEqual('R3', node.reg2.reg)
         self.assertEqual('TS120400', node.goes)
         self.assertEqual('BL', node.on)
         # SL    R5,ZERO
-        node = seg.nodes['TS120400.15']
+        node = seg.nodes['TS120400.17']
         self.assertEqual('SL', node.command)
         self.assertEqual('R5', node.reg.reg)
         self.assertEqual('ZERO', node.field.name)

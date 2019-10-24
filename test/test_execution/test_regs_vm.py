@@ -1,6 +1,6 @@
 import unittest
 
-from execution.regs_store import Registers, Storage
+from execution.ex0_regs_store import Registers, Storage
 from utils.data_type import Register
 
 

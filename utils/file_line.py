@@ -137,6 +137,10 @@ class Line:
         return True if cmd.check(self.command, 'directive') else False
 
     @property
+    def create_node_for_directive(self) -> bool:
+        return True if cmd.check(self.command, 'directive') and cmd.check(self.command, 'create') else False
+
+    @property
     def is_sw00sr(self) -> bool:
         return True if cmd.check(self.command, 'sw00sr') else False
 
@@ -147,7 +151,7 @@ class Line:
 
     @property
     def stop_checking_for_conditions(self) -> bool:
-        return True if self.is_set_cc or not self.is_fall_down or self.label is not None \
+        return True if self.is_set_cc or not self.is_fall_down \
                        or not cmd.command_check(self.command) else False
 
     @property

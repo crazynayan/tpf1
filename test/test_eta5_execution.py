@@ -362,7 +362,7 @@ class NameFailETA5(unittest.TestCase):
 
     def test_no_name_ETA5420(self) -> None:
         label = TD.state.run('ETA5', aaa=True)
-        self.assertEqual('ETA5420.7', label)
+        self.assertEqual('ETA5420.9', label)
         self.assertEqual("'NEED NAME IN PNR TO COMPLETE TRANSACTION'", TD.state.message)
 
     def test_too_many_names_ETA5430(self) -> None:
@@ -626,7 +626,7 @@ class Companion(unittest.TestCase):
 
     def test_eta9pdwk_allocate_error_ETAW(self) -> None:
         Pnr.add_hfax(config.AAAPNR, TD.hfax_2812_gld)
-        TD.state.setup.errors.add('ETA92300.25')
+        TD.state.setup.errors.add('ETA92300.27')
         label = TD.state.run('ETA5', aaa=True)
         self.assertEqual('$$ETAW$$.1', label)
         self.assertNotEqual('WP89', DataType('X', bytes=TD.state.vm.get_bytes(TD.ebx000, 4)).decode)
@@ -653,7 +653,7 @@ class Companion(unittest.TestCase):
         Pnr.add_hfax(config.AAAPNR, TD.hfax_2812_gld)
         Pnr.add_fqtv('DGHWCL', TD.fqtv_gld)
         Pnr.add_itin('DGHWCL', TD.itin_2811_2812)
-        TD.state.setup.errors.add('ETA92500.7')
+        TD.state.setup.errors.add('ETA92500.11')
         label = TD.state.run('ETA5', aaa=True)
         self.assertEqual('$$ETAW$$.1', label)
         self.assertNotEqual('WP89', DataType('X', bytes=TD.state.vm.get_bytes(TD.ebx000, 4)).decode)
@@ -663,7 +663,7 @@ class Companion(unittest.TestCase):
         Pnr.add_hfax(config.AAAPNR, TD.hfax_2812_gld)
         Pnr.add_fqtv('DGHWCL', TD.fqtv_gld)
         Pnr.add_itin('DGHWCL', TD.itin_2811_2812)
-        TD.state.setup.errors.add('ETA92500.19')
+        TD.state.setup.errors.add('ETA92500.24')
         label = TD.state.run('ETA5', aaa=True)
         self.assertEqual('$$ETAW$$.1', label)
         self.assertEqual('WP89', DataType('X', bytes=TD.state.vm.get_bytes(TD.ebx000, 4)).decode)

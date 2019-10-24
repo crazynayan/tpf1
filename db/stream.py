@@ -1,7 +1,7 @@
 from typing import Dict
 
 from assembly.mac2_data_macro import DataMacro
-from execution.state import Storage
+from execution.ex1_state import Storage
 
 
 class Stream:

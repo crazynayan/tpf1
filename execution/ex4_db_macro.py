@@ -5,7 +5,7 @@ from assembly.seg2_ins_operand import FieldBaseDsp
 from assembly.seg5_exec_macro import KeyValue
 from db.pnr import Pnr, PnrLocator
 from db.tpfdf import Tpfdf
-from execution.state import State
+from execution.ex1_state import State
 from utils.data_type import Register
 
 

@@ -22,7 +22,7 @@ class Execute(unittest.TestCase):
         self.assertEqual('R15', node.reg.reg)
         self.assertEqual('TS130010.1', node.ex_label)
         self.assertEqual('TS130040', node.goes)
-        self.assertSetEqual({'TS130010.3', 'TS130040'}, node.next_labels)
+        self.assertSetEqual({'TS130010.4', 'TS130040'}, node.next_labels)
         ex_node = seg.nodes[node.ex_label]
         self.assertEqual('TM', ex_node.command)
         self.assertEqual(0, ex_node.bits.value)
@@ -38,7 +38,7 @@ class Execute(unittest.TestCase):
         self.assertEqual('EBW000', ex_node.field_len.name)
         self.assertEqual('EBT000', ex_node.field.name)
         # EX    R15,TS130030 on PACK  EBW088(8),4(1,R2)
-        node = seg.nodes['TS130010.3']
+        node = seg.nodes['TS130010.4']
         self.assertEqual('EX', node.command)
         self.assertEqual('R15', node.reg.reg)
         self.assertEqual('TS130030', node.ex_label)

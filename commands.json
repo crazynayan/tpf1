@@ -1,937 +1,764 @@
 {
     "A": {
-        "create": "RegisterFieldIndex",
         "field_len": 4,
         "len": 4,
         "set_cc": 1
     },
     "AAGET": {
-        "create": "KeyValue",
         "len": 4
     },
     "AH": {
-        "create": "RegisterFieldIndex",
         "field_len": 2,
         "len": 4,
         "set_cc": 1
     },
     "AHI": {
-        "create": "RegisterData",
         "len": 4,
         "set_cc": 1
     },
     "AL": {
-        "create": "RegisterFieldIndex",
         "field_len": 4,
         "len": 4,
         "set_cc": 1
     },
     "ALR": {
-        "create": "RegisterRegister",
         "len": 2,
         "set_cc": 1
     },
     "AP": {
-        "create": "FieldLenFieldLen",
         "len": 6,
         "set_cc": 1
     },
     "AR": {
-        "create": "RegisterRegister",
         "len": 2,
         "set_cc": 1
     },
     "ATTAC": {
-        "create": "KeyValue",
         "len": 4
     },
     "B": {
-        "create": "BranchCondition",
         "len": 4,
         "mask": 15,
         "no_fall_down": 1
     },
     "BACKC": {
-        "create": "Exit",
         "no_fall_down": 1
     },
     "BAS": {
-        "create": "RegisterBranch",
         "mask": 15
     },
     "BASR": {
-        "create": "RegisterRegister",
         "len": 2
     },
     "BC": {
         "check_cc": 1,
-        "create": "BranchCondition",
         "len": 4
     },
     "BCR": {
         "check_cc": 1,
-        "create": "BranchConditionRegister",
         "len": 2
     },
     "BCRY": {
         "check_cc": 1,
-        "create": "BranchCondition",
         "len": 4,
         "mask": 3
     },
     "BCT": {
-        "create": "RegisterBranch",
         "len": 4
     },
     "BCTR": {
-        "create": "RegisterRegister",
         "len": 2
     },
     "BE": {
         "check_cc": 1,
-        "create": "BranchCondition",
         "len": 4,
         "mask": 8
     },
     "BER": {
         "check_cc": 1,
-        "create": "BranchConditionRegister",
         "len": 2,
         "mask": 8
     },
     "BH": {
         "check_cc": 1,
-        "create": "BranchCondition",
         "len": 4,
         "mask": 2
     },
     "BHR": {
         "check_cc": 1,
-        "create": "BranchConditionRegister",
         "len": 2,
         "mask": 2
     },
     "BL": {
         "check_cc": 1,
-        "create": "BranchCondition",
         "len": 4,
         "mask": 4
     },
     "BLR": {
         "check_cc": 1,
-        "create": "BranchConditionRegister",
         "len": 2,
         "mask": 4
     },
     "BM": {
         "check_cc": 1,
-        "create": "BranchCondition",
         "len": 4,
         "mask": 4
     },
     "BMR": {
         "check_cc": 1,
-        "create": "BranchConditionRegister",
         "len": 2,
         "mask": 4
     },
     "BNE": {
         "check_cc": 1,
-        "create": "BranchCondition",
         "len": 4,
         "mask": 7
     },
     "BNER": {
         "check_cc": 1,
-        "create": "BranchConditionRegister",
         "len": 2,
         "mask": 7
     },
     "BNH": {
         "check_cc": 1,
-        "create": "BranchCondition",
         "len": 4,
         "mask": 13
     },
     "BNHR": {
         "check_cc": 1,
-        "create": "BranchConditionRegister",
         "len": 2,
         "mask": 13
     },
     "BNL": {
         "check_cc": 1,
-        "create": "BranchCondition",
         "len": 4,
         "mask": 11
     },
     "BNLR": {
         "check_cc": 1,
-        "create": "BranchConditionRegister",
         "len": 2,
         "mask": 11
     },
     "BNM": {
         "check_cc": 1,
-        "create": "BranchCondition",
         "len": 4,
         "mask": 11
     },
     "BNMR": {
         "check_cc": 1,
-        "create": "BranchConditionRegister",
         "len": 2,
         "mask": 11
     },
     "BNO": {
         "check_cc": 1,
-        "create": "BranchCondition",
         "len": 4,
         "mask": 14
     },
     "BNOR": {
         "check_cc": 1,
-        "create": "BranchConditionRegister",
         "len": 2,
         "mask": 14
     },
     "BNP": {
         "check_cc": 1,
-        "create": "BranchCondition",
         "len": 4,
         "mask": 13
     },
     "BNPR": {
         "check_cc": 1,
-        "create": "BranchConditionRegister",
         "len": 2,
         "mask": 13
     },
     "BNZ": {
         "check_cc": 1,
-        "create": "BranchCondition",
         "len": 4,
         "mask": 7
     },
     "BNZR": {
         "check_cc": 1,
-        "create": "BranchConditionRegister",
         "len": 2,
         "mask": 7
     },
     "BO": {
         "check_cc": 1,
-        "create": "BranchCondition",
         "len": 4,
         "mask": 1
     },
     "BOR": {
         "check_cc": 1,
-        "create": "BranchConditionRegister",
         "len": 2,
         "mask": 1
     },
     "BP": {
         "check_cc": 1,
-        "create": "BranchCondition",
         "len": 4,
         "mask": 2
     },
     "BPR": {
         "check_cc": 1,
-        "create": "BranchConditionRegister",
         "len": 2,
         "mask": 2
     },
     "BR": {
-        "create": "BranchConditionRegister",
         "len": 2,
         "mask": 15,
         "no_fall_down": 1
     },
     "BXH": {
-        "create": "RegisterRegisterBranch",
         "len": 4
     },
     "BXLE": {
-        "create": "RegisterRegisterBranch",
         "len": 4
     },
     "BZ": {
         "check_cc": 1,
-        "create": "BranchCondition",
         "len": 4,
         "mask": 8
     },
     "BZR": {
         "check_cc": 1,
-        "create": "BranchConditionRegister",
         "len": 2,
         "mask": 8
     },
     "C": {
-        "create": "RegisterFieldIndex",
         "field_len": 4,
         "len": 4,
         "set_cc": 1
     },
     "CFCMA": {
-        "create": "KeyValue",
         "len": 4
     },
     "CH": {
-        "create": "RegisterFieldIndex",
         "field_len": 2,
         "len": 4,
         "set_cc": 1
     },
     "CHI": {
-        "create": "RegisterData",
         "len": 4,
         "set_cc": 1
     },
     "CL": {
-        "create": "RegisterFieldIndex",
         "len": 4,
         "set_cc": 1
     },
     "CLC": {
-        "create": "FieldLenField",
         "len": 6,
         "set_cc": 1
     },
     "CLCL": {
-        "create": "RegisterRegister",
         "len": 2,
         "set_cc": 1
     },
     "CLI": {
-        "create": "FieldData",
         "len": 4,
         "set_cc": 1
     },
     "CLM": {
-        "create": "RegisterDataField",
         "len": 4,
         "set_cc": 1
     },
     "CLR": {
-        "create": "RegisterRegister",
         "len": 2,
         "set_cc": 1
     },
     "CP": {
-        "create": "FieldLenFieldLen",
         "len": 6,
         "set_cc": 1
     },
     "CR": {
-        "create": "RegisterRegister",
         "len": 2,
         "set_cc": 1
     },
     "CRUSA": {
-        "create": "KeyValue",
         "len": 4
     },
     "CSECT": {
-        "create": "Csect",
         "directive": 1,
         "first_pass": 1
     },
     "CVB": {
-        "create": "RegisterFieldIndex",
         "field_len": 8,
         "len": 4
     },
     "CVD": {
-        "create": "RegisterFieldIndex",
         "field_len": 8,
         "len": 4
     },
     "D": {
-        "create": "RegisterFieldIndex",
         "field_len": 4,
         "len": 4
     },
     "DBCLS": {
-        "create": "KeyValue",
         "len": 4,
         "sw00sr": 1
     },
     "DBIFB": {
-        "create": "KeyValue",
         "len": 4,
         "sw00sr": 1
     },
     "DBOPN": {
-        "create": "KeyValue",
         "len": 4,
         "sw00sr": 1
     },
     "DBRED": {
-        "create": "KeyValue",
         "len": 4,
         "sw00sr": 1
     },
     "DC": {
-        "create": "Dc",
         "directive": 1,
         "first_pass": 1
     },
     "DETAC": {
-        "create": "KeyValue",
         "len": 4
     },
     "DP": {
-        "create": "FieldLenFieldLen",
         "len": 6,
         "set_cc": 1
     },
     "DR": {
-        "create": "RegisterRegister",
         "len": 2
     },
     "DS": {
-        "create": "Ds",
+        "create": 1,
         "directive": 1,
         "first_pass": 1
     },
     "DSECT": {
-        "create": "dsect",
         "directive": 1,
         "first_pass": 1
     },
     "ED": {
-        "create": "FieldLenField",
         "len": 6,
         "set_cc": 1
     },
     "EDMK": {
-        "create": "FieldLenField",
         "len": 6,
         "set_cc": 1
     },
+    "EJECT": {
+        "directive": 1,
+        "first_pass": 1
+    },
     "END": {
-        "create": "no_operation",
         "directive": 1,
         "first_pass": 1
     },
     "ENTDC": {
-        "create": "SegmentCall",
         "len": 4,
         "no_fall_down": 1
     },
     "ENTNC": {
-        "create": "SegmentCall",
         "no_fall_down": 1
     },
-    "ENTRC": {
-        "create": "SegmentCall"
-    },
     "EQU": {
-        "create": "Equ",
+        "create": 1,
         "directive": 1,
         "first_pass": 1
     },
     "EX": {
-        "create": "RegisterLabel",
         "len": 4,
         "set_cc": 1
     },
     "EXITC": {
-        "create": "Exit",
         "no_fall_down": 1
     },
     "FINIS": {
-        "create": "no_operation",
         "directive": 1,
         "first_pass": 1
     },
     "GETCC": {
-        "create": "KeyValue",
         "len": 4
     },
     "GLOBZ": {
-        "create": "KeyValue",
         "len": 4
     },
     "IC": {
-        "create": "RegisterFieldIndex",
         "field_len": 1,
         "len": 4
     },
     "ICM": {
-        "create": "RegisterDataField",
         "len": 4,
         "set_cc": 1
     },
     "J": {
-        "create": "BranchCondition",
         "len": 4,
         "mask": 15,
         "no_fall_down": 1
     },
     "JAS": {
-        "create": "RegisterBranch",
         "mask": 15
     },
     "JC": {
         "check_cc": 1,
-        "create": "BranchCondition",
         "len": 4
     },
     "JE": {
         "check_cc": 1,
-        "create": "BranchCondition",
         "len": 4,
         "mask": 8
     },
     "JH": {
         "check_cc": 1,
-        "create": "BranchCondition",
         "len": 4,
         "mask": 2
     },
     "JL": {
         "check_cc": 1,
-        "create": "BranchCondition",
         "len": 4,
         "mask": 4
     },
     "JM": {
         "check_cc": 1,
-        "create": "BranchCondition",
         "len": 4,
         "mask": 4
     },
     "JNE": {
         "check_cc": 1,
-        "create": "BranchCondition",
         "len": 4,
         "mask": 7
     },
     "JNH": {
         "check_cc": 1,
-        "create": "BranchCondition",
         "len": 4,
         "mask": 13
     },
     "JNL": {
         "check_cc": 1,
-        "create": "BranchCondition",
         "len": 4,
         "mask": 11
     },
     "JNM": {
         "check_cc": 1,
-        "create": "BranchCondition",
         "len": 4,
         "mask": 11
     },
     "JNO": {
         "check_cc": 1,
-        "create": "BranchCondition",
         "len": 4,
         "mask": 14
     },
     "JNOP": {
-        "create": "BranchCondition",
         "len": 4,
         "mask": 0
     },
     "JNP": {
         "check_cc": 1,
-        "create": "BranchCondition",
         "len": 4,
         "mask": 13
     },
     "JNZ": {
         "check_cc": 1,
-        "create": "BranchCondition",
         "len": 4,
         "mask": 7
     },
     "JO": {
         "check_cc": 1,
-        "create": "BranchCondition",
         "len": 4,
         "mask": 1
     },
     "JP": {
         "check_cc": 1,
-        "create": "BranchCondition",
         "len": 4,
         "mask": 2
     },
     "JZ": {
         "check_cc": 1,
-        "create": "BranchCondition",
         "len": 4,
         "mask": 8
     },
     "L": {
-        "create": "RegisterFieldIndex",
         "field_len": 4,
         "len": 4
     },
     "LA": {
-        "create": "RegisterFieldIndex",
         "field_len": 0,
         "len": 4
     },
     "LCR": {
-        "create": "RegisterRegister",
         "len": 2,
         "set_cc": 1
     },
     "LH": {
-        "create": "RegisterFieldIndex",
         "field_len": 2,
         "len": 4
     },
     "LHI": {
-        "create": "RegisterData",
         "len": 4
     },
     "LM": {
-        "create": "RegisterRegisterField",
         "len": 4
     },
     "LNR": {
-        "create": "RegisterRegister",
         "len": 2,
         "set_cc": 1
     },
     "LPR": {
-        "create": "RegisterRegister",
         "len": 2,
         "set_cc": 1
     },
     "LR": {
-        "create": "RegisterRegister",
         "len": 2
     },
     "LTORG": {
-        "create": "no_operation",
         "directive": 1,
         "first_pass": 1
     },
     "LTR": {
-        "create": "RegisterRegister",
         "len": 2,
         "set_cc": 1
     },
     "M": {
-        "create": "RegisterFieldIndex",
         "field_len": 4,
         "len": 4
     },
     "MH": {
-        "create": "RegisterFieldIndex",
         "field_len": 2,
         "len": 4
     },
     "MHI": {
-        "create": "RegisterData",
         "len": 4
     },
     "MODEC": {
-        "create": "KeyValue",
         "len": 4
     },
     "MP": {
-        "create": "FieldLenFieldLen",
         "len": 6,
         "set_cc": 1
     },
     "MR": {
-        "create": "RegisterRegister",
         "len": 2
     },
     "MVC": {
-        "create": "FieldLenField",
         "len": 6
     },
     "MVCL": {
-        "create": "RegisterRegister",
         "len": 2
     },
     "MVI": {
-        "create": "FieldData",
         "len": 4
     },
     "MVN": {
-        "create": "FieldLenField",
         "len": 6
     },
     "MVO": {
-        "create": "FieldLenFieldLen",
         "len": 6
     },
     "MVZ": {
-        "create": "FieldLenField",
         "len": 6
     },
     "N": {
-        "create": "RegisterFieldIndex",
         "field_len": 4,
         "len": 4,
         "set_cc": 1
     },
     "NC": {
-        "create": "FieldLenField",
         "len": 6,
         "set_cc": 1
     },
     "NI": {
-        "create": "FieldBits",
         "len": 4,
         "set_cc": 1
     },
     "NOP": {
-        "create": "BranchCondition",
         "len": 4,
         "mask": 0
     },
     "NOPR": {
-        "create": "BranchConditionRegister",
         "len": 2,
         "mask": 0
     },
     "NR": {
-        "create": "RegisterRegister",
         "len": 2,
         "set_cc": 1
     },
     "O": {
-        "create": "RegisterFieldIndex",
         "len": 4,
         "set_cc": 1
     },
     "OC": {
-        "create": "FieldLenField",
         "len": 6,
         "set_cc": 1
     },
     "OI": {
-        "create": "FieldBits",
         "len": 4,
         "set_cc": 1
     },
     "OR": {
-        "create": "RegisterRegister",
         "len": 2,
         "set_cc": 1
     },
     "ORG": {
-        "create": "org",
         "directive": 1,
         "first_pass": 1
     },
     "PACK": {
-        "create": "FieldLenFieldLen",
         "len": 6
     },
     "PDCLS": {
-        "create": "KeyValue",
         "len": 4
     },
     "PDRED": {
-        "create": "KeyValue",
         "len": 4
     },
     "PGMID": {
-        "create": "pgmid",
         "directive": 1,
         "first_pass": 1
     },
     "PNRCC": {
-        "create": "KeyValue",
         "len": 4
     },
     "PNRCM": {
-        "create": "KeyValue",
         "len": 4
     },
     "POP": {
-        "create": "pop",
         "directive": 1,
         "len": 0
     },
+    "PRINT": {
+        "directive": 1,
+        "first_pass": 1
+    },
     "PUSH": {
-        "create": "Push",
         "directive": 1,
         "len": 0
     },
     "RELCC": {
-        "create": "KeyValue",
         "len": 4
     },
     "S": {
-        "create": "RegisterFieldIndex",
         "field_len": 4,
         "len": 4,
         "set_cc": 1
     },
     "SENDA": {
-        "create": "KeyValue",
         "len": 4,
         "no_fall_down": 1
     },
     "SERRC": {
-        "create": "KeyValue",
         "len": 4
     },
     "SH": {
-        "create": "RegisterFieldIndex",
         "field_len": 2,
         "len": 4,
         "set_cc": 1
     },
     "SL": {
-        "create": "RegisterFieldIndex",
         "field_len": 4,
         "len": 4,
         "set_cc": 1
     },
     "SLA": {
-        "create": "RegisterFieldIndex",
         "len": 4,
         "set_cc": 1
     },
     "SLDA": {
-        "create": "RegisterFieldIndex",
         "len": 4,
         "set_cc": 1
     },
     "SLDL": {
-        "create": "RegisterFieldIndex",
         "len": 4,
         "set_cc": 1
     },
     "SLL": {
-        "create": "RegisterFieldIndex",
         "len": 4,
         "set_cc": 1
     },
     "SLR": {
-        "create": "RegisterRegister",
         "len": 2,
         "set_cc": 1
     },
     "SP": {
-        "create": "FieldLenFieldLen",
         "len": 6,
         "set_cc": 1
     },
+    "SPACE": {
+        "directive": 1,
+        "first_pass": 1
+    },
     "SR": {
-        "create": "RegisterRegister",
         "len": 2,
         "set_cc": 1
     },
     "SRA": {
-        "create": "RegisterFieldIndex",
         "len": 4,
         "set_cc": 1
     },
     "SRDA": {
-        "create": "RegisterFieldIndex",
         "len": 4,
         "set_cc": 1
     },
     "SRDL": {
-        "create": "RegisterFieldIndex",
         "len": 4,
         "set_cc": 1
     },
     "SRL": {
-        "create": "RegisterFieldIndex",
         "len": 4,
         "set_cc": 1
     },
     "SRP": {
-        "create": "FieldLenFieldLen",
         "len": 6,
         "set_cc": 1
     },
     "ST": {
-        "create": "RegisterFieldIndex",
         "field_len": 4,
         "len": 4
     },
     "STC": {
-        "create": "RegisterFieldIndex",
         "field_len": 1,
         "len": 4
     },
     "STCM": {
-        "create": "RegisterDataField",
         "len": 4
     },
     "STH": {
-        "create": "RegisterFieldIndex",
         "field_len": 2,
         "len": 4
     },
     "STM": {
-        "create": "RegisterRegisterField",
         "len": 4
     },
     "SYSRA": {
-        "create": "KeyValue",
         "len": 4
     },
     "TM": {
-        "create": "FieldBits",
         "len": 4,
         "set_cc": 1
     },
     "TP": {
-        "create": "FieldSingle",
         "len": 6,
         "set_cc": 1
     },
     "TR": {
-        "create": "FieldLenField",
         "len": 6
     },
     "TRT": {
-        "create": "FieldLenField",
         "len": 6,
         "set_cc": 1
     },
     "UNPK": {
-        "create": "FieldLenFieldLen",
         "len": 6
     },
     "USING": {
-        "create": "using",
         "directive": 1,
         "len": 0
     },
     "X": {
-        "create": "RegisterFieldIndex",
         "len": 4,
         "set_cc": 1
     },
     "XC": {
-        "create": "FieldLenField",
         "len": 6,
         "set_cc": 1
     },
     "XI": {
-        "create": "FieldBits",
         "len": 4,
         "set_cc": 1
     },
     "XR": {
-        "create": "RegisterRegister",
         "len": 2,
         "set_cc": 1
     },
     "ZAP": {
-        "create": "FieldLenFieldLen",
         "len": 6,
         "set_cc": 1
     }

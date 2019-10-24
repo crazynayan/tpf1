@@ -3,7 +3,7 @@ from copy import deepcopy
 from assembly.seg3_ins_type import RegisterRegister, RegisterFieldIndex, RegisterData, RegisterDataField, \
     RegisterRegisterField, FieldLenField, FieldData, BranchCondition, RegisterBranch, BranchConditionRegister, \
     FieldBits, RegisterLabel, FieldLenFieldLen
-from execution.state import State
+from execution.ex1_state import State
 from utils.data_type import DataType
 from utils.errors import PackExecutionError, BctExecutionError
 

@@ -1,6 +1,6 @@
 from assembly.mac2_data_macro import macros
 from config import config
-from execution.execute import Execute
+from execution.ex5_execute import Execute
 from utils.data_type import DataType
 
 macros['UI2PF'].load()
@@ -8,7 +8,7 @@ macros['UI2PF'].load()
 
 class TD:
     state: Execute = Execute()
-    state.init_debug(['ETAJ'])
+    state.init_debug(['ETA5'])
     ebsw01 = config.ECB + macros['EB0EB'].evaluate('EBSW01')
     ebw000 = config.ECB + macros['EB0EB'].evaluate('EBW000')
     ebx000 = config.ECB + macros['EB0EB'].evaluate('EBX000')
