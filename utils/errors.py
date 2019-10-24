@@ -50,10 +50,6 @@ class RegisterIndexInvalidError(AssemblyError):
     pass
 
 
-class RegisterLabelInvalidError(AssemblyError):
-    pass
-
-
 class BranchInvalidError(AssemblyError):
     pass
 

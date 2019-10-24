@@ -1,13 +1,13 @@
 from typing import Tuple, Dict
 
-from assembly.seg2_ins_operand import InstructionOperand, Label
+from assembly.seg2_ins_operand import InstructionOperand
 from assembly.seg3_ins_type import InstructionGeneric, FieldBits, FieldLenField, FieldLenFieldLen, FieldData, \
     RegisterRegister, RegisterFieldIndex, RegisterData, RegisterRegisterField, RegisterDataField, BranchCondition, \
-    RegisterBranch, BranchConditionRegister, FieldSingle, RegisterRegisterBranch, RegisterLabel, InstructionType, \
+    RegisterBranch, BranchConditionRegister, FieldSingle, RegisterRegisterBranch, InstructionType, \
     FieldLenFieldData
 from utils.command import cmd
 from utils.data_type import Register
-from utils.errors import DataInvalidError, RegisterInvalidError, ConditionMaskError, RegisterLabelInvalidError
+from utils.errors import DataInvalidError, RegisterInvalidError, ConditionMaskError
 from utils.file_line import Line
 
 
@@ -323,26 +323,12 @@ class InstructionImplementation(InstructionOperand):
         branch = self.get_branch(operand3)
         return RegisterRegisterBranch(line, reg1, reg2, branch)
 
-    def reg_label(self, line: Line) -> RegisterLabel:
-        operand1, operand2 = line.split_operands()
-        reg = Register(operand1)
-        if not reg.is_valid():
-            raise RegisterInvalidError
-        if self.is_branch(operand2):
-            if self.is_instruction_branch(operand2):
-                label = operand2
-            else:
-                label = operand2 + Label.SEPARATOR + '1'
-        else:
-            if operand2.startswith('*-'):
-                prior_ins = next((node for _, node in self.nodes.items() if node.fall_down == line.label), None)
-                if prior_ins is None:
-                    raise RegisterLabelInvalidError
-                prior_ins_len = self.get_value(operand2[2:])
-                if prior_ins.get_attribute('len') == prior_ins_len:
-                    label = prior_ins.label
-                else:
-                    raise RegisterLabelInvalidError
-            else:
-                raise RegisterLabelInvalidError
-        return RegisterLabel(line, reg, label)
+    def reg_label(self, line: Line) -> RegisterFieldIndex:
+        reg_index: RegisterFieldIndex = self.reg_field_index(line)
+        _, operand2 = line.split_operands()
+        if operand2.startswith('*'):
+            expression = line.label + operand2[1:]
+            reg_index.field.dsp = self.get_value(expression)
+            reg_index.field.base = Register('R8')
+            reg_index.field.name = self.get_field_name(reg_index.field.base, reg_index.field.dsp, 4)
+        return reg_index

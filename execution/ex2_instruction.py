@@ -2,7 +2,7 @@ from copy import deepcopy
 
 from assembly.seg3_ins_type import RegisterRegister, RegisterFieldIndex, RegisterData, RegisterDataField, \
     RegisterRegisterField, FieldLenField, FieldData, BranchCondition, RegisterBranch, BranchConditionRegister, \
-    FieldBits, RegisterLabel, FieldLenFieldLen
+    FieldBits, FieldLenFieldLen
 from execution.ex1_state import State
 from utils.data_type import DataType
 from utils.errors import PackExecutionError, BctExecutionError
@@ -282,9 +282,16 @@ class LogicalUsefulConversion(State):
             self.cc = 1
         return self.next_label(node)
 
-    def execute(self, node: RegisterLabel) -> str:
+    def execute(self, node: RegisterFieldIndex) -> str:
         value = self.regs.get_value(node.reg) & 0xFF if node.reg.reg != 'R0' else 0
-        exec_node = deepcopy(self.seg.nodes[node.ex_label])
+        dsp = node.field.dsp
+        if node.field.index is not None and node.field.index.reg != 'R0':
+            dsp += self.regs.get_value(node.field.index)
+        name = self.seg.get_field_name(node.field.base, dsp, 4)
+        exec_node = self.seg.nodes[name]
+        if exec_node.command in ['EQU', 'DS']:
+            exec_node = self.seg.nodes[exec_node.fall_down]
+        exec_node = deepcopy(exec_node)
         if isinstance(exec_node, FieldLenField):
             exec_node.field_len.length |= value
             self.ex_command(exec_node)

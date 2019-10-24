@@ -48,11 +48,12 @@ class Bits:
 
     def __repr__(self) -> str:
         bit_text = [str(bit) for _, bit in self.__dict__.items() if bit.on]
+        if not bit_text:
+            return '0'
         if len(bit_text) < 5:
             return ' + '.join(bit_text)
-        else:
-            bit_text = [str(bit) for _, bit in self.__dict__.items() if not bit.on]
-            return self.PREFIX + 'A - ' + ' - '.join(bit_text)
+        bit_text = [str(bit) for _, bit in self.__dict__.items() if not bit.on]
+        return self.PREFIX + 'A - ' + ' - '.join(bit_text)
 
     @property
     def value(self) -> int:

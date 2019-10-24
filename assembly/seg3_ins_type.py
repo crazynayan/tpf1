@@ -238,13 +238,3 @@ class RegisterRegisterBranch(BranchGeneric):
 
     def __repr__(self) -> str:
         return f"{super().__repr__()}:{self.reg1},{self.reg2},{self.branch}"
-
-
-class RegisterLabel(InstructionGeneric):
-    def __init__(self, line: Line, reg: Register, label: str):
-        super().__init__(line)
-        self.reg: Register = reg
-        self.ex_label: str = label
-
-    def __repr__(self) -> str:
-        return f"{super().__repr__()}:{self.reg},{self.ex_label}"
