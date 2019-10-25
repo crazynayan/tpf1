@@ -42,6 +42,7 @@ TS060140 DS    0H               ERROR PATHS
          LTR   R4,R4
          BNO   TS060100
          JNOP  TS060130
+TS060150 B     TS06E100(R14)
 TS06E100 DS    0H               ERROR PATHS
 *         JC    -1,TS06E100
 *         BC    12,TS06E100

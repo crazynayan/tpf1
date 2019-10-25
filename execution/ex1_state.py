@@ -1,12 +1,13 @@
 from typing import Callable, Optional, Tuple, Dict, List, Set
 
 from assembly.mac2_data_macro import macros
+from assembly.seg2_ins_operand import FieldIndex
 from assembly.seg3_ins_type import InstructionType
 from assembly.seg6_segment import Segment, segments
 from config import config
 from execution.debug import Debug
 from execution.ex0_regs_store import Registers, Storage
-from utils.data_type import DataType
+from utils.data_type import DataType, Register
 
 
 class State:
@@ -128,6 +129,13 @@ class State:
 
     def is_error(self, label: str) -> bool:
         return label in self.setup.errors
+
+    def index_to_label(self, field: FieldIndex) -> str:
+        if field.index.reg == 'R0':
+            return field.name
+        dsp = self.regs.get_address(field.index, field.dsp)
+        label = self.seg.get_field_name(Register('R8'), dsp, 4)
+        return label
 
 
 class Setup:

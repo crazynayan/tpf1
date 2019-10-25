@@ -1,8 +1,7 @@
 import unittest
 
 from assembly.seg6_segment import Segment, segments
-from utils.errors import RegisterInvalidError, ConditionMaskError, BranchIndexError, \
-    BranchInvalidError, NotFoundInSymbolTableError
+from utils.errors import RegisterInvalidError, ConditionMaskError, BranchInvalidError, NotFoundInSymbolTableError
 from utils.file_line import Line
 
 
@@ -11,7 +10,6 @@ class BranchCondition(unittest.TestCase):
         seg: Segment = segments['TS06']
         self.assertRaises(ConditionMaskError, seg.branch_condition, Line.from_line(' JC -1,TS06E100'))
         self.assertRaises(ConditionMaskError, seg.branch_condition, Line.from_line(' BC 12,TS06E100'))
-        self.assertRaises(BranchIndexError, seg.branch_condition, Line.from_line(' B 8(R8,R14)'))
         self.assertRaises(RegisterInvalidError, seg.branch_condition, Line.from_line(' JC 14,8(-1)'))
         self.assertRaises(BranchInvalidError, seg.branch_condition, Line.from_line(' BNZ 1000(R8)'))
         self.assertRaises(NotFoundInSymbolTableError, seg.branch_condition, Line.from_line(' JE TS061000'))
@@ -169,8 +167,15 @@ class BranchCondition(unittest.TestCase):
         self.assertEqual('JNOP', node.command)
         self.assertIsNone(node.branch)
         self.assertEqual(0, node.mask)
-        self.assertSetEqual({'TS06E100'}, node.next_labels)
-        self.assertEqual('TS06E100', node.fall_down)
+        self.assertSetEqual({'TS060150'}, node.next_labels)
+        self.assertEqual('TS060150', node.fall_down)
+        # B     TS06E100(R14)
+        node = seg.nodes['TS060150']
+        self.assertEqual('B', node.command)
+        self.assertEqual(15, node.mask)
+        self.assertEqual('TS06E100', node.branch.name)
+        self.assertEqual('R8', node.branch.base.reg)
+        self.assertEqual('R14', node.branch.index.reg)
 
 
 if __name__ == '__main__':

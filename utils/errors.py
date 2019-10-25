@@ -54,10 +54,6 @@ class BranchInvalidError(AssemblyError):
     pass
 
 
-class BranchIndexError(AssemblyError):
-    pass
-
-
 class ConditionMaskError(AssemblyError):
     pass
 

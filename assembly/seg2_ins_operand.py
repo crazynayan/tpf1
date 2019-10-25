@@ -6,7 +6,7 @@ from assembly.seg1_directive import DirectiveImplementation
 from config import config
 from utils.data_type import Register
 from utils.errors import RegisterInvalidError, FieldDspInvalidError, FieldLengthInvalidError, BitsInvalidError, \
-    RegisterIndexInvalidError, BranchInvalidError, BranchIndexError
+    RegisterIndexInvalidError, BranchInvalidError
 
 
 class Label:
@@ -235,8 +235,6 @@ class InstructionOperand(DirectiveImplementation):
 
     def get_branch(self, operand: str) -> FieldIndex:
         field = self.field_index(operand)
-        if field.index.reg != 'R0':
-            raise BranchIndexError
         if not self.is_branch(field.name):
             raise BranchInvalidError
         return field

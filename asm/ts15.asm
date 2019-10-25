@@ -31,7 +31,10 @@ $IS$     CSECT
          UNPK  SUM,DWD3
          MVC   FIN,SUM
          OI    FIN+L'FIN-1,X'F0'
-         EXITC
+         LA    R7,4
+         B     TS15SKIP(R7)
+TS15SKIP LA    R7,8
+TS15EXIT EXITC
 C_AA     DC     C'AA'
 SPACES   DS     0XL256
          DC     256C' '

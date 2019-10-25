@@ -146,9 +146,8 @@ class MoveLogicControl(State):
         self.vm.set_value(node.data, address, 1)
         return self.next_label(node)
 
-    @staticmethod
-    def branch(node: BranchCondition) -> str:
-        return node.branch.name
+    def branch(self, node: BranchCondition) -> str:
+        return self.index_to_label(node.branch)
 
     def branch_on_count_register(self, node: RegisterRegister) -> str:
         if node.reg2.reg != 'R0':
@@ -173,7 +172,7 @@ class MoveLogicControl(State):
         return node.branch.name
 
     def branch_return(self, node: BranchConditionRegister) -> str:
-        value = self.regs.get_unsigned_value(node.reg)
+        value = self.regs.get_address(node.reg)
         label = self.seg.get_field_name(Register('R8'), value, 4)
         return label
 
