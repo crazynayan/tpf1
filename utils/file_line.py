@@ -90,43 +90,9 @@ class Line:
             prior_line = line
         return lines
 
-    @classmethod
-    def yield_lines(cls, lines: List['Line']) -> list:
-        lines_to_yield = list()
-        yielded_lines = list()
-        for index, line in enumerate(lines):
-            if line in yielded_lines:
-                continue
-            lines_to_yield.append(line)
-            if line.is_set_cc:
-                try:
-                    other_lines = list()
-                    for check_line in lines[index + 1:]:
-                        if check_line.is_check_cc:
-                            lines_to_yield.extend(other_lines)
-                            lines_to_yield.append(check_line)
-                            other_lines = list()
-                        else:
-                            other_lines.append(check_line)
-                        if check_line.stop_checking_for_conditions:
-                            break
-                except IndexError:
-                    pass
-            yield lines_to_yield
-            yielded_lines = lines_to_yield
-            lines_to_yield = list()
-
     def remove_suffix(self) -> 'Line':
         self.label = next(iter(self.label.split('&'))) if self.label is not None else None
         return self
-
-    @property
-    def is_fall_down(self) -> bool:
-        return True if not cmd.check(self.command, 'no_fall_down') else False
-
-    @property
-    def is_set_cc(self) -> bool:
-        return True if cmd.check(self.command, 'set_cc') else False
 
     @property
     def is_first_pass(self) -> bool:
@@ -143,16 +109,6 @@ class Line:
     @property
     def is_sw00sr(self) -> bool:
         return True if cmd.check(self.command, 'sw00sr') else False
-
-    @property
-    def is_check_cc(self) -> bool:
-        return True if cmd.check(self.command, 'check_cc') and \
-                       (self.command not in ['BC', 'JC'] or self.operand[:2] not in ['15', '0,']) else False
-
-    @property
-    def stop_checking_for_conditions(self) -> bool:
-        return True if self.is_set_cc or not self.is_fall_down \
-                       or not cmd.command_check(self.command) else False
 
     @property
     def length(self) -> int:

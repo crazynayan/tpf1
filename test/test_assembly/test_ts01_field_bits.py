@@ -57,7 +57,7 @@ class FieldBits(unittest.TestCase):
         self.assertEqual(0x3f, node.bits.value)
         self.assertTrue(node.bits.bit6.on)
         # Check TM with BZ TS010010
-        node = seg.nodes['$$TS01$$.6']
+        node = seg.nodes['$$TS01$$.7']
         self.assertEqual('TS010010', node.goes)
         self.assertEqual('BZ', node.on)
         self.assertSetEqual({'$$TS01$$.8', 'TS010010'}, node.next_labels)

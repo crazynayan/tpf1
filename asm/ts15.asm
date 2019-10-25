@@ -10,7 +10,11 @@ DWD3     DS    FD           EBW056      64
 FIN      DS    CL6          EBW064      72
 $IS$     CSECT
          USING TS15WK,R14
-         MVI   EBW001,23
+         LA    R11,TS15MVI
+         LA    R12,3
+         BCTR  R12,R11
+         LA    R12,100
+TS15MVI  MVI   EBW001,23
          ICM   R2,B'0011',EBW000
          ST    R2,EBW000
          AHI   R3,-2
@@ -31,7 +35,7 @@ $IS$     CSECT
          UNPK  SUM,DWD3
          MVC   FIN,SUM
          OI    FIN+L'FIN-1,X'F0'
-         LA    R7,4
+TS15IDX  LA    R7,4
          B     TS15SKIP(R7)
 TS15SKIP LA    R7,8
 TS15EXIT EXITC

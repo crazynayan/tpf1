@@ -21,14 +21,13 @@ class Subroutine(unittest.TestCase):
         self.assertEqual('R2', node.reg.reg)
         self.assertEqual('TS09S200', node.branch.name)
         self.assertEqual('R8', node.branch.base.reg)
-        # LTR   R1,R1 with BZR   R4
-        node = seg.nodes['TS09S100.1']
+        # BZR   R4
+        node = seg.nodes['TS09S100.2']
         self.assertIsNone(node.goes)
         self.assertEqual({'TS09S100.3'}, node.next_labels)
-        self.assertEqual('BZR', node.conditions[0].on)
-        self.assertEqual('R4', node.conditions[0].reg.reg)
-        self.assertEqual(8, node.conditions[0].mask)
-        self.assertIsNone(node.conditions[0].goes)
+        self.assertEqual('BZR', node.on)
+        self.assertEqual('R4', node.reg.reg)
+        self.assertEqual(8, node.mask)
         # AHI   R2,1
         self.assertEqual('AHI', seg.nodes['TS09S100.3'].command)
         # LTR   R1,R1
@@ -53,17 +52,17 @@ class Subroutine(unittest.TestCase):
         self.assertEqual(15, node.mask)
         # BCR   0,R2
         node = seg.nodes['TS09S200.1']
-        self.assertEqual('NOPR', node.command)
+        self.assertEqual('BCR', node.command)
         self.assertIsNone(node.goes)
         self.assertEqual({'TS09S200.2'}, node.next_labels)
-        self.assertEqual('NOPR', node.on)
+        self.assertEqual('BCR', node.on)
         self.assertEqual('R2', node.reg.reg)
         self.assertEqual(0, node.mask)
         # BCR   15,R2
         node = seg.nodes['TS09S200.2']
-        self.assertEqual('BR', node.command)
+        self.assertEqual('BCR', node.command)
         self.assertIsNone(node.goes)
-        self.assertEqual(set(), node.next_labels)
+        self.assertEqual('TS09S200.3', node.fall_down)
         self.assertEqual('R2', node.reg.reg)
         self.assertEqual(15, node.mask)
         # BCR   8,R2
@@ -71,7 +70,7 @@ class Subroutine(unittest.TestCase):
         self.assertIsNone(node.goes)
         self.assertEqual({'TS09S200.4'}, node.next_labels)
         self.assertEqual('R2', node.reg.reg)
-        self.assertEqual('BER', node.on)
+        self.assertEqual('BCR', node.on)
         self.assertEqual(8, node.mask)
 
 

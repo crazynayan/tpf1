@@ -27,6 +27,7 @@ class FieldVariants(unittest.TestCase):
         self.assertEqual(7, node.field_len.length)
         self.assertEqual('EBCID1', node.field.name)
         self.assertEqual(0xe8, node.field.dsp)
+        node = seg.nodes['TS040100.3']
         self.assertEqual('BNE', node.on)
         self.assertEqual('TS040110', node.goes)
         # MVC   EBW000(L'CE1WKA-1),EBW001
@@ -48,6 +49,7 @@ class FieldVariants(unittest.TestCase):
         literal = node.field.name
         self.assertTrue(seg.lookup(literal).is_literal)
         self.assertEqual('I/', seg.get_constant_bytes(literal).decode(encoding='cp037'))
+        node = seg.nodes['TS040100.6']
         self.assertEqual('TS040110', node.goes)
         self.assertEqual('BE', node.on)
         # CLC   =C'C/',2(R2) with BL    TS040110
@@ -60,6 +62,7 @@ class FieldVariants(unittest.TestCase):
         literal = node.field_len.name
         self.assertTrue(seg.lookup(literal).is_literal)
         self.assertEqual('C/', seg.get_constant_bytes(literal).decode(encoding='cp037'))
+        node = seg.nodes['TS040100.8']
         self.assertEqual('TS040110', node.goes)
         self.assertEqual('BL', node.on)
         # MVC   23(L'CE1WKA,R3),26(R4)
@@ -94,6 +97,7 @@ class FieldVariants(unittest.TestCase):
         node = seg.nodes['TS040300.1']
         self.assertEqual('EBW000', node.field.name)
         self.assertEqual(0xC2, node.data)
+        node = seg.nodes['TS040300.2']
         self.assertEqual('BNE', node.on)
         self.assertEqual('TS040310', node.goes)
         # MVI   23(R4),L'CE1WKA

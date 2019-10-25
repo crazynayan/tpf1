@@ -1,4 +1,4 @@
-from typing import Dict, Callable
+from typing import Dict
 
 from assembly.seg3_ins_type import InstructionType
 from execution.ex2_instruction import Instruction
@@ -9,143 +9,189 @@ from execution.ex4_db_macro import DbMacro
 class Execute(Instruction, ExecutableMacro, DbMacro):
     def __init__(self):
         super().__init__()
-        self.ex: Dict[str, Callable] = {
+        self._ex: Dict[str, callable] = dict()
 
-            # S03 - Load & Store
-            'LR': self.load_register,
-            'LTR': self.load_test_register,
-            # LPR - Not in ETA5
-            # LNR - Not in ETA5
-            # LCR - Not in ETA5
-            'L': self.load_fullword,
-            'ST': self.store_fullword,
-            'LA': self.load_address,
-            'LH': self.load_halfword,
-            'LHI': self.load_halfword_immediate,
-            'STH': self.store_halfword,
-            'IC': self.insert_character,
-            'ICM': self.insert_character_mask,
-            'STC': self.store_character,
-            'STCM': self.store_character_mask,
-            'LM': self.load_multiple,
-            'STM': self.store_multiple,
+        # S03 - Load & Store
+        self._ex['LR'] = self.load_register
+        self._ex['LTR'] = self.load_test_register
+        # LPR - Not in ETA5
+        # LNR - Not in ETA5
+        # LCR - Not in ETA5
+        self._ex['L'] = self.load_fullword
+        self._ex['ST'] = self.store_fullword
+        self._ex['LA'] = self.load_address
+        self._ex['LH'] = self.load_halfword
+        self._ex['LHI'] = self.load_halfword_immediate
+        self._ex['STH'] = self.store_halfword
+        self._ex['IC'] = self.insert_character
+        self._ex['ICM'] = self.insert_character_mask
+        self._ex['STC'] = self.store_character
+        self._ex['STCM'] = self.store_character_mask
+        self._ex['LM'] = self.load_multiple
+        self._ex['STM'] = self.store_multiple
 
-            # S04 - Arithmetic & Shift Algebraic
-            'AR': self.add_register,
-            # A - Not in ETA5
-            'AH': self.add_halfword,
-            'AHI': self.add_halfword_immediate,
-            'SR': self.subtract_register,
-            # S - Not in ETA5
-            # SH - Not in ETA5
-            # MH, MHI, M, MR, DR, D - Not in ETA5
-            # SLA, SRA, SLDA, SRDA - Not in ETA5
+        # S04 - Arithmetic & Shift Algebraic
+        self._ex['AR'] = self.add_register
+        # A - Not in ETA5
+        self._ex['AH'] = self.add_halfword
+        self._ex['AHI'] = self.add_halfword_immediate
+        self._ex['SR'] = self.subtract_register
+        # S - Not in ETA5
+        # SH - Not in ETA5
+        # MH, MHI, M, MR, DR, D - Not in ETA5
+        # SLA, SRA, SLDA, SRDA - Not in ETA5
 
-            # S05 - Move Store & Logic Control
-            'MVC': self.move_character,
-            'MVI': self.move_immediate,
-            # MVCL - Not in ETA5
-            # MVZ, MVO, MVN - Not in ETA5
-            'B': self.branch,
-            'J': self.branch,
-            'BCT': self.branch_on_count,
-            'BCTR': self.branch_on_count_register,
-            # BXH, BXLE - Not in ETA5
-            'BAS': self.branch_and_save,
-            'BR': self.branch_return,
-            # BASR - Not in ETA5
+        # S05 - Move Store & Logic Control
+        self._ex['MVC'] = self.move_character
+        self._ex['MVI'] = self.move_immediate
+        # MVCL - Not in ETA5
+        # MVZ, MVO, MVN - Not in ETA5
+        self._ex['BCT'] = self.branch_on_count
+        self._ex['BCTR'] = self.branch_on_count_register
+        # BXH, BXLE - Not in ETA5
+        self._ex['BAS'] = self.branch_and_save
+        # BASR - Not in ETA5
+        self._ex['B'] = self.branch
+        self._ex['NOP'] = self.branch
+        self._ex['BZ'] = self.branch
+        self._ex['BNZ'] = self.branch
+        self._ex['BO'] = self.branch
+        self._ex['BNO'] = self.branch
+        self._ex['BE'] = self.branch
+        self._ex['BNE'] = self.branch
+        self._ex['BM'] = self.branch
+        self._ex['BNM'] = self.branch
+        self._ex['BP'] = self.branch
+        self._ex['BNP'] = self.branch
+        self._ex['BH'] = self.branch
+        self._ex['BNH'] = self.branch
+        self._ex['BL'] = self.branch
+        self._ex['BNL'] = self.branch
+        self._ex['JC'] = self.branch
+        self._ex['J'] = self.branch
+        self._ex['JNOP'] = self.branch
+        self._ex['JZ'] = self.branch
+        self._ex['JNZ'] = self.branch
+        self._ex['JO'] = self.branch
+        self._ex['JNO'] = self.branch
+        self._ex['JE'] = self.branch
+        self._ex['JNE'] = self.branch
+        self._ex['JM'] = self.branch
+        self._ex['JNM'] = self.branch
+        self._ex['JP'] = self.branch
+        self._ex['JNP'] = self.branch
+        self._ex['JH'] = self.branch
+        self._ex['JNH'] = self.branch
+        self._ex['JL'] = self.branch
+        self._ex['JNL'] = self.branch
+        self._ex['BCR'] = self.branch_return
+        self._ex['BR'] = self.branch_return
+        self._ex['NOPR'] = self.branch_return
+        self._ex['BER'] = self.branch_return
+        self._ex['BNER'] = self.branch_return
+        self._ex['BHR'] = self.branch_return
+        self._ex['BNHR'] = self.branch_return
+        self._ex['BLR'] = self.branch_return
+        self._ex['BNLR'] = self.branch_return
+        self._ex['BZR'] = self.branch_return
+        self._ex['BNZR'] = self.branch_return
+        self._ex['BOR'] = self.branch_return
+        self._ex['BNOR'] = self.branch_return
+        self._ex['BPR'] = self.branch_return
+        self._ex['BNPR'] = self.branch_return
+        self._ex['BMR'] = self.branch_return
+        self._ex['BNMR'] = self.branch_return
 
-            # S06 -  Compare & Logical
-            'CR': self.compare_register,
-            'C': self.compare_fullword,
-            'CH': self.compare_halfword,
-            # CHI - Not in ETA5
-            # CL, CLR - Not in ETA5
-            'CLI': self.compare_logical_immediate,
-            'CLC': self.compare_logical_character,
-            # CLM, CLCL - Not in ETA5
-            # SLL, SRL, SLDL, SRDL - Not in ETA5
-            # ALR, AL, SLR, SL - Not in ETA5
+        # S06 -  Compare & Logical
+        self._ex['CR'] = self.compare_register
+        self._ex['C'] = self.compare_fullword
+        self._ex['CH'] = self.compare_halfword
+        # CHI - Not in ETA5
+        # CL, CLR - Not in ETA5
+        self._ex['CLI'] = self.compare_logical_immediate
+        self._ex['CLC'] = self.compare_logical_character
+        # CLM, CLCL - Not in ETA5
+        # SLL, SRL, SLDL, SRDL - Not in ETA5
+        # ALR, AL, SLR, SL - Not in ETA5
 
+        # S07 - And/Or/Xor, TM, EX, Data Conversion
+        # NR - Not in ETA5
+        # XR - Not in ETA5
+        self._ex['OR'] = self.or_register
+        self._ex['N'] = self.and_fullword
+        # O - Not in ETA5
+        # X - Not in ETA5
+        self._ex['NC'] = self.and_character
+        self._ex['OC'] = self.or_character
+        self._ex['XC'] = self.xor_character
+        self._ex['NI'] = self.and_immediate
+        self._ex['OI'] = self.or_immediate
+        # XI - Not in ETA5 (Need to check the status of flipped bits via is_updated_bit)
+        self._ex['TM'] = self.test_mask
+        self._ex['EX'] = self.execute
+        self._ex['PACK'] = self.pack
+        self._ex['CVB'] = self.convert_binary
+        self._ex['CVD'] = self.convert_decimal
+        self._ex['UNPK'] = self.unpack
 
-            # S07 - And/Or/Xor, TM, EX, Data Conversion
-            # NR - Not in ETA5
-            # XR - Not in ETA5
-            'OR': self.or_register,
-            'N': self.and_fullword,
-            # O - Not in ETA5
-            # X - Not in ETA5
-            'NC': self.and_character,
-            'OC': self.or_character,
-            'XC': self.xor_character,
-            'NI': self.and_immediate,
-            'OI': self.or_immediate,
-            # XI - Not in ETA5 (Need to check the status of flipped bits via is_updated_bit)
-            'TM': self.test_mask,
-            'EX': self.execute,
-            'PACK': self.pack,
-            'CVB': self.convert_binary,
-            'CVD': self.convert_decimal,
-            'UNPK': self.unpack,
+        # S08 - Decimal Arithmetic & Complex - Not in ETA5
+        # ZAP
+        # AP
+        # SP
+        # MP, DP, SRP
+        # CP
+        # TP
+        # TR
+        # TRT
+        # ED, EDMK
 
-            # S08 - Decimal Arithmetic & Complex - Not in ETA5
-            # ZAP
-            # AP
-            # SP
-            # MP, DP, SRP
-            # CP
-            # TP
-            # TR
-            # TRT
-            # ED, EDMK
+        # Realtime Macros
+        self._ex['GETCC'] = self.getcc
+        self._ex['MODEC'] = self.no_operation
+        self._ex['DETAC'] = self.detac
+        self._ex['ATTAC'] = self.attac
+        self._ex['RELCC'] = self.relcc
+        self._ex['CRUSA'] = self.crusa
+        self._ex['SENDA'] = self.senda
+        self._ex['SYSRA'] = self.sysra
+        self._ex['SERRC'] = self.serrc
+        self._ex['ENTRC'] = self.entrc
+        self._ex['ENTNC'] = self.entnc
+        self._ex['ENTDC'] = self.entdc
+        self._ex['BACKC'] = self.backc
 
-            # Realtime Macros
-            'GETCC': self.getcc,
-            'MODEC': self.no_operation,
-            'DETAC': self.detac,
-            'ATTAC': self.attac,
-            'RELCC': self.relcc,
-            'CRUSA': self.crusa,
-            'SENDA': self.senda,
-            'SYSRA': self.sysra,
-            'SERRC': self.serrc,
-            'ENTRC': self.entrc,
-            'ENTNC': self.entnc,
-            'ENTDC': self.entdc,
-            'BACKC': self.backc,
+        # User Defined Executable Macros
+        self._ex['AAGET'] = self.aaget
+        self._ex['CFCMA'] = self.heapa
+        self._ex['HEAPA'] = self.heapa
+        self._ex['PNRCC'] = self.pnrcc
 
-            # User Defined Executable Macros
-            'AAGET': self.aaget,
-            'CFCMA': self.heapa,
-            'HEAPA': self.heapa,
-            'PNRCC': self.pnrcc,
+        # User Defined Executable Macros created for this tool
+        self._ex['PARS_DATE'] = self.pars_date
+        self._ex['ERROR_CHECK'] = self.error_check
 
-            # User Defined Executable Macros created for this tool
-            'PARS_DATE': self.pars_date,
-            'ERROR_CHECK': self.error_check,
+        # Realtime Db Macros - Not in ETA5
+        self._ex['FINWC'] = self.finwc
+        # FINWC, FIWHC, FINDC, FINHC
+        # FILEC, FILNC
 
-            # Realtime Db Macros - Not in ETA5
-            'FINWC': self.finwc,
-            # FINWC, FIWHC, FINDC, FINHC
-            # FILEC, FILNC
+        # User defined Db Macros
+        self._ex['PDRED'] = self.pdred
+        self._ex['PDCLS'] = self.pdcls
+        # PDADD, PDDEL - Not in ETA5
 
-            # User defined Db Macros
-            'PDRED': self.pdred,
-            'PDCLS': self.pdcls,
-            # PDADD, PDDEL - Not in ETA5
+        # TPFDF Macros
+        self._ex['DBOPN'] = self.dbopn
+        self._ex['DBRED'] = self.dbred
+        self._ex['DBCLS'] = self.dbcls
+        self._ex['DBIFB'] = self.dbifb
+        # DBADD, DBDEL - Not in ETA5
 
-            # TPFDF Macros
-            'DBOPN': self.dbopn,
-            'DBRED': self.dbred,
-            'DBCLS': self.dbcls,
-            'DBIFB': self.dbifb,
-            # DBADD, DBDEL - Not in ETA5
+        # No operation
+        self._ex['EQU'] = self.no_operation
+        self._ex['DS'] = self.no_operation
+        self._ex['EXITC'] = self.no_operation
 
-            # No operation
-            'EQU': self.no_operation,
-            'DS': self.no_operation,
-            'EXITC': self.no_operation,
-        }
-
-    def no_operation(self, node: InstructionType) -> str:
-        return self.next_label(node)
+    @staticmethod
+    def no_operation(node: InstructionType) -> str:
+        return node.fall_down

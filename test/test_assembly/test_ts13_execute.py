@@ -16,9 +16,10 @@ class Execute(unittest.TestCase):
         self.assertEqual('EX', node.command)
         self.assertEqual('R15', node.reg.reg)
         self.assertEqual('TS130010.1', node.field.name)
+        ex_node = seg.nodes[node.field.name]
+        node = seg.nodes['TS130010.3']
         self.assertEqual('TS130040', node.goes)
         self.assertSetEqual({'TS130010.4', 'TS130040'}, node.next_labels)
-        ex_node = seg.nodes[node.field.name]
         self.assertEqual('TM', ex_node.command)
         self.assertEqual(0, ex_node.bits.value)
         # EX    R1,*-6 on MVC   EBW000,EBT000

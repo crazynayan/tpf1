@@ -291,7 +291,7 @@ class InstructionImplementation(InstructionOperand):
 
     def branch_condition(self, line: Line) -> BranchCondition:
         mask, operand, command = self._get_mask(line)
-        line.command = command
+        # line.command = command
         if mask == 0:
             branch = None
         else:
@@ -300,7 +300,7 @@ class InstructionImplementation(InstructionOperand):
 
     def branch_condition_reg(self, line: Line) -> BranchConditionRegister:
         mask, operand, command = self._get_mask(line)
-        line.command = command
+        # line.command = command
         reg = Register(operand)
         if not reg.is_valid():
             raise RegisterInvalidError

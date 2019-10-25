@@ -30,6 +30,7 @@ class RegisterVariants(unittest.TestCase):
         node = seg.nodes['TS050100.1']
         self.assertEqual('R15', node.reg.reg)
         self.assertEqual(0xff, node.data)
+        node = seg.nodes['TS050100.2']
         self.assertEqual('BP', node.on)
         self.assertEqual('TS050110', node.goes)
         # AHI   R15,X'00'

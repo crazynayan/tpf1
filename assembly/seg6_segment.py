@@ -74,8 +74,7 @@ class Segment(UserDefinedMacroImplementation):
     def _assemble_instructions(self, lines: List[Line]) -> None:
         prior_label: str = self.root_label()
         self.nodes[self.root_label()] = self.equ(self.root_line)
-        for ins_line in Line.yield_lines(lines):
-            line = ins_line[0]
+        for line in lines:
             # Process data macro declarations and second pass assembler directives like USING, PUSH, POP
             if self._process_assembler_directive(line):
                 continue
@@ -83,17 +82,9 @@ class Segment(UserDefinedMacroImplementation):
             prior_node = self.nodes[str(prior_label)]
             if prior_node.is_fall_down:
                 prior_node.fall_down = line.label
-            # Update labels
             prior_label = line.label
             # Create the node based on type of instruction
             self.nodes[line.label] = self._command[line.command](line)
-            # Other lines contain one or more conditions (like BNE, JL) and instruction that don't change cc.
-            other_lines = ins_line[1:] if len(ins_line) > 1 else list()
-            for other_line in other_lines:
-                if other_line.is_assembler_directive:
-                    continue
-                condition = self._command[other_line.command](other_line)
-                self.nodes[line.label].conditions.append(condition)
 
     def _process_assembler_directive(self, line: Line) -> bool:
         # return True -> skip creating node.

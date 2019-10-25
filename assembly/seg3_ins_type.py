@@ -1,4 +1,4 @@
-from typing import Optional, List, Set, TypeVar
+from typing import Optional, Set, TypeVar
 
 from assembly.seg2_ins_operand import FieldBaseDsp, Bits, FieldIndex, FieldLen
 from utils.command import cmd
@@ -15,36 +15,28 @@ class InstructionGeneric:
         self.label: Optional[str] = line.label
         self.command: str = line.command
         self.fall_down: Optional[str] = None
-        self.conditions: List[InstructionType] = list()
 
     def __repr__(self) -> str:
         return f"{self.index}:{self.label}:{self.command}"
 
     @property
     def next_labels(self) -> Set[str]:
-        labels = {condition.branch.name for condition in self.conditions if condition.is_check_cc and condition.branch}
+        labels = set()
         if self.fall_down:
             labels.add(self.fall_down)
         return labels
 
     @property
-    def goes(self) -> str:
-        return next((condition.goes for condition in self.conditions if condition.goes), None)
+    def goes(self) -> Optional[str]:
+        return None
 
     @property
     def on(self) -> str:
-        return next((condition.command for condition in self.conditions if condition.is_check_cc), None)
+        return self.command
 
     @property
     def is_fall_down(self) -> bool:
-        return True if not self.get_attribute('no_fall_down') else False
-
-    @property
-    def is_check_cc(self) -> bool:
-        return True if self.get_attribute('check_cc') else False
-
-    def get_attribute(self, cmd_attribute: str) -> Optional[str]:
-        return cmd.check(self.command, cmd_attribute)
+        return True if not cmd.check(self.command, 'no_fall_down') else False
 
 
 class FieldBits(InstructionGeneric):

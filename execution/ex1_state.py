@@ -18,7 +18,7 @@ class State:
         self.regs: Registers = Registers()
         self.vm: Storage = Storage()
         self.cc: Optional[int] = None
-        self.ex: Dict[str, Callable] = dict()
+        self._ex: Dict[str, Callable] = dict()
         self.detac_stack: Dict[str, List] = {level: list() for level in config.ECB_LEVELS}
         self.message: Optional[str] = None
         self.dumps: List[str] = list()
@@ -87,7 +87,7 @@ class State:
                 return node.label
 
     def ex_command(self, node: InstructionType) -> str:
-        label = self.ex[node.command](node)
+        label = self._ex[node.command](node)
         self.DEBUG.hit(node, label)
         return label
 
@@ -97,18 +97,6 @@ class State:
 
     def branch_return(self, _) -> str:
         pass
-
-    def next_label(self, node: InstructionType) -> Optional[str]:
-        for condition in node.conditions:
-            if condition.is_check_cc:
-                if condition.mask & (1 << 3 - self.cc) != 0:
-                    if condition.branch:
-                        return self.branch(condition)
-                    else:
-                        return self.branch_return(condition)
-            else:
-                self.ex[condition.command](condition)
-        return node.fall_down
 
     def set_number_cc(self, number: int) -> None:
         if number > 0:
