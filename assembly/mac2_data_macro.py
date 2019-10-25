@@ -23,10 +23,10 @@ class DataMacro(DataMacroImplementation):
         return
 
     def load(self) -> None:
-        if self._symbol_table:
+        if self.all_labels:
             return
         # Load default macros
-        self._symbol_table = {**self._symbol_table, **self.default_macros}
+        self._symbol_table = {**self.all_labels, **self.default_macros}
         # Get the data from file after removing CVS and empty lines.
         file_lines = File.open(self.file_name)
         # Create a list of Line objects
@@ -50,7 +50,7 @@ class DataMacro(DataMacroImplementation):
 
     @property
     def loaded(self):
-        return self._symbol_table != dict()
+        return self.all_labels != dict()
 
 
 class _DataMacroCollection:

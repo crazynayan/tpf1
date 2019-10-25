@@ -1,7 +1,7 @@
 import re
 from typing import List, Optional
 
-from assembly.mac0_generic import MacroGeneric, LabelReference
+from assembly.mac0_generic import MacroGeneric
 from utils.data_type import DataType
 from utils.errors import EquLabelRequiredError, EquDataTypeHasAmpersandError
 from utils.file_line import Line
@@ -85,7 +85,7 @@ class DataMacroImplementation(MacroGeneric):
         dsdc: Dsdc = self._dsdc(operands[0])
         dsdc_list: List[Dsdc] = [dsdc]
         if line.label:
-            self._symbol_table[line.label] = LabelReference(line.label, dsdc.start, dsdc.length, self.name)
+            self.add_label(line.label, dsdc.start, dsdc.length, self.name)
         if len(operands) > 1:
             for operand in operands[1:]:
                 dsdc_list.append(self._dsdc(operand))  # Increment location counter for multiple values
@@ -116,7 +116,7 @@ class DataMacroImplementation(MacroGeneric):
             dsp = self.get_value(dsp_operand)
         if len(operands) > 1:
             length = self.get_value(operands[1])
-        self._symbol_table[line.label] = LabelReference(line.label, dsp, length, self.name)
+        self.add_label(line.label, dsp, length, self.name)
         return
 
     def org(self, line: Line) -> None:
@@ -129,5 +129,5 @@ class DataMacroImplementation(MacroGeneric):
     def dsect(self, line: Line) -> None:
         self._location_counter = 0
         self._max_counter = 0
-        self._symbol_table[line.label] = LabelReference(line.label, 0, 0, line.label)
+        self.add_label(line.label, 0, 0, line.label)
         return

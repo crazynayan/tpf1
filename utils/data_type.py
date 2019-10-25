@@ -234,8 +234,6 @@ class DataType:
     }
 
     def __init__(self, data_type: str, **kwargs):
-        if data_type not in self.DT:
-            raise KeyError
         self.data_type_object = self.DT[data_type]()
         self.data_type_object.input = kwargs['input'] if 'input' in kwargs else None
         self.data_type_object.bytes = kwargs['bytes'] if 'bytes' in kwargs and 'input' not in kwargs else None

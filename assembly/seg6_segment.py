@@ -2,7 +2,6 @@ import os
 import re
 from typing import Dict, Optional, List
 
-from assembly.mac0_generic import LabelReference
 from assembly.mac2_data_macro import macros
 from assembly.seg2_ins_operand import Label
 from assembly.seg5_exec_macro import UserDefinedMacroImplementation
@@ -34,9 +33,8 @@ class Segment(UserDefinedMacroImplementation):
         if self.nodes:
             return
         # Default processing
-        self._symbol_table = {**self.all_labels, **macros['EB0EB'].all_labels}
         self.set_using(self.name, Register('R8'))
-        self.set_using('EB0EB', Register('R9'))
+        self.load_macro('EB0EB', base='R9')
         # Get the data from line after removing CVS and empty lines.
         file_lines = File.open(self.file_name)
         # Create a list of Line objects
@@ -66,8 +64,8 @@ class Segment(UserDefinedMacroImplementation):
                 prior_label.index += 1
                 line.label = str(prior_label)
             if not line.is_assembler_directive:
-                self._symbol_table[line.label] = LabelReference(line.label, self._location_counter, length, self.name)
-                self._symbol_table[line.label].set_instruction_branch()
+                self.add_label(line.label, self._location_counter, length, self.name)
+                self._symbol_table[line.label].set_branch()
                 self._location_counter += length
         return
 

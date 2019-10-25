@@ -1,5 +1,5 @@
 import re
-from typing import Optional, Dict
+from typing import Optional, Dict, Tuple, List
 
 from utils.data_type import DataType
 from utils.errors import NotFoundInSymbolTableError
@@ -22,18 +22,11 @@ class LabelReference:
         return self._branch > 0
 
     @property
-    def is_instruction_branch(self) -> bool:
-        return self._branch == 2
-
-    @property
     def is_literal(self) -> bool:
         return self.dsp > 0xFFF
 
     def set_branch(self) -> None:
         self._branch = 1
-
-    def set_instruction_branch(self) -> None:
-        self._branch = 2
 
 
 class MacroGeneric:
@@ -41,6 +34,7 @@ class MacroGeneric:
     def __init__(self, name):
         self.name = name
         self._symbol_table: Dict[str, LabelReference] = dict()
+        self._index: Dict[str, List[Tuple[str, int]]] = dict()
         self._command: Dict[str, callable] = dict()
         self._location_counter: int = 0
         self._max_counter: int = 0
@@ -95,3 +89,8 @@ class MacroGeneric:
                     value = self.evaluate(expression)
                 eval_list.append(str(value))
         return eval(''.join(eval_list))
+
+    def add_label(self, label: str, dsp: int, length: int, name: str) -> LabelReference:
+        label_ref = LabelReference(label, dsp, length, name)
+        self._symbol_table[label] = label_ref
+        return label_ref

@@ -51,9 +51,9 @@ class SegmentGeneric(DataMacroImplementation):
             name = name + suffix
             new_symbol_table = {label + suffix: LabelReference(label + suffix, label_ref.dsp, label_ref.length, name)
                                 for label, label_ref in macros[original_name].all_labels.items()}
-            self._symbol_table = {**self._symbol_table, **new_symbol_table}
+            self._symbol_table = {**self.all_labels, **new_symbol_table}
         elif name not in self.data_macro:
-            self._symbol_table = {**self._symbol_table, **macros[name].all_labels}
+            self._symbol_table = {**self.all_labels, **macros[name].all_labels}
             self.data_macro.add(name)
         if base is not None:
             base = Register(base)
@@ -77,15 +77,29 @@ class SegmentGeneric(DataMacroImplementation):
 
     def get_field_name(self, base: Register, dsp: int, length: Optional[int]) -> Optional[str]:
         length = 1 if length is None else length
-        macro_name = self.get_macro_name(base)
-        if not macro_name:
+        name = self.get_macro_name(base)
+        if not name:
             return None
-        matches = {label: label_ref for label, label_ref in self.all_labels.items()
-                   if label_ref.dsp == dsp and label_ref.name == macro_name}
-        return min(matches, key=lambda label: abs(matches[label].length - length)) if matches else None
+        if name == self.seg_name:
+            index_label = name + str(dsp)
+            if index_label not in self._index:
+                return None
+            matches = self._index[index_label]
+            field = min(matches, key=lambda item: abs(item[1] - length))[0]
+        else:
+            matches = {label: label_ref for label, label_ref in self.all_labels.items()
+                       if label_ref.dsp == dsp and label_ref.name == name}
+            field = min(matches, key=lambda label: abs(matches[label].length - length)) if matches else None
+        return field
 
     def is_branch(self, label: str) -> bool:
         return self.check(label) and self.lookup(label).is_branch
 
-    def is_instruction_branch(self, label: str) -> bool:
-        return self.check(label) and self.lookup(label).is_instruction_branch
+    def add_label(self, label: str, dsp: int, length: int, name: str) -> LabelReference:
+        label_ref = super().add_label(label, dsp, length, name)
+        if name == self.seg_name:
+            index_label = name + str(dsp)
+            if index_label not in self._index:
+                self._index[index_label] = list()
+            self._index[index_label].append((label, length))
+        return label_ref
