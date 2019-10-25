@@ -2,6 +2,7 @@ import unittest
 
 from execution.ex0_regs_store import Registers, Storage
 from utils.data_type import Register
+from utils.errors import RegisterInvalidError
 
 
 class RegistersTest(unittest.TestCase):
@@ -38,19 +39,19 @@ class RegistersTest(unittest.TestCase):
         self.assertEqual(0x00001244, self.regs.get_address(Register('R9'), 0x234, Register('4')))
         self.assertEqual(0x00001234, self.regs.get_address(Register('REB'), 0x234, Register('0')))
         # Check errors and exceptions
-        self.assertRaises(AttributeError, self.regs.get_value, 'RAC')
-        self.assertRaises(AttributeError, self.regs.get_address, 'R01', 0)
-        self.assertRaises(AttributeError, self.regs.get_address, Register('R16'), 0)
-        self.assertRaises(AttributeError, self.regs.get_address, Register('R0'), 0, '0')
-        self.assertRaises(AttributeError, self.regs.get_address, Register('R0'), 0, Register('-1'))
-        self.assertRaises(AttributeError, self.regs.next_reg, 'F1')
-        self.assertRaises(AttributeError, self.regs.get_bytes, '-1')
-        self.assertRaises(AttributeError, self.regs.get_bytes_from_mask, '1', 15)
+        self.assertRaises(RegisterInvalidError, self.regs.get_value, 'RAC')
+        self.assertRaises(RegisterInvalidError, self.regs.get_address, 'R01', 0)
+        self.assertRaises(RegisterInvalidError, self.regs.get_address, Register('R16'), 0)
+        self.assertRaises(RegisterInvalidError, self.regs.get_address, Register('R0'), 0, '0')
+        self.assertRaises(RegisterInvalidError, self.regs.get_address, Register('R0'), 0, Register('-1'))
+        self.assertRaises(RegisterInvalidError, self.regs.next_reg, 'F1')
+        self.assertRaises(RegisterInvalidError, self.regs.get_bytes, '-1')
+        self.assertRaises(RegisterInvalidError, self.regs.get_bytes_from_mask, '1', 15)
         self.assertRaises(IndexError, self.regs.get_bytes_from_mask, 'R1', 0b10001)
-        self.assertRaises(AttributeError, self.regs.set_bytes, bytearray([0x00] * 4), 23)
+        self.assertRaises(RegisterInvalidError, self.regs.set_bytes, bytearray([0x00] * 4), 23)
         self.assertRaises(ValueError, self.regs.set_bytes, bytearray([0x00] * 3), 'R9')
-        self.assertRaises(AttributeError, self.regs.set_value, 0, '0')
-        self.assertRaises(AttributeError, self.regs.set_bytes_from_mask, bytearray([0x00] * 4), 'R04', 0b1111)
+        self.assertRaises(RegisterInvalidError, self.regs.set_value, 0, '0')
+        self.assertRaises(RegisterInvalidError, self.regs.set_bytes_from_mask, bytearray([0x00] * 4), 'R04', 0b1111)
         self.assertRaises(ValueError, self.regs.set_bytes_from_mask, bytearray([0x00] * 2), 'R9', 0b0111)
         self.assertRaises(IndexError, self.regs.set_bytes_from_mask, bytearray([0x00] * 2), 'R1', 0b10000)
 

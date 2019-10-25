@@ -4,6 +4,7 @@ from typing import Union, Optional, Tuple, Dict
 from assembly.mac2_data_macro import macros
 from config import config
 from utils.data_type import DataType, Register
+from utils.errors import RegisterInvalidError
 
 
 class Registers:
@@ -40,14 +41,14 @@ class Registers:
         try:
             return getattr(self, str(reg))
         except AttributeError:
-            raise AttributeError
+            raise RegisterInvalidError
 
     def get_unsigned_value(self, reg: Union[str, Register]) -> int:
         return self.get_value(reg) & self.L
 
-    def get_address(self, base: Register, dsp: int, index: Optional[Register] = None) -> int:
-        return (self.get_value(base) if str(base) != 'R0' else 0) + dsp + \
-               (self.get_value(index) if index and str(index) != 'R0' else 0)
+    def get_address(self, base: Optional[Register], dsp: int = 0, index: Optional[Register] = None) -> int:
+        return (self.get_unsigned_value(base) if base and str(base) != 'R0' else 0) + dsp + \
+               (self.get_unsigned_value(index) if index and str(index) != 'R0' else 0)
 
     def next_reg(self, reg: str) -> str:
         self.get_value(reg)

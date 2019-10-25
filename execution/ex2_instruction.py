@@ -4,7 +4,7 @@ from assembly.seg3_ins_type import RegisterRegister, RegisterFieldIndex, Registe
     RegisterRegisterField, FieldLenField, FieldData, BranchCondition, RegisterBranch, BranchConditionRegister, \
     FieldBits, FieldLenFieldLen
 from execution.ex1_state import State
-from utils.data_type import DataType
+from utils.data_type import DataType, Register
 from utils.errors import PackExecutionError, BctExecutionError
 
 
@@ -152,7 +152,7 @@ class MoveLogicControl(State):
 
     def branch_on_count_register(self, node: RegisterRegister) -> str:
         if node.reg2.reg != 'R0':
-            raise TypeError
+            raise TypeError  # TODO Ensure BCTR works with register other than R0
         value = self.regs.get_value(node.reg1) - 1
         self.regs.set_value(value, node.reg1)
         return self.next_label(node)
@@ -168,15 +168,14 @@ class MoveLogicControl(State):
         return self.next_label(node)
 
     def branch_and_save(self, node: RegisterBranch) -> str:
-        bas = self.seg.bas
-        value = bas.dumps(node.fall_down)
+        value = self.seg.evaluate(node.fall_down)
         self.regs.set_value(value, node.reg)
         return node.branch.name
 
     def branch_return(self, node: BranchConditionRegister) -> str:
-        bas = self.seg.bas
-        value = self.regs.get_value(node.reg)
-        return bas.loads(value)
+        value = self.regs.get_unsigned_value(node.reg)
+        label = self.seg.get_field_name(Register('R8'), value, 4)
+        return label
 
 
 class CompareLogical(State):
@@ -283,10 +282,8 @@ class LogicalUsefulConversion(State):
         return self.next_label(node)
 
     def execute(self, node: RegisterFieldIndex) -> str:
-        value = self.regs.get_value(node.reg) & 0xFF if node.reg.reg != 'R0' else 0
-        dsp = node.field.dsp
-        if node.field.index is not None and node.field.index.reg != 'R0':
-            dsp += self.regs.get_value(node.field.index)
+        value = self.regs.get_address(node.reg) & 0xFF
+        dsp = self.regs.get_address(node.field.index, node.field.dsp)
         name = self.seg.get_field_name(node.field.base, dsp, 4)
         exec_node = self.seg.nodes[name]
         if exec_node.command in ['EQU', 'DS']:

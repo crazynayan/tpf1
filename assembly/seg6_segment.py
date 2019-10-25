@@ -11,27 +11,11 @@ from utils.data_type import Register
 from utils.file_line import Line, File
 
 
-class LabelSave:
-    def __init__(self):
-        self.labels: List = list()
-
-    def dumps(self, label: str) -> int:
-        self.labels.append(label)
-        return len(self.labels) << config.DSP_SHIFT
-
-    def loads(self, saved: int) -> str:
-        try:
-            return self.labels[(saved >> config.DSP_SHIFT) - 1]
-        except IndexError:
-            raise IndexError
-
-
 class Segment(UserDefinedMacroImplementation):
 
     def __init__(self, name: str, file_name: str):
         super().__init__(name)
         self.file_name: str = file_name
-        self.bas: LabelSave = LabelSave()
 
     def __repr__(self) -> str:
         return f"{self.name}:{self.nodes != dict()}:{len(self.nodes)}"

@@ -22,7 +22,7 @@ class EquDataTypeHasAmpersandError(AssemblyError):
     pass
 
 
-class RegisterInvalidError(AssemblyError):
+class RegisterInvalidError(AssemblyError, ExecutionError):
     pass
 
 
