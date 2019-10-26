@@ -269,11 +269,11 @@ class InstructionImplementation(InstructionOperand):
         return RegisterDataField(line, reg, data, field)
 
     def branch_condition(self, line: Line) -> BranchCondition:
-        mask, operand = line.split_operands()
-        mask = int(mask)
+        operand1, operand2 = line.split_operands()
+        mask = self.get_value(operand1)
         if not 0 <= mask <= BranchGeneric.MAX_VALUE:
             raise ConditionMaskError
-        branch = self.get_branch(operand)
+        branch = self.get_branch(operand2)
         return BranchCondition(line, branch, mask)
 
     def branch_mnemonic(self, line: Line) -> BranchCondition:
@@ -289,13 +289,12 @@ class InstructionImplementation(InstructionOperand):
             raise RegisterInvalidError
         return BranchConditionRegister(line, mask, reg)
 
-    @staticmethod
-    def branch_condition_reg(line: Line) -> BranchConditionRegister:
-        mask, operand = line.split_operands()
-        mask = int(mask)
+    def branch_condition_reg(self, line: Line) -> BranchConditionRegister:
+        operand1, operand2 = line.split_operands()
+        mask = self.get_value(operand1)
         if not 0 <= mask <= BranchGeneric.MAX_VALUE:
             raise ConditionMaskError
-        reg = Register(operand)
+        reg = Register(operand2)
         if not reg.is_valid():
             raise RegisterInvalidError
         return BranchConditionRegister(line, mask, reg)

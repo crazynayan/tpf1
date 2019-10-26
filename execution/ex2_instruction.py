@@ -119,6 +119,13 @@ class ArithmeticShiftAlgebraic(State):
         self.set_number_cc(value)
         return node.fall_down
 
+    def add_fullword(self, node: RegisterFieldIndex) -> str:
+        address = self.regs.get_address(node.field.base, node.field.dsp, node.field.index)
+        value = self.regs.get_value(node.reg) + self.vm.get_value(address, 4)
+        self.regs.set_value(value, node.reg)
+        self.set_number_cc(value)
+        return node.fall_down
+
     def add_halfword_immediate(self, node: RegisterData) -> str:
         value = self.regs.get_value(node.reg) + node.data
         self.regs.set_value(value, node.reg)
@@ -129,6 +136,37 @@ class ArithmeticShiftAlgebraic(State):
         value = self.regs.get_value(node.reg1) - self.regs.get_value(node.reg2)
         self.regs.set_value(value, node.reg1)
         self.set_number_cc(value)
+        return node.fall_down
+
+    def subtract_fullword(self, node: RegisterFieldIndex) -> str:
+        address = self.regs.get_address(node.field.base, node.field.dsp, node.field.index)
+        value = self.regs.get_value(node.reg) - self.vm.get_value(address, 4)
+        self.regs.set_value(value, node.reg)
+        self.set_number_cc(value)
+        return node.fall_down
+
+    def multiply_fullword(self, node: RegisterFieldIndex) -> str:
+        address = self.regs.get_address(node.field.base, node.field.dsp, node.field.index)
+        odd_reg = self.regs.next_reg(node.reg)
+        value = self.regs.get_value(odd_reg) * self.vm.get_value(address, 4)
+        self.regs.set_double_value(value, node.reg)
+        return node.fall_down
+
+    def multiply_halfword(self, node: RegisterFieldIndex) -> str:
+        address = self.regs.get_address(node.field.base, node.field.dsp, node.field.index)
+        value = self.regs.get_value(node.reg) * self.vm.get_value(address, 2)
+        self.regs.set_value(value, node.reg)
+        return node.fall_down
+
+    def divide_fullword(self, node: RegisterFieldIndex) -> str:
+        address = self.regs.get_address(node.field.base, node.field.dsp, node.field.index)
+        dividend = self.regs.get_double_value(node.reg)
+        divisor = self.vm.get_value(address, 4)
+        remainder = dividend % divisor
+        quotient = dividend // divisor
+        odd_reg = self.regs.next_reg(node.reg)
+        self.regs.set_value(remainder, node.reg)
+        self.regs.set_value(quotient, odd_reg)
         return node.fall_down
 
 
@@ -224,11 +262,61 @@ class CompareLogical(State):
         self.set_number_cc(reg_value1 - reg_value2)
         return node.fall_down
 
+    def compare_logical_character_mask(self, node: RegisterDataField) -> str:
+        if node.data == 0:
+            self.set_number_cc(0)
+            return node.fall_down
+        bytes1 = self.regs.get_bytes_from_mask(node.reg, node.data)
+        address = self.regs.get_address(node.field.base, node.field.dsp)
+        bytes2 = self.vm.get_bytes(address, bin(node.data).count('1'))
+        value1 = DataType('X', bytes=bytes1).value
+        value2 = DataType('X', bytes=bytes2).value
+        self.set_number_cc(value1 - value2)
+        return node.fall_down
+
+    def shift_left_logical(self, node: RegisterFieldIndex):
+        factor = self.regs.get_address(node.field.base, node.field.dsp) & 0x3F
+        value = self.regs.get_unsigned_value(node.reg) << factor & self.regs.L
+        self.regs.set_value(value, node.reg)
+        return node.fall_down
+
+    def shift_right_logical(self, node: RegisterFieldIndex):
+        factor = self.regs.get_address(node.field.base, node.field.dsp) & 0x3F
+        value = self.regs.get_unsigned_value(node.reg) >> factor
+        self.regs.set_value(value, node.reg)
+        return node.fall_down
+
+    def shift_left_double_logical(self, node: RegisterFieldIndex):
+        factor = self.regs.get_address(node.field.base, node.field.dsp) & 0x3F
+        value = self.regs.get_unsigned_double_value(node.reg) << factor
+        self.regs.set_double_value(value, node.reg)
+        return node.fall_down
+
+    def shift_right_double_logical(self, node: RegisterFieldIndex):
+        factor = self.regs.get_address(node.field.base, node.field.dsp) & 0x3F
+        value = self.regs.get_unsigned_double_value(node.reg) >> factor
+        self.regs.set_double_value(value, node.reg)
+        return node.fall_down
+
 
 class LogicalUsefulConversion(State):
     def or_register(self, node: RegisterRegister) -> str:
         value = self.regs.get_value(node.reg1)
         value |= self.regs.get_value(node.reg2)
+        self.regs.set_value(value, node.reg1)
+        self.set_zero_cc(value)
+        return node.fall_down
+
+    def and_register(self, node: RegisterRegister) -> str:
+        value = self.regs.get_value(node.reg1)
+        value &= self.regs.get_value(node.reg2)
+        self.regs.set_value(value, node.reg1)
+        self.set_zero_cc(value)
+        return node.fall_down
+
+    def xor_register(self, node: RegisterRegister) -> str:
+        value = self.regs.get_value(node.reg1)
+        value ^= self.regs.get_value(node.reg2)
         self.regs.set_value(value, node.reg1)
         self.set_zero_cc(value)
         return node.fall_down

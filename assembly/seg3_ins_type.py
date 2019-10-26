@@ -211,7 +211,7 @@ class BranchConditionRegister(BranchCondition):
         self.reg: Register = reg
 
     def __repr__(self) -> str:
-        return f"{super().__repr__()}:{self.mask},{self.reg}"
+        return f"{self.command}:{self.mask},{self.reg}"
 
 
 class RegisterBranch(BranchGeneric):

@@ -38,6 +38,10 @@ class RegistersTest(unittest.TestCase):
         self.assertEqual(0x00000234, self.regs.get_address(Register('RAC'), 0x234))
         self.assertEqual(0x00001244, self.regs.get_address(Register('R9'), 0x234, Register('4')))
         self.assertEqual(0x00001234, self.regs.get_address(Register('REB'), 0x234, Register('0')))
+        # Check double value
+        self.regs.set_double_value(-3, Register('0'))
+        self.assertEqual(-1, self.regs.R0)
+        self.assertEqual(-3, self.regs.R1)
         # Check errors and exceptions
         self.assertRaises(RegisterInvalidError, self.regs.get_value, 'RAC')
         self.assertRaises(RegisterInvalidError, self.regs.get_address, 'R01', 0)

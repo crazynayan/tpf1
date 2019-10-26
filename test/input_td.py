@@ -8,7 +8,7 @@ macros['UI2PF'].load()
 
 class TD:
     state: Execute = Execute()
-    state.init_debug(['ETA5'])
+    state.init_debug(['ETAJ'])
     ebsw01 = config.ECB + macros['EB0EB'].evaluate('EBSW01')
     ebw000 = config.ECB + macros['EB0EB'].evaluate('EBW000')
     ebx000 = config.ECB + macros['EB0EB'].evaluate('EBX000')

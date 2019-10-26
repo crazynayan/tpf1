@@ -9,8 +9,10 @@ from utils.errors import RegisterInvalidError
 
 class Registers:
     ORDER = ('R0', 'R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R9', 'R10', 'R11', 'R12', 'R13', 'R14', 'R15')
-    LEN = 4
-    L = 0xFFFFFFFF
+    BITS = 32
+    LEN = BITS // 8
+    L = (1 << BITS) - 1  # 0xFFFFFFFF
+    NEG = 1 << BITS - 1  # 0x80000000
 
     def __init__(self):
         self.R0 = 0
@@ -31,8 +33,8 @@ class Registers:
         self.R15 = 0
 
     def __repr__(self) -> str:
-        return f"R0:{self.R0 & self.L:08x},R1:{self.R1 & self.L:08x},R2:{self.R2 & self.L:08x}," \
-               f"R3:{self.R3 & self.L:08x},R4:{self.R4 & self.L:08x},R5:{self.R5 & self.L:08x},"
+        return f"R0:{self.R0 & self.L:08X},R1:{self.R1 & self.L:08X},R2:{self.R2 & self.L:08X}," \
+               f"R3:{self.R3 & self.L:08X},R4:{self.R4 & self.L:08X},R5:{self.R5 & self.L:08X},"
 
     def get_bytes(self, reg: Union[str, Register]) -> bytearray:
         return DataType('F', input=str(self.get_value(reg))).to_bytes(self.LEN)
@@ -50,9 +52,9 @@ class Registers:
         return (self.get_unsigned_value(base) if base and str(base) != 'R0' else 0) + dsp + \
                (self.get_unsigned_value(index) if index and str(index) != 'R0' else 0)
 
-    def next_reg(self, reg: str) -> str:
+    def next_reg(self, reg: Union[str, Register]) -> str:
         self.get_value(reg)
-        return self.ORDER[0] if reg == self.ORDER[-1] else self.ORDER[self.ORDER.index(reg) + 1]
+        return self.ORDER[0] if reg == self.ORDER[-1] else self.ORDER[self.ORDER.index(str(reg)) + 1]
 
     def get_bytes_from_mask(self, reg: Register, mask: int) -> bytearray:
         reg_bytes = self.get_bytes(reg)
@@ -69,6 +71,10 @@ class Registers:
 
     def set_value(self, value: int, reg: Union[Register, str]) -> None:
         self.get_value(reg)
+        if value < -self.NEG or value > self.L:
+            value &= self.L
+        if value > 0 and value & self.NEG != 0:
+            value -= self.L + 1
         setattr(self, str(reg), value)
 
     def set_bytes_from_mask(self,  byte_array: bytearray, reg: Register, mask: int) -> None:
@@ -81,6 +87,23 @@ class Registers:
         except IndexError:
             raise IndexError
         setattr(self, str(reg), DataType('F', bytes=bytearray(reg_bytes)).value)
+
+    def get_double_value(self, reg: Register) -> int:
+        high_value = self.get_value(reg)
+        low_value = self.get_unsigned_value(self.next_reg(reg))
+        high_value <<= self.BITS
+        return high_value + low_value
+
+    def get_unsigned_double_value(self, reg: Register) -> int:
+        high_value = self.get_unsigned_value(reg)
+        low_value = self.get_unsigned_value(self.next_reg(reg))
+        high_value <<= self.BITS
+        return high_value + low_value
+
+    def set_double_value(self, value: int, reg: Register) -> None:
+        high_value = value >> self.BITS
+        self.set_value(high_value, reg)
+        self.set_value(value, self.next_reg(reg))
 
 
 class Storage:
@@ -117,14 +140,17 @@ class Storage:
         today = datetime(year=today.year, month=today.month, day=today.day)
         pars_today = (today - config.START).days
         self.set_value(pars_today, u1dmo, 2)
+        tjord = config.GLOBAL + macros['GLOBAL'].evaluate('@TJORD')
+        self.set_value(0x00088EDC, tjord)
 
     def get_allocated_address(self) -> bytearray:
         return DataType('F', input=str(self.nab - config.F4K)).to_bytes(Registers.LEN)
 
     @staticmethod
     def base_key(address: int) -> str:
+        address &= Registers.L
         address = (address >> config.DSP_SHIFT) << config.DSP_SHIFT
-        return f"{address:08x}"
+        return f"{address:08X}"
 
     @staticmethod
     def dsp(address: int) -> int:

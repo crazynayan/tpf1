@@ -32,13 +32,16 @@ class Execute(Instruction, ExecutableMacro, DbMacro):
 
         # S04 - Arithmetic & Shift Algebraic
         self._ex['AR'] = self.add_register
-        # A - Not in ETA5
+        self._ex['A'] = self.add_fullword
         self._ex['AH'] = self.add_halfword
         self._ex['AHI'] = self.add_halfword_immediate
         self._ex['SR'] = self.subtract_register
-        # S - Not in ETA5
+        self._ex['S'] = self.subtract_fullword
         # SH - Not in ETA5
-        # MH, MHI, M, MR, DR, D - Not in ETA5
+        self._ex['M'] = self.multiply_fullword
+        self._ex['MH'] = self.multiply_halfword
+        self._ex['D'] = self.divide_fullword
+        # MH, MHI, M, MR, DR - Not in ETA5
         # SLA, SRA, SLDA, SRDA - Not in ETA5
 
         # S05 - Move Store & Logic Control
@@ -110,14 +113,18 @@ class Execute(Instruction, ExecutableMacro, DbMacro):
         # CL, CLR - Not in ETA5
         self._ex['CLI'] = self.compare_logical_immediate
         self._ex['CLC'] = self.compare_logical_character
+        self._ex['CLM'] = self.compare_logical_character_mask
         # CLM, CLCL - Not in ETA5
-        # SLL, SRL, SLDL, SRDL - Not in ETA5
+        self._ex['SLL'] = self.shift_left_logical
+        self._ex['SRL'] = self.shift_right_logical
+        self._ex['SLDL'] = self.shift_left_double_logical
+        self._ex['SRDL'] = self.shift_right_double_logical
         # ALR, AL, SLR, SL - Not in ETA5
 
         # S07 - And/Or/Xor, TM, EX, Data Conversion
-        # NR - Not in ETA5
-        # XR - Not in ETA5
         self._ex['OR'] = self.or_register
+        self._ex['NR'] = self.and_register
+        self._ex['XR'] = self.xor_register
         self._ex['N'] = self.and_fullword
         # O - Not in ETA5
         # X - Not in ETA5
