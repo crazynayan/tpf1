@@ -80,11 +80,12 @@ class SegmentGeneric(DataMacroImplementation):
         name = self.get_macro_name(base)
         if not name:
             return None
-        if name == self.seg_name:
+        if name == self.seg_name or name in macros:
+            indexed_data = self._index if name == self.seg_name else macros[name].indexed_data
             index_label = name + str(dsp)
-            if index_label not in self._index:
+            if index_label not in indexed_data:
                 return None
-            matches = self._index[index_label]
+            matches = indexed_data[index_label]
             field = min(matches, key=lambda item: abs(item[1] - length))[0]
         else:
             matches = {label: label_ref for label, label_ref in self.all_labels.items()
@@ -97,9 +98,4 @@ class SegmentGeneric(DataMacroImplementation):
 
     def add_label(self, label: str, dsp: int, length: int, name: str) -> LabelReference:
         label_ref = super().add_label(label, dsp, length, name)
-        if name == self.seg_name:
-            index_label = name + str(dsp)
-            if index_label not in self._index:
-                self._index[index_label] = list()
-            self._index[index_label].append((label, length))
         return label_ref

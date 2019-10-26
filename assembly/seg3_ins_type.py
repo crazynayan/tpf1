@@ -171,6 +171,7 @@ class RegisterDataField(InstructionGeneric):
 
 
 class BranchGeneric(InstructionGeneric):
+    MAX_VALUE = 15
 
     def __init__(self, line: Line, branch: Optional[FieldIndex]):
         super().__init__(line)

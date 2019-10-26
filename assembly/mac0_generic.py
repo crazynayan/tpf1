@@ -43,6 +43,10 @@ class MacroGeneric:
     def all_labels(self) -> Dict[str, LabelReference]:
         return self._symbol_table
 
+    @property
+    def indexed_data(self) -> Dict[str, List[Tuple[str, int]]]:
+        return self._index
+
     def check(self, label: str) -> bool:
         return label in self._symbol_table
 
@@ -93,4 +97,8 @@ class MacroGeneric:
     def add_label(self, label: str, dsp: int, length: int, name: str) -> LabelReference:
         label_ref = LabelReference(label, dsp, length, name)
         self._symbol_table[label] = label_ref
+        index_label = name + str(dsp)
+        if index_label not in self._index:
+            self._index[index_label] = list()
+        self._index[index_label].append((label, length))
         return label_ref

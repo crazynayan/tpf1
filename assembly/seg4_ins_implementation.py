@@ -1,10 +1,10 @@
-from typing import Tuple, Dict
+from typing import Dict
 
 from assembly.seg2_ins_operand import InstructionOperand
 from assembly.seg3_ins_type import InstructionGeneric, FieldBits, FieldLenField, FieldLenFieldLen, FieldData, \
     RegisterRegister, RegisterFieldIndex, RegisterData, RegisterRegisterField, RegisterDataField, BranchCondition, \
     RegisterBranch, BranchConditionRegister, FieldSingle, RegisterRegisterBranch, InstructionType, \
-    FieldLenFieldData
+    FieldLenFieldData, BranchGeneric
 from utils.command import cmd
 from utils.data_type import Register
 from utils.errors import DataInvalidError, RegisterInvalidError, ConditionMaskError
@@ -112,57 +112,56 @@ class InstructionImplementation(InstructionOperand):
         self._command['BXLE'] = self.reg_reg_branch
         self._command['EX'] = self.reg_label
         self._command['BC'] = self.branch_condition
-        self._command['BCRY'] = self.branch_condition
-        self._command['B'] = self.branch_condition
-        self._command['NOP'] = self.branch_condition
-        self._command['BZ'] = self.branch_condition
-        self._command['BNZ'] = self.branch_condition
-        self._command['BO'] = self.branch_condition
-        self._command['BNO'] = self.branch_condition
-        self._command['BE'] = self.branch_condition
-        self._command['BNE'] = self.branch_condition
-        self._command['BM'] = self.branch_condition
-        self._command['BNM'] = self.branch_condition
-        self._command['BP'] = self.branch_condition
-        self._command['BNP'] = self.branch_condition
-        self._command['BH'] = self.branch_condition
-        self._command['BNH'] = self.branch_condition
-        self._command['BL'] = self.branch_condition
-        self._command['BNL'] = self.branch_condition
+        self._command['B'] = self.branch_mnemonic
+        self._command['NOP'] = self.branch_mnemonic
+        self._command['BZ'] = self.branch_mnemonic
+        self._command['BNZ'] = self.branch_mnemonic
+        self._command['BO'] = self.branch_mnemonic
+        self._command['BNO'] = self.branch_mnemonic
+        self._command['BE'] = self.branch_mnemonic
+        self._command['BNE'] = self.branch_mnemonic
+        self._command['BM'] = self.branch_mnemonic
+        self._command['BNM'] = self.branch_mnemonic
+        self._command['BP'] = self.branch_mnemonic
+        self._command['BNP'] = self.branch_mnemonic
+        self._command['BH'] = self.branch_mnemonic
+        self._command['BNH'] = self.branch_mnemonic
+        self._command['BL'] = self.branch_mnemonic
+        self._command['BNL'] = self.branch_mnemonic
         self._command['JC'] = self.branch_condition
-        self._command['J'] = self.branch_condition
-        self._command['JNOP'] = self.branch_condition
-        self._command['JZ'] = self.branch_condition
-        self._command['JNZ'] = self.branch_condition
-        self._command['JO'] = self.branch_condition
-        self._command['JNO'] = self.branch_condition
-        self._command['JE'] = self.branch_condition
-        self._command['JNE'] = self.branch_condition
-        self._command['JM'] = self.branch_condition
-        self._command['JNM'] = self.branch_condition
-        self._command['JP'] = self.branch_condition
-        self._command['JNP'] = self.branch_condition
-        self._command['JH'] = self.branch_condition
-        self._command['JNH'] = self.branch_condition
-        self._command['JL'] = self.branch_condition
-        self._command['JNL'] = self.branch_condition
+        self._command['J'] = self.branch_mnemonic
+        self._command['JNOP'] = self.branch_mnemonic
+        self._command['JZ'] = self.branch_mnemonic
+        self._command['JNZ'] = self.branch_mnemonic
+        self._command['JO'] = self.branch_mnemonic
+        self._command['JNO'] = self.branch_mnemonic
+        self._command['JE'] = self.branch_mnemonic
+        self._command['JNE'] = self.branch_mnemonic
+        self._command['JM'] = self.branch_mnemonic
+        self._command['JNM'] = self.branch_mnemonic
+        self._command['JP'] = self.branch_mnemonic
+        self._command['JNP'] = self.branch_mnemonic
+        self._command['JH'] = self.branch_mnemonic
+        self._command['JNH'] = self.branch_mnemonic
+        self._command['JL'] = self.branch_mnemonic
+        self._command['JNL'] = self.branch_mnemonic
         self._command['BCR'] = self.branch_condition_reg
-        self._command['BR'] = self.branch_condition_reg
-        self._command['NOPR'] = self.branch_condition_reg
-        self._command['BER'] = self.branch_condition_reg
-        self._command['BNER'] = self.branch_condition_reg
-        self._command['BHR'] = self.branch_condition_reg
-        self._command['BNHR'] = self.branch_condition_reg
-        self._command['BLR'] = self.branch_condition_reg
-        self._command['BNLR'] = self.branch_condition_reg
-        self._command['BZR'] = self.branch_condition_reg
-        self._command['BNZR'] = self.branch_condition_reg
-        self._command['BOR'] = self.branch_condition_reg
-        self._command['BNOR'] = self.branch_condition_reg
-        self._command['BPR'] = self.branch_condition_reg
-        self._command['BNPR'] = self.branch_condition_reg
-        self._command['BMR'] = self.branch_condition_reg
-        self._command['BNMR'] = self.branch_condition_reg
+        self._command['BR'] = self.branch_mnemonic_reg
+        self._command['NOPR'] = self.branch_mnemonic_reg
+        self._command['BER'] = self.branch_mnemonic_reg
+        self._command['BNER'] = self.branch_mnemonic_reg
+        self._command['BHR'] = self.branch_mnemonic_reg
+        self._command['BNHR'] = self.branch_mnemonic_reg
+        self._command['BLR'] = self.branch_mnemonic_reg
+        self._command['BNLR'] = self.branch_mnemonic_reg
+        self._command['BZR'] = self.branch_mnemonic_reg
+        self._command['BNZR'] = self.branch_mnemonic_reg
+        self._command['BOR'] = self.branch_mnemonic_reg
+        self._command['BNOR'] = self.branch_mnemonic_reg
+        self._command['BPR'] = self.branch_mnemonic_reg
+        self._command['BNPR'] = self.branch_mnemonic_reg
+        self._command['BMR'] = self.branch_mnemonic_reg
+        self._command['BNMR'] = self.branch_mnemonic_reg
 
     @staticmethod
     def instruction_generic(line: Line) -> InstructionGeneric:
@@ -269,38 +268,33 @@ class InstructionImplementation(InstructionOperand):
         field = self.field_base_dsp(operand3)
         return RegisterDataField(line, reg, data, field)
 
-    @staticmethod
-    def _get_mask(line: Line) -> Tuple[int, str, str]:
-        mask = cmd.check(line.command, 'mask')
-        command = line.command
-        if mask is not None:
-            # This is commands with mnemonics like BP, JNZ, J, B, NOP, BR, BMR
-            mask = int(mask)
-            operand = line.operand
-        else:
-            # This is commands with mask. BC or JC or BCR
-            mask, operand = line.split_operands()
-            mask = int(mask)
-            commands = cmd.get_commands('mask', mask)
-            mnemonic = next((command for command in commands
-                             if cmd.check(line.command, 'len') == cmd.check(command, 'len')), None)
-            if mnemonic is None:
-                raise ConditionMaskError
-            command = mnemonic
-        return mask, operand, command
-
     def branch_condition(self, line: Line) -> BranchCondition:
-        mask, operand, command = self._get_mask(line)
-        # line.command = command
-        if mask == 0:
-            branch = None
-        else:
-            branch = self.get_branch(operand)
+        mask, operand = line.split_operands()
+        mask = int(mask)
+        if not 0 <= mask <= BranchGeneric.MAX_VALUE:
+            raise ConditionMaskError
+        branch = self.get_branch(operand)
         return BranchCondition(line, branch, mask)
 
-    def branch_condition_reg(self, line: Line) -> BranchConditionRegister:
-        mask, operand, command = self._get_mask(line)
-        # line.command = command
+    def branch_mnemonic(self, line: Line) -> BranchCondition:
+        mask = cmd.check(line.command, 'mask')
+        branch = self.get_branch(line.operand)
+        return BranchCondition(line, branch, mask)
+
+    @staticmethod
+    def branch_mnemonic_reg(line: Line) -> BranchConditionRegister:
+        mask = cmd.check(line.command, 'mask')
+        reg = Register(line.operand)
+        if not reg.is_valid():
+            raise RegisterInvalidError
+        return BranchConditionRegister(line, mask, reg)
+
+    @staticmethod
+    def branch_condition_reg(line: Line) -> BranchConditionRegister:
+        mask, operand = line.split_operands()
+        mask = int(mask)
+        if not 0 <= mask <= BranchGeneric.MAX_VALUE:
+            raise ConditionMaskError
         reg = Register(operand)
         if not reg.is_valid():
             raise RegisterInvalidError

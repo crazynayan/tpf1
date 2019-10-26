@@ -9,7 +9,7 @@ class Subroutine(unittest.TestCase):
     def test_subroutine(self):
         seg: Segment = segments['TS09']
         self.assertRaises(RegisterInvalidError, seg.reg_branch, Line.from_line(" BAS R16,TS09S100"))
-        self.assertRaises(RegisterInvalidError, seg.branch_condition_reg, Line.from_line(" BR -1"))
+        self.assertRaises(RegisterInvalidError, seg.branch_mnemonic_reg, Line.from_line(" BR -1"))
         seg.assemble()
         # BAS   R4,TS09S100
         node = seg.nodes['TS090010.1']
