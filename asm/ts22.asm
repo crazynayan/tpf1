@@ -4,7 +4,6 @@
          PGMID 'TS2201'
          SUBID REG=R1
          LA    R1,EBW000
-         MVC   SUB0DE,=CL(L'SUB0DE)'B4T0'
          ENTRC SUB1
 TS22EXIT EQU   *
          EXITC

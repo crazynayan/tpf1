@@ -28,6 +28,7 @@ class TD:
     wa0ftn = macros['WA0AA'].evaluate('#WA0FTN')
     wa0ftd = macros['WA0AA'].evaluate('#WA0FTD')
     wa0afu = macros['WA0AA'].evaluate('#WA0AFU')
+    wa0tvl = macros['WA0AA'].evaluate('#WA0TVL')
     ui2cnn = macros['UI2PF'].evaluate('UI2CNN')
     ui2097 = macros['UI2PF'].evaluate('#UI2097')
     ui2098 = macros['UI2PF'].evaluate('#UI2098')

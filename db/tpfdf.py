@@ -40,7 +40,7 @@ class Tpfdf:
             lrec = dict()
             lrec['key'] = key
             lrec['data'] = bytearray()
-            lrec['data'].extend(Stream.to_bytes(lrec_dict, macros[ref_name]))
+            lrec['data'].extend(Stream(macros[ref_name]).to_bytes(lrec_dict))
             ref.append(lrec)
 
     @staticmethod

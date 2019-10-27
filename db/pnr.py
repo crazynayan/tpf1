@@ -110,15 +110,14 @@ class Pnr:
     def add_fqtv(pnr_locator: str, frequent_travellers: List[Dict[str, bytearray]]) -> None:
         pnr_doc = Pnr.get_pnr_doc(pnr_locator)
         macros['PR001W'].load()
-        frequent_travellers: List[bytearray] = [Stream.to_bytes(fqtv, macros['PR001W'])
-                                                for fqtv in frequent_travellers]
+        frequent_travellers: List[bytearray] = [Stream(macros['PR001W']).to_bytes(fqtv) for fqtv in frequent_travellers]
         Pnr.add_elements(pnr_doc, frequent_travellers, '60', packed=True)
 
     @staticmethod
     def add_itin(pnr_locator: str, itineraries: List[Dict[str, bytearray]]) -> None:
         pnr_doc = Pnr.get_pnr_doc(pnr_locator)
         macros['WI0BS'].load()
-        itineraries: List[bytearray] = [Stream.to_bytes(itin, macros['WI0BS']) for itin in itineraries]
+        itineraries: List[bytearray] = [Stream(macros['WI0BS']).to_bytes(itin) for itin in itineraries]
         Pnr.add_elements(pnr_doc, itineraries, '30')
 
     @staticmethod
