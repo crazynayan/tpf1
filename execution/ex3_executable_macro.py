@@ -1,7 +1,6 @@
 from typing import Optional
 
 from assembly.seg5_exec_macro import KeyValue, SegmentCall
-from config import config
 from db.pnr import PnrLocator
 from execution.ex1_state import State
 from utils.data_type import DataType, Register
@@ -10,16 +9,7 @@ from utils.ucdr import pars_to_date, date_to_pars
 
 class RealTimeMacro(State):
     def getcc(self, node: KeyValue) -> str:
-        address = self.vm.allocate()
-        level_address = self.get_ecb_address(node.keys[0], 'CE1CR')
-        control_address = self.get_ecb_address(node.keys[0], 'CE1CT')
-        size_address = self.get_ecb_address(node.keys[0], 'CE1CC')
-        block_type = node.keys[1]
-        control_value = config.BLOCK_TYPE[block_type] if block_type in config.BLOCK_TYPE else config.BLOCK_TYPE['L4']
-        size_value = config.BLOCK_SIZE[block_type] if block_type in config.BLOCK_SIZE else config.BLOCK_TYPE['L4']
-        self.vm.set_value(address, level_address)
-        self.vm.set_value(control_value, control_address, 2)
-        self.vm.set_value(size_value, size_address, 2)
+        address = self.get_core_block(node.keys[0], node.keys[1])
         self.regs.R14 = address
         return node.fall_down
 

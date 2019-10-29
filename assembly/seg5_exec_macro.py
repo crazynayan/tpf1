@@ -84,6 +84,7 @@ class RealtimeMacroImplementation(InstructionImplementation):
         self._command['ATTAC'] = self.key_value
         self._command['MODEC'] = self.key_value
         self._command['GLOBZ'] = self.globz
+        self._command['FACE'] = self.instruction_generic
         self._command['FINWC'] = self.key_value
         self._command['SYSRA'] = self.key_value
         self._command['SERRC'] = self.key_value

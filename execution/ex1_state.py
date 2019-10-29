@@ -125,6 +125,19 @@ class State:
         label = self.seg.get_field_name(Register('R8'), dsp, 4)
         return label
 
+    def get_core_block(self, level: str, block_type: Optional[str] = None) -> int:
+        address = self.vm.allocate()
+        level_address = self.get_ecb_address(level, 'CE1CR')
+        control_address = self.get_ecb_address(level, 'CE1CT')
+        size_address = self.get_ecb_address(level, 'CE1CC')
+        control_value = config.BLOCK_TYPE[block_type] if block_type in config.BLOCK_TYPE else config.BLOCK_TYPE['L4']
+        size_value = config.BLOCK_SIZE[block_type] if block_type in config.BLOCK_SIZE else config.BLOCK_SIZE['L4']
+        self.vm.set_value(address, level_address)
+        self.vm.set_value(control_value, control_address, 2)
+        self.vm.set_value(size_value, size_address, 2)
+        return address
+
+
 
 class Setup:
     def __init__(self):

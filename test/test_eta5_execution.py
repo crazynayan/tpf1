@@ -19,6 +19,7 @@ class NameSuccessETAW(unittest.TestCase):
         Pnr.add_names(config.AAAPNR, ['1ZAVERI'])
         label = TD.state.run('ETA5', aaa=True)
         self.assertEqual('$$ETAW$$.1', label)
+        self.assertListEqual(list(), TD.state.dumps)
         self.assertEqual(0xF0F0, TD.state.vm.get_unsigned_value(TD.state.regs.R1 + TD.wa0ext, 2))
         self.assertEqual(1, TD.state.vm.get_byte(TD.ebw000 + 15))
         self.assertEqual(1, TD.state.vm.get_byte(TD.state.regs.R1 + TD.wa0pty))

@@ -2,7 +2,9 @@ from typing import Optional
 
 from assembly.mac0_generic import LabelReference
 from assembly.seg2_ins_operand import FieldBaseDsp
+from assembly.seg3_ins_type import InstructionGeneric
 from assembly.seg5_exec_macro import KeyValue
+from db.flat_file import FlatFile
 from db.pnr import Pnr, PnrLocator
 from db.tpfdf import Tpfdf
 from execution.ex1_state import State
@@ -123,9 +125,27 @@ class UserDefinedDbMacro(State):
 class RealTimeDbMacro(State):
 
     def finwc(self, node: KeyValue) -> str:
-        address = self.vm.allocate()
-        level_address = self.get_ecb_address(node.keys[0], 'CE1CR')
-        self.vm.set_value(address, level_address)
+        level = node.keys[0]
+        # GETCC equivalent process
+        address = self.get_core_block(level)
+        # Get file address and record id
+        record_id_address = self.get_ecb_address(level, 'CE1FA')
+        file_address_address = self.get_ecb_address(level, 'EBCFA')
+        record_id = self.vm.get_unsigned_value(record_id_address, 2)
+        file_address = self.vm.get_unsigned_value(file_address_address, 4)
+        # Move the data in the work block
+        data = FlatFile.get_record(record_id, file_address)
+        if data is None or self.is_error(node.label):
+            return node.keys[1]
+        self.vm.set_bytes(data, address, len(data))
+        return node.fall_down
+
+    def face(self, node: InstructionGeneric) -> str:
+        ordinal = self.regs.R0
+        face_type = self.regs.R6
+        address = self.regs.R7 + 4
+        file_address = int(FlatFile.face(face_type, ordinal), 16)
+        self.vm.set_value(file_address, address)
         return node.fall_down
 
 

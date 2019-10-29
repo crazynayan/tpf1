@@ -176,6 +176,7 @@ class Execute(Instruction, ExecutableMacro, DbMacro):
         # User Defined Executable Macros created for this tool
         self._ex['PARS_DATE'] = self.pars_date
         self._ex['ERROR_CHECK'] = self.error_check
+        self._ex['FACE'] = self.face
 
         # Realtime Db Macros - Not in ETA5
         self._ex['FINWC'] = self.finwc
