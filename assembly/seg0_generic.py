@@ -95,7 +95,3 @@ class SegmentGeneric(DataMacroImplementation):
 
     def is_branch(self, label: str) -> bool:
         return self.check(label) and self.lookup(label).is_branch
-
-    def add_label(self, label: str, dsp: int, length: int, name: str) -> LabelReference:
-        label_ref = super().add_label(label, dsp, length, name)
-        return label_ref

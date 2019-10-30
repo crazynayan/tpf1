@@ -23,10 +23,10 @@ class EtajTest(unittest.TestCase):
     def tjr_setup(self, iy9aon: bytearray, pool: int = 1, iy1lok: bool = False) -> None:
         iy_item = dict()
         iy_item['IY9AON'] = iy9aon
-        if iy1lok:
-            iy_item['IY9AGY'] = bytearray([self.iy1lok])
         empty_item = iy_item.copy()
         empty_item['IY9AON'] = bytearray([config.ZERO])
+        if iy1lok:
+            iy_item['IY9AGY'] = bytearray([self.iy1lok])
         iy_bytes = Stream(macros['IY1IY']).item_to_bytes([iy_item], 'IY1ATH', count='IY1CTR')
         iy_address = FlatFile.add_pool(iy_bytes, self.iy_id)
         for _ in range(pool - 1):

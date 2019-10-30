@@ -138,7 +138,6 @@ class State:
         return address
 
 
-
 class Setup:
     def __init__(self):
         self.ecb: Dict[str, bytearray] = dict()
