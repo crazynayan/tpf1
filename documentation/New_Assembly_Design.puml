@@ -163,11 +163,11 @@ package seg2_ins_operand {
     FieldIndex -|> FieldBaseDsp
     FieldLen --|> FieldBaseDsp
     Bits::Bit *- Bit
-    InstructionOperand --|> seg1_directive
+    InstructionOperand --|> DirectiveImplementation
     InstructionOperand::FieldBaseDsp *. FieldBaseDsp
     InstructionOperand::FieldIndex *. FieldIndex
     InstructionOperand::FieldLen *. FieldLen
-    InstructionOperand::Bits *. Bits
+    InstructionOperand::Bits *.. Bits
 }
 
 package seg3_ins_type {
@@ -260,10 +260,10 @@ package seg3_ins_type {
     BranchGeneric ---|> InstructionGeneric
     BranchCondition --|> BranchGeneric
     BranchConditionRegister -|> BranchCondition
-    RegisterBranch --|> BranchCondition
-    RegisterRegisterBranch --|> BranchCondition
+    RegisterBranch --|> BranchGeneric
+    RegisterRegisterBranch --|> BranchGeneric
 }
-seg3_ins_type *... seg2_ins_operand
+seg3_ins_type ..* seg2_ins_operand
 
 package seg4_ins_implementation {
     abstract class InstructionImplementation {
@@ -291,7 +291,7 @@ package seg4_ins_implementation {
         +reg_reg_branch(line: Line) -> RegisterRegisterBranch
         +reg_label(line: Line) -> RegisterFieldIndex
     }
-    InstructionImplementation ---|> seg2_ins_operand
+    InstructionImplementation --|> InstructionOperand
     InstructionImplementation ..* seg3_ins_type
 }
 
