@@ -231,8 +231,8 @@ class CompareLogical(State):
     def compare_logical_character(self, node: FieldLenField) -> str:
         source_address = self.regs.get_address(node.field.base, node.field.dsp)
         target_address = self.regs.get_address(node.field_len.base, node.field_len.dsp)
-        source_value = self.vm.get_unsigned_value(target_address, node.field_len.length + 1)
-        target_value = self.vm.get_unsigned_value(source_address, node.field_len.length + 1)
+        source_value = self.vm.get_unsigned_value(source_address, node.field_len.length + 1)
+        target_value = self.vm.get_unsigned_value(target_address, node.field_len.length + 1)
         self.set_number_cc(target_value - source_value)
         return node.fall_down
 
@@ -403,6 +403,8 @@ class LogicalUsefulConversion(State):
         elif isinstance(exec_node, FieldBits):
             value |= exec_node.bits.value
             exec_node.bits.set_value(value)
+            self.ex_command(exec_node)
+        elif value == 0:
             self.ex_command(exec_node)
         else:
             raise TypeError

@@ -3,7 +3,7 @@
 **********************************************************************
          PGMID 'TS2201'
          SUBID REG=R1
-         LA    R1,EBW000
+         LA    R1,EBX000
          ENTRC SUB1
 TS22EXIT EQU   *
          EXITC

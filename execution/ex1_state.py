@@ -39,9 +39,11 @@ class State:
             self.seg = segments[seg_name]
             self.seg.assemble()
             self.regs.R8 = self.vm.allocate()   # Constant
-            literal = self.vm.allocate()        # Literal is immediately the next frame
-            self.vm.set_bytes(self.seg.data.constant, self.regs.R8, len(self.seg.data.constant))
-            self.vm.set_bytes(self.seg.data.literal, literal, len(self.seg.data.literal))
+            literal = self.vm.allocate()  # Literal is immediately the next frame
+            self.vm.frames[self.vm.base_key(self.regs.R8)] = self.seg.data.constant
+            self.vm.frames[self.vm.base_key(literal)] = self.seg.data.literal
+            # self.vm.set_bytes(self.seg.data.constant, self.regs.R8, len(self.seg.data.constant))
+            # self.vm.set_bytes(self.seg.data.literal, literal, len(self.seg.data.literal))
             self.loaded_seg[seg_name] = (self.seg, self.regs.R8)
 
     def init_debug(self, seg_list: List[str]) -> None:
