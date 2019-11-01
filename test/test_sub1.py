@@ -1,5 +1,6 @@
 import unittest
 
+from assembly.seg6_segment import segments
 from test.input_td import TD
 from utils.data_type import DataType
 
@@ -16,6 +17,9 @@ class Sub1Test(unittest.TestCase):
         self.assertEqual('B4T0 ', DataType('X', bytes=TD.state.vm.get_bytes(TD.ebx000 + 3, 5)).decode)
         self.assertEqual(0xC2F4E3, TD.state.vm.get_unsigned_value(TD.ebx000, 3))
         self.assertEqual(0x017F, TD.state.vm.get_value(TD.ebx000 + 8, 3))
+        # TODO remove once the scenario for it is present
+        tnaa_bytes = DataType('X', input='00003EF8000002A40000001A00040000').to_bytes()
+        self.assertEqual(tnaa_bytes, segments['SUB1'].get_constant_bytes('SUB2TNAA', 16))
 
     def test_00017F(self):
         TD.state.setup.ecb['EBX008'] = DataType('X', input='00017F').to_bytes()
@@ -139,6 +143,41 @@ class Sub1Test(unittest.TestCase):
         self.assertEqual('4K37 ', DataType('X', bytes=TD.state.vm.get_bytes(TD.ebx000 + 3, 5)).decode)
         self.assertEqual(0x035DA7, TD.state.vm.get_unsigned_value(TD.ebx000, 3))
         self.assertEqual(0x035DA7, TD.state.vm.get_value(TD.ebx000 + 8, 3))
+
+    def test_C4C6E6_encode(self):
+        TD.state.setup.ecb['EBX000'] = DataType('X', input='C4C6E6').to_bytes()
+        label = TD.state.run('TS22')
+        self.assertEqual('TS22EXIT.1', label)
+        self.assertEqual(0, TD.state.regs.R0)
+
+    def test_F1F2F3_encode(self):
+        TD.state.setup.ecb['EBX000'] = DataType('X', input='F1F2F3').to_bytes()
+        label = TD.state.run('TS22')
+        self.assertEqual('TS22EXIT.1', label)
+        self.assertEqual(0, TD.state.regs.R0)
+
+    def test_DFW(self):
+        TD.state.setup.ecb['EBX003'] = DataType('C', input='DFW').to_bytes()
+        label = TD.state.run('TS22')
+        self.assertEqual('TS22EXIT.1', label)
+        self.assertEqual(0, TD.state.regs.R0)
+
+    def test_123(self):
+        TD.state.setup.ecb['EBX003'] = DataType('C', input='123').to_bytes()
+        label = TD.state.run('TS22')
+        self.assertEqual('TS22EXIT.1', label)
+        self.assertEqual(0, TD.state.regs.R0)
+
+    def test_error_code_1(self):
+        label = TD.state.run('TS22')
+        self.assertEqual('TS22EXIT.1', label)
+        self.assertEqual(1, TD.state.regs.R0)
+
+    def test_error_code_3(self):
+        TD.state.setup.ecb['EBX003'] = DataType('C', input='-*A').to_bytes()
+        label = TD.state.run('TS22')
+        self.assertEqual('TS22EXIT.1', label)
+        self.assertEqual(3, TD.state.regs.R0)
 
 
 # noinspection PyPep8Naming
