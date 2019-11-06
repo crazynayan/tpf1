@@ -1,7 +1,6 @@
 from typing import Optional, Set, TypeVar
 
 from assembly.seg2_ins_operand import FieldBaseDsp, Bits, FieldIndex, FieldLen
-from utils.command import cmd
 from utils.data_type import Register
 from utils.file_line import Line
 
@@ -33,10 +32,6 @@ class InstructionGeneric:
     @property
     def on(self) -> str:
         return self.command
-
-    @property
-    def is_fall_down(self) -> bool:
-        return True if not cmd.check(self.command, 'no_fall_down') else False
 
 
 class FieldBits(InstructionGeneric):

@@ -3,6 +3,7 @@ from copy import deepcopy
 from assembly.seg3_ins_type import RegisterRegister, RegisterFieldIndex, RegisterData, RegisterDataField, \
     RegisterRegisterField, FieldLenField, FieldData, BranchCondition, RegisterBranch, BranchConditionRegister, \
     FieldBits, FieldLenFieldLen
+from config import config
 from execution.ex1_state import State
 from utils.data_type import DataType, Register
 from utils.errors import PackExecutionError, BctExecutionError
@@ -87,7 +88,7 @@ class LoadStore(State):
             self.regs.set_value(value, reg)
             if reg == node.reg2.reg:
                 break
-            address += self.regs.LEN
+            address += config.REG_BYTES
             reg = self.regs.next_reg(reg)
         return node.fall_down
 
@@ -100,7 +101,7 @@ class LoadStore(State):
             self.vm.set_value(value, address)
             if reg == node.reg2.reg:
                 break
-            address += self.regs.LEN
+            address += config.REG_BYTES
             reg = self.regs.next_reg(reg)
         return node.fall_down
 
@@ -276,7 +277,7 @@ class CompareLogical(State):
 
     def shift_left_logical(self, node: RegisterFieldIndex):
         factor = self.regs.get_address(node.field.base, node.field.dsp) & 0x3F
-        value = self.regs.get_unsigned_value(node.reg) << factor & self.regs.L
+        value = self.regs.get_unsigned_value(node.reg) << factor & config.REG_MAX
         self.regs.set_value(value, node.reg)
         return node.fall_down
 

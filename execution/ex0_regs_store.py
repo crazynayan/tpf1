@@ -8,11 +8,6 @@ from utils.errors import RegisterInvalidError
 
 
 class Registers:
-    ORDER = ('R0', 'R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R9', 'R10', 'R11', 'R12', 'R13', 'R14', 'R15')
-    BITS = 32
-    LEN = BITS // 8
-    L = (1 << BITS) - 1  # 0xFFFFFFFF
-    NEG = 1 << BITS - 1  # 0x80000000
 
     def __init__(self):
         self.R0 = 0
@@ -33,11 +28,18 @@ class Registers:
         self.R15 = 0
 
     def __repr__(self) -> str:
-        return f"R0:{self.R0 & self.L:08X},R1:{self.R1 & self.L:08X},R2:{self.R2 & self.L:08X}," \
-               f"R3:{self.R3 & self.L:08X},R4:{self.R4 & self.L:08X},R5:{self.R5 & self.L:08X},"
+        return f"R0:{self.R0 & config.REG_MAX:08X}," \
+               f"R1:{self.R1 & config.REG_MAX:08X}," \
+               f"R2:{self.R2 & config.REG_MAX:08X}," \
+               f"R3:{self.R3 & config.REG_MAX:08X}," \
+               f"R5:{self.R5 & config.REG_MAX:08X}," \
+               f"R6:{self.R6 & config.REG_MAX:08X}," \
+               f"R7:{self.R7 & config.REG_MAX:08X}," \
+               f"R14:{self.R14 & config.REG_MAX:08X}," \
+               f"R15:{self.R15 & config.REG_MAX:08X},"
 
     def get_bytes(self, reg: Union[str, Register]) -> bytearray:
-        return DataType('F', input=str(self.get_value(reg))).to_bytes(self.LEN)
+        return DataType('F', input=str(self.get_value(reg))).to_bytes(config.REG_BYTES)
 
     def get_value(self, reg: Union[str, Register]) -> int:
         try:
@@ -46,7 +48,7 @@ class Registers:
             raise RegisterInvalidError
 
     def get_unsigned_value(self, reg: Union[str, Register]) -> int:
-        return self.get_value(reg) & self.L
+        return self.get_value(reg) & config.REG_MAX
 
     def get_address(self, base: Optional[Register], dsp: int = 0, index: Optional[Register] = None) -> int:
         return (self.get_unsigned_value(base) if base and str(base) != 'R0' else 0) + dsp + \
@@ -54,7 +56,8 @@ class Registers:
 
     def next_reg(self, reg: Union[str, Register]) -> str:
         self.get_value(reg)
-        return self.ORDER[0] if reg == self.ORDER[-1] else self.ORDER[self.ORDER.index(str(reg)) + 1]
+        return config.REGISTERS[0] if reg == config.REGISTERS[-1] \
+            else config.REGISTERS[config.REGISTERS.index(str(reg)) + 1]
 
     def get_bytes_from_mask(self, reg: Register, mask: int) -> bytearray:
         reg_bytes = self.get_bytes(reg)
@@ -65,16 +68,16 @@ class Registers:
 
     def set_bytes(self, byte_array: bytearray, reg: Register) -> None:
         self.get_value(reg)
-        if len(byte_array) != self.LEN:
+        if len(byte_array) != config.REG_BYTES:
             raise ValueError
         setattr(self, str(reg), DataType('F', bytes=byte_array).value)
 
     def set_value(self, value: int, reg: Union[Register, str]) -> None:
         self.get_value(reg)
-        if value < -self.NEG or value > self.L:
-            value &= self.L
-        if value > 0 and value & self.NEG != 0:
-            value -= self.L + 1
+        if value < -config.REG_NEG or value > config.REG_MAX:
+            value &= config.REG_MAX
+        if value > 0 and value & config.REG_NEG != 0:
+            value -= config.REG_MAX + 1
         setattr(self, str(reg), value)
 
     def set_bytes_from_mask(self,  byte_array: bytearray, reg: Register, mask: int) -> None:
@@ -91,17 +94,17 @@ class Registers:
     def get_double_value(self, reg: Register) -> int:
         high_value = self.get_value(reg)
         low_value = self.get_unsigned_value(self.next_reg(reg))
-        high_value <<= self.BITS
+        high_value <<= config.REG_BITS
         return high_value + low_value
 
     def get_unsigned_double_value(self, reg: Register) -> int:
         high_value = self.get_unsigned_value(reg)
         low_value = self.get_unsigned_value(self.next_reg(reg))
-        high_value <<= self.BITS
+        high_value <<= config.REG_BITS
         return high_value + low_value
 
     def set_double_value(self, value: int, reg: Register) -> None:
-        high_value = value >> self.BITS
+        high_value = value >> config.REG_BITS
         self.set_value(high_value, reg)
         self.set_value(value, self.next_reg(reg))
 
@@ -144,11 +147,11 @@ class Storage:
         self.set_value(0x00088EDC, tjord)
 
     def get_allocated_address(self) -> bytearray:
-        return DataType('F', input=str(self.nab - config.F4K)).to_bytes(Registers.LEN)
+        return DataType('F', input=str(self.nab - config.F4K)).to_bytes(config.REG_BYTES)
 
     @staticmethod
     def base_key(address: int) -> str:
-        address &= Registers.L
+        address &= config.REG_MAX
         address = (address >> config.DSP_SHIFT) << config.DSP_SHIFT
         return f"{address:08X}"
 

@@ -1,4 +1,6 @@
-from typing import Optional, Dict, Callable, List
+from typing import Optional, Dict, Callable
+
+from config import config
 
 
 class DataTypeGeneric:
@@ -27,7 +29,6 @@ class DataTypeGeneric:
 
 
 class CDataType(DataTypeGeneric):
-    PADDING = 0x40
 
     def __init__(self):
         super().__init__()
@@ -48,11 +49,12 @@ class CDataType(DataTypeGeneric):
             return char_data
         if self.length > length:
             return char_data[:length]  # Truncation
-        char_data.extend(bytearray([self.PADDING] * (length - self.length)))
+        char_data.extend(bytearray([config.CHAR_PADDING] * (length - self.length)))
         return char_data               # Padding
 
 
 class XDataType(DataTypeGeneric):
+
     def __init__(self):
         super().__init__()
         self.data_type = 'X'
@@ -95,6 +97,7 @@ class BDataType(DataTypeGeneric):
 
 
 class PDataType(DataTypeGeneric):
+
     def __init__(self):
         super().__init__()
         self.data_type = 'P'
@@ -126,7 +129,6 @@ class PDataType(DataTypeGeneric):
 
 
 class ZDataType(DataTypeGeneric):
-    PADDING = 0xF0
 
     def __init__(self):
         super().__init__()
@@ -151,7 +153,7 @@ class ZDataType(DataTypeGeneric):
             return zoned_data
         if self.length > length:
             return zoned_data[(self.length - length):]  # Truncation
-        pad_data = bytearray([self.PADDING] * (length - self.length))
+        pad_data = bytearray([config.NUMBER_PADDING] * (length - self.length))
         pad_data.extend(zoned_data)
         return pad_data                                # Padding
 
@@ -183,24 +185,28 @@ class NumericDataType(DataTypeGeneric):
 
 
 class FDataType(NumericDataType):
+
     def __init__(self):
         super().__init__()
         self.data_type = 'F'
 
 
 class HDataType(NumericDataType):
+
     def __init__(self):
         super().__init__()
         self.data_type = 'H'
 
 
 class FDDataType(NumericDataType):
+
     def __init__(self):
         super().__init__()
         self.data_type = 'FD'
 
 
 class DDataType(NumericDataType):
+
     def __init__(self):
         super().__init__()
         self.data_type = 'D'
@@ -213,6 +219,7 @@ class ADataType(NumericDataType):
 
 
 class YDataType(NumericDataType):
+
     def __init__(self):
         super().__init__()
         self.data_type = 'Y'
@@ -266,32 +273,14 @@ class DataType:
 
 
 class Register:
-    INVALID = '??'
-    REG: Dict[str, List[str]] = {
-        'R0': ['0', '00', 'R0', 'R00', 'RAC'],
-        'R1': ['1', '01', 'R1', 'R01', 'RG1'],
-        'R2': ['2', '02', 'R2', 'R02', 'RGA'],
-        'R3': ['3', '03', 'R3', 'R03', 'RGB'],
-        'R4': ['4', '04', 'R4', 'R04', 'RGC'],
-        'R5': ['5', '05', 'R5', 'R05', 'RGD'],
-        'R6': ['6', '06', 'R6', 'R06', 'RGE'],
-        'R7': ['7', '07', 'R7', 'R07', 'RGF'],
-        'R8': ['8', '08', 'R8', 'R08', 'RAP'],
-        'R9': ['9', '09', 'R9', 'R09', 'REB'],
-        'R10': ['10', 'R10', 'RLA'],
-        'R11': ['11', 'R11', 'RLB'],
-        'R12': ['12', 'R12', 'RLC'],
-        'R13': ['13', 'R13', 'RLD'],
-        'R14': ['14', 'R14', 'RDA'],
-        'R15': ['15', 'R15', 'RDB'],
-    }
 
     def __init__(self, reg: str = None):
         super().__init__()
-        self.reg = next((key for key in self.REG for reg_val in self.REG[key] if reg_val == reg), self.INVALID)
+        self.reg = next((key for key in config.REG for reg_val in config.REG[key] if reg_val == reg),
+                        config.REG_INVALID)
 
     def __repr__(self) -> str:
         return self.reg
 
     def is_valid(self) -> bool:
-        return self.reg != self.INVALID
+        return self.reg != config.REG_INVALID

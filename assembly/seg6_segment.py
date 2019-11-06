@@ -53,7 +53,6 @@ class Segment(UserDefinedMacroImplementation):
         for line in lines:
             if line.command in macros:
                 continue
-            length = line.length if line.length is not None else config.DEFAULT_INSTRUCTION_LENGTH
             if line.is_first_pass:
                 self._command[line.command](line)
             if line.is_assembler_directive and not self.is_branch(line.label):
@@ -64,25 +63,24 @@ class Segment(UserDefinedMacroImplementation):
                 prior_label.index += 1
                 line.label = str(prior_label)
             if not line.is_assembler_directive:
+                length = line.instruction_length
                 self.add_label(line.label, self._location_counter, length, self.name)
                 self._symbol_table[line.label].set_branch()
                 self._location_counter += length
         return
 
     def _assemble_instructions(self, lines: List[Line]) -> None:
-        prior_label: str = self.root_label()
-        self.nodes[self.root_label()] = self.equ(self.root_line)
+        first_line = self.root_line
+        self.nodes[first_line.label] = self.equ(first_line)
+        prior_line: Line = first_line
         for line in lines:
-            # Process data macro declarations and second pass assembler directives like USING, PUSH, POP
             if self._process_assembler_directive(line):
                 continue
-            # Update the prior label with fall down
-            prior_node = self.nodes[str(prior_label)]
-            if prior_node.is_fall_down:
-                prior_node.fall_down = line.label
-            prior_label = line.label
-            # Create the node based on type of instruction
+            if prior_line.is_fall_down:
+                self.nodes[prior_line.label].fall_down = line.label
+            prior_line = line
             self.nodes[line.label] = self._command[line.command](line)
+        return
 
     def _process_assembler_directive(self, line: Line) -> bool:
         # return True -> skip creating node.

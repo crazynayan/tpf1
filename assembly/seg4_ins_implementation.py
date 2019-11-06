@@ -5,7 +5,7 @@ from assembly.seg3_ins_type import InstructionGeneric, FieldBits, FieldLenField,
     RegisterRegister, RegisterFieldIndex, RegisterData, RegisterRegisterField, RegisterDataField, BranchCondition, \
     RegisterBranch, BranchConditionRegister, FieldSingle, RegisterRegisterBranch, InstructionType, \
     FieldLenFieldData, BranchGeneric
-from utils.command import cmd
+from config import config
 from utils.data_type import Register
 from utils.errors import DataInvalidError, RegisterInvalidError, ConditionMaskError
 from utils.file_line import Line
@@ -277,13 +277,13 @@ class InstructionImplementation(InstructionOperand):
         return BranchCondition(line, branch, mask)
 
     def branch_mnemonic(self, line: Line) -> BranchCondition:
-        mask = cmd.check(line.command, 'mask')
+        mask = config.MASK[line.command]
         branch = self.get_branch(line.operand)
         return BranchCondition(line, branch, mask)
 
     @staticmethod
     def branch_mnemonic_reg(line: Line) -> BranchConditionRegister:
-        mask = cmd.check(line.command, 'mask')
+        mask = config.MASK[line.command]
         reg = Register(line.operand)
         if not reg.is_valid():
             raise RegisterInvalidError

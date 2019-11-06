@@ -1,13 +1,10 @@
 import re
 from typing import List, Optional
 
-from utils.command import cmd
+from config import config
 
 
 class File:
-    CVS_C2 = {'Ch', 'RC', 'VE', '==', '**', 'ng', '/u', '1.'}
-    TRIM = {'0': 7, ' ': 1}
-    COMMENT_C1 = {'*', '.'}
 
     @classmethod
     def open(cls, file_name: str) -> List[str]:
@@ -20,7 +17,7 @@ class File:
         # Remove the CVS header if present
         index = 0
         for line in lines:
-            if line[:2] not in cls.CVS_C2:
+            if line[:2] not in config.CVS_C2:
                 break
             index += 1
         lines = lines[index:] if index < len(lines) else list()
@@ -33,10 +30,10 @@ class File:
         if all(line[0] == lines[0][0] for line in lines):
             char = lines[0][0]
         # Remove (TRIM) the character from each line
-        if char in cls.TRIM:
-            lines = [line[cls.TRIM[char]:] for line in lines]
+        if char in config.TRIM:
+            lines = [line[config.TRIM[char]:] for line in lines]
         # Remove comments
-        lines = [line for line in lines if line and line[0] not in cls.COMMENT_C1]
+        lines = [line for line in lines if line and line[0] not in config.COMMENT_C1]
         return lines
 
 
@@ -96,24 +93,33 @@ class Line:
 
     @property
     def is_first_pass(self) -> bool:
-        return True if cmd.check(self.command, 'first_pass') else False
+        return True if self.is_assembler_directive and self.command not in config.DIRECTIVE_SECOND_PASS else False
 
     @property
     def is_assembler_directive(self) -> bool:
-        return True if cmd.check(self.command, 'directive') else False
+        return True if self.command in config.DIRECTIVE else False
 
     @property
     def create_node_for_directive(self) -> bool:
-        return True if cmd.check(self.command, 'directive') and cmd.check(self.command, 'create') else False
+        return True if self.command in config.DIRECTIVE_NODE else False
 
     @property
     def is_sw00sr(self) -> bool:
-        return True if cmd.check(self.command, 'sw00sr') else False
+        return True if self.command in config.SW00SR else False
 
     @property
-    def length(self) -> int:
-        return cmd.check(self.command, 'len')
-        # return 0 if length is None else length
+    def instruction_length(self) -> int:
+        if self.is_assembler_directive:
+            return 0
+        if self.command in config.INSTRUCTION_LEN_2:
+            return 2
+        if self.command in config.INSTRUCTION_LEN_6:
+            return 6
+        return config.INSTRUCTION_LEN_DEFAULT
+
+    @property
+    def is_fall_down(self) -> bool:
+        return True if self.command not in config.NO_FALL_DOWN else False
 
     def split_operands(self) -> List[str]:
         # Split operands separated by commas. Ignore commas enclosed in parenthesis.
@@ -121,5 +127,3 @@ class Line:
 
     def __repr__(self) -> str:
         return f'{self.label}:{self.command}:{self.operand}'
-
-
