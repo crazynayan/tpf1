@@ -12,7 +12,7 @@ COPY assembly assembly
 COPY execution execution
 COPY db db
 COPY test test
-COPY config.py google-cloud.json commands.json ./
+COPY config.py google-cloud.json ./
 
 
 ENV GOOGLE_APPLICATION_CREDENTIALS google-cloud.json
