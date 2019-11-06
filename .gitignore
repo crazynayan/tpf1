@@ -12,3 +12,4 @@ asm/etaj.asm
 asm/sub1.asm
 v1/eta5.asm
 test/trace_log.txt
+google-cloud.json

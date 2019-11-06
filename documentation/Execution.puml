@@ -1,0 +1,36 @@
+@startuml
+title Code Execution
+
+actor User
+participant "UX\nService" as Frontend
+participant "Code\nExecution\nService" as Backend
+database Firestore
+
+autonumber
+
+== Authentication ==
+User -> Frontend ++ : Logs in
+    Frontend -> Backend ++ : Pass login details as auth=
+        Backend -> Firestore ++ : Check user & password
+        return user
+    return user with token
+return Welcome Screen
+
+== Test Data Setup ==
+User -> Frontend ++ : Setup test data
+    Frontend -> Backend ++ : POST test data \n/test_data
+        Backend -> Firestore ++ : save test data
+        return test_data_id
+    return test_data_id
+return Test Data View
+
+== Evaluate TPF code ==
+User -> Frontend ++ : Run a segment
+    Frontend -> Backend ++ : GET execution result \n /test_data/{test_data_id}?seg=
+    Backend -> Firestore ++ : retrieve test data
+    return test data
+    Backend -> Backend : Execute segments
+    return execution output
+return Output View
+
+@enduml

@@ -1,0 +1,276 @@
+swagger: '2.0'
+info:
+  description: An API to update test data
+  version: 1.0.0
+  title: Test Data Api
+  contact:
+    email: nayan@crayzideas.co.in
+
+  license:
+    name: MIT License
+    url: https://github.com/crazynayan/tpf1/blob/master/LICENSE
+
+# tags are used for organizing operations
+tags:
+  - name: developers
+    description: Operations available to regular developers
+
+paths:
+  /test_data:
+    post:
+      tags:
+        - developers
+      summary: Add Test data
+      operationId: add_test_data
+      description: Updates the test data item on server
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: test_data
+          description: Test data to update
+          schema:
+            $ref: '#/definitions/TestData'
+      responses:
+        200:
+          description: Item Added
+          schema:
+            $ref: '#/definitions/TestDataID'
+        400:
+          description: Invalid Input, Object Invalid
+        401:
+          description: Unauthorized
+  /test_data/{test_data_id}:
+    get:
+      tags:
+        - developers
+      summary: Find test data by ID
+      description: Returns a test data
+      operationId: get_test_data_by_id
+      produces:
+        - application/json
+      parameters:
+        - name: test_data_id
+          in: path
+          description: ID of test data to return
+          required: true
+          type: string
+      responses:
+        200:
+          description: Successful operation
+          schema:
+            $ref: '#/definitions/TestData'
+        400:
+          description: Invalid ID supplied
+        404:
+          description: Pet not found
+definitions:
+  TestDataID:
+    type: object
+    required:
+      - test_data_id
+    properties:
+      test_data_id:
+        type: string
+        example: Lx7yTabLpa3K
+  TestData:
+    type: object
+    properties:
+      test_data_id:
+        type: string
+        example: Lx7yTabLpa3K
+      core:
+        type: array
+        items: {
+          $ref: '#/definitions/Core'
+        }
+      flat_file:
+        type: array
+        items: {
+          $ref: '#/definitions/FlatFile'
+        }
+      tpfdf:
+        type: array
+        items: {
+          $ref: '#/definitions/Tpfdf'
+        }
+      pnr:
+        type: array
+        items: {
+          $ref: '#/definitions/PnrElement'
+        }
+  FieldBytes:
+    required:
+      - field_name
+      - bytes
+    properties:
+      field_name:
+        type: string
+        example: EBW000
+      bytes:
+        type: string
+        format: byte
+        example: wcIB
+  Core:
+    required:
+      - name
+      - data
+    properties:
+      name:
+        type: string
+        example: EB0EB
+      data:
+        type: array
+        items: {
+          $ref: '#/definitions/FieldBytes'
+        }
+  PnrElement:
+    required:
+      - key
+      - pnr_locator
+    properties:
+      key:
+        type: string
+        enum: [name, hfax, fqtv, itin, subs_card_seg, group_plan]
+      pnr_locator:
+        type: string
+        example: AAAAAA
+        maxLength: 6
+        minLength: 6
+      data_string:
+        type: array
+        items: {
+          type: string
+        }
+        example: [1ZAVERI, C/TOURS]
+      data_bytes:
+        type: array
+        items: {
+          $ref: '#/definitions/FieldBytes'
+        }
+  Tpfdf:
+    required:
+      - ref_name
+      - key
+      - data
+    properties:
+      ref_name:
+        type: string
+        example: TR1GAA
+      key:
+        type: string
+        maxLength: 2
+        minLength: 2
+        example: A0
+      data:
+        type: array
+        items: {
+          $ref: '#/definitions/FieldBytes'
+        }
+  FlatFile:
+    required:
+      - fixed_id
+      - fixed_type
+      - fixed_ordinal
+      - name
+    properties:
+      fixed_id:
+        type: integer
+        maximum: 65535
+        minimum: 0
+        example: 31248
+      fixed_type:
+        type: integer
+        example: 94
+      fixed_ordinal:
+        type: integer
+        example: 383
+      name:
+        type: string
+        example: TJ1TJ
+      item:
+        $ref: '#/definitions/FileItem'
+      pool_file:
+        type: array
+        items: {
+          $ref: '#/definitions/PoolFile'
+        }
+      forward_chain_label:
+        type: string
+        example: TJ1FCH
+      forward_chain_count:
+        type: integer
+        default: 0
+        example: 1
+  PoolFile:
+    required:
+      - id
+      - name
+      - index
+    properties:
+      id:
+        type: integer
+        maximum: 65535
+        minimum: 0
+        example: 52826
+      name:
+        type: string
+        example: IY1IY
+      index:
+        $ref: '#/definitions/Index'
+      data:
+        type: array
+        items: {
+          $ref: '#/definitions/FieldBytes'
+        }
+      item:
+        $ref: '#/definitions/FileItem'
+      forward_chain_label:
+        type: string
+        example: IY1FCH
+      forward_chain_count:
+        type: integer
+        default: 0
+        example: 3
+      pool_file:
+        type: array
+        items: {
+          $ref: '#/definitions/PoolFile'
+        }
+  FileItem:
+    required:
+      - label
+      - count_label
+      - data
+    properties:
+      label:
+        type: string
+        example: IY1ATH
+      count_label:
+        type: string
+        example: IY1CNT
+      data:
+        type: array
+        items: {
+          $ref: '#/definitions/FieldBytes'
+        }
+  Index:
+    required:
+      - label
+    properties:
+      label:
+        type: string
+      forward_chain_count:
+        type: integer
+        default: 0
+      item_count:
+        type: integer
+        default: 0
+
+# Added by API Auto Mocking Plugin
+host: virtserver.swaggerhub.com
+basePath: /crazy-ideas/test-data_api/1.0.0
+schemes:
+  - https

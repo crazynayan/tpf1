@@ -7,4 +7,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+ENV GOOGLE_APPLICATION_CREDENTIALS google-cloud.json
+
 RUN exec python -m unittest discover -s test -v -f

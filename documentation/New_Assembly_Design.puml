@@ -1,5 +1,7 @@
 @startuml
 
+title Assembly Design
+
 package mac0_generic   {
     class LabelReference {
         +label: str
