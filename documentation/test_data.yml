@@ -101,21 +101,21 @@ definitions:
         items: {
           $ref: '#/definitions/PnrElement'
         }
-  FieldBytes:
+  FieldByte:
     required:
       - field_name
-      - bytes
+      - byte
     properties:
       field_name:
         type: string
         example: EBW000
-      bytes:
+      byte:
         type: string
         format: byte
         example: wcIB
   Core:
     required:
-      - name
+      - macro_name
       - data
     properties:
       name:
@@ -124,7 +124,7 @@ definitions:
       data:
         type: array
         items: {
-          $ref: '#/definitions/FieldBytes'
+          $ref: '#/definitions/FieldByte'
         }
   PnrElement:
     required:
@@ -140,23 +140,20 @@ definitions:
         maxLength: 6
         minLength: 6
       data_string:
+        type: string
+        example: 1ZAVERI
+      data_byte:
         type: array
         items: {
-          type: string
-        }
-        example: [1ZAVERI, C/TOURS]
-      data_bytes:
-        type: array
-        items: {
-          $ref: '#/definitions/FieldBytes'
+          $ref: '#/definitions/FieldByte'
         }
   Tpfdf:
     required:
-      - ref_name
+      - macro_name
       - key
       - data
     properties:
-      ref_name:
+      macro_name:
         type: string
         example: TR1GAA
       key:
@@ -167,16 +164,16 @@ definitions:
       data:
         type: array
         items: {
-          $ref: '#/definitions/FieldBytes'
+          $ref: '#/definitions/FieldByte'
         }
   FlatFile:
     required:
-      - fixed_id
+      - fixed_rec_id
       - fixed_type
       - fixed_ordinal
-      - name
+      - macro_name
     properties:
-      fixed_id:
+      fixed_rec_id:
         type: integer
         maximum: 65535
         minimum: 0
@@ -187,10 +184,10 @@ definitions:
       fixed_ordinal:
         type: integer
         example: 383
-      name:
+      macro_name:
         type: string
         example: TJ1TJ
-      item:
+      file_item:
         $ref: '#/definitions/FileItem'
       pool_file:
         type: array
@@ -206,16 +203,16 @@ definitions:
         example: 1
   PoolFile:
     required:
-      - id
-      - name
+      - pool_rec_id
+      - macro_name
       - index
     properties:
-      id:
+      pool_rec_id:
         type: integer
         maximum: 65535
         minimum: 0
         example: 52826
-      name:
+      macro_name:
         type: string
         example: IY1IY
       index:
@@ -223,9 +220,9 @@ definitions:
       data:
         type: array
         items: {
-          $ref: '#/definitions/FieldBytes'
+          $ref: '#/definitions/FieldByte'
         }
-      item:
+      file_item:
         $ref: '#/definitions/FileItem'
       forward_chain_label:
         type: string
@@ -254,7 +251,7 @@ definitions:
       data:
         type: array
         items: {
-          $ref: '#/definitions/FieldBytes'
+          $ref: '#/definitions/FieldByte'
         }
   Index:
     required:

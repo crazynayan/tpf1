@@ -1,0 +1,88 @@
+@startuml
+
+title Test Data Model
+
+class TestData {
+    core_ref: List[core_id]
+    flat_file_ref: List[flat_file_id]
+    tpfdf_ref: List[tpfdf_id]
+    pnr_ref: List[pnr_id]
+    error_labels: List[str]
+    output: TBD
+}
+
+class Core {
+    macro_name: str
+    data: List[field_byte_id]
+}
+
+class Pnr {
+    pnr_locator: str
+    key: str
+    data_str: str
+    data: List[field_byte_id]
+}
+
+class Tpfdf {
+    macro_name: str
+    key: str
+    data: List[field_byte_id]
+}
+
+class FlatFile {
+    fixed_rec_id: int
+    fixed_type: int
+    fixed_ordinal: int
+    macro_name: str
+    forward_chain_label: str
+    forward_chain_count: int
+    data: List[field_byte_id]
+    file_item: FileItem
+    pool_file: List[pool_file_id]
+}
+
+class FileItem {
+    item_label: str
+    count_label: str
+    data: List[field_byte_id]
+}
+
+class PoolFile {
+    pool_rec_id: int
+    macro_name: str
+    index: Index
+    forward_chain_label: str
+    forward_chain_count: int
+    data: List[field_byte_id]
+    file_item: FileItem
+    pool_file: List[pool_file_id]
+}
+
+class Index {
+    index_label: str
+    item_count: int
+    forward_chain_count: int
+    collection_name: str
+    collection_doc_id: str
+}
+
+class FieldByte {
+    field_name: str
+    byte: byte
+}
+
+TestData::core_ref *-- Core
+TestData::tpfdf_ref *-- Tpfdf
+TestData::flat_file_ref *-- FlatFile
+TestData::pnr_ref *-- Pnr
+Core::data *-- FieldByte
+Tpfdf::data *-- FieldByte
+Pnr::data *-- FieldByte
+FlatFile::data *-- FieldByte
+FlatFile::file_item *-- FileItem
+FlatFile::pool_file *--- PoolFile
+PoolFile::data *--- FieldByte
+PoolFile::file_item *--- FileItem
+PoolFile::pool_file *-- PoolFile
+PoolFile::index *--- Index
+@enduml
