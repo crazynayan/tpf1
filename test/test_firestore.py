@@ -1,7 +1,7 @@
 from typing import List
 from unittest import TestCase
 
-from model.firestore_ci import FirestoreDocument, ORDER_DESCENDING
+from model.firestore_ci import FirestoreDocument, ORDER_DESCENDING, FirestoreCIError
 
 
 class User(FirestoreDocument):
@@ -123,6 +123,13 @@ class FirestoreTest(TestCase):
         self.assertListEqual(list(), clients)
         clients: List[Client] = Client.objects.limit(-3).get()
         self.assertListEqual(list(), clients)
+        self.assertIsNone(User.get_by_id('invalid id'))
+        # Test exceptions
+        self.assertRaises(FirestoreCIError, User.objects.filter, 'invalid', '==', 'some data')
+        self.assertRaises(FirestoreCIError, User.objects.filter, 'email', '!=', 'some data')
+        self.assertRaises(FirestoreCIError, User.objects.filter_by, invalid='some data')
+        self.assertRaises(FirestoreCIError, User.objects.order_by, 'invalid')
+        self.assertRaises(FirestoreCIError, User.objects.order_by, 'email', 'desc')
 
     def test_update(self):
         # Test on objects returned by create (Works only on objects that do not have child objects)
@@ -154,6 +161,49 @@ class FirestoreTest(TestCase):
         nayan: User = User.objects.cascade.filter_by(name='Nayan').first()  # Use cascade to test nested clients
         self.assertEqual(2, len(nayan.clients))
         self.assertEqual('Nayan HUF', nayan.clients[1].name)
+
+    def test_delete(self) -> None:
+        # Test delete on created objects
+        self.assertEqual(str(), self.nayan.delete())  # Will not delete since it contains child reference as None
+        self.assertEqual(str(), self.nayan.delete(cascade=True))
+        self.assertEqual('Nayan', User.get_by_id(self.nayan.id).name)
+        # Test direct delete of object with no child
+        deleted_id = Client.objects.filter_by(name='Nayan').delete()
+        self.assertNotEqual(str(), deleted_id)  # Will delete
+        self.assertIsNone(Client.objects.filter_by(name='Nayan').first())
+        # But it leaves a dangling reference in the database
+        nayan = User.objects.filter_by(name='Nayan').first()  # Not use cascade so ids are retrieved
+        self.assertEqual(1, len(nayan.clients))
+        self.assertEqual(deleted_id, nayan.clients[0])
+        nayan_whole = User.objects.cascade.filter_by(name='Nayan').first()
+        self.assertEqual(1, len(nayan_whole.clients))
+        self.assertIsNone(nayan_whole.clients[0])
+        # Fix it by removing the dangling reference
+        nayan.clients.remove(deleted_id)
+        nayan.save()
+        self.assertEqual(0, len(nayan.clients))
+        nayan_whole = User.objects.cascade.filter_by(name='Nayan').first()
+        self.assertEqual(0, len(nayan_whole.clients))
+        # Deleting a child object without using id (Not applicable for many-to-many relationship)
+        # 1 Read the parent object with cascade (Needs to be done before Step #2)
+        # 2 Delete the child document
+        # 3 Remove the child object from the parent object.
+        # 4 Save the parent object
+        avani = User.objects.cascade.filter_by(name='Avani').first()
+        Client.objects.filter_by(name='Crazy Ideas').delete()
+        avani.clients.remove(next(client for client in avani.clients if client.name == 'Crazy Ideas'))
+        avani.save()
+        self.assertEqual(2, len(User.objects.filter_by(name='Avani').first().clients))
+        # Delete a child object using id
+        # 1 Read the parent object without cascade
+        # 2 Delete the child document and get its id
+        # 3 Remove the deleted id from the parent object
+        # 4 Save the parent object
+        avani = User.objects.filter_by(name='Avani').first()  # Read without cascade
+        deleted_id = Client.objects.filter_by(name='Hiten').delete()
+        avani.clients.remove(deleted_id)
+        avani.save()
+        self.assertEqual(1, len(User.objects.filter_by(name='Avani').first().clients))
 
     def tearDown(self) -> None:
         User.objects.cascade.filter_by(name='Nayan').delete()

@@ -1,18 +1,23 @@
 from copy import deepcopy
 from typing import TypeVar, Optional, Set, Union, Type, List, Dict, Iterable
 
-from google.cloud.exceptions import NotFound
 from google.cloud.firestore import Client, CollectionReference, Query, DocumentSnapshot
 
 # Need environment variable GOOGLE_APPLICATION_CREDENTIALS set to path of the the service account key (json file)
-DB = Client()
-
-FirestoreDocumentChild = TypeVar('FirestoreDocumentChild', bound='FirestoreDocument')
-
+_DB = Client()
+# All models imported from FirestoreDocument are of type FirestoreDocChild
+_FirestoreDocChild = TypeVar('_FirestoreDocChild', bound='FirestoreDocument')
+# These can be imported for passing in order_by method
 ORDER_ASCENDING = Query.ASCENDING
 ORDER_DESCENDING = Query.DESCENDING
+# Used to map collection to model
+_REFERENCE: Dict[str, callable] = dict()
 
-REFERENCE: Dict[str, callable] = dict()
+
+class FirestoreCIError(Exception):
+
+    def __init__(self, message):
+        super().__init__(message)
 
 
 class _Query:
@@ -20,16 +25,16 @@ class _Query:
     _DIRECTION = {ORDER_ASCENDING, ORDER_DESCENDING}
 
     def __init__(self):
-        self._doc_class: Optional[Type[FirestoreDocumentChild]] = None
+        self._doc_class: Optional[Type[_FirestoreDocChild]] = None
         self._doc_ref: Optional[CollectionReference] = None
         self._query_ref: Optional[Union[Query, CollectionReference]] = None
         self._doc_fields: Set = set()
         self._cascade: bool = False
 
-    def set_document(self, document_class: Type[FirestoreDocumentChild]) -> None:
+    def set_document(self, document_class: Type[_FirestoreDocChild]) -> None:
         self._doc_class = document_class
         self._doc_fields = set(document_class().doc_to_dict())
-        self._doc_ref: CollectionReference = DB.collection(self._doc_class.COLLECTION)
+        self._doc_ref: CollectionReference = _DB.collection(self._doc_class.COLLECTION)
         self.init_query()
 
     def init_query(self) -> None:
@@ -40,17 +45,23 @@ class _Query:
         for field_name, field_value in kwargs.items():
             if field_name in self._doc_fields:
                 self._query_ref = self._query_ref.where(field_name, '==', field_value)
+            else:
+                raise FirestoreCIError('filter_by method has invalid field.')
         return self
 
     def filter(self, field_name: str, condition: str, field_value: object) -> '_Query':
-        if field_name not in self._doc_fields or condition not in self._COMPARISON_OPERATORS:
-            return self
+        if field_name not in self._doc_fields:
+            raise FirestoreCIError('filter method has invalid field.')
+        if condition not in self._COMPARISON_OPERATORS:
+            raise FirestoreCIError('filter method has invalid condition.')
         self._query_ref = self._query_ref.where(field_name, condition, field_value)
         return self
 
     def order_by(self, field_name: str, direction: str = ORDER_ASCENDING) -> '_Query':
-        if field_name not in self._doc_fields or direction not in self._DIRECTION:
-            return self
+        if field_name not in self._doc_fields:
+            raise FirestoreCIError('order_by method has invalid field.')
+        if direction not in self._DIRECTION:
+            raise FirestoreCIError('order_by has invalid direction.')
         self._query_ref = self._query_ref.order_by(field_name, direction=direction)
         return self
 
@@ -63,24 +74,27 @@ class _Query:
         self._cascade = True
         return self
 
-    def get(self) -> List[FirestoreDocumentChild]:
+    def get(self) -> List[_FirestoreDocChild]:
         docs: Iterable[DocumentSnapshot] = self._query_ref.stream()
         documents: List = [self._doc_class.dict_to_doc(doc.to_dict(), doc.id, cascade=self._cascade) for doc in docs]
         self.init_query()
         return documents
 
-    def first(self) -> Optional[FirestoreDocumentChild]:
+    def first(self) -> Optional[_FirestoreDocChild]:
         doc: DocumentSnapshot = next((self._query_ref.limit(1).stream()), None)
         document = self._doc_class.dict_to_doc(doc.to_dict(), doc.id, cascade=self._cascade) if doc else None
         self.init_query()
         return document
 
-    def delete(self) -> bool:
+    def delete(self) -> str:
         docs: Iterable[DocumentSnapshot] = self._query_ref.stream()
         documents: List = [self._doc_class.dict_to_doc(doc.to_dict(), doc.id, cascade=self._cascade) for doc in docs]
-        result = all(document.delete(cascade=self._cascade) for document in documents)
+        results = [document.delete(cascade=self._cascade) for document in documents]
         self.init_query()
-        return result
+        if results and all(result != str() for result in results):
+            return results[-1]
+        else:
+            return str()
 
 
 class FirestoreDocument:
@@ -92,7 +106,7 @@ class FirestoreDocument:
         cls.COLLECTION = collection if collection else f"{cls.__name__.lower()}s"
         cls.objects = _Query()
         cls.objects.set_document(cls)
-        REFERENCE[cls.COLLECTION] = cls
+        _REFERENCE[cls.COLLECTION] = cls
 
     def __init__(self):
         self._doc_id: Optional[str] = None  # This tracks the document id of the collection.
@@ -113,7 +127,7 @@ class FirestoreDocument:
         return doc_dict
 
     @classmethod
-    def dict_to_doc(cls, doc_dict: dict, doc_id: Optional[str] = None, cascade: bool = False) -> FirestoreDocumentChild:
+    def dict_to_doc(cls, doc_dict: dict, doc_id: Optional[str] = None, cascade: bool = False) -> _FirestoreDocChild:
         document = cls()
         if doc_id:
             document.set_id(doc_id)
@@ -125,16 +139,16 @@ class FirestoreDocument:
                 continue
             values = value if isinstance(value, list) else [value]
             if isinstance(values[0], dict):
-                firestore_document_list = [REFERENCE[field].dict_to_doc(value_dict, cascade=True)
+                firestore_document_list = [_REFERENCE[field].dict_to_doc(value_dict, cascade=True)
                                            for value_dict in values]
             else:
-                firestore_document_list = [REFERENCE[field].get_by_id(nested_id, cascade=True) for nested_id in values]
+                firestore_document_list = [_REFERENCE[field].get_by_id(nested_id, cascade=True) for nested_id in values]
             setattr(document, field, firestore_document_list)
         return document
 
     @staticmethod
     def _eligible_for_cascade(field, value) -> bool:
-        if field not in REFERENCE:
+        if field not in _REFERENCE:
             return False
         if isinstance(value, dict):
             return True
@@ -146,7 +160,7 @@ class FirestoreDocument:
         return False
 
     @classmethod
-    def create_from_dict(cls, doc_dict: dict) -> FirestoreDocumentChild:
+    def create_from_dict(cls, doc_dict: dict) -> _FirestoreDocChild:
         document = cls.dict_to_doc(doc_dict, cascade=True)
         original_document = deepcopy(document)
         doc_id = document.create()
@@ -156,61 +170,47 @@ class FirestoreDocument:
     def create(self) -> str:
         documents = self._get_nested_documents()
         for field, doc_list in documents.items():
-            ids: List[str] = list()
-            for document in doc_list:
-                doc_id = document.create()
-                ids.append(doc_id)
+            ids: List[str] = [document.create() for document in doc_list]
             setattr(self, field, ids)
-        doc = DB.collection(self.COLLECTION).add(self.doc_to_dict())
+        doc = _DB.collection(self.COLLECTION).add(self.doc_to_dict())
         return doc[1].id
 
     def save(self, cascade: bool = False) -> bool:
         if not self._doc_id:
             return False
-        result = True
         document_copy = deepcopy(self)
         documents = document_copy._get_nested_documents()
         for field, doc_list in documents.items():
-            ids: List[str] = list()
-            for document in doc_list:
-                if not document.id:
+            if cascade:
+                if any(document.save(cascade=True) is False for document in doc_list):
                     return False
-                ids.append(document.id)
-                if not cascade:
-                    continue
-                result = document.save(cascade=True)
-                if result is False:
-                    return False
+            elif any(document.id is None for document in doc_list):
+                return False
+            ids: List[str] = [document.id for document in doc_list]
             setattr(document_copy, field, ids)
-        DB.collection(self.COLLECTION).document(self._doc_id).set(document_copy.doc_to_dict())
-        return result
+        _DB.collection(self.COLLECTION).document(self._doc_id).set(document_copy.doc_to_dict())
+        return True
 
-    def delete(self, cascade: bool = False) -> bool:
+    def delete(self, cascade: bool = False) -> str:
         if not self._doc_id:
-            return False
-        result = True
+            return str()
+        documents = self._get_nested_documents()
         if cascade:
-            documents = self._get_nested_documents()
-            result = all(document.delete(cascade=True) for _, doc_list in documents.items() for document in doc_list)
-        if result is True:
-            DB.collection(self.COLLECTION).document(self._doc_id).delete()
-            self._doc_id = None
-        return result
+            if any(doc.delete(cascade=True) == str() for _, doc_list in documents.items() for doc in doc_list):
+                return str()
+        elif documents and any(document.id is None for _, doc_list in documents.items() for document in doc_list):
+            return str()
+        _DB.collection(self.COLLECTION).document(self._doc_id).delete()
+        doc_id = self._doc_id
+        self._doc_id = None
+        return doc_id
 
-    def _get_nested_documents(self) -> Dict[str, List[FirestoreDocumentChild]]:
-        documents = dict()
-        for field, value in self.__dict__.items():
-            if not isinstance(value, list) or not isinstance(next(iter(value), None), FirestoreDocument):
-                continue
-            documents[field] = list()
-            for nested_document in value:
-                documents[field].append(nested_document)
-        return documents
+    def _get_nested_documents(self) -> Dict[str, List[_FirestoreDocChild]]:
+        return {field: [doc for doc in value_list if isinstance(doc, FirestoreDocument)]
+                for field, value_list in self.__dict__.items()
+                if isinstance(value_list, list) and any(isinstance(doc, FirestoreDocument) for doc in value_list)}
 
     @classmethod
-    def get_by_id(cls, doc_id: str, cascade: bool = False) -> Optional[FirestoreDocumentChild]:
-        try:
-            doc = DB.collection(cls.COLLECTION).document(doc_id).get()
-        except NotFound:
-            return None
-        return cls.dict_to_doc(doc.to_dict(), doc.id, cascade=cascade)
+    def get_by_id(cls, doc_id: str, cascade: bool = False) -> Optional[_FirestoreDocChild]:
+        doc: DocumentSnapshot = _DB.collection(cls.COLLECTION).document(doc_id).get()
+        return cls.dict_to_doc(doc.to_dict(), doc.id, cascade=cascade) if doc.exists else None

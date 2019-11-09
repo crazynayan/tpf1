@@ -11,6 +11,7 @@ COPY utils utils
 COPY assembly assembly
 COPY execution execution
 COPY db db
+COPY model model
 COPY test test
 COPY config.py google-cloud.json ./
 
