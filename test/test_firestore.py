@@ -1,7 +1,7 @@
 from typing import List
 from unittest import TestCase
 
-from model.firestore_ci import FirestoreDocument, ORDER_DESCENDING, FirestoreCIError
+from firestore.firestore_ci import FirestoreDocument, ORDER_DESCENDING, FirestoreCIError
 
 
 class User(FirestoreDocument):

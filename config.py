@@ -1,9 +1,17 @@
 import os
+from base64 import b64encode
 from datetime import datetime
 from typing import Dict, Tuple, List, Set
 
 
-class _Config:
+class Config:
+    # Used by firestore.auth
+    DEFAULT_PASSWORD = b64encode(os.urandom(24)).decode()
+    DEFAULT_TOKEN = b64encode(os.urandom(24)).decode()
+
+    # Used by flask
+    SECRET_KEY = os.environ.get('SECRET_KEY') or b64encode(os.urandom(24)).decode()
+
     # Used by utils
     REG_INVALID: str = '??'
     REG: Dict[str, List[str]] = {
@@ -71,4 +79,4 @@ class _Config:
     AAAPNR: str = 'AAAAAA'
 
 
-config = _Config()
+config = Config()
