@@ -1,3 +1,4 @@
+from base64 import b64decode
 from typing import Callable, Optional, Tuple, Dict, List, Set
 
 from assembly.mac2_data_macro import macros
@@ -5,6 +6,7 @@ from assembly.seg2_ins_operand import FieldIndex
 from assembly.seg3_ins_type import InstructionType
 from assembly.seg6_segment import Segment, segments
 from config import config
+from db.pnr import PnrElement
 from execution.debug import Debug
 from execution.ex0_regs_store import Registers, Storage
 from utils.data_type import DataType, Register
@@ -157,3 +159,39 @@ class Setup:
         for label, byte_array in self.aaa.items():
             dsp = macros['WA0AA'].evaluate(label)
             yield byte_array, config.AAA + dsp
+
+    def set_from_dict(self, test_data: dict) -> None:
+        PnrElement.init_db()
+        if 'errors' in test_data and test_data['errors']:
+            self.errors = set(test_data['errors'])
+        if 'cores' in test_data and test_data['cores']:
+            for macro_dict in test_data['cores']:
+                if 'macro_name' not in macro_dict or 'field_bytes' not in macro_dict:
+                    continue
+                if macro_dict['macro_name'].upper() == 'EB0EB':
+                    self.ecb = self._convert_field_bytes(macro_dict['field_bytes'])
+                elif macro_dict['macro_name'].upper() == 'WA0AA':
+                    self.aaa = self._convert_field_bytes(macro_dict['field_bytes'])
+                elif macro_dict['macro_name'].upper() == 'MI0MI':
+                    self.img = self._convert_field_bytes(macro_dict['field_bytes'])
+        if 'pnr' in test_data and test_data['pnr']:
+            for pnr_dict in test_data['pnr']:
+                if 'key' not in pnr_dict or pnr_dict['key'] not in PnrElement.ADD:
+                    continue
+                pnr_locator = pnr_dict['locator'] if 'locator' in pnr_dict and pnr_dict['locator'] else config.AAAPNR
+                if PnrElement.ADD[pnr_dict['key']]['field_bytes']:
+                    if 'field_bytes' not in pnr_dict or not pnr_dict['field_bytes']:
+                        continue
+                    pnr_data = self._convert_field_bytes(pnr_dict['field_bytes'])
+                else:
+                    if 'data' not in pnr_dict or not pnr_dict['data']:
+                        continue
+                    pnr_data = pnr_dict['data']
+                pnr_data = [pnr_data]
+                PnrElement.ADD[pnr_dict['key']]['function'](pnr_locator, pnr_data)
+        return
+
+    @staticmethod
+    def _convert_field_bytes(field_byte_list: list) -> Dict[str, bytearray]:
+        return {field_byte_dict['field']: bytearray(b64decode(field_byte_dict['data']))
+                for field_byte_dict in field_byte_list if 'field' in field_byte_dict and 'data' in field_byte_dict}

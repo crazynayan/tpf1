@@ -7,11 +7,12 @@ class TestData(FirestoreDocument):
 
     def __init__(self):
         super().__init__()
-        self.regs: Dict[str, bytes] = dict()
+        self.regs: Dict[str, str] = dict()
         self.cores: List[Core] = list()
         self.pnr: List[Pnr] = list()
         self.tpfdf: List[Tpfdf] = list()
         self.flat_files = list()
+        self.errors: List[str] = list()
         self.test_data: List[TestData] = list()  # For output
 
     @classmethod

@@ -2,6 +2,8 @@ from typing import Dict
 
 from flask import Response, jsonify, request
 
+from assembly.seg6_segment import segments
+from execution.ex5_execute import Execute
 from firestore.auth import User
 from firestore.test_data import TestData
 from flask_app import tpf1_app
@@ -36,7 +38,17 @@ def get_test_data(test_data_id) -> Response:
     test_data: dict = TestData.get_test_data(test_data_id)
     if not test_data:
         return error_response(404, 'Test data id not found')
-    return jsonify(test_data)
+    if not request.args.get('run'):
+        return jsonify(test_data)
+    seg_to_run = request.args.get('run').upper()
+    if seg_to_run not in segments:
+        return error_response(404, 'Segment not present in the TPF Analyzer tool')
+    tpf_server = Execute()
+    tpf_server.setup.set_from_dict(test_data)
+    label = tpf_server.run(seg_to_run, aaa=True)
+    response_dict = dict()
+    response_dict['last_label'] = label
+    return jsonify(response_dict)
 
 
 @tpf1_app.route('/test_data/<string:test_data_id>', methods=['DELETE'])

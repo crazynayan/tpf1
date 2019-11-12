@@ -37,8 +37,8 @@ class NameSuccessETAW(unittest.TestCase):
         self.assertEqual(TD.ui2214, TD.state.vm.get_byte(TD.state.regs.R7 + TD.ui2cnn))
 
     def test_WA0NAD_ETAW(self) -> None:
-        Pnr.add_names(config.AAAPNR, ['1ZAVERI', '3SHAH'])
         TD.wa0nad = macros['WA0AA'].evaluate('#WA0NAD')
+        Pnr.add_names(config.AAAPNR, ['1ZAVERI', '3SHAH'])
         TD.state.setup.aaa['WA0ETG'] = bytearray([TD.wa0nad])
         label = TD.state.run('ETA5', aaa=True)
         self.assertEqual('$$ETAW$$.1', label)
@@ -479,7 +479,7 @@ class NameFailETA2(unittest.TestCase):
         self.assertIn('19000', TD.state.dumps)
         self.assertEqual(1, TD.state.regs.R1)
 
-    def test_name_error_ERROR(self) -> None:
+    def test_name_error_ETA3(self) -> None:
         Pnr.add_names(config.AAAPNR, ['1ZAVERI'])
         TD.state.setup.errors.add('ETA5090.1')
         label = TD.state.run('ETA5', aaa=True)

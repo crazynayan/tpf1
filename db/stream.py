@@ -1,7 +1,7 @@
 from typing import Dict, List, Optional
 
 from assembly.mac2_data_macro import DataMacro
-from execution.ex1_state import Storage
+from execution.ex0_regs_store import Storage
 from utils.data_type import DataType
 
 

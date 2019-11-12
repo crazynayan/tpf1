@@ -132,6 +132,28 @@ class Pnr:
         Pnr.DB = [{'id': config.AAAPNR, 'doc': list()}]
 
 
+class PnrElement(Pnr):
+    ADD: Dict[str, dict] = dict()
+    ADD['name'] = dict()
+    ADD['name']['function'] = Pnr.add_names
+    ADD['name']['field_bytes'] = False
+    ADD['hfax'] = dict()
+    ADD['hfax']['function'] = Pnr.add_hfax
+    ADD['hfax']['field_bytes'] = False
+    ADD['fqtv'] = dict()
+    ADD['fqtv']['function'] = Pnr.add_fqtv
+    ADD['fqtv']['field_bytes'] = True
+    ADD['itin'] = dict()
+    ADD['itin']['function'] = Pnr.add_itin
+    ADD['itin']['field_bytes'] = True
+    ADD['group_plan'] = dict()
+    ADD['group_plan']['function'] = Pnr.add_group_plan
+    ADD['group_plan']['field_bytes'] = False
+    ADD['subs_card_seg'] = dict()
+    ADD['subs_card_seg']['function'] = Pnr.add_subs_card_seg
+    ADD['subs_card_seg']['field_bytes'] = False
+
+
 class PnrLocator:
     VALID = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     LEN_OF_VALID = len(VALID)
