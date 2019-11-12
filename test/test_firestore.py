@@ -30,18 +30,20 @@ Client.init()
 
 class FirestoreTest(TestCase):
     def setUp(self) -> None:
-        nayan_dict = {
+        self.nayan_dict = {
             'name': 'Nayan',
             'email': 'nayan@crazyideas.co.in',
-            'clients': {
-                'name': 'Nayan',
-                'address': 'Mumbai',
-                'account_type': 'Individual',
-                'amount_pending': 5000,
-                'contacts': ['+91 91234 50001', '+91 91234 50002'],
-            },
+            'clients': [
+                {
+                    'name': 'Nayan',
+                    'address': 'Mumbai',
+                    'account_type': 'Individual',
+                    'amount_pending': 5000,
+                    'contacts': ['+91 91234 50001', '+91 91234 50002'],
+                },
+            ]
         }
-        avani_dict = {
+        self.avani_dict = {
             'name': 'Avani',
             'email': 'avani@crazyideas.co.in',
             'clients': [
@@ -70,8 +72,8 @@ class FirestoreTest(TestCase):
         }
         User.objects.cascade.filter_by(name='Nayan').delete()
         User.objects.cascade.filter_by(name='Avani').delete()
-        self.nayan: User = User.create_from_dict(nayan_dict)
-        self.avani: User = User.create_from_dict(avani_dict)
+        self.nayan: User = User.create_from_dict(self.nayan_dict)
+        self.avani: User = User.create_from_dict(self.avani_dict)
 
     def test_create(self):
         # Nayan - Client #1
@@ -104,6 +106,9 @@ class FirestoreTest(TestCase):
         self.assertEqual('Nayan', nayan.name)
         nayan_client: Client = Client.objects.filter_by(name='Nayan').first()
         self.assertListEqual([nayan_client.id], nayan.clients)
+        # Test cascade_to_dict
+        self.assertEqual(self.avani_dict, User.objects.cascade.filter_by(name='Avani').first().cascade_to_dict())
+        self.assertEqual(self.nayan_dict, User.objects.cascade.filter_by(name='Nayan').first().cascade_to_dict())
         # Test filter, cascade and get
         avani: List[User] = User.objects.cascade.filter('email', '==', 'avani@crazyideas.co.in').get()
         avani: User = next(iter(avani))  # or avani: User = avani[0]

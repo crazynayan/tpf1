@@ -1,7 +1,7 @@
 from flask import g, Response, jsonify
 from flask_httpauth import HTTPBasicAuth, HTTPTokenAuth
 
-from firestore.auth import User, get_user_by_email, get_user_by_token
+from firestore.auth import User
 from flask_app import tpf1_app
 from flask_app.errors import error_response
 
@@ -11,11 +11,8 @@ token_auth = HTTPTokenAuth()
 
 @basic_auth.verify_password
 def verify_password(email: str, password: str) -> bool:
-    user: User = get_user_by_email(email)
-    if user is None:
-        return False
-    g.current_user = user
-    return user.check_password(password)
+    g.current_user = User.get_by_email(email)
+    return g.current_user is not None and g.current_user.check_password(password)
 
 
 @basic_auth.error_handler
@@ -32,7 +29,7 @@ def generate_token() -> Response:
 
 @token_auth.verify_token
 def verify_token(token: str) -> bool:
-    g.current_user = get_user_by_token(token) if token else None
+    g.current_user = User.get_by_token(token) if token else None
     return g.current_user is not None
 
 

@@ -12,7 +12,7 @@ class User(FirestoreDocument):
 
     def __init__(self):
         super().__init__()
-        self.email: str = ''
+        self.email: str = str()
         self.password_hash: str = config.DEFAULT_PASSWORD
         self.token: str = config.DEFAULT_TOKEN
 
@@ -31,24 +31,24 @@ class User(FirestoreDocument):
     def revoke_token(self) -> None:
         self.token = b64encode(os.urandom(24)).decode()
 
+    @classmethod
+    def get_user(cls, doc_id: str) -> Optional[Dict[str, str]]:
+        user: Optional[cls] = cls.get_by_id(doc_id)
+        if not user:
+            return None
+        user_dict: Dict[str, str] = dict()
+        user_dict['email'] = user.email
+        return user_dict
+
+    @classmethod
+    def get_by_token(cls, token: str) -> Optional['User']:
+        return cls.objects.filter_by(token=token).first()
+
+    @classmethod
+    def get_by_email(cls, email: str) -> Optional['User']:
+        return cls.objects.filter_by(email=email).first()
+
 
 User.init()
 
 
-def get_user_by_token(token: str) -> Optional[User]:
-    user: Optional[User] = User.objects.filter_by(token=token).first()
-    return user
-
-
-def get_user_by_email(email: str) -> Optional[User]:
-    user: Optional[User] = User.objects.filter_by(email=email).first()
-    return user
-
-
-def get_user_dict_by_id(doc_id: str) -> Optional[Dict[str, str]]:
-    user_dict: Dict[str, str] = dict()
-    user: Optional[User] = User.get_by_id(doc_id)
-    if not user:
-        return None
-    user_dict['email'] = user.email
-    return user_dict

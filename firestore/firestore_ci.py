@@ -146,6 +146,16 @@ class FirestoreDocument:
             setattr(document, field, firestore_document_list)
         return document
 
+    def cascade_to_dict(self) -> dict:
+        document_copy = deepcopy(self)
+        documents = document_copy._get_nested_documents()
+        for field, doc_list in documents.items():
+            document_list: List[dict] = [document.cascade_to_dict() for document in doc_list]
+            if any(doc_dict == dict() for doc_dict in document_list):
+                return dict()
+            setattr(document_copy, field, document_list)
+        return document_copy.doc_to_dict()
+
     @staticmethod
     def _eligible_for_cascade(field, value) -> bool:
         if field not in _REFERENCE:

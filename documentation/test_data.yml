@@ -86,7 +86,7 @@ definitions:
         items: {
           $ref: '#/definitions/Core'
         }
-      flat_file:
+      flat_files:
         type: array
         items: {
           $ref: '#/definitions/FlatFile'
@@ -99,7 +99,7 @@ definitions:
       pnr:
         type: array
         items: {
-          $ref: '#/definitions/PnrElement'
+          $ref: '#/definitions/Pnr'
         }
   FieldByte:
     required:
@@ -126,15 +126,15 @@ definitions:
         items: {
           $ref: '#/definitions/FieldByte'
         }
-  PnrElement:
+  Pnr:
     required:
       - key
-      - pnr_locator
+      - locator
     properties:
       key:
         type: string
         enum: [name, hfax, fqtv, itin, subs_card_seg, group_plan]
-      pnr_locator:
+      locator:
         type: string
         example: AAAAAA
         maxLength: 6
@@ -173,7 +173,7 @@ definitions:
       - fixed_ordinal
       - macro_name
     properties:
-      fixed_rec_id:
+      rec_id:
         type: integer
         maximum: 65535
         minimum: 0
@@ -238,26 +238,26 @@ definitions:
         }
   FileItem:
     required:
-      - label
-      - count_label
-      - data
+      - field
+      - count_field
+      - field_bytes
     properties:
-      label:
+      field:
         type: string
         example: IY1ATH
-      count_label:
+      count_field:
         type: string
         example: IY1CNT
-      data:
+      field_bytes:
         type: array
         items: {
           $ref: '#/definitions/FieldByte'
         }
   Index:
     required:
-      - label
+      - field
     properties:
-      label:
+      field:
         type: string
       forward_chain_count:
         type: integer
