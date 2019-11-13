@@ -127,7 +127,8 @@ class RealTimeDbMacro(State):
     def finwc(self, node: KeyValue) -> str:
         level = node.keys[0]
         # GETCC equivalent process
-        address = self.get_core_block(level)
+        address = self.vm.allocate()
+        self._core_block(address, level)
         # Get file address and record id
         record_id_address = self.get_ecb_address(level, 'CE1FA')
         file_address_address = self.get_ecb_address(level, 'EBCFA')

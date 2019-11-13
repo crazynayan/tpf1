@@ -1,6 +1,7 @@
-from base64 import b64decode
+from base64 import b64decode, b64encode
 from typing import Callable, Optional, Tuple, Dict, List, Set
 
+from assembly.mac0_generic import LabelReference
 from assembly.mac2_data_macro import macros
 from assembly.seg2_ins_operand import FieldIndex
 from assembly.seg3_ins_type import InstructionType
@@ -9,7 +10,9 @@ from config import config
 from db.pnr import PnrElement
 from execution.debug import Debug
 from execution.ex0_regs_store import Registers, Storage
+from firestore.test_data import TestData, FieldByte, Output
 from utils.data_type import DataType, Register
+from utils.errors import SegmentNotFoundError, EcbLevelFormatError, PnrElementError, InvalidBaseRegError
 
 
 class State:
@@ -33,7 +36,7 @@ class State:
     def __repr__(self) -> str:
         return f"State:{self.seg}:{self.regs}:{self.vm}"
 
-    def init_seg(self, seg_name: str) -> None:
+    def _init_seg(self, seg_name: str) -> None:
         if seg_name in self.loaded_seg:
             self.regs.R8 = self.loaded_seg[seg_name][1]
             self.seg = self.loaded_seg[seg_name][0]
@@ -42,10 +45,8 @@ class State:
             self.seg.assemble()
             self.regs.R8 = self.vm.allocate()   # Constant
             literal = self.vm.allocate()  # Literal is immediately the next frame
-            self.vm.frames[self.vm.base_key(self.regs.R8)] = self.seg.data.constant
-            self.vm.frames[self.vm.base_key(literal)] = self.seg.data.literal
-            # self.vm.set_bytes(self.seg.data.constant, self.regs.R8, len(self.seg.data.constant))
-            # self.vm.set_bytes(self.seg.data.literal, literal, len(self.seg.data.literal))
+            self.vm.set_frame(self.seg.data.constant, self.regs.R8)
+            self.vm.set_frame(self.seg.data.literal, literal)
             self.loaded_seg[seg_name] = (self.seg, self.regs.R8)
 
     def init_debug(self, seg_list: List[str]) -> None:
@@ -60,7 +61,7 @@ class State:
         # level is from D0 to DF, ecb_label is the partial label to which the level number (0-F) to be appended
         if not level.startswith('D') or len(level) != 2 or level[1] not in config.ECB_LEVELS:
             # For DECB=(R1) DECB=L1ADR
-            raise TypeError
+            raise EcbLevelFormatError
         level = f"{ecb_label}{level[1]}"
         dsp = macros['EB0EB'].evaluate(level)
         return config.ECB + dsp
@@ -72,35 +73,31 @@ class State:
     def init_run(self) -> None:
         self.__init__()
 
-    def restart(self, seg_name: str, aaa: bool = False) -> None:
-        self.init_run()
-        self.run(seg_name, aaa)
-
-    def run(self, seg_name: Optional[str] = None, aaa: bool = False) -> str:
-        seg_name = self.seg.name if seg_name is None else seg_name
-        self.init_seg(seg_name)
+    def run(self, seg_name: str, test_data: TestData = None) -> str:
+        if seg_name not in segments:
+            raise SegmentNotFoundError
+        self._init_seg(seg_name)
         self.regs.R9 = config.ECB
-        if aaa:
-            self.vm.set_value(config.AAA, config.ECB + 0x170)  # Save AAA address in CE1CR1
+        self._core_block(config.AAA, 'D1')
+        self._core_block(config.IMG, 'D0')
         self._setup()
+        if test_data:
+            self._set_from_test_data(test_data)
         label = self.seg.root_label()
+        node = self.seg.nodes[label]
         while True:
-            node = self.seg.nodes[label]
-            label = self.ex_command(node)
+            label = self._ex_command(node)
             if label is None:
-                return node.label
+                break
+            node = self.seg.nodes[label]
+        if test_data:
+            self._capture_output(test_data.outputs, node.label)
+        return node.label
 
-    def ex_command(self, node: InstructionType) -> str:
+    def _ex_command(self, node: InstructionType) -> str:
         label = self._ex[node.command](node)
         self.DEBUG.hit(node, label)
         return label
-
-    @staticmethod
-    def branch(_) -> str:
-        pass
-
-    def branch_return(self, _) -> str:
-        pass
 
     def set_number_cc(self, number: int) -> None:
         if number > 0:
@@ -126,11 +123,10 @@ class State:
         if field.index.reg == 'R0':
             return field.name
         dsp = self.regs.get_address(field.index, field.dsp)
-        label = self.seg.get_field_name(Register('R8'), dsp, 4)
+        label = self.seg.get_field_name(Register('R8'), dsp, config.INSTRUCTION_LEN_DEFAULT)
         return label
 
-    def get_core_block(self, level: str, block_type: Optional[str] = None) -> int:
-        address = self.vm.allocate()
+    def _core_block(self, address: int, level: str, block_type: Optional[str] = None) -> None:
         level_address = self.get_ecb_address(level, 'CE1CR')
         control_address = self.get_ecb_address(level, 'CE1CT')
         size_address = self.get_ecb_address(level, 'CE1CC')
@@ -139,7 +135,73 @@ class State:
         self.vm.set_value(address, level_address)
         self.vm.set_value(control_value, control_address, 2)
         self.vm.set_value(size_value, size_address, 2)
-        return address
+
+    def _set_from_test_data(self, test_data: TestData) -> None:
+        self.setup.errors = set(test_data.errors)
+        for core in test_data.cores:
+            macro_name = core.macro_name.upper()
+            if macro_name == 'WA0AA':
+                self._set_core(core.field_bytes, macro_name, config.AAA)
+            elif macro_name == 'EB0EB':
+                self._set_core(core.field_bytes, macro_name, config.ECB)
+            elif macro_name == 'MI0MI':
+                self._set_core(core.field_bytes, macro_name, config.IMG)
+        PnrElement.init_db()
+        for pnr in test_data.pnr:
+            if pnr.key not in PnrElement.ADD:
+                raise PnrElementError
+            pnr_locator = pnr.locator if pnr.locator else config.AAAPNR
+            if PnrElement.ADD[pnr.key]['field_bytes']:
+                pnr_data = self._convert_field_bytes(pnr.field_bytes)
+            else:
+                pnr_data = pnr.data
+            pnr_data = [pnr_data]
+            PnrElement.ADD[pnr.key]['function'](pnr_locator, pnr_data)
+        return
+
+    def _set_core(self, field_bytes: List[FieldByte], macro_name: str, base_address: int) -> None:
+        field_byte_array: Dict[str, bytearray] = self._convert_field_bytes(field_bytes)
+        for field, byte_array in field_byte_array.items():
+            address = macros[macro_name].evaluate(field) + base_address
+            self.vm.set_bytes(byte_array, address, len(byte_array))
+        return
+
+    @staticmethod
+    def _convert_field_bytes(field_bytes: List[FieldByte]) -> Dict[str, bytearray]:
+        return {field_byte.field.upper(): bytearray(b64decode(field_byte.data)) for field_byte in field_bytes}
+
+    def _capture_output(self, outputs: List[Output], last_line: str) -> None:
+        if not outputs:
+            output = Output()
+            outputs.append(output)
+        output = outputs[0]
+        output.message = self.message if self.message else str()
+        output.dumps.extend(self.dumps)
+        output.last_line = last_line
+        for core in output.cores:
+            macro_name = core.macro_name.upper()
+            if macro_name == 'WA0AA':
+                self._capture_core(core.field_bytes, macro_name, config.AAA)
+            elif macro_name == 'EB0EB':
+                self._capture_core(core.field_bytes, macro_name, config.ECB)
+            elif macro_name == 'MI0MI':
+                self._capture_core(core.field_bytes, macro_name, config.IMG)
+            elif macro_name in macros:
+                if not Register(core.base_reg).is_valid():
+                    raise InvalidBaseRegError
+                self._capture_core(core.field_bytes, macro_name, self.regs.get_unsigned_value(core.base_reg))
+        for reg in output.regs:
+            if not Register(reg).is_valid():
+                raise InvalidBaseRegError
+            output.regs[reg] = self.regs.get_value(reg)
+
+    def _capture_core(self, field_bytes: List[FieldByte], macro_name: str, base_address: int) -> None:
+        for field_byte in field_bytes:
+            field: LabelReference = macros[macro_name].lookup(field_byte.field.upper())
+            address = field.dsp + base_address
+            length = field_byte.length if field_byte.length > 0 else field.length
+            field_byte.data = b64encode(self.vm.get_bytes(address, length)).decode()
+        return
 
 
 class Setup:
@@ -159,39 +221,3 @@ class Setup:
         for label, byte_array in self.aaa.items():
             dsp = macros['WA0AA'].evaluate(label)
             yield byte_array, config.AAA + dsp
-
-    def set_from_dict(self, test_data: dict) -> None:
-        PnrElement.init_db()
-        if 'errors' in test_data and test_data['errors']:
-            self.errors = set(test_data['errors'])
-        if 'cores' in test_data and test_data['cores']:
-            for macro_dict in test_data['cores']:
-                if 'macro_name' not in macro_dict or 'field_bytes' not in macro_dict:
-                    continue
-                if macro_dict['macro_name'].upper() == 'EB0EB':
-                    self.ecb = self._convert_field_bytes(macro_dict['field_bytes'])
-                elif macro_dict['macro_name'].upper() == 'WA0AA':
-                    self.aaa = self._convert_field_bytes(macro_dict['field_bytes'])
-                elif macro_dict['macro_name'].upper() == 'MI0MI':
-                    self.img = self._convert_field_bytes(macro_dict['field_bytes'])
-        if 'pnr' in test_data and test_data['pnr']:
-            for pnr_dict in test_data['pnr']:
-                if 'key' not in pnr_dict or pnr_dict['key'] not in PnrElement.ADD:
-                    continue
-                pnr_locator = pnr_dict['locator'] if 'locator' in pnr_dict and pnr_dict['locator'] else config.AAAPNR
-                if PnrElement.ADD[pnr_dict['key']]['field_bytes']:
-                    if 'field_bytes' not in pnr_dict or not pnr_dict['field_bytes']:
-                        continue
-                    pnr_data = self._convert_field_bytes(pnr_dict['field_bytes'])
-                else:
-                    if 'data' not in pnr_dict or not pnr_dict['data']:
-                        continue
-                    pnr_data = pnr_dict['data']
-                pnr_data = [pnr_data]
-                PnrElement.ADD[pnr_dict['key']]['function'](pnr_locator, pnr_data)
-        return
-
-    @staticmethod
-    def _convert_field_bytes(field_byte_list: list) -> Dict[str, bytearray]:
-        return {field_byte_dict['field']: bytearray(b64decode(field_byte_dict['data']))
-                for field_byte_dict in field_byte_list if 'field' in field_byte_dict and 'data' in field_byte_dict}

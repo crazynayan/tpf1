@@ -189,6 +189,11 @@ class Storage:
     def get_unsigned_value(self, address: int, length: int = 4) -> int:
         return DataType('X', bytes=self.get_bytes(address, length)).value
 
+    def set_frame(self, byte_array: bytearray, address: int):
+        base_address = self.base_key(address)
+        self.frames[base_address] = byte_array
+        self._frame[base_address] = byte_array
+
     def set_bytes(self, byte_array: bytearray, address: int, length: Optional[int] = None) -> None:
         base_address, start, end = self._get_data(address, length)
         for index, byte in enumerate(byte_array[: end - start]):

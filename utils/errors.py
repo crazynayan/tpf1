@@ -10,6 +10,10 @@ class ExecutionError(TpfAnalyzerError):
     pass
 
 
+class TestDataError(TpfAnalyzerError):
+    pass
+
+
 class NotFoundInSymbolTableError(AssemblyError):
     pass
 
@@ -63,4 +67,20 @@ class PackExecutionError(ExecutionError):
 
 
 class BctExecutionError(ExecutionError):
+    pass
+
+
+class SegmentNotFoundError(ExecutionError):
+    pass
+
+
+class EcbLevelFormatError(ExecutionError):
+    pass
+
+
+class PnrElementError(TestDataError):
+    pass
+
+
+class InvalidBaseRegError(TestDataError):
     pass

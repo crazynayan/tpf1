@@ -9,7 +9,8 @@ from utils.ucdr import pars_to_date, date_to_pars
 
 class RealTimeMacro(State):
     def getcc(self, node: KeyValue) -> str:
-        address = self.get_core_block(node.keys[0], node.keys[1])
+        address = self.vm.allocate()
+        self._core_block(address, node.keys[0], node.keys[1])
         self.regs.R14 = address
         return node.fall_down
 
@@ -77,21 +78,21 @@ class RealTimeMacro(State):
 
     def entrc(self, node: SegmentCall) -> str:
         self.call_stack.append((node.fall_down, self.seg.name))
-        self.init_seg(node.keys[0])
+        self._init_seg(node.keys[0])
         return node.goes
 
     def entnc(self, node: SegmentCall) -> str:
-        self.init_seg(node.keys[0])
+        self._init_seg(node.keys[0])
         return node.goes
 
     def entdc(self, node: SegmentCall) -> str:
         del self.call_stack[:]
-        self.init_seg(node.keys[0])
+        self._init_seg(node.keys[0])
         return node.goes
 
     def backc(self, _) -> str:
         branch, seg_name = self.call_stack.pop()
-        self.init_seg(seg_name)
+        self._init_seg(seg_name)
         return branch
 
 

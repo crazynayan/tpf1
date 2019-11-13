@@ -12,7 +12,7 @@ class DbTest(unittest.TestCase):
 
     def test_tpfdf_ts20(self):
         Tpfdf.add(TD.tr1gaa, 'TR1GAA', '40')
-        TD.state.run('TS20', aaa=True)
+        TD.state.run('TS20')
         self.assertEqual(21, TD.state.regs.R0)
         self.assertEqual(0x80, TD.state.vm.get_byte(TD.state.regs.R5 + 5))
 

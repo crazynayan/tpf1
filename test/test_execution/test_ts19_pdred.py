@@ -16,7 +16,7 @@ class PdredHfax(unittest.TestCase):
         Pnr.add_hfax(config.AAAPNR, TD.hfax_2812_gld)
         Pnr.add_fqtv('DGHWCL', TD.fqtv_gld)
         Pnr.add_itin(config.AAAPNR, TD.itin_2811_2812)
-        TD.state.run('TS19', aaa=True)
+        TD.state.run('TS19')
         self.assertEqual(0xF2F8F1F2, TD.state.regs.get_unsigned_value('R1'))
         self.assertEqual(0xF9F0F8F7, TD.state.regs.get_unsigned_value('R2'))
         self.assertEqual(0x00D6D9C4, TD.state.regs.get_unsigned_value('R3'))

@@ -35,7 +35,7 @@ class Conditional(unittest.TestCase):
         self.state.regs.set_value(-10, 'R15')
         self.state.regs.set_value(23, 'R14')
         self.state.vm.set_bytes(bytearray([0x11]), config.ECB + 17)
-        self.state.run()
+        self.state.run('TS16')
         self.assertEqual(2, self.state.regs.get_value('R0'))
         self.assertEqual(3, self.state.regs.get_value('R1'))
         self.assertEqual(2, self.state.regs.get_value('R2'))
@@ -51,11 +51,11 @@ class Conditional(unittest.TestCase):
         # Update state to 3.3, 5.3
         self.state.regs.set_value(10, 'R15')
         self.state.vm.set_bytes(bytearray([0x10]), config.ECB + 17)
-        self.state.run()
+        self.state.run('TS16')
         self.assertEqual(3, self.state.regs.get_value('R2'))
         self.assertEqual(2, self.state.regs.get_value('R3'))
         self.assertEqual(3, self.state.regs.get_value('R5'))
-        self.state.run()
+        self.state.run('TS16')
 
 
 if __name__ == '__main__':

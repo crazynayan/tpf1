@@ -35,20 +35,20 @@ def create_test_data() -> Response:
 @tpf1_app.route('/test_data/<string:test_data_id>', methods=['GET'])
 @token_auth.login_required
 def get_test_data(test_data_id) -> Response:
-    test_data: dict = TestData.get_test_data(test_data_id)
-    if not test_data:
-        return error_response(404, 'Test data id not found')
     if not request.args.get('run'):
+        test_data: dict = TestData.get_test_data_dict(test_data_id)
+        if not test_data:
+            return error_response(404, 'Test data id not found')
         return jsonify(test_data)
     seg_to_run = request.args.get('run').upper()
     if seg_to_run not in segments:
         return error_response(404, 'Segment not present in the TPF Analyzer tool')
+    test_data: TestData = TestData.get_test_data(test_data_id)
+    if not test_data:
+        return error_response(404, 'Test data id not found')
     tpf_server = Execute()
-    tpf_server.setup.set_from_dict(test_data)
-    label = tpf_server.run(seg_to_run, aaa=True)
-    response_dict = dict()
-    response_dict['last_label'] = label
-    return jsonify(response_dict)
+    tpf_server.run(seg_to_run, test_data)
+    return jsonify(test_data.get_output_dict())
 
 
 @tpf1_app.route('/test_data/<string:test_data_id>', methods=['DELETE'])

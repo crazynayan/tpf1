@@ -41,21 +41,21 @@ class EtajTest(unittest.TestCase):
     def test_branch_validation_fail_lok_off(self) -> None:
         iy9aon = DataType('X', input='00006F2F').to_bytes()
         self.tjr_setup(iy9aon, pool=3)
-        label = TD.state.run('TS21', aaa=True)
+        label = TD.state.run('TS21')
         self.assertEqual('$$ETK4$$.1', label)
         self.assertEqual(8, TD.state.regs.R6)
 
     def test_branch_validation_pass_lok_on(self) -> None:
         iy9aon = DataType('X', input='00006F2F').to_bytes()
         self.tjr_setup(iy9aon, iy1lok=True)
-        label = TD.state.run('TS21', aaa=True)
+        label = TD.state.run('TS21')
         self.assertEqual('TS21EXIT.1', label)
 
     def test_finwc_fail(self) -> None:
         iy9aon = DataType('X', input='00006F2F').to_bytes()
         self.tjr_setup(iy9aon)
         TD.state.setup.errors.add('$$ETAJ$$.35')
-        label = TD.state.run('TS21', aaa=True)
+        label = TD.state.run('TS21')
         self.assertEqual('ETAJ500.1', label)
         self.assertIn('0140F1', TD.state.dumps)
 
