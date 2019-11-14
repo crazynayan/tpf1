@@ -35,6 +35,11 @@ class TD:
     ui2097 = macros['UI2PF'].evaluate('#UI2097')
     ui2098 = macros['UI2PF'].evaluate('#UI2098')
     ui2214 = macros['UI2PF'].evaluate('#UI2214')
+    ui2inc = macros['UI2PF'].evaluate('UI2INC')
+    ui2xui = macros['UI2PF'].evaluate('#UI2XUI')
+    ui2can = macros['UI2PF'].evaluate('#UI2CAN')
+    ui2nxt = macros['AASEQ'].evaluate('#UI2NXT')
+
     # Database
     hfax_2812_gld = [
         'SSRFQTUBA2811Y20OCTDFW  ORD  0510GLD/DGHWCL RR    ',

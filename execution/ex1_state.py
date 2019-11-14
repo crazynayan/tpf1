@@ -8,11 +8,12 @@ from assembly.seg3_ins_type import InstructionType
 from assembly.seg6_segment import Segment, segments
 from config import config
 from db.pnr import PnrElement
+from db.tpfdf import Tpfdf
 from execution.debug import Debug
 from execution.ex0_regs_store import Registers, Storage
 from firestore.test_data import TestData, FieldByte, Output
 from utils.data_type import DataType, Register
-from utils.errors import SegmentNotFoundError, EcbLevelFormatError, PnrElementError, InvalidBaseRegError
+from utils.errors import SegmentNotFoundError, EcbLevelFormatError, PnrElementError, InvalidBaseRegError, TpfdfError
 
 
 class State:
@@ -155,8 +156,15 @@ class State:
                 pnr_data = self._convert_field_bytes(pnr.field_bytes)
             else:
                 pnr_data = pnr.data
-            pnr_data = [pnr_data]
+            pnr_data = [pnr_data]  # TODO remove this line on retrofit
             PnrElement.ADD[pnr.key]['function'](pnr_locator, pnr_data)
+        Tpfdf.init_db()
+        for lrec in test_data.tpfdf:
+            if lrec.macro_name not in macros:
+                raise TpfdfError
+            lrec_data = self._convert_field_bytes(lrec.field_bytes)
+            lrec_data = [lrec_data]  # TODO remove this line on retrofit
+            Tpfdf.add(lrec_data, lrec.macro_name, lrec.key)
         return
 
     def _set_core(self, field_bytes: List[FieldByte], macro_name: str, base_address: int) -> None:

@@ -84,3 +84,7 @@ class PnrElementError(TestDataError):
 
 class InvalidBaseRegError(TestDataError):
     pass
+
+
+class TpfdfError(TestDataError):
+    pass
