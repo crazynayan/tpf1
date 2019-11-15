@@ -74,6 +74,10 @@ class XDataType(DataTypeGeneric):
         except OverflowError:
             return bytearray(self.value.to_bytes(self.length, 'big', signed=False)[(self.length - length):])
 
+    @property
+    def decode(self) -> str:
+        return self.bytes.decode(encoding='cp037') if self.bytes else self.to_bytes().decode(encoding='cp037')
+
 
 class BDataType(DataTypeGeneric):
     def __init__(self):

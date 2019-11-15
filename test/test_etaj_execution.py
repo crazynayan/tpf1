@@ -13,7 +13,7 @@ class EtajTest(unittest.TestCase):
     def setUp(self) -> None:
         Pnr.init_db()
         TD.state.init_run()
-        Pnr.add_group_plan(config.AAAPNR, ['BTS-B4T0/108/11-FINANCIAL SERVICES'])
+        Pnr.add_from_data('BTS-B4T0/108/11-FINANCIAL SERVICES', 'group_plan', config.AAAPNR)
         TD.state.setup.aaa['WA0POR'] = DataType('X', input='006F2F').to_bytes()
         TD.state.setup.aaa['WA0FNS'] = bytearray([TD.wa0tvl])
         self.tj_id = DataType('C', input='TJ').value

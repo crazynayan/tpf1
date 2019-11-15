@@ -1,28 +1,30 @@
 import unittest
 
-from config import config
-from db.pnr import Pnr
+from execution.ex5_execute import Execute
+from firestore.test_data import TestData
 from test.input_td import TD
 from utils.data_type import DataType
 
 
 class PdredHfax(unittest.TestCase):
     def setUp(self) -> None:
-        TD.state.init_run()
-        Pnr.init_db()
+        self.test_data = TestData()
+        self.tpf_server = Execute()
+        self.output = self.test_data.output
+        self.ecb = self.test_data.add_core_with_len([('EBW000', 5)], 'EB0EB')
+        self.output.add_regs(['R1', 'R2', 'R3', 'R12'])
 
     def test_pdred_ts19(self):
         # This also test PDCLS
-        Pnr.add_hfax(config.AAAPNR, TD.hfax_2812_gld)
-        Pnr.add_fqtv('DGHWCL', TD.fqtv_gld)
-        Pnr.add_itin(config.AAAPNR, TD.itin_2811_2812)
-        TD.state.run('TS19')
-        self.assertEqual(0xF2F8F1F2, TD.state.regs.get_unsigned_value('R1'))
-        self.assertEqual(0xF9F0F8F7, TD.state.regs.get_unsigned_value('R2'))
-        self.assertEqual(0x00D6D9C4, TD.state.regs.get_unsigned_value('R3'))
-        date_bytes = TD.state.vm.get_bytes(config.ECB + 8, 5)
-        self.assertEqual('24OCT', DataType('X', bytes=date_bytes).decode)
-        self.assertEqual(12, TD.state.regs.R12)
+        self.test_data.add_pnr_from_data(TD.hfax_2812_gld, 'hfax')
+        self.test_data.add_pnr_from_byte_array(TD.fqtv_gld, 'fqtv', 'DGHWCL')
+        self.test_data.add_pnr_from_byte_array(TD.itin_2811_2812, 'itin')
+        self.tpf_server.run('TS19', self.test_data)
+        self.assertEqual(0xF2F8F1F2, self.output.get_unsigned_value('R1'))
+        self.assertEqual(0xF9F0F8F7, self.output.get_unsigned_value('R2'))
+        self.assertEqual(0x00D6D9C4, self.output.get_unsigned_value('R3'))
+        self.assertEqual('24OCT', DataType('X', input=self.ecb['EBW000'].hex).decode)
+        self.assertEqual(12, self.output.regs['R12'])
 
 
 if __name__ == '__main__':

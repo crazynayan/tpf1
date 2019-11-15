@@ -33,15 +33,14 @@ class Tpfdf:
         return ref
 
     @staticmethod
-    def add(data: List[Dict[str, bytearray]], ref_name: str, key: str) -> None:
+    def add(data: Dict[str, bytearray], key: str, ref_name: str) -> None:
         ref = Tpfdf.get_ref(ref_name)
         macros[ref_name].load()
-        for lrec_dict in data:
-            lrec = dict()
-            lrec['key'] = key
-            lrec['data'] = bytearray()
-            lrec['data'].extend(Stream(macros[ref_name]).to_bytes(lrec_dict))
-            ref.append(lrec)
+        lrec = dict()
+        lrec['key'] = key
+        lrec['data'] = bytearray()
+        lrec['data'].extend(Stream(macros[ref_name]).to_bytes(data))
+        ref.append(lrec)
 
     @staticmethod
     def init_db(ref_name: Optional[str] = None):
@@ -51,3 +50,4 @@ class Tpfdf:
             df_record = next((df_record for df_record in Tpfdf.DB if df_record['id'] == ref_name), None)
             if df_record is not None:
                 Tpfdf.DB.remove(df_record)
+        return

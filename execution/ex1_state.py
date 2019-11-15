@@ -1,4 +1,4 @@
-from base64 import b64decode, b64encode
+from base64 import b64encode
 from typing import Callable, Optional, Tuple, Dict, List, Set
 
 from assembly.mac0_generic import LabelReference
@@ -7,13 +7,13 @@ from assembly.seg2_ins_operand import FieldIndex
 from assembly.seg3_ins_type import InstructionType
 from assembly.seg6_segment import Segment, segments
 from config import config
-from db.pnr import PnrElement
+from db.pnr import Pnr
 from db.tpfdf import Tpfdf
 from execution.debug import Debug
 from execution.ex0_regs_store import Registers, Storage
 from firestore.test_data import TestData, FieldByte, Output
 from utils.data_type import DataType, Register
-from utils.errors import SegmentNotFoundError, EcbLevelFormatError, PnrElementError, InvalidBaseRegError, TpfdfError
+from utils.errors import SegmentNotFoundError, EcbLevelFormatError, InvalidBaseRegError, TpfdfError, PartitionError
 
 
 class State:
@@ -112,6 +112,8 @@ class State:
         self.cc = 1 if number else 0
 
     def set_partition(self, partition: str) -> None:
+        if partition not in config.PARTITION:
+            raise PartitionError
         haalc = config.GLOBAL + macros['GLOBAL'].evaluate('@HAALC')
         ce1uid = config.ECB + macros['EB0EB'].evaluate('CE1$UID')
         self.vm.set_bytes(DataType('C', input=partition).to_bytes(), haalc, 2)
@@ -139,6 +141,8 @@ class State:
 
     def _set_from_test_data(self, test_data: TestData) -> None:
         self.setup.errors = set(test_data.errors)
+        if test_data.partition:
+            self.set_partition(test_data.partition)
         for core in test_data.cores:
             macro_name = core.macro_name.upper()
             if macro_name == 'WA0AA':
@@ -147,36 +151,27 @@ class State:
                 self._set_core(core.field_bytes, macro_name, config.ECB)
             elif macro_name == 'MI0MI':
                 self._set_core(core.field_bytes, macro_name, config.IMG)
-        PnrElement.init_db()
+        Pnr.init_db()
         for pnr in test_data.pnr:
-            if pnr.key not in PnrElement.ADD:
-                raise PnrElementError
             pnr_locator = pnr.locator if pnr.locator else config.AAAPNR
-            if PnrElement.ADD[pnr.key]['field_bytes']:
-                pnr_data = self._convert_field_bytes(pnr.field_bytes)
+            if pnr.data:
+                Pnr.add_from_data(pnr.data, pnr.key, pnr_locator)
             else:
-                pnr_data = pnr.data
-            pnr_data = [pnr_data]  # TODO remove this line on retrofit
-            PnrElement.ADD[pnr.key]['function'](pnr_locator, pnr_data)
+                Pnr.add_from_byte_array(FieldByte.to_dict(pnr.field_bytes), pnr.key, pnr_locator)
         Tpfdf.init_db()
         for lrec in test_data.tpfdf:
             if lrec.macro_name not in macros:
                 raise TpfdfError
-            lrec_data = self._convert_field_bytes(lrec.field_bytes)
-            lrec_data = [lrec_data]  # TODO remove this line on retrofit
-            Tpfdf.add(lrec_data, lrec.macro_name, lrec.key)
+            lrec_data = FieldByte.to_dict(lrec.field_bytes)
+            Tpfdf.add(lrec_data, lrec.key, lrec.macro_name)
         return
 
     def _set_core(self, field_bytes: List[FieldByte], macro_name: str, base_address: int) -> None:
-        field_byte_array: Dict[str, bytearray] = self._convert_field_bytes(field_bytes)
+        field_byte_array: Dict[str, bytearray] = FieldByte.to_dict(field_bytes)
         for field, byte_array in field_byte_array.items():
             address = macros[macro_name].evaluate(field) + base_address
             self.vm.set_bytes(byte_array, address, len(byte_array))
         return
-
-    @staticmethod
-    def _convert_field_bytes(field_bytes: List[FieldByte]) -> Dict[str, bytearray]:
-        return {field_byte.field.upper(): bytearray(b64decode(field_byte.data)) for field_byte in field_bytes}
 
     def _capture_output(self, outputs: List[Output], last_line: str) -> None:
         if not outputs:

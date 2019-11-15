@@ -23,6 +23,7 @@ $IS$     CSECT
          CLI   SW00RTN,#TPFDBOK
          BNE   TS200100
          MVC   TIER,TR1G_40_PTI
+         MVC   EBW000,TIER
          DBCLS REF=TR1GAA
          DBIFB REF=TR1GAA
          LTR   R3,R3

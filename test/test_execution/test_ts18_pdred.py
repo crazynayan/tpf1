@@ -1,35 +1,36 @@
 import unittest
 
-from config import config
-from db.pnr import Pnr
+from execution.ex5_execute import Execute
+from firestore.test_data import TestData
 from test.input_td import TD
 
 
 class PdredNames(unittest.TestCase):
     def setUp(self) -> None:
-        TD.state.init_run()
-        Pnr.init_db()
+        self.tpf_server = Execute()
+        self.test_data = TestData()
+        self.output = self.test_data.output
+        self.output.add_regs(['R1'])
 
-    def test_pdred_ts18(self):
-        names = ['C/21TOURS', '2ZAVERI', 'I/2ZAVERI/S']
-        Pnr.add_names(config.AAAPNR, names)
+    def test_multiple_names(self):
+        self.test_data.add_pnr_from_data(['C/21TOURS', '2ZAVERI', 'I/2ZAVERI/S'], 'name')
+        self.tpf_server.run('TS18', self.test_data)
         TD.state.run('TS18')
-        self.assertIsNone(TD.state.message)
-        self.assertEqual(25, TD.state.regs.R1)
-        # Check for another corporate
-        Pnr.add_names(config.AAAPNR, ['C/21VEENA TOURS'])
-        TD.state.init_run()
-        TD.state.run('TS18')
-        self.assertEqual("'MORE THAN 1 C/'", TD.state.message)
-        self.assertEqual(0, TD.state.regs.R1)
+        self.assertEqual(str(), self.output.message)
+        self.assertEqual(25, self.output.regs['R1'])
+
+    def test_multiple_corporate(self):
+        self.test_data.add_pnr_from_data(['C/21TOURS', '2ZAVERI', 'I/2ZAVERI/S', 'C/21VEENA TOURS'], 'name')
+        self.tpf_server.run('TS18', self.test_data)
+        self.assertEqual("'MORE THAN 1 C/'", self.output.message)
+        self.assertEqual(0, self.output.regs['R1'])
+
+    def test_100_names(self):
         # Check for > 99 names
-        names = ['55ZAVERI', '45SHAH']
-        Pnr.init_db()
-        Pnr.add_names(config.AAAPNR, names)
-        TD.state.init_run()
-        TD.state.run('TS18')
-        self.assertEqual("'MORE THAN 99 NAMES'", TD.state.message)
-        self.assertEqual(100, TD.state.regs.R1)
+        self.test_data.add_pnr_from_data(['55ZAVERI', '45SHAH'], 'name')
+        self.tpf_server.run('TS18', self.test_data)
+        self.assertEqual("'MORE THAN 99 NAMES'", self.output.message)
+        self.assertEqual(100, self.output.regs['R1'])
 
 
 if __name__ == '__main__':

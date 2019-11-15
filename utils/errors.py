@@ -78,6 +78,10 @@ class EcbLevelFormatError(ExecutionError):
     pass
 
 
+class PartitionError(ExecutionError):
+    pass
+
+
 class PnrElementError(TestDataError):
     pass
 
