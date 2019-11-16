@@ -4,7 +4,7 @@ from typing import Dict, List, Tuple
 from config import config
 from firestore.firestore_ci import FirestoreDocument
 from utils.data_type import Register
-from utils.errors import InvalidBaseRegError
+from utils.errors import InvalidBaseRegError, FileItemSpecificationError, PoolFileSpecificationError
 
 
 class Output(FirestoreDocument):
@@ -40,7 +40,7 @@ class TestData(FirestoreDocument):
         self.cores: List[Core] = list()
         self.pnr: List[Pnr] = list()
         self.tpfdf: List[Tpfdf] = list()
-        self.flat_files = list()
+        self.fixed_files: List[FixedFile] = list()
         self.errors: List[str] = list()
         self.outputs: List[Output] = [Output()]
         self.partition: str = str()
@@ -132,6 +132,85 @@ class TestData(FirestoreDocument):
             self.tpfdf.append(lrec)
         return
 
+    def add_file(self, fixed_rec_id: int, fixed_file_type: int, fixed_file_ordinal: int, fixed_macro_name: str,
+                 fixed_forward_chain_label: str = str(),
+                 fixed_field_bytes: Dict[str, bytearray] = None,
+                 fixed_item_field: str = str(),
+                 fixed_item_count_field: str = str(),
+                 fixed_item_position: int = 0,
+                 fixed_item_forward_chain_count: int = 0,
+                 fixed_item_field_bytes: Dict[str, bytearray] = None,
+                 pool_rec_id: int = 0,
+                 pool_macro_name: str = str(),
+                 pool_index_field: str = str(),
+                 pool_index_count: int = 0,
+                 pool_index_forward_chain_count: int = 0,
+                 pool_forward_chain_label: str = str(),
+                 pool_field_bytes: Dict[str, bytearray] = None,
+                 pool_item_field: str = str(),
+                 pool_item_count_field: str = str(),
+                 pool_item_position: int = 0,
+                 pool_item_forward_chain_count: int = 0,
+                 pool_item_field_bytes: Dict[str, bytearray] = None,
+                 ) -> None:
+        fixed_file = self._get_or_create_fixed_file(fixed_rec_id, fixed_file_type, fixed_file_ordinal, fixed_macro_name)
+        fixed_file.forward_chain_label = fixed_forward_chain_label
+        fixed_file.forward_chain_count = fixed_item_forward_chain_count
+        if fixed_item_forward_chain_count and not fixed_forward_chain_label:
+            raise PoolFileSpecificationError
+        if fixed_field_bytes:
+            fixed_file.field_bytes = FieldByte.from_dict(fixed_field_bytes)
+        if fixed_item_field:
+            if not fixed_item_field_bytes:
+                raise FileItemSpecificationError
+            item = FileItem()
+            fixed_file.file_items.append(item)
+            item.field = fixed_item_field
+            item.position = fixed_item_position
+            item.count_field = fixed_item_count_field
+            item.field_bytes = FieldByte.from_dict(fixed_item_field_bytes)
+        if pool_rec_id or pool_macro_name or pool_index_field:
+            if not (pool_rec_id and pool_macro_name and pool_index_field):
+                raise PoolFileSpecificationError
+            pool = PoolFile()
+            fixed_file.pool_files.append(pool)
+            pool.rec_id = pool_rec_id
+            pool.macro_name = pool_macro_name
+            pool.index_field = pool_index_field
+            pool.index_count = pool_index_count
+            pool.index_forward_chain_count = pool_index_forward_chain_count
+            pool.forward_chain_label = pool_forward_chain_label
+            pool.forward_chain_count = pool_item_forward_chain_count
+            if pool_item_forward_chain_count and not pool_forward_chain_label:
+                raise PoolFileSpecificationError
+            if pool_field_bytes:
+                pool.field_bytes = FieldByte.from_dict(pool_field_bytes)
+            if pool_item_field:
+                if not pool_item_field_bytes:
+                    raise FileItemSpecificationError
+                item = FileItem()
+                pool.file_items.append(item)
+                item.field = pool_item_field
+                item.position = pool_item_position
+                item.count_field = pool_item_count_field
+                item.field_bytes = FieldByte.from_dict(pool_item_field_bytes)
+        return
+
+    def _get_or_create_fixed_file(self, rec_id, file_type, file_ordinal, macro_name) -> 'FixedFile':
+        fixed_file: FixedFile = next((file for file in self.fixed_files
+                                      if file.rec_id == rec_id
+                                      and file.fixed_type == file_type
+                                      and file.fixed_ordinal == file_ordinal
+                                      and file.macro_name == macro_name), None)
+        if not fixed_file:
+            fixed_file: FixedFile = FixedFile()
+            fixed_file.rec_id = rec_id
+            fixed_file.fixed_type = file_type
+            fixed_file.fixed_ordinal = file_ordinal
+            fixed_file.macro_name = macro_name
+            self.fixed_files.append(fixed_file)
+        return fixed_file
+
 
 TestData.init('test_data')
 
@@ -179,9 +258,10 @@ class Tpfdf(FirestoreDocument):
 Tpfdf.init('tpfdf')
 
 
-class File:
+class FlatFile(FirestoreDocument):
 
     def __init__(self):
+        super().__init__()
         self.macro_name: str = str()
         self.rec_id: int = 0
         self.item_field: str = str()
@@ -192,24 +272,30 @@ class File:
         self.field_bytes: List[FieldByte] = list()
 
 
-class FlatFile(FirestoreDocument, File):
+class FixedFile(FlatFile):
 
     def __init__(self):
         super().__init__()
         self.fixed_type: int = 0
         self.fixed_ordinal: int = 0
 
+    def __repr__(self):
+        return f"{self.rec_id:04X}:{self.macro_name}:{self.fixed_type}:{self.fixed_ordinal}"
 
-FlatFile.init('flat_files')
+
+FixedFile.init('fixed_files')
 
 
-class PoolFile(FirestoreDocument, File):
+class PoolFile(FlatFile):
 
     def __init__(self):
         super().__init__()
         self.index_field: str = str()
         self.index_forward_chain_count: int = 0
         self.index_item_count: int = 0
+
+    def __repr__(self):
+        return f"{self.rec_id:04X}:{self.macro_name}:{self.index_field}"
 
 
 PoolFile.init('pool_files')
@@ -221,7 +307,11 @@ class FileItem(FirestoreDocument):
         super().__init__()
         self.field: str = str()
         self.count_field: str = str()
+        self.position: int = 0
         self.field_bytes: List[FieldByte] = list()
+
+    def __repr__(self):
+        return f"{self.field}:{self.field_bytes}"
 
 
 FileItem.init('file_items')

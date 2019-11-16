@@ -2,7 +2,7 @@ import unittest
 
 from assembly.mac2_data_macro import macros
 from assembly.seg6_segment import segments, Segment
-from test.input_td import TD
+from execution.ex5_execute import Execute
 from utils.file_line import Line, File
 
 
@@ -24,7 +24,7 @@ class SegmentTest(unittest.TestCase):
         unknown_in_assembly = {command for command in instructions if command not in seg.all_commands}
         self.assertSetEqual(set(), unknown_in_assembly, "\nUnknown in assembly.")
         seg.assemble()
-        unknown_in_execute = {node.command for _, node in seg.nodes.items() if node.command not in TD.state._ex}
+        unknown_in_execute = {node.command for _, node in seg.nodes.items() if node.command not in Execute()._ex}
         self.assertSetEqual(set(), unknown_in_execute, "\nUnknown in execute.")
 
 

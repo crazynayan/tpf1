@@ -12,6 +12,7 @@ class Stream:
         self.vm = Storage()
         self.address = self.vm.allocate()
         self.base_key = self.vm.base_key(self.address)
+        self.data_macro.load()
 
     def to_bytes(self, data: Dict[str, bytearray]) -> bytearray:
         for field_name, byte_array in data.items():

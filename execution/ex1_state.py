@@ -7,13 +7,16 @@ from assembly.seg2_ins_operand import FieldIndex
 from assembly.seg3_ins_type import InstructionType
 from assembly.seg6_segment import Segment, segments
 from config import config
+from db.flat_file import FlatFile
 from db.pnr import Pnr
+from db.stream import Stream
 from db.tpfdf import Tpfdf
 from execution.debug import Debug
 from execution.ex0_regs_store import Registers, Storage
 from firestore.test_data import TestData, FieldByte, Output
 from utils.data_type import DataType, Register
-from utils.errors import SegmentNotFoundError, EcbLevelFormatError, InvalidBaseRegError, TpfdfError, PartitionError
+from utils.errors import SegmentNotFoundError, EcbLevelFormatError, InvalidBaseRegError, TpfdfError, PartitionError, \
+    FileItemSpecificationError, PoolFileSpecificationError
 
 
 class State:
@@ -32,7 +35,7 @@ class State:
         self.call_stack: List[Tuple[str, str]] = list()
         self.loaded_seg: Dict[str, Tuple[Segment, int]] = dict()
         self.tpfdf_ref: Dict[str, int] = dict()
-        self.setup: Setup = Setup()
+        self.errors: Set[str] = set()
 
     def __repr__(self) -> str:
         return f"State:{self.seg}:{self.regs}:{self.vm}"
@@ -67,10 +70,6 @@ class State:
         dsp = macros['EB0EB'].evaluate(level)
         return config.ECB + dsp
 
-    def _setup(self) -> None:
-        for byte_array, address in self.setup.yield_data():
-            self.vm.set_bytes(byte_array, address, len(byte_array))
-
     def init_run(self) -> None:
         self.__init__()
 
@@ -81,7 +80,6 @@ class State:
         self.regs.R9 = config.ECB
         self._core_block(config.AAA, 'D1')
         self._core_block(config.IMG, 'D0')
-        self._setup()
         if test_data:
             self._set_from_test_data(test_data)
         label = self.seg.root_label()
@@ -120,7 +118,7 @@ class State:
         self.vm.set_value(config.PARTITION[partition], ce1uid, 1)
 
     def is_error(self, label: str) -> bool:
-        return label in self.setup.errors
+        return label in self.errors
 
     def index_to_label(self, field: FieldIndex) -> str:
         if field.index.reg == 'R0':
@@ -140,7 +138,7 @@ class State:
         self.vm.set_value(size_value, size_address, 2)
 
     def _set_from_test_data(self, test_data: TestData) -> None:
-        self.setup.errors = set(test_data.errors)
+        self.errors = set(test_data.errors)
         if test_data.partition:
             self.set_partition(test_data.partition)
         for core in test_data.cores:
@@ -164,6 +162,58 @@ class State:
                 raise TpfdfError
             lrec_data = FieldByte.to_dict(lrec.field_bytes)
             Tpfdf.add(lrec_data, lrec.key, lrec.macro_name)
+        self._capture_file(test_data)
+        return
+
+    @staticmethod
+    def _capture_file(test_data: TestData):
+        FlatFile.init_db()
+        for fixed_file in test_data.fixed_files:
+            fixed_dict = dict()
+            for pool_file in fixed_file.pool_files:
+                item_list = list()
+                count_field = None
+                item_field = None
+                for item in pool_file.file_items:
+                    if not macros[pool_file.macro_name].check(item.field):
+                        raise FileItemSpecificationError
+                    if item.count_field:
+                        if not macros[pool_file.macro_name].check(item.count_field):
+                            raise FileItemSpecificationError
+                        count_field = item.count_field
+                    item_field = item.field
+                    item_list.append(FieldByte.to_dict(item.field_bytes))
+                pool_file_bytes_dict = FieldByte.to_dict(pool_file.field_bytes) if pool_file.field_bytes else None
+                if item_field:
+                    data_bytes = Stream(macros[pool_file.macro_name]).item_to_bytes(item_list, item_field, count_field,
+                                                                                    pool_file_bytes_dict)
+                elif pool_file_bytes_dict:
+                    data_bytes = Stream(macros[pool_file.macro_name]).to_bytes(pool_file_bytes_dict)
+                else:
+                    raise PoolFileSpecificationError
+                pool_address = FlatFile.add_pool(data_bytes, pool_file.rec_id)
+                if pool_file.forward_chain_count and not item_field:
+                    raise PoolFileSpecificationError
+                empty_items = [{field: bytearray([config.ZERO] * len(byte_array))
+                                for field, byte_array in item_dict.items()}
+                               for item_dict in item_list]
+                for _ in range(pool_file.forward_chain_count):
+                    fch_dict = {pool_file.forward_chain_label: DataType('F', input=str(pool_address)).to_bytes()}
+                    if pool_file_bytes_dict:
+                        fch_dict = {**fch_dict, **pool_file_bytes_dict}
+                    data_bytes = Stream(macros[pool_file.macro_name]).item_to_bytes(empty_items, item_field,
+                                                                                    count_field, fch_dict)
+                    pool_address = FlatFile.add_pool(data_bytes, pool_file.rec_id)
+                index_dict = {pool_file.index_field: DataType('F', input=str(pool_address)).to_bytes()}
+                fixed_dict = {**fixed_dict, **index_dict}
+            # Fixed File
+            if fixed_file.field_bytes:
+                fixed_dict = {**fixed_dict, **FieldByte.to_dict(fixed_file.field_bytes)}
+            if not fixed_dict:
+                raise PoolFileSpecificationError
+            data_bytes = Stream(macros[fixed_file.macro_name]).to_bytes(fixed_dict)
+            FlatFile.add_fixed(data_bytes, fixed_file.rec_id, fixed_file.fixed_type, fixed_file.fixed_ordinal)
+            # TODO Fixed File items and multiple level indexes to be coded later when scenario is with us
         return
 
     def _set_core(self, field_bytes: List[FieldByte], macro_name: str, base_address: int) -> None:
@@ -205,22 +255,3 @@ class State:
             length = field_byte.length if field_byte.length > 0 else field.length
             field_byte.data = b64encode(self.vm.get_bytes(address, length)).decode()
         return
-
-
-class Setup:
-    def __init__(self):
-        self.ecb: Dict[str, bytearray] = dict()
-        self.img: Dict[str, bytearray] = dict()
-        self.aaa: Dict[str, bytearray] = dict()
-        self.errors: Set[str] = set()
-
-    def yield_data(self) -> Tuple[bytearray, int]:
-        for label, byte_array in self.ecb.items():
-            dsp = macros['EB0EB'].evaluate(label)
-            yield byte_array, config.ECB + dsp
-        for label, byte_array in self.img.items():
-            dsp = macros['MI0MI'].evaluate(label)
-            yield byte_array, config.IMG + dsp
-        for label, byte_array in self.aaa.items():
-            dsp = macros['WA0AA'].evaluate(label)
-            yield byte_array, config.AAA + dsp

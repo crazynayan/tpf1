@@ -2,7 +2,6 @@ import unittest
 
 from execution.ex5_execute import Execute
 from firestore.test_data import TestData
-from test.input_td import TD
 
 
 class PdredNames(unittest.TestCase):
@@ -15,7 +14,6 @@ class PdredNames(unittest.TestCase):
     def test_multiple_names(self):
         self.test_data.add_pnr_from_data(['C/21TOURS', '2ZAVERI', 'I/2ZAVERI/S'], 'name')
         self.tpf_server.run('TS18', self.test_data)
-        TD.state.run('TS18')
         self.assertEqual(str(), self.output.message)
         self.assertEqual(25, self.output.regs['R1'])
 

@@ -6,6 +6,11 @@ class FlatFile:
     POOL: Dict[str, int] = dict()
 
     @classmethod
+    def init_db(cls):
+        cls.DB = dict()
+        cls.POOL = dict()
+
+    @classmethod
     def get_record(cls, record_id: int, file_address: int) -> Optional[bytearray]:
         db_key = f"{record_id:04X}{file_address:08X}"
         if db_key not in cls.DB:

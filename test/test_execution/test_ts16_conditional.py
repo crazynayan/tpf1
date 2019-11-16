@@ -1,12 +1,12 @@
 import unittest
 
 from config import config
-from test.input_td import TD
+from execution.ex5_execute import Execute
 
 
 class Conditional(unittest.TestCase):
     def setUp(self) -> None:
-        self.state = TD.state
+        self.state = Execute()
         self.state.init_run()
 
     def test_ts16(self):

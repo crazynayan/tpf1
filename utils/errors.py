@@ -92,3 +92,11 @@ class InvalidBaseRegError(TestDataError):
 
 class TpfdfError(TestDataError):
     pass
+
+
+class FileItemSpecificationError(TestDataError):
+    pass
+
+
+class PoolFileSpecificationError(TestDataError):
+    pass

@@ -1,6 +1,5 @@
 from base64 import b64encode
 
-from test.input_td import TD
 from test.test_eta5_execution import NameGeneral
 
 
@@ -40,7 +39,7 @@ class NameFailETK1(NameGeneral):
         self.i_aaa['WA0ET4'].data = b64encode(bytes([self.wa0tty])).decode()
         self.tpf_server.run('ETA5', self.test_data)
         self.assertEqual('$$ETK1$$.1', self.output.last_line)
-        self.assertListEqual(list(), TD.state.dumps)
+        self.assertListEqual(list(), self.output.dumps)
         self.assertEqual(f'{self.ui2097:02X}', self.o_ui2['UI2CNN'].hex)
         self.assertEqual(33, self.output.regs['R6'])
         self.assertEqual('60', self.o_ecb['EBRS01'].hex)
@@ -51,7 +50,7 @@ class NameFailETK1(NameGeneral):
         self.i_aaa['WA0ET4'].data = b64encode(bytes([self.wa0tty])).decode()
         self.tpf_server.run('ETA5', self.test_data)
         self.assertEqual('$$ETK1$$.1', self.output.last_line)
-        self.assertListEqual(list(), TD.state.dumps)
+        self.assertListEqual(list(), self.output.dumps)
         self.assertEqual(f'{self.ui2097:02X}', self.o_ui2['UI2CNN'].hex)
         self.assertEqual(33, self.output.regs['R6'])
         self.assertEqual('60', self.o_ecb['EBRS01'].hex)
@@ -62,7 +61,7 @@ class NameFailETK1(NameGeneral):
         self.i_aaa['WA0ET4'].data = b64encode(bytes([self.wa0tty])).decode()
         self.tpf_server.run('ETA5', self.test_data)
         self.assertEqual('$$ETK1$$.1', self.output.last_line)
-        self.assertListEqual(list(), TD.state.dumps)
+        self.assertListEqual(list(), self.output.dumps)
         self.assertEqual(f'{self.ui2098:02X}', self.o_ui2['UI2CNN'].hex)
         self.assertEqual(16, self.output.regs['R6'])
         self.assertEqual('E0', self.o_ecb['EBRS01'].hex)
@@ -73,7 +72,7 @@ class NameFailETK1(NameGeneral):
         self.i_aaa['WA0ET4'].data = b64encode(bytes([self.wa0tty])).decode()
         self.tpf_server.run('ETA5', self.test_data)
         self.assertEqual('$$ETK1$$.1', self.output.last_line)
-        self.assertListEqual(list(), TD.state.dumps)
+        self.assertListEqual(list(), self.output.dumps)
         self.assertEqual(f'{self.ui2098:02X}', self.o_ui2['UI2CNN'].hex)
         self.assertEqual(16, self.output.regs['R6'])
         self.assertEqual('E0', self.o_ecb['EBRS01'].hex)

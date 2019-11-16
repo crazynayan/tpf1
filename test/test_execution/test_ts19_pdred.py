@@ -2,7 +2,7 @@ import unittest
 
 from execution.ex5_execute import Execute
 from firestore.test_data import TestData
-from test.input_td import TD
+from test.test_eta5_execution import hfax_2812_gld, fqtv_gld, itin_2811_2812
 from utils.data_type import DataType
 
 
@@ -16,9 +16,9 @@ class PdredHfax(unittest.TestCase):
 
     def test_pdred_ts19(self):
         # This also test PDCLS
-        self.test_data.add_pnr_from_data(TD.hfax_2812_gld, 'hfax')
-        self.test_data.add_pnr_from_byte_array(TD.fqtv_gld, 'fqtv', 'DGHWCL')
-        self.test_data.add_pnr_from_byte_array(TD.itin_2811_2812, 'itin')
+        self.test_data.add_pnr_from_data(hfax_2812_gld, 'hfax')
+        self.test_data.add_pnr_from_byte_array(fqtv_gld, 'fqtv', 'DGHWCL')
+        self.test_data.add_pnr_from_byte_array(itin_2811_2812, 'itin')
         self.tpf_server.run('TS19', self.test_data)
         self.assertEqual(0xF2F8F1F2, self.output.get_unsigned_value('R1'))
         self.assertEqual(0xF9F0F8F7, self.output.get_unsigned_value('R2'))

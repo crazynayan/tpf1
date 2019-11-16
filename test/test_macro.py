@@ -4,7 +4,7 @@ from assembly.mac2_data_macro import DataMacro, macros
 
 
 class MacroTest(unittest.TestCase):
-    NUMBER_OF_FILES = 21
+    NUMBER_OF_FILES = 22
 
     def test_files(self):
         self.assertIn('EB0EB', macros)

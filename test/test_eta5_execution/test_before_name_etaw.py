@@ -1,8 +1,7 @@
 from base64 import b64encode
 
 from config import config
-from test.input_td import TD
-from test.test_eta5_execution import NameGeneral
+from test.test_eta5_execution import NameGeneral, fqtv_gld
 
 
 class BeforeNameETAW(NameGeneral):
@@ -30,7 +29,7 @@ class BeforeNameETAW(NameGeneral):
     def test_ASC_ITN_fqtv_ETAS(self):
         self.i_aaa['WA0ASC'].data = b64encode(bytes([0x01])).decode()
         self.i_aaa['WA0ET2'].data = b64encode(bytes([self.wa0itn])).decode()
-        self.test_data.add_pnr_from_byte_array(TD.fqtv_gld, 'fqtv', config.AAAPNR)
+        self.test_data.add_pnr_from_byte_array(fqtv_gld, 'fqtv', config.AAAPNR)
         self.tpf_server.run('ETA5', self.test_data)
         self.assertEqual('$$ETAW$$.1', self.output.last_line)
         self.assertEqual('C5E3C1E2', self.o_ecb['EBX008'].hex)  # ETAS
@@ -44,7 +43,7 @@ class BeforeNameETAW(NameGeneral):
 
     def test_ASC_fqtv_ETAS(self):
         self.i_aaa['WA0ASC'].data = b64encode(bytes([0x01])).decode()
-        self.test_data.add_pnr_from_byte_array(TD.fqtv_gld, 'fqtv', config.AAAPNR)
+        self.test_data.add_pnr_from_byte_array(fqtv_gld, 'fqtv', config.AAAPNR)
         self.tpf_server.run('ETA5', self.test_data)
         self.assertEqual('$$ETAW$$.1', self.output.last_line)
         self.assertNotEqual('C5E3C1E2', self.o_ecb['EBX008'].hex)  # ETAS

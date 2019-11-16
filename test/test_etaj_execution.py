@@ -1,71 +1,80 @@
 import unittest
+from base64 import b64encode
 
 from assembly.mac2_data_macro import macros
 from config import config
-from db.flat_file import FlatFile
-from db.pnr import Pnr
-from db.stream import Stream
-from test.input_td import TD
+from execution.ex5_execute import Execute
+from firestore.test_data import TestData
 from utils.data_type import DataType
 
 
 class EtajTest(unittest.TestCase):
-    def setUp(self) -> None:
-        Pnr.init_db()
-        TD.state.init_run()
-        Pnr.add_from_data('BTS-B4T0/108/11-FINANCIAL SERVICES', 'group_plan', config.AAAPNR)
-        TD.state.setup.aaa['WA0POR'] = DataType('X', input='006F2F').to_bytes()
-        TD.state.setup.aaa['WA0FNS'] = bytearray([TD.wa0tvl])
-        self.tj_id = DataType('C', input='TJ').value
-        self.iy_id = DataType('C', input='IY').value
-        self.iy1lok = macros['IY1IY'].evaluate('#IY1LOK')
+    tpf_server: Execute = None
 
-    def tjr_setup(self, iy9aon: bytearray, pool: int = 1, iy1lok: bool = False) -> None:
-        iy_item = dict()
-        iy_item['IY9AON'] = iy9aon
-        empty_item = iy_item.copy()
-        empty_item['IY9AON'] = bytearray([config.ZERO])
-        if iy1lok:
-            iy_item['IY9AGY'] = bytearray([self.iy1lok])
-        iy_bytes = Stream(macros['IY1IY']).item_to_bytes([iy_item], 'IY1ATH', count='IY1CTR')
-        iy_address = FlatFile.add_pool(iy_bytes, self.iy_id)
-        for _ in range(pool - 1):
-            data = dict()
-            data['IY1FCH'] = DataType('F', input=str(iy_address)).to_bytes()
-            iy_bytes = Stream(macros['IY1IY']).item_to_bytes([empty_item], 'IY1ATH', count='IY1CTR', data=data)
-            iy_address = FlatFile.add_pool(iy_bytes, self.iy_id)
-        tj_bytes = bytearray([config.ZERO] * 404)
-        tj_bytes.extend(DataType('F', input=str(iy_address)).to_bytes())
-        FlatFile.add_fixed(tj_bytes, self.tj_id, macros['SYSEQC'].evaluate('#TJRRI'), 0x17F)
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.tpf_server = Execute()
+        cls.tpf_server.init_debug(['ETAJ'])
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        if 'ETAJ' in cls.tpf_server.DEBUG.seg_list:
+            with open('trace_log.txt', 'w') as trace_log:
+                trace_log.write('\n'.join([str(trace) for trace in cls.tpf_server.DEBUG.get_no_hit()]))
+        return
+
+    def setUp(self) -> None:
+        self.tpf_server.init_run()
+        self.test_data = TestData()
+        self.output = self.test_data.output
+        # Test data setup
+        self.test_data.add_pnr('group_plan', data='BTS-B4T0/108/11-FINANCIAL SERVICES')
+        self.aaa = self.test_data.add_core(['WA0POR', 'WA0FNS'], 'WA0AA')
+        self.aaa['WA0POR'].data = b64encode(DataType('X', input='006F2F').to_bytes()).decode()
+        self.aaa['WA0FNS'].data = b64encode(bytes([macros['WA0AA'].evaluate('#WA0TVL')])).decode()
+        self.output.add_regs(['R6'])
+        # Item setup
+        self.iy_item = dict()
+        self.iy_item['IY9AON'] = bytearray([config.ZERO] * 4)
+        self.iy_item['IY9AGY'] = bytearray([config.ZERO])
+
+    def _tjr_setup(self, iy_chain_count: int = 0):
+        self.test_data.add_file(fixed_rec_id=DataType('C', input='TJ').value,
+                                fixed_file_type=macros['SYSEQC'].evaluate('#TJRRI'),
+                                fixed_file_ordinal=0x17F,
+                                fixed_macro_name='TJ1TJ',
+                                pool_rec_id=DataType('C', input='IY').value,
+                                pool_macro_name='IY1IY',
+                                pool_index_field='TJ1IY1',
+                                pool_forward_chain_label='IY1FCH',
+                                pool_item_field='IY1ATH',
+                                pool_item_count_field='IY1CTR',
+                                pool_item_field_bytes=self.iy_item,
+                                pool_item_forward_chain_count=iy_chain_count,
+                                )
+        return
 
     def test_branch_validation_fail_lok_off(self) -> None:
-        iy9aon = DataType('X', input='00006F2F').to_bytes()
-        self.tjr_setup(iy9aon, pool=3)
-        label = TD.state.run('TS21')
-        self.assertEqual('$$ETK4$$.1', label)
-        self.assertEqual(8, TD.state.regs.R6)
+        self.iy_item['IY9AON'] = DataType('X', input='00006F2F').to_bytes()
+        self._tjr_setup(2)
+        self.tpf_server.run('TS21', self.test_data)
+        self.assertEqual('$$ETK4$$.1', self.output.last_line)
+        self.assertEqual(8, self.output.regs['R6'])
 
     def test_branch_validation_pass_lok_on(self) -> None:
-        iy9aon = DataType('X', input='00006F2F').to_bytes()
-        self.tjr_setup(iy9aon, iy1lok=True)
-        label = TD.state.run('TS21')
-        self.assertEqual('TS21EXIT.1', label)
+        self.iy_item['IY9AON'] = DataType('X', input='00006F2F').to_bytes()
+        self.iy_item['IY9AGY'] = bytearray([macros['IY1IY'].evaluate('#IY1LOK')])
+        self._tjr_setup()
+        self.tpf_server.run('TS21', self.test_data)
+        self.assertEqual('TS21EXIT.1', self.output.last_line)
 
     def test_finwc_fail(self) -> None:
-        iy9aon = DataType('X', input='00006F2F').to_bytes()
-        self.tjr_setup(iy9aon)
-        TD.state.setup.errors.add('$$ETAJ$$.35')
-        label = TD.state.run('TS21')
-        self.assertEqual('ETAJ500.1', label)
-        self.assertIn('0140F1', TD.state.dumps)
-
-
-# noinspection PyPep8Naming
-def tearDownModule():
-    if 'ETAJ' in TD.state.DEBUG.seg_list:
-        with open('trace_log.txt', 'w') as trace_log:
-            trace_log.write('\n'.join([str(trace) for trace in TD.state.DEBUG.get_no_hit()]))
-    return
+        self.iy_item['IY9AON'] = DataType('X', input='00006F2F').to_bytes()
+        self._tjr_setup()
+        self.test_data.errors.append('$$ETAJ$$.35')
+        self.tpf_server.run('TS21', self.test_data)
+        self.assertEqual('ETAJ500.1', self.output.last_line)
+        self.assertIn('0140F1', self.output.dumps)
 
 
 if __name__ == '__main__':
