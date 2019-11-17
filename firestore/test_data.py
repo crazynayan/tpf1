@@ -1,5 +1,5 @@
 from base64 import b64decode, b64encode
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 
 from config import config
 from firestore.firestore_ci import FirestoreDocument
@@ -12,6 +12,7 @@ class Output(FirestoreDocument):
     def __init__(self):
         super().__init__()
         self.regs: Dict[str, int] = dict()
+        self.reg_pointers: Dict[str, Union[str, int]] = dict()
         self.cores: List[Core] = list()
         self.dumps: List[str] = list()
         self.message: str = str()
@@ -29,6 +30,15 @@ class Output(FirestoreDocument):
             raise InvalidBaseRegError
         return self.regs[reg] & config.REG_MAX
 
+    def add_all_regs(self) -> None:
+        for reg in config.REG:
+            self.regs[reg] = 0
+        return
+
+    def add_all_reg_pointers(self, length) -> None:
+        for reg in config.REG:
+            self.reg_pointers[reg] = length
+
 
 Output.init()
 
@@ -44,6 +54,7 @@ class TestData(FirestoreDocument):
         self.errors: List[str] = list()
         self.outputs: List[Output] = [Output()]
         self.partition: str = str()
+        self.regs: Dict[str, int] = dict()
 
     @property
     def output(self):
@@ -70,6 +81,13 @@ class TestData(FirestoreDocument):
 
     def get_output_dict(self) -> dict:
         return self.outputs[0].cascade_to_dict() if self.outputs[0] else dict()
+
+    def add_all_regs(self) -> Dict[str, int]:
+        for reg in config.REG:
+            if reg in ['R8', 'R9']:
+                continue
+            self.regs[reg] = 0
+        return self.regs
 
     def _get_core(self, macro_name: str, output: bool, base_reg) -> 'Core':
         cores = self.outputs[0].cores if output else self.cores

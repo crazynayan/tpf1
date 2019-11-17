@@ -4,7 +4,7 @@ from typing import Union, Optional, Tuple, Dict
 from assembly.mac2_data_macro import macros
 from config import config
 from utils.data_type import DataType, Register
-from utils.errors import RegisterInvalidError
+from utils.errors import RegisterInvalidError, BaseAddressError
 
 
 class Registers:
@@ -163,7 +163,7 @@ class Storage:
         try:
             frame_len = len(self.frames[base_address])
         except KeyError:
-            raise KeyError
+            raise BaseAddressError
         if length > frame_len:
             self.frames[base_address].extend(bytearray([config.ZERO] * (length - frame_len)))
             self._frame[base_address].extend(bytearray([config.ONES] * (length - frame_len)))
@@ -247,7 +247,7 @@ class Storage:
             self.frames[base_address] = bytearray()
             self._frame[base_address] = bytearray()
         except KeyError:
-            raise KeyError
+            raise BaseAddressError
 
     def valid_address(self, address: int) -> int:
         return address if self.base_key(address) in self.frames else self.allocate()

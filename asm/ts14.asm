@@ -3,7 +3,6 @@
 **********************************************************************
          PGMID 'TS14'
          WA0AA  REG=R1
-         GETCC  D1,L4,FILL=00
          L      R1,CE1CR1
          LH     R2,C_AA
          STH    R2,WA0BBR

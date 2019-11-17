@@ -16,7 +16,7 @@ from execution.ex0_regs_store import Registers, Storage
 from firestore.test_data import TestData, FieldByte, Output
 from utils.data_type import DataType, Register
 from utils.errors import SegmentNotFoundError, EcbLevelFormatError, InvalidBaseRegError, TpfdfError, PartitionError, \
-    FileItemSpecificationError, PoolFileSpecificationError
+    FileItemSpecificationError, PoolFileSpecificationError, BaseAddressError
 
 
 class State:
@@ -149,6 +149,8 @@ class State:
                 self._set_core(core.field_bytes, macro_name, config.ECB)
             elif macro_name == 'MI0MI':
                 self._set_core(core.field_bytes, macro_name, config.IMG)
+        for reg, value in test_data.regs.items():
+            self.regs.set_value(value, reg)
         Pnr.init_db()
         for pnr in test_data.pnr:
             pnr_locator = pnr.locator if pnr.locator else config.AAAPNR
@@ -244,9 +246,14 @@ class State:
                     raise InvalidBaseRegError
                 self._capture_core(core.field_bytes, macro_name, self.regs.get_unsigned_value(core.base_reg))
         for reg in output.regs:
-            if not Register(reg).is_valid():
-                raise InvalidBaseRegError
             output.regs[reg] = self.regs.get_value(reg)
+        for reg in output.reg_pointers:
+            try:
+                output.reg_pointers[reg] = self.vm.get_bytes(self.regs.get_unsigned_value(reg),
+                                                             output.reg_pointers[reg]).hex().upper()
+            except BaseAddressError:
+                continue
+        return
 
     def _capture_core(self, field_bytes: List[FieldByte], macro_name: str, base_address: int) -> None:
         for field_byte in field_bytes:

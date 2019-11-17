@@ -62,6 +62,10 @@ class ConditionMaskError(AssemblyError):
     pass
 
 
+class BaseAddressError(ExecutionError):
+    pass
+
+
 class PackExecutionError(ExecutionError):
     pass
 
