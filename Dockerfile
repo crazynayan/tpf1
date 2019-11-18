@@ -19,8 +19,6 @@ COPY config.py google-cloud.json ./
 
 ENV GOOGLE_APPLICATION_CREDENTIALS google-cloud.json
 
-EXPOSE 5000
-
 RUN exec python -m unittest discover -s test -v -f
 
-ENTRYPOINT exec gunicorn -b :5000 --access-logfile - --error-logfile - flask_app:tpf1_app
+CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --access-logfile - --error-logfile - flask_app:tpf1_app

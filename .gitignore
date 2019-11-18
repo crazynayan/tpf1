@@ -4,7 +4,6 @@ __pycache__
 *.env
 *.csv
 static/
-.gcloudignore
 tpf1-key.json
 macro/
 asm/eta5.asm

@@ -1,0 +1,13 @@
+version: '3.3'
+services:
+  tpf_server:
+    container_name: tpf_analyzer
+    build:
+      context: .
+      labels:
+        in.co.crazyideas.tpf1: "TPF Server"
+    image: tpf_analyzer
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
