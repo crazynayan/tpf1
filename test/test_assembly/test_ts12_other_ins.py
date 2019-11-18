@@ -340,7 +340,7 @@ class OtherInstruction(unittest.TestCase):
         self.assertEqual('R6', node.field.base.reg)
         self.assertEqual(0x3cc, node.field.dsp)
         self.assertEqual(0xCA, node.bits.value)
-        self.assertEqual('#BIT0=0x80 + #BIT1=0x40 + #BIT4=0x08 + #BIT6=0x02', str(node.bits))
+        self.assertEqual('#BIT0=0x80+#BIT1=0x40+#BIT4=0x08+#BIT6=0x02', str(node.bits))
         # ZAP   FLD1,FLD1+1(2)
         node = seg.nodes['TS120600.1']
         self.assertEqual('ZAP', node.command)

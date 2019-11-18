@@ -28,6 +28,11 @@ class LabelReference:
     def set_branch(self) -> None:
         self._branch = 1
 
+    def to_dict(self) -> dict:
+        self_dict = self.__dict__.copy()
+        del self_dict['_branch']
+        return self_dict
+
 
 class MacroGeneric:
 

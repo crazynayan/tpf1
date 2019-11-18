@@ -47,6 +47,7 @@ class TestData(FirestoreDocument):
 
     def __init__(self):
         super().__init__()
+        self.name: str = ''
         self.cores: List[Core] = list()
         self.pnr: List[Pnr] = list()
         self.tpfdf: List[Tpfdf] = list()
@@ -59,6 +60,10 @@ class TestData(FirestoreDocument):
     @property
     def output(self):
         return self.outputs[0]
+
+    @classmethod
+    def name_exists(cls, name: str) -> bool:
+        return cls.objects.filter_by(name=name).first() is not None
 
     @classmethod
     def create_test_data(cls, test_data_dict: dict) -> str:

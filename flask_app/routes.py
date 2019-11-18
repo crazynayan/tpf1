@@ -1,7 +1,8 @@
-from typing import Dict
+from typing import Dict, List
 
 from flask import Response, jsonify, request
 
+from assembly.mac2_data_macro import macros
 from assembly.seg6_segment import segments
 from execution.ex5_execute import Execute
 from firestore.auth import User
@@ -26,6 +27,10 @@ def create_test_data() -> Response:
     test_data: dict = request.get_json()
     if not test_data:
         return error_response(400, 'Test data is empty')
+    if 'name' not in test_data or not test_data['name']:
+        return error_response(400, 'Name is required for the test data')
+    if TestData.name_exists(test_data['name']):
+        return error_response(400, 'Name of the test data should be unique')
     test_data_id = TestData.create_test_data(test_data)
     response_dict = dict()
     response_dict['test_data_id'] = test_data_id
@@ -60,3 +65,60 @@ def delete_test_data(test_data_id) -> Response:
     response_dict = dict()
     response_dict['test_data_id'] = test_data_id
     return jsonify(response_dict)
+
+
+@tpf1_app.route('/segments')
+@token_auth.login_required
+def segment_list() -> Response:
+    seg_list: List[str] = sorted(list(segments))
+    response_dict: Dict[str, List[str]] = {'segments': seg_list}
+    return jsonify(response_dict)
+
+
+@tpf1_app.route('/segments/<string:seg_name>/instructions')
+@token_auth.login_required
+def segment_instruction(seg_name) -> Response:
+    if seg_name not in segments:
+        return error_response(404, 'Segment not found')
+    segments[seg_name].assemble()
+    instructions: List[str] = [str(node) for _, node in segments[seg_name].nodes.items()]
+    instructions.sort()
+    response_dict = {'seg_name': seg_name, 'instructions': instructions}
+    return jsonify(response_dict)
+
+
+@tpf1_app.route('/macros')
+@token_auth.login_required
+def macro_list() -> Response:
+    mac_list: List[str] = sorted(list(macros))
+    response_dict: Dict[str, List[str]] = {'macros': mac_list}
+    return jsonify(response_dict)
+
+
+@tpf1_app.route('/macros/<string:macro_name>/symbol_table')
+@token_auth.login_required
+def macro_symbol_table(macro_name) -> Response:
+    if macro_name not in macros:
+        return error_response(404, 'Macro not found')
+    macros[macro_name].load()
+    symbol_table = [label_ref.to_dict() for _, label_ref in macros[macro_name].all_labels.items()
+                    if label_ref.name == macro_name]
+    response_dict = {'macro_name': macro_name, 'symbol_table': symbol_table}
+    return jsonify(response_dict)
+
+
+@tpf1_app.route('/fields/<string:field_name>')
+@token_auth.login_required
+def find_field(field_name) -> Response:
+    if not field_name:
+        return error_response(400, 'Field name cannot be empty')
+    field_name = field_name.upper()
+    label_ref = None
+    for _, data_macro in macros.items():
+        data_macro.load()
+        if data_macro.check(field_name):
+            label_ref = data_macro.lookup(field_name)
+            break
+    if label_ref is None:
+        return error_response(404, 'Field name not found')
+    return jsonify(label_ref.to_dict())

@@ -16,7 +16,7 @@ class InstructionGeneric:
         self.fall_down: Optional[str] = None
 
     def __repr__(self) -> str:
-        return f"{self.index}:{self.label}:{self.command}"
+        return f"{self.index:04}:{self.label}:{self.command}"
 
     @property
     def next_labels(self) -> Set[str]:
@@ -206,7 +206,7 @@ class BranchConditionRegister(BranchCondition):
         self.reg: Register = reg
 
     def __repr__(self) -> str:
-        return f"{self.command}:{self.mask},{self.reg}"
+        return f"{super().__repr__()}:{self.mask},{self.reg}"
 
 
 class RegisterBranch(BranchGeneric):
