@@ -1,7 +1,7 @@
 import os
 from base64 import b64encode
 from datetime import datetime
-from typing import Dict, Tuple, List, Set
+from typing import Dict, List, Set
 
 
 class Config:
@@ -31,7 +31,7 @@ class Config:
     COMMENT_C1: Set[str] = {'*', '.'}
     DIRECTIVE: Set[str] = {'PUSH', 'USING', 'DSECT', 'PGMID', 'LTORG', 'FINIS', 'END', 'ORG', 'POP', 'CSECT',
                            'EQU', 'DS', 'DC', 'EJECT', 'SPACE', 'PRINT', 'BEGIN'}
-    DIRECTIVE_SECOND_PASS: Tuple[str] = ('PUSH', 'USING', 'POP')
+    DIRECTIVE_SECOND_PASS: tuple = ('PUSH', 'USING', 'POP')
     DIRECTIVE_NODE: Set[str] = {'EQU', 'DS'}
     INSTRUCTION_LEN_DEFAULT: int = 4
     INSTRUCTION_LEN_2: Set[str] = {'BCTR', 'BR', 'LR', 'LTR', 'AR', 'SR', 'BER', 'BNER', 'BHR', 'BNHR', 'BLR', 'BNLR',
@@ -53,8 +53,8 @@ class Config:
                             'BPR': 2, 'BNPR': 13, 'BOR': 1, 'BNOR': 14, 'BZR': 8, 'BNZR': 7, 'NOPR': 0}
 
     # Used by execution
-    REGISTERS: Tuple[str] = ('R0', 'R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7',
-                             'R8', 'R9', 'R10', 'R11', 'R12', 'R13', 'R14', 'R15')
+    REGISTERS: tuple = ('R0', 'R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8', 'R9', 'R10', 'R11', 'R12', 'R13', 'R14',
+                        'R15')
     REG_BITS: int = 32
     REG_BYTES: int = REG_BITS // 8
     REG_MAX: int = (1 << REG_BITS) - 1  # 0xFFFFFFFF
@@ -68,7 +68,7 @@ class Config:
     GLOBAL: int = F4K * 2
     AAA: int = F4K * 3
     IMG: int = F4K * 4  # 12 more fixed frames are spare
-    ECB_LEVELS: Tuple[str] = ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F')
+    ECB_LEVELS: tuple = ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F')
     BLOCK_SIZE: Dict[str, int] = {'L0': 128, 'L1': 381, 'L2': 1055, 'L4': 4095}
     BLOCK_TYPE: Dict[str, int] = {'L0': 0x11, 'L1': 0x21, 'L2': 0x31, 'L4': 0x41}
     START: datetime = datetime(1966, 1, 2, 0, 0, 0)
