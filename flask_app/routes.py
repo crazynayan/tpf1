@@ -1,4 +1,5 @@
 from typing import Dict, List
+from urllib.parse import unquote
 
 from flask import Response, jsonify, request
 
@@ -12,7 +13,7 @@ from flask_app.auth import token_auth
 from flask_app.errors import error_response
 
 
-@tpf1_app.route('/users/<string:doc_id>', methods=['GET'])
+@tpf1_app.route('/users/<string:doc_id>')
 @token_auth.login_required
 def get_user(doc_id) -> Response:
     user: Dict[str, str] = User.get_user(doc_id)
@@ -29,31 +30,52 @@ def create_test_data() -> Response:
         return error_response(400, 'Test data is empty')
     if 'name' not in test_data or not test_data['name']:
         return error_response(400, 'Name is required for the test data')
+    if 'seg_name' not in test_data or not test_data['seg_name']:
+        return error_response(400, 'Seg Name is required for the test data')
     if TestData.name_exists(test_data['name']):
         return error_response(400, 'Name of the test data should be unique')
+    if test_data['seg_name'] not in segments:
+        return error_response(400, 'Segment is not present')
     test_data_id = TestData.create_test_data(test_data)
     response_dict = dict()
     response_dict['test_data_id'] = test_data_id
     return jsonify(response_dict)
 
 
-@tpf1_app.route('/test_data/<string:test_data_id>', methods=['GET'])
+@tpf1_app.route('/test_data', methods=['GET'])
 @token_auth.login_required
-def get_test_data(test_data_id) -> Response:
-    if not request.args.get('run'):
-        test_data: dict = TestData.get_test_data_dict(test_data_id)
+def get_test_data_header() -> Response:
+    name = request.args.get('name')
+    if name:
+        name = unquote(name)
+        test_data = TestData.get_test_data_by_name(name)
         if not test_data:
-            return error_response(404, 'Test data id not found')
-        return jsonify(test_data)
-    seg_to_run = request.args.get('run').upper()
-    if seg_to_run not in segments:
-        return error_response(404, 'Segment not present in the TPF Analyzer tool')
+            return error_response(404, f'No test data found by this name - {name}')
+        return jsonify(test_data.get_header_dict())
+    test_data_list = [test_data.get_header_dict() for test_data in TestData.get_all()]
+    return jsonify(test_data_list)
+
+
+@tpf1_app.route('/test_data/<string:test_data_id>/run')
+@token_auth.login_required
+def run_test_data(test_data_id) -> Response:
     test_data: TestData = TestData.get_test_data(test_data_id)
     if not test_data:
         return error_response(404, 'Test data id not found')
+    if test_data.seg_name not in segments:
+        return error_response(400, 'Segment not present - Test Data might be corrupted')
     tpf_server = Execute()
-    tpf_server.run(seg_to_run, test_data)
+    tpf_server.run(test_data.seg_name, test_data)
     return jsonify(test_data.get_output_dict())
+
+
+@tpf1_app.route('/test_data/<string:test_data_id>')
+@token_auth.login_required
+def get_test_data(test_data_id) -> Response:
+    test_data: dict = TestData.get_test_data_dict(test_data_id)
+    if not test_data:
+        return error_response(404, 'Test data id not found')
+    return jsonify(test_data)
 
 
 @tpf1_app.route('/test_data/<string:test_data_id>', methods=['DELETE'])

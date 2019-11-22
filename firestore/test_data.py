@@ -1,5 +1,5 @@
 from base64 import b64decode, b64encode
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Tuple, Union, Optional
 
 from config import config
 from firestore.firestore_ci import FirestoreDocument
@@ -48,6 +48,7 @@ class TestData(FirestoreDocument):
     def __init__(self):
         super().__init__()
         self.name: str = ''
+        self.seg_name: str = ''
         self.cores: List[Core] = list()
         self.pnr: List[Pnr] = list()
         self.tpfdf: List[Tpfdf] = list()
@@ -71,9 +72,17 @@ class TestData(FirestoreDocument):
         return test_data.id
 
     @classmethod
+    def get_all(cls) -> List['TestData']:
+        return cls.objects.get()
+
+    @classmethod
     def get_test_data_dict(cls, test_data_id: str) -> dict:
         test_data: cls = cls.get_by_id(test_data_id, cascade=True)
         return test_data.cascade_to_dict() if test_data else dict()
+
+    @classmethod
+    def get_test_data_by_name(cls, name: str) -> Optional['TestData']:
+        return cls.objects.filter_by(name=name).first()
 
     @classmethod
     def get_test_data(cls, test_data_id: str) -> 'TestData':
@@ -85,7 +94,12 @@ class TestData(FirestoreDocument):
         return test_data.delete(cascade=True) if test_data else str()
 
     def get_output_dict(self) -> dict:
-        return self.outputs[0].cascade_to_dict() if self.outputs[0] else dict()
+        output_dict = self.get_header_dict()
+        output_dict['outputs'] = self.outputs[0].cascade_to_dict() if self.outputs[0] else dict()
+        return output_dict
+
+    def get_header_dict(self) -> dict:
+        return {'id': self.id, 'name': self.name, 'seg_name': self.seg_name}
 
     def add_all_regs(self) -> Dict[str, int]:
         for reg in config.REG:

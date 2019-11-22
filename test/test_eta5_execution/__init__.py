@@ -6,6 +6,9 @@ from firestore import test_data
 from utils.data_type import DataType
 
 
+# Change 4CC1 to 4E2F to ____ i.e. 20Oct19 to 20Oct20 to 20Oct21 (every year after 20NOV)
+
+
 class NameGeneral(unittest.TestCase):
 
     def setUp(self) -> None:
@@ -78,14 +81,14 @@ itin_2811_2812 = [
     {
         'WI0ARC': DataType('C', input='BA').to_bytes(),
         'WI0FNB': DataType('H', input='2812').to_bytes(),
-        'WI0DTE': DataType('X', input='4CC1').to_bytes(),
+        'WI0DTE': DataType('X', input='4E2F').to_bytes(),
         'WI0BRD': DataType('C', input='DFW').to_bytes(),
         'WI0OFF': DataType('C', input='ORZ').to_bytes(),
     },
     {
         'WI0ARC': DataType('C', input='AA').to_bytes(),
         'WI0FNB': DataType('H', input='2811').to_bytes(),
-        'WI0DTE': DataType('X', input='4CC1').to_bytes(),
+        'WI0DTE': DataType('X', input='4E2F').to_bytes(),
         'WI0BRD': DataType('C', input='DFW').to_bytes(),
         'WI0OFF': DataType('C', input='ORD').to_bytes(),
     },
@@ -99,14 +102,14 @@ itin_2811_2812 = [
     {
         'WI0ARC': DataType('C', input='AA').to_bytes(),
         'WI0FNB': DataType('H', input='2812').to_bytes(),
-        'WI0DTE': DataType('X', input='4CC1').to_bytes(),
+        'WI0DTE': DataType('X', input='4E2F').to_bytes(),
         'WI0BRD': DataType('C', input='DFX').to_bytes(),
         'WI0OFF': DataType('C', input='ORC').to_bytes(),
     },
     {
         'WI0ARC': DataType('C', input='AA').to_bytes(),
         'WI0FNB': DataType('H', input='2812').to_bytes(),
-        'WI0DTE': DataType('X', input='4CC1').to_bytes(),
+        'WI0DTE': DataType('X', input='4E2F').to_bytes(),
         'WI0BRD': DataType('C', input='DFW').to_bytes(),
         'WI0OFF': DataType('C', input='ORD').to_bytes(),
     },

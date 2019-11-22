@@ -14,7 +14,7 @@ class EtajTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.tpf_server = Execute()
-        cls.tpf_server.init_debug(['ETAJ'])
+        # cls.tpf_server.init_debug(['ETAJ'])
 
     @classmethod
     def tearDownClass(cls) -> None:
