@@ -15,7 +15,7 @@ from flask_app.errors import error_response
 
 @tpf1_app.route('/users/<string:doc_id>')
 @token_auth.login_required
-def get_user(doc_id) -> Response:
+def get_user(doc_id: str) -> Response:
     user: Dict[str, str] = User.get_user(doc_id)
     if user is None:
         return error_response(404)
@@ -42,7 +42,7 @@ def create_test_data() -> Response:
     return jsonify(response_dict)
 
 
-@tpf1_app.route('/test_data', methods=['GET'])
+@tpf1_app.route('/test_data')
 @token_auth.login_required
 def get_test_data_header() -> Response:
     name = request.args.get('name')
@@ -58,7 +58,7 @@ def get_test_data_header() -> Response:
 
 @tpf1_app.route('/test_data/<string:test_data_id>/run')
 @token_auth.login_required
-def run_test_data(test_data_id) -> Response:
+def run_test_data(test_data_id: str) -> Response:
     test_data: TestData = TestData.get_test_data(test_data_id)
     if not test_data:
         return error_response(404, 'Test data id not found')
@@ -71,7 +71,7 @@ def run_test_data(test_data_id) -> Response:
 
 @tpf1_app.route('/test_data/<string:test_data_id>')
 @token_auth.login_required
-def get_test_data(test_data_id) -> Response:
+def get_test_data(test_data_id: str) -> Response:
     test_data: dict = TestData.get_test_data_dict(test_data_id)
     if not test_data:
         return error_response(404, 'Test data id not found')
@@ -80,7 +80,7 @@ def get_test_data(test_data_id) -> Response:
 
 @tpf1_app.route('/test_data/<string:test_data_id>', methods=['DELETE'])
 @token_auth.login_required
-def delete_test_data(test_data_id) -> Response:
+def delete_test_data(test_data_id: str) -> Response:
     test_data_id: str = TestData.delete_test_data(test_data_id)
     if not test_data_id:
         return error_response(404, 'Test data id not found')
@@ -99,7 +99,7 @@ def segment_list() -> Response:
 
 @tpf1_app.route('/segments/<string:seg_name>/instructions')
 @token_auth.login_required
-def segment_instruction(seg_name) -> Response:
+def segment_instruction(seg_name: str) -> Response:
     if seg_name not in segments:
         return error_response(404, 'Segment not found')
     segments[seg_name].assemble()
@@ -119,7 +119,7 @@ def macro_list() -> Response:
 
 @tpf1_app.route('/macros/<string:macro_name>/symbol_table')
 @token_auth.login_required
-def macro_symbol_table(macro_name) -> Response:
+def macro_symbol_table(macro_name: str) -> Response:
     if macro_name not in macros:
         return error_response(404, 'Macro not found')
     macros[macro_name].load()
@@ -131,7 +131,7 @@ def macro_symbol_table(macro_name) -> Response:
 
 @tpf1_app.route('/fields/<string:field_name>')
 @token_auth.login_required
-def find_field(field_name) -> Response:
+def find_field(field_name: str) -> Response:
     if not field_name:
         return error_response(400, 'Field name cannot be empty')
     field_name = field_name.upper()
