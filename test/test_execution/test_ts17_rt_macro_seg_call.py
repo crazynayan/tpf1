@@ -20,7 +20,7 @@ class RealTimeMacro(unittest.TestCase):
         self.assertEqual('C300', self.output.reg_pointers['R3'])
         self.assertEqual('C4C4', self.output.reg_pointers['R4'])
         self.assertListEqual(['021014', '19000'], self.output.dumps)
-        self.assertEqual("'MAXIMUM NUMBER OF NAMES PER PNR IS 99 - CREATE NEW PNR'", self.output.message)
+        self.assertIn("MAXIMUM NUMBER OF NAMES PER PNR IS 99 - CREATE NEW PNR", self.output.messages)
         self.assertEqual(self.tpf_server.heap['TS17PDWK'], self.tpf_server.regs.get_value('R4'))
         self.assertEqual(1, len(self.tpf_server.detac_stack['2']))
         self.assertEqual(0, len(self.tpf_server.detac_stack['1']))

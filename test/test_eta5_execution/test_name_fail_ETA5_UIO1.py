@@ -9,13 +9,13 @@ class NameFailETA5(NameGeneral):
     def test_no_name_ETA5420(self) -> None:
         self.tpf_server.run('ETA5', self.test_data)
         self.assertEqual('ETA5420.9', self.output.last_line)
-        self.assertEqual("'NEED NAME IN PNR TO COMPLETE TRANSACTION'", self.output.message)
+        self.assertIn("NEED NAME IN PNR TO COMPLETE TRANSACTION", self.output.messages)
 
     def test_too_many_names_ETA5430(self) -> None:
         self.test_data.add_pnr_from_data(['45ZAVERI', '55SHAH'], 'name')
         self.tpf_server.run('ETA5', self.test_data)
         self.assertEqual('ETA5430', self.output.last_line)
-        self.assertEqual("'MAXIMUM NUMBER OF NAMES PER PNR IS 99 - CREATE NEW PNR'", self.output.message)
+        self.assertIn("MAXIMUM NUMBER OF NAMES PER PNR IS 99 - CREATE NEW PNR", self.output.messages)
         self.assertEqual(100, self.output.regs['R15'])
         self.assertEqual(f'{self.ui2098:02X}', self.o_ui2['UI2CNN'].hex)
 
@@ -23,7 +23,7 @@ class NameFailETA5(NameGeneral):
         self.test_data.add_pnr_from_data(['45ZAVERI', 'I/55ZAVERI'], 'name')
         self.tpf_server.run('ETA5', self.test_data)
         self.assertEqual('ETA5430', self.output.last_line)
-        self.assertEqual("'MAXIMUM NUMBER OF NAMES PER PNR IS 99 - CREATE NEW PNR'", self.output.message)
+        self.assertIn("MAXIMUM NUMBER OF NAMES PER PNR IS 99 - CREATE NEW PNR", self.output.messages)
         self.assertEqual(100, self.output.regs['R15'])
         self.assertEqual(f'{self.ui2098:02X}', self.o_ui2['UI2CNN'].hex)
 

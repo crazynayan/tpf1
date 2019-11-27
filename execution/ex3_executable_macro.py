@@ -51,7 +51,7 @@ class RealTimeMacro(State):
         return node.fall_down
 
     def senda(self, node: KeyValue) -> str:
-        self.message = node.get_value('MSG')
+        self.messages.append(node.get_value('MSG').replace("'", ""))
         return node.fall_down
 
     def sysra(self, node: KeyValue) -> Optional[str]:

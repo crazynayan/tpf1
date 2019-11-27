@@ -15,7 +15,7 @@ class Output(FirestoreDocument):
         self.reg_pointers: Dict[str, Union[str, int]] = dict()
         self.cores: List[Core] = list()
         self.dumps: List[str] = list()
-        self.message: str = str()
+        self.messages: List[str] = list()
         self.last_line: str = str()
 
     def add_regs(self, reg_list: List[str]) -> None:
@@ -73,7 +73,7 @@ class TestData(FirestoreDocument):
 
     @classmethod
     def get_all(cls) -> List['TestData']:
-        return cls.objects.get()
+        return cls.objects.order_by('name').get()
 
     @classmethod
     def get_test_data_dict(cls, test_data_id: str) -> dict:

@@ -29,7 +29,7 @@ class State:
         self.cc: Optional[int] = None
         self._ex: Dict[str, Callable] = dict()
         self.detac_stack: Dict[str, List] = {level: list() for level in config.ECB_LEVELS}
-        self.message: Optional[str] = None
+        self.messages: List[str] = list()
         self.dumps: List[str] = list()
         self.heap: Dict[str, int] = dict()
         self.call_stack: List[Tuple[str, str]] = list()
@@ -230,7 +230,7 @@ class State:
             output = Output()
             outputs.append(output)
         output = outputs[0]
-        output.message = self.message if self.message else str()
+        output.messages = self.messages.copy()
         output.dumps.extend(self.dumps)
         output.last_line = last_line
         for core in output.cores:
