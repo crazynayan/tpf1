@@ -1,10 +1,74 @@
 from base64 import b64decode, b64encode
 from typing import Dict, List, Tuple, Union, Optional
 
+from assembly.mac2_data_macro import macros
 from config import config
 from firestore.firestore_ci import FirestoreDocument
 from utils.data_type import Register
 from utils.errors import InvalidBaseRegError, FileItemSpecificationError, PoolFileSpecificationError
+
+
+class FieldByte(FirestoreDocument):
+
+    def __init__(self):
+        super().__init__()
+        self.field: str = str()
+        self.data: str = str()
+        self.length: int = 0
+
+    def __repr__(self):
+        return f"{self.field}:{self.hex}"
+
+    @property
+    def hex(self):
+        return b64decode(self.data).hex().upper()
+
+    @classmethod
+    def from_dict(cls, field_byte_array: Dict[str, bytearray]) -> List['FieldByte']:
+        field_bytes: List[cls] = list()
+        for field, byte_array in field_byte_array.items():
+            field_byte = cls()
+            field_byte.field = field
+            field_byte.data = b64encode(byte_array).decode()
+            field_bytes.append(field_byte)
+        return field_bytes
+
+    @classmethod
+    def to_dict(cls, field_bytes: List['FieldByte']) -> Dict[str, bytearray]:
+        return {field_byte.field.upper(): bytearray(b64decode(field_byte.data)) for field_byte in field_bytes
+                if field_byte.data}
+
+
+FieldByte.init('field_bytes')
+
+
+class Core(FirestoreDocument):
+
+    def __init__(self):
+        super().__init__()
+        self.macro_name: str = str()
+        self.base_reg: str = str()
+        self.field_bytes: List[Union[FieldByte, str]] = list()
+
+    def __repr__(self):
+        return self.macro_name
+
+    def create_field_byte(self, field_name: str) -> FieldByte:
+        field_byte: FieldByte = FieldByte.create_from_dict({'field': field_name})
+        self.field_bytes.append(field_byte)
+        self.save()
+        return field_byte
+
+    def delete_field_byte(self, field_name: str) -> str:
+        field_byte = next((field_byte for field_byte in self.field_bytes if field_byte.field == field_name), None)
+        if not field_byte:
+            return str()
+        self.field_bytes.remove(field_byte)
+        self.save()
+        return field_byte.delete()
+
+
+Core.init()
 
 
 class Output(FirestoreDocument):
@@ -13,7 +77,7 @@ class Output(FirestoreDocument):
         super().__init__()
         self.regs: Dict[str, int] = dict()
         self.reg_pointers: Dict[str, Union[str, int]] = dict()
-        self.cores: List[Core] = list()
+        self.cores: List[Union[Core, str]] = list()
         self.dumps: List[str] = list()
         self.messages: List[str] = list()
         self.last_line: str = str()
@@ -38,6 +102,39 @@ class Output(FirestoreDocument):
     def add_all_reg_pointers(self, length) -> None:
         for reg in config.REG:
             self.reg_pointers[reg] = length
+
+    def create_core(self, macro_name: str, base_reg: str = None) -> Optional[Core]:
+        if macro_name not in macros:
+            return None
+        core_dict = dict()
+        core_dict['macro_name'] = macro_name
+        core_dict['base_reg'] = base_reg if base_reg and Register(base_reg).is_valid() and base_reg != 'R0' else str()
+        core: Core = Core.create_from_dict(core_dict)
+        self.cores.append(core)
+        self.save()
+        return core
+
+    def delete_core(self, macro_name: str) -> str:
+        core: Core = next((core for core in self.cores if core.macro_name == macro_name), None)
+        if not core:
+            return str()
+        self.cores.remove(core)
+        self.save()
+        return core.delete(cascade=True)
+
+    def create_regs(self, reg_list: List[str]) -> bool:
+        self.regs = dict()
+        try:
+            self.add_regs(reg_list)
+        except InvalidBaseRegError:
+            return False
+        self.save()
+        return True
+
+    def delete_regs(self) -> bool:
+        self.regs = dict()
+        self.save()
+        return True
 
 
 Output.init()
@@ -252,21 +349,6 @@ class TestData(FirestoreDocument):
 TestData.init('test_data')
 
 
-class Core(FirestoreDocument):
-
-    def __init__(self):
-        super().__init__()
-        self.macro_name: str = str()
-        self.base_reg: str = str()
-        self.field_bytes: List[FieldByte] = list()
-
-    def __repr__(self):
-        return self.macro_name
-
-
-Core.init()
-
-
 class Pnr(FirestoreDocument):
 
     def __init__(self):
@@ -352,37 +434,3 @@ class FileItem(FirestoreDocument):
 
 
 FileItem.init('file_items')
-
-
-class FieldByte(FirestoreDocument):
-
-    def __init__(self):
-        super().__init__()
-        self.field: str = str()
-        self.data: str = str()
-        self.length: int = 0
-
-    def __repr__(self):
-        return f"{self.field}:{self.hex}"
-
-    @property
-    def hex(self):
-        return b64decode(self.data).hex().upper()
-
-    @classmethod
-    def from_dict(cls, field_byte_array: Dict[str, bytearray]) -> List['FieldByte']:
-        field_bytes: List[cls] = list()
-        for field, byte_array in field_byte_array.items():
-            field_byte = cls()
-            field_byte.field = field
-            field_byte.data = b64encode(byte_array).decode()
-            field_bytes.append(field_byte)
-        return field_bytes
-
-    @classmethod
-    def to_dict(cls, field_bytes: List['FieldByte']) -> Dict[str, bytearray]:
-        return {field_byte.field.upper(): bytearray(b64decode(field_byte.data)) for field_byte in field_bytes
-                if field_byte.data}
-
-
-FieldByte.init('field_bytes')

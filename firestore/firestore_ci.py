@@ -114,6 +114,9 @@ class FirestoreDocument:
     def __repr__(self) -> str:
         return f"/{self.COLLECTION}/{self._doc_id}"
 
+    def __eq__(self, other) -> bool:
+        return self.id == other.id
+
     @property
     def id(self) -> str:
         return self._doc_id
