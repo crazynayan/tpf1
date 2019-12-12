@@ -48,15 +48,30 @@ class Core(FirestoreDocument):
         super().__init__()
         self.macro_name: str = str()
         self.base_reg: str = str()
-        self.field_bytes: List[Union[FieldByte, str]] = list()
+        self.field_bytes: List[FieldByte] = list()
 
     def __repr__(self):
         return self.macro_name
 
-    def create_field_byte(self, field_name: str) -> FieldByte:
-        field_byte: FieldByte = FieldByte.create_from_dict({'field': field_name})
-        self.field_bytes.append(field_byte)
-        self.save()
+    def create_field_byte(self, macro_name: str, field_dict: dict) -> Optional[FieldByte]:
+        if 'field' not in field_dict or not field_dict['field']:
+            return None
+        macros[macro_name].load()
+        if not macros[macro_name].check(field_dict['field']):
+            return None
+        field_dict['length'] = field_dict['length'] if 'length' in field_dict and field_dict['length'] \
+            else macros[macro_name].evaluate(f"L'{field_dict['field']}")
+        field_dict['data'] = field_dict['data'] if 'data' in field_dict else str()
+        field_byte = next((field_byte for field_byte in self.field_bytes if field_byte.field == field_dict['field']),
+                          None)
+        if not field_byte:
+            field_byte = FieldByte.create_from_dict(field_dict)
+            self.field_bytes.append(field_byte)
+            self.save()
+        else:
+            field_byte.length = field_dict['length']
+            field_byte.data = field_dict['data']
+            field_byte.save()
         return field_byte
 
     def delete_field_byte(self, field_name: str) -> str:
@@ -71,13 +86,44 @@ class Core(FirestoreDocument):
 Core.init()
 
 
+class Pnr(FirestoreDocument):
+
+    def __init__(self):
+        super().__init__()
+        self.locator: str = str()
+        self.key: str = str()
+        self.data: str = str()
+        self.field_bytes: List[FieldByte] = list()
+
+    def __repr__(self):
+        return f"{self.locator}:{self.key}:{self.data}:{len(self.field_bytes)}"
+
+    def create_field_byte(self, field_dict: dict) -> Optional[FieldByte]:
+        if 'field' not in field_dict or not field_dict['field']:
+            return None
+        field_dict['data'] = field_dict['data'] if 'data' in field_dict else str()
+        field_byte = next((field_byte for field_byte in self.field_bytes if field_byte.field == field_dict['field']),
+                          None)
+        if not field_byte:
+            field_byte = FieldByte.create_from_dict(field_dict)
+            self.field_bytes.append(field_byte)
+            self.save()
+        else:
+            field_byte.data = field_dict['data']
+            field_byte.save()
+        return field_byte
+
+
+Pnr.init('pnr')
+
+
 class Output(FirestoreDocument):
 
     def __init__(self):
         super().__init__()
         self.regs: Dict[str, int] = dict()
         self.reg_pointers: Dict[str, Union[str, int]] = dict()
-        self.cores: List[Union[Core, str]] = list()
+        self.cores: List[Core] = list()
         self.dumps: List[str] = list()
         self.messages: List[str] = list()
         self.last_line: str = str()
@@ -103,16 +149,21 @@ class Output(FirestoreDocument):
         for reg in config.REG:
             self.reg_pointers[reg] = length
 
-    def create_core(self, macro_name: str, base_reg: str = None) -> Optional[Core]:
+    def create_field_byte(self, macro_name, field_dict) -> Optional[FieldByte]:
         if macro_name not in macros:
             return None
-        core_dict = dict()
-        core_dict['macro_name'] = macro_name
-        core_dict['base_reg'] = base_reg if base_reg and Register(base_reg).is_valid() and base_reg != 'R0' else str()
-        core: Core = Core.create_from_dict(core_dict)
-        self.cores.append(core)
-        self.save()
-        return core
+        base_reg = field_dict['base_reg'] if 'base_reg' in field_dict and \
+                                             Register(field_dict['base_reg']).is_valid() and \
+                                             field_dict['base_reg'] != 'R0' else str()
+        core = next((core for core in self.cores if core.macro_name == macro_name), None)
+        if not core:
+            core: Core = Core.create_from_dict({'macro_name': macro_name, 'base_reg': base_reg})
+            self.cores.append(core)
+            self.save()
+        elif core.base_reg != base_reg:
+            core.base_reg = base_reg
+            core.save()
+        return core.create_field_byte(macro_name, field_dict)
 
     def delete_core(self, macro_name: str) -> str:
         core: Core = next((core for core in self.cores if core.macro_name == macro_name), None)
@@ -122,19 +173,20 @@ class Output(FirestoreDocument):
         self.save()
         return core.delete(cascade=True)
 
-    def create_regs(self, reg_list: List[str]) -> bool:
+    def create_regs(self, reg_dict: dict) -> dict:
+        if 'regs' not in reg_dict:
+            return dict()
         self.regs = dict()
         try:
-            self.add_regs(reg_list)
+            self.add_regs(reg_dict['regs'])
         except InvalidBaseRegError:
-            return False
+            return dict()
         self.save()
-        return True
+        return self.regs
 
-    def delete_regs(self) -> bool:
+    def delete_regs(self) -> None:
         self.regs = dict()
         self.save()
-        return True
 
 
 Output.init()
@@ -171,11 +223,6 @@ class TestData(FirestoreDocument):
     @classmethod
     def get_all(cls) -> List['TestData']:
         return cls.objects.order_by('name').get()
-
-    @classmethod
-    def get_test_data_dict(cls, test_data_id: str) -> dict:
-        test_data: cls = cls.get_by_id(test_data_id, cascade=True)
-        return test_data.cascade_to_dict() if test_data else dict()
 
     @classmethod
     def get_test_data_by_name(cls, name: str) -> Optional['TestData']:
@@ -345,24 +392,69 @@ class TestData(FirestoreDocument):
             self.fixed_files.append(fixed_file)
         return fixed_file
 
+    def create_field_byte(self, macro_name, field_dict) -> Optional[FieldByte]:
+        if macro_name not in macros:
+            return None
+        core = next((core for core in self.cores if core.macro_name == macro_name), None)
+        if not core:
+            core: Core = Core.create_from_dict({'macro_name': macro_name})
+            self.cores.append(core)
+            self.save()
+        return core.create_field_byte(macro_name, field_dict)
+
+    def delete_core(self, macro_name: str) -> str:
+        core: Core = next((core for core in self.cores if core.macro_name == macro_name), None)
+        if not core:
+            return str()
+        self.cores.remove(core)
+        self.save()
+        return core.delete(cascade=True)
+
+    def add_reg(self, reg_dict: dict) -> dict:
+        if 'reg' not in reg_dict or not Register(reg_dict['reg']).is_valid():
+            return dict()
+        if 'value' not in reg_dict or not isinstance(reg_dict['value'], int):
+            return dict()
+        self.regs[reg_dict['reg']] = reg_dict['value']
+        self.save()
+        return self.regs
+
+    def delete_reg(self, reg: str) -> dict:
+        if not Register(reg).is_valid():
+            return dict()
+        self.regs.pop(reg, None)
+        self.save()
+        return self.regs
+
+    def create_pnr_element(self, pnr_dict: dict) -> Optional[Pnr]:
+        if 'key' not in pnr_dict:
+            return None
+        pnr_dict['locator'] = pnr_dict['locator'] if 'locator' in pnr_dict else str()
+        if pnr_dict['locator'] and len(pnr_dict['locator']) != 6:
+            return None
+        data_list = pnr_dict['data'] if 'data' in pnr_dict else str()
+        pnr_dict['field_bytes'] = list()
+        pnr = None
+        for data in data_list.split(','):
+            pnr_dict['data'] = data
+            pnr = next((pnr for pnr in self.pnr if pnr.key == pnr_dict['key'] and pnr.locator == pnr_dict['locator']
+                        and pnr.data == data and pnr.field_bytes == list()), None)
+            if not pnr:
+                pnr = Pnr.create_from_dict(pnr_dict)
+                self.pnr.append(pnr)
+                self.save()
+        return pnr
+
+    def delete_pnr_element(self, pnr_id: str) -> str:
+        pnr: Pnr = next((pnr for pnr in self.pnr if pnr.id == pnr_id), None)
+        if not pnr:
+            return str()
+        self.pnr.remove(pnr)
+        self.save()
+        return pnr.delete(cascade=True)
+
 
 TestData.init('test_data')
-
-
-class Pnr(FirestoreDocument):
-
-    def __init__(self):
-        super().__init__()
-        self.locator: str = str()
-        self.key: str = str()
-        self.data: str = str()
-        self.field_bytes: List[FieldByte] = list()
-
-    def __repr__(self):
-        return f"{self.locator}:{self.key}:{self.data}:{len(self.field_bytes)}"
-
-
-Pnr.init('pnr')
 
 
 class Tpfdf(FirestoreDocument):

@@ -1,457 +1,346 @@
 @startuml
 
-class Register {
-    +reg: str
-    +is_valid() -> bool
+title Assembly Design
+
+package mac0_generic   {
+    class LabelReference {
+        +label: str
+        +dsp: int
+        +length: int
+        +name: str
+        -branch: int ~ 0, 1
+        +is_branch: property -> bool
+        +is_literal: property -> bool
+        +set_branch()
+    }
+    abstract class MacroGeneric {
+        +name: str
+        -symbol_table: Dict[label, LabelReference]
+        -index: Dict[name_dsp, List[Tuple[label, length]]]
+        -command: Dict[command, callable]
+        -location_counter: int
+        -max_counter: int
+        +all_labels: property -> Dict[label, LabelReference]
+        +indexed_data: property -> index
+        +check(label: str) -> bool
+        +lookup(label: str) -> LabelReference
+        +evaluate(expression: str) -> int
+        +get_value(expression: str) -> int
+        +add_label(label: str, dsp: int, length: int, name: str) -> LabelReference
+    }
+    note left
+    # lookup() is for a single label
+    # evaluate() is for
+    ## digits
+    ## dsp of label
+    ## length of label(L'XY)
+    # get_value() is for
+    ## all that evaluate() returns
+    ## arithmetic(+-*)
+    ## DataTypes(X'AB')
+    end note
+    MacroGeneric::symbol_table *- LabelReference
 }
 
-
-class Line {
-    +index: int
-    +label: str
-    +command: str
-    +operand: str
-    -continuation: bool
-    +is_fall_down: property -> bool
-    +is_set_cc: property -> bool
-    +is_first_pass: property -> bool
-    +is_assembler_directive: property -> bool
-    +is_fall_down: property -> bool
-    +stop_checking_for_conditions: property -> bool
-    +length: property -> int
-    +is_sw00sr: property -> bool
-    +from_line(file_line: str, continuing: bool) -> Line
-    +from_file(file_lines: List[file_line: str]) -> List[Line]
-    +yield_lines(List[Line]) -> List[Line]
-    +remove_suffix() -> Line
-    +split_operands() -> List[str] 
+package mac1_implementation {
+    class Dsdc {
+        +duplication_factor: int
+        +length: int
+        +data_type: str
+        +data: bytearray
+        +start: int
+    }
+    abstract class DataMacroImplementation {
+        -dsdc(operand: str) -> Dsdc
+        +ds(line: Line)
+        +equ(line: Line)
+        +org(line: Line)
+        +dsect(line: Line)
+    }
+    DataMacroImplementation --|>  mac0_generic
+    DataMacroImplementation::Dsdc *. Dsdc
 }
 
-class LabelReference {
-    +label: str
-    +dsp: int
-    +length: int
-    +name: str
-    -branch: int ~ 0, 1, 2
-    +is_branch: property -> bool
-    +is_instruction_branch: property -> bool
-    +is_literal: property -> bool
-    +set_branch()
-    +set_is_instruction_branch()
+package mac2_data_macro {
+    class DataMacro {
+        +file_name:str
+        +default_macros: Dict[label, LabelReference]
+        -second_pass(command: str, second_list: list)
+        +loaded: property -> bool
+        +load()
+    }
+    class DataMacroCollection <<Singleton>> {
+        +macros: Dict[name, DataMacro]
+    }
+    DataMacro ---|>  mac1_implementation
+    DataMacroCollection::DataMacro *- DataMacro
 }
 
-class Dsdc {
-    +duplication_factor: int
-    +length: int
-    +data_type: str
-    +data: bytearray
-    +start: int
+package seg0_generic {
+    class Data {
+        +constant: bytearray
+        +literal: bytearray
+        +next_constant: property -> int
+        +next_literal: property -> int
+        +set_constant(byte_array, dsp)
+    }
+    abstract class SegmentGeneric {
+        +seg_name: str
+        -counters: Tuple[location_counter, max_counter]
+        +dsect: Tuple[location_counter: int, dsect: str]
+        -using: Dict[dsect, Register]
+        +using_stack: List[using]
+        +data_macro: Set[macro_name]
+        +data: Data
+        +root_label(name: str) -> label
+        +load_macro(macro_name: str, base: Register, suffix: str)
+        +set_using(dsect: str, base: Register)
+        +get_macro_name(base: Register)
+        +get_base(macro_name: str)
+        +get_field_name(base: Register, dsp: int, length: int)
+        +is_branch(label: str) -> bool
+    }
+    SegmentGeneric --|> mac1_implementation
+    SegmentGeneric::Data *- Data
 }
 
-abstract class MacroGeneric {
-    +name: str
-    -symbol_table: Dict[label, LabelReference]
-    -directives: Dict[command, callable]
-    -location_counter: int
-    -max_location_counter: int
-    +all_labels: property -> Dict[label, LabelReference]
-    +check(label: str) -> bool
-    +lookup(label: str) -> LabelReference
-    +evaluate(expression: str) -> int
-    +get_value(expression: str) -> int
-    -dsdc(operand: str) -> Dsdc
-}
-note left
-# lookup() is for a single label
-# evaluate() is for
-## digits
-## dsp of label
-## length of label(L'XY)
-# get_value() is for
-## all that evaluate() returns
-## arithmetic(+-*)
-## DataTypes(X'AB')
-end note
-
-MacroGeneric::symbol_table *-- LabelReference
-MacroGeneric::dsdc *.. Dsdc
-
-abstract class DataMacroImplementation {
-    +ds(line: Line)
-    +equ(line: Line)
-    +org(line: Line)
-    +dsect(line: Line)
-}
-DataMacroImplementation --|>  MacroGeneric
-DataMacroImplementation::Line *... Line
-
-class DataMacro {
-    +file_name:str
-    +default_macros: Dict[label, LabelReference]
-    -second_pass(command: str, second_list: list)
-    +load()
-}
-DataMacro ---|>  DataMacroImplementation
-
-class Data {
-    +constant: bytearray
-    +literal: bytearray
-    +next_constant: property -> int
-    +next_literal: property -> int
+package seg1_directive {
+    abstract class DirectiveImplementation {
+        +ds(line: Line)
+        +equ(line: Line)
+        +org(line: Line)
+        +dsect(line: Line)
+        +dc(line: Line)
+        +csect(line: Line)
+        +pgmid(line: Line)
+        +push(line: Line)
+        +pop(line: Line)
+        +using(line: Line)
+        +no_operation(line: Line)
+    }
+    DirectiveImplementation --|> seg0_generic
 }
 
-
-abstract class SegmentGeneric {
-    +dsect: Tuple[location_counter: int, dsect: str]
-    -using: Dict[dsect, Register]
-    +using_stack: List[using]
-    +data_macro: Set[macro_name]
-    +data: Data
-    +load_macro(macro_name: str, base: Register, suffix: str)
-    +set_using(dsect: str, base: Register)
-    +get_macro_name(base: Register)
-    +get_base(macro_name: str)
-    +get_field_name(base: Register, dsp: int, length: int)
-    +is_branch(label: str) -> bool
-    +is_instruction_branch(label: str) -> bool
+package seg2_ins_operand {
+    class FieldBaseDsp {
+        +name: str
+        +base: Register
+        +dsp: int
+    }
+    class FieldIndex {
+        +index: Register
+    }
+    class FieldLen {
+        +length: int
+    }
+    class Bit {
+        +name: str
+        +value: int
+        +on: bool
+    }
+    class Bits {
+        +bit0: Bit
+        +bit1: Bit
+        +bit2: Bit
+        +bit3: Bit
+        +bit4: Bit
+        +bit5: Bit
+        +bit6: Bit
+        +bit7: Bit
+        +value: property -> int
+        +set_value(value: int)
+        +set_name(name: str, value: int)
+        +bit_by_name(name: str) -> Bit
+    }
+    abstract class InstructionOperand {
+        -get_field_by_name(field_name: str) -> FieldBaseDsp
+        -get_field_by_base_dsp(base: str, dsp: int, length) -> FieldBaseDsp
+        -literal(operand: str) -> LabelReference
+        +get_bits(operand: str) -> Bits
+        +field_base_dsp(operand: str, length: int = 1) -> FieldBaseDsp
+        +field_index(operand: str, length: int) -> FieldIndex
+        +field_len(operand: str, max_len: int) -> FieldLen
+        +get_branch(operand: str) -> FieldIndex
+    }
+    FieldIndex -|> FieldBaseDsp
+    FieldLen --|> FieldBaseDsp
+    Bits::Bit *- Bit
+    InstructionOperand --|> DirectiveImplementation
+    InstructionOperand::FieldBaseDsp *. FieldBaseDsp
+    InstructionOperand::FieldIndex *. FieldIndex
+    InstructionOperand::FieldLen *. FieldLen
+    InstructionOperand::Bits *.. Bits
 }
 
-SegmentGeneric --|> DataMacroImplementation
-SegmentGeneric::Register *... Register
-SegmentGeneric::Data *- Data
+package seg3_ins_type {
+    class InstructionGeneric {
+        +index: int
+        +label: str
+        +command: str
+        +fall_down: Optional[str]
+        +next_labels: property -> Set[label]
+        +goes: property -> label: str
+        +on: property -> condition: str
+        +is_fall_down: property -> bool
+    }
+    class FieldBits {
+        +field: FieldBaseDsp
+        +bits: Bits
+    }
+    class FieldLenField {
+        +field_len: FieldLen
+        +field: FieldBaseDsp
+    }
+    class FieldLenFieldLen {
+        +field_len1: FieldLen
+        +field_len2: FieldLen
+    }
+    class FieldLenFieldData {
+        +field_len: FieldLen
+        +field: FieldBaseDsp
+        +data: int
+    }
+    class FieldData {
+        +field: FieldBaseDsp
+        +data: int
+    }
+    class FieldSingle {
+        +field: FieldBaseDsp
+    }
+    class RegisterRegister {
+        +reg1: Register
+        +reg2: Register
+    }
+    class RegisterFieldIndex {
+        +reg: Register
+        +field: FieldIndex
+    }
+    class RegisterData {
+        +reg: Register
+        +data: int
+    }
+    class RegisterRegisterField {
+        +reg1: Register
+        +reg2: Register
+        +field: FieldBaseDsp
+    }
+    class RegisterDataField {
+        +reg: Register
+        +data: int
+        +field: FieldBaseDsp
+    }
+    abstract class BranchGeneric {
+        branch: FieldIndex
+        +next_labels: property -> Set[label]
+        +goes: property -> label: str
+        +on: property -> condition: str
+    }
+    class BranchCondition {
+        mask: int
+    }
+    class BranchConditionRegister {
+        reg: Register
+    }
+    class RegisterBranch {
+        reg:Register
+    }
+    class RegisterRegisterBranch {
+        reg1:Register
+        reg2:Register
+    }
+    FieldBits --|> InstructionGeneric
+    FieldLenField --|> InstructionGeneric
+    FieldLenFieldLen ---|> InstructionGeneric
+    FieldLenFieldData ---|> InstructionGeneric
+    FieldData --|> InstructionGeneric
+    FieldSingle ---|> InstructionGeneric
+    RegisterRegister --|> InstructionGeneric
+    RegisterData ---|> InstructionGeneric
+    RegisterFieldIndex --|> InstructionGeneric
+    RegisterRegisterField ---|> InstructionGeneric
+    RegisterDataField ---|> InstructionGeneric
+    BranchGeneric ---|> InstructionGeneric
+    BranchCondition --|> BranchGeneric
+    BranchConditionRegister -|> BranchCondition
+    RegisterBranch --|> BranchGeneric
+    RegisterRegisterBranch --|> BranchGeneric
+}
+seg3_ins_type ..* seg2_ins_operand
 
-abstract class DirectiveImplementation {
-    +ds(line: Line)
-    +equ(line: Line)
-    +org(line: Line)
-    +dsect(line: Line)
-    +dc(line: Line)
-    +csect(line: Line)
-    +pgmid(line: Line)
-    +push(line: Line)
-    +pop(line: Line)
-    +using(line: Line)
-    +no_operation(line: Line)
+package seg4_ins_implementation {
+    abstract class InstructionImplementation {
+        +nodes: Dict[label, InstructionGeneric]
+        +instruction_generic(line: Line) -> InstructionGeneric
+        +eq(line: Line) -> InstructionGeneric
+        +ds(line: Line) -> InstructionGeneric
+        +field_bits(line: Line) -> FieldBits
+        +field_len_field(line: Line) -> FieldLenField
+        +field_len_field_len(line: Line) -> FieldLenFieldLen
+        +field_len_field_data(line: Line) -> FieldLenFieldData
+        +field_data(line: Line) -> FieldData
+        +field_single(line: Line) -> FieldSingle
+        +reg_reg(line: Line) -> RegisterRegister
+        +reg_field_index(line: Line) -> RegisterFieldIndex
+        +reg_data(line: Line) -> RegisterData
+        +reg_reg_field(line: Line) -> RegisterRegisterField
+        +reg_data_field(line: Line) -> RegisterDataField
+        -get_mask(line: Line) -> Tuple[mask: int, operand: str, command: str]
+        +branch_condition(line: Line) -> BranchCondition
+        +branch_mnemonic(line: Line) -> BranchCondition
+        +branch_condition_reg(line: Line) -> BranchConditionRegister
+        +branch_mnemonic_reg(line: Line) -> BranchConditionRegister
+        +reg_branch(line: Line) -> RegisterBranch
+        +reg_reg_branch(line: Line) -> RegisterRegisterBranch
+        +reg_label(line: Line) -> RegisterFieldIndex
+    }
+    InstructionImplementation --|> InstructionOperand
+    InstructionImplementation ..* seg3_ins_type
 }
 
-DirectiveImplementation --|> SegmentGeneric
-DirectiveImplementation::Line *... Line
-
-abstract class InstructionOperand {
-    -get_field_by_name(field_name: str) -> FieldBaseDsp
-    -get_field_by_base_dsp(base: str, dsp: int, length) -> FieldBaseDsp
-    -literal(operand: str) -> LabelReference
-    +field_base_dsp(operand: str, length: int = 1) -> FieldBaseDsp
-    +get_bits(operand: str) -> Bits
-    +field_index(operand: str, length: int) -> FieldIndex
-    +field_len(operand: str, max_len: int) -> FieldLen
-    +get_branch(operand: str) -> FieldIndex
+package seg5_exec_macro {
+    class KeyValue {
+        -operands: List[Tuple[str, Union[Optional[str], List[Tuple[str, Optional[str]]]]]]
+        +branches: List[str]
+        +keys: property -> List[str]
+        +sub_key_value: property -> List[Tuple[str, List]]
+        +next_labels: property -> Set[label]
+        +goes: property -> label: str
+        +get_value(key: str) -> value: Union[Optional[str], List]
+        +get_sub_value(key: str, sub_key: str) -> sub_value: str
+        +set_sub_value(value: FieldBaseDsp, original_value: str, key: str, sub_key: str)
+    }
+    class SegmentCall
+    abstract class RealtimeMacroImplementation {
+        +key_value(line: Line) -> KeyValue
+        +seg_call(line: Line) -> SegmentCall
+        +globz(line: Line) -> RegisterData
+        +dbred(line: Line) -> KeyValue
+        +load_macro_from_line(line: Line)
+     }
+    class UserDefinedMacroImplementation
+    SegmentCall -|> KeyValue
+    KeyValue -|> InstructionGeneric
+    RealtimeMacroImplementation --|> InstructionImplementation
+    RealtimeMacroImplementation ..* KeyValue
+    UserDefinedMacroImplementation --|> RealtimeMacroImplementation
 }
-
-InstructionOperand ---|> DirectiveImplementation
-InstructionOperand::FieldBaseDsp *... FieldBaseDsp
-InstructionOperand::FieldIndex *... FieldIndex
-InstructionOperand::FieldLen *... FieldLen
-InstructionOperand::Bits *... Bits
-InstructionOperand::LabelReference *... LabelReference
-
-class FieldBaseDsp {
-    +name: str
-    +base: Register
-    +dsp: int
+package seg6_segment {
+    class Segment {
+        +file_name: str
+        +nodes: Dict[label, InstructionGeneric]
+        +root_line: property -> Line
+        +all_commands: property -> List[command]
+        +assemble()
+        -build_symbol_table()
+        -assemble_instructions()
+        -update_index(List[Line]) -> List[Line]
+        -process_assembler_directives() -> bool
+        +get_constant_bytes(label: str, length: int) -> bytearray
+    }
+    class SegmentCollection <<Singleton>> {
+        +segments: Dict[name, Segment]
+    }
+    Segment --|> UserDefinedMacroImplementation
+    SegmentCollection *. Segment
 }
-
-FieldBaseDsp::Register *-- Register
-
-class FieldIndex {
-    +index: Register
-}
-
-FieldIndex --|> FieldBaseDsp
-FieldIndex::Register *-- Register
-
-
-class FieldLen {
-    +length: int
-}
-
-FieldLen --|> FieldBaseDsp
-
-class Bit {
-    +name: str
-    +value: int
-    +on: bool
-}
-
-class Bits {
-    +bit0: Bit
-    +bit1: Bit
-    +bit2: Bit
-    +bit3: Bit
-    +bit4: Bit
-    +bit5: Bit
-    +bit6: Bit
-    +bit7: Bit
-    +value: property -> int
-}
-
-Bits::Bit *- Bit
-
-
-abstract class InstructionImplementation {
-    +field_bits(line: Line) -> FieldBits
-    +field_len_field(line: Line) -> FieldLenField
-    +field_len_field_len(line: Line) -> FieldLenFieldLen
-    +field_len_field_data(line: Line) -> FieldLenFieldData
-    +field_data(line: Line) -> FieldData
-    +field_single(line: Line) -> FieldSingle
-    +reg_reg(line: Line) -> RegisterRegister
-    +reg_field_index(line: Line) -> RegisterFieldIndex
-    +reg_data(line: Line) -> RegisterData
-    +reg_reg_field(line: Line) -> RegisterRegisterField
-    +reg_data_field(line: Line) -> RegisterDataField
-    -get_mask(line: Line) -> Tuple[mask: int, operand: str, command: str]
-    +branch_condition(line: Line) -> BranchCondition
-    +branch_condition_reg(line: Line) -> BranchConditionRegister
-    +reg_branch(line: Line) -> RegisterBranch
-    +reg_reg_branch(line: Line) -> RegisterRegisterBranch
-}
-
-InstructionImplementation::FieldBits *... FieldBits
-InstructionImplementation::FieldLenField *... FieldLenField
-InstructionImplementation::FieldLenFieldData *... FieldLenFieldData
-InstructionImplementation::FieldLenFieldLen *... FieldLenFieldLen
-InstructionImplementation::FieldData *... FieldData
-InstructionImplementation::FieldSingle *... FieldSingle
-InstructionImplementation::RegisterRegister *... RegisterRegister
-InstructionImplementation::RegisterFieldIndex *... RegisterFieldIndex
-InstructionImplementation::RegisterData *... RegisterData
-InstructionImplementation::RegisterRegisterField *... RegisterRegisterField
-InstructionImplementation::RegisterDataField *... RegisterDataField
-InstructionImplementation::BranchCondition *... BranchCondition
-InstructionImplementation::BranchConditionRegister *... BranchConditionRegister
-InstructionImplementation::RegisterBranch *... RegisterBranch
-InstructionImplementation::RegisterRegisterBranch *... RegisterRegisterBranch
-InstructionImplementation::Line *... Line
-InstructionImplementation ---|> InstructionOperand
-
-class InstructionGeneric {
-    +index: int
-    +label: str
-    +command: str
-    +fall_down: Optional[str]
-    +conditions: List[InstructionGeneric]
-    +next_labels: property -> Set[label]
-    +goes: property -> label: str
-    +on: property -> condition: str
-    +is_fall_down: property -> bool
-    +is_check_cc: property -> bool
-    +get_attribute(cmd_attribute) -> attribute_value: str
-}
-
-class FieldBits {
-    +field: FieldBaseDsp
-    +bits: Bits
-}
-
-FieldBits::field *-- FieldBaseDsp
-FieldBits::Bits *-- Bits
-FieldBits --|> InstructionGeneric
-
-class FieldLenField {
-    +field_len: FieldLen
-    +field: FieldBaseDsp
-}
-
-FieldLenField::FieldBaseDsp *-- FieldBaseDsp
-FieldLenField::FieldLen *-- FieldLen
-FieldLenField --|> InstructionGeneric
-
-class FieldLenFieldLen {
-    +field_len1: FieldLen
-    +field_len2: FieldLen
-}
-
-FieldLenFieldLen::FieldLen *-- FieldLen
-FieldLenFieldLen --|> InstructionGeneric
-
-class FieldLenFieldData {
-    +field_len: FieldLen
-    +field: FieldBaseDsp
-    +data: int
-}
-
-FieldLenFieldData::FieldBaseDsp *-- FieldBaseDsp
-FieldLenFieldData::FieldLen *-- FieldLen
-FieldLenFieldData --|> InstructionGeneric
-
-class FieldData {
-    +field: FieldBaseDsp
-    +data: int
-}
-
-FieldData::FieldBaseDsp *-- FieldBaseDsp
-FieldData --|> InstructionGeneric
-
-class FieldSingle {
-    +field: FieldBaseDsp
-}
-
-FieldSingle::FieldBaseDsp *-- FieldBaseDsp
-FieldSingle --|> InstructionGeneric
-
-class RegisterRegister {
-    +reg1: Register
-    +reg2: Register
-}
-
-RegisterRegister::Register *-- Register
-RegisterRegister --|> InstructionGeneric
-
-class RegisterFieldIndex {
-    +reg: Register
-    +field: FieldIndex
-}
-
-RegisterFieldIndex::Register *-- Register
-RegisterFieldIndex::FieldIndex *-- FieldIndex
-RegisterFieldIndex --|> InstructionGeneric
-
-class RegisterData {
-    +reg: Register
-    +data: int
-}
-
-RegisterData::Register *-- Register
-RegisterData --|> InstructionGeneric
-
-class RegisterRegisterField {
-    +reg1: Register
-    +reg2: Register
-    +field: FieldBaseDsp
-}
-
-RegisterRegisterField::Register *-- Register
-RegisterRegisterField::FieldBaseDsp *-- FieldBaseDsp
-RegisterRegisterField --|> InstructionGeneric
-
-class RegisterDataField {
-    +reg: Register
-    +data: int
-    +field: FieldBaseDsp
-}
-
-RegisterDataField::Register *-- Register
-RegisterDataField::FieldBaseDsp *-- FieldBaseDsp
-RegisterDataField --|> InstructionGeneric
-
-abstract class BranchGeneric {
-    branch: FieldIndex
-    +next_labels: property -> Set[label]
-    +goes: property -> label: str
-    +on: property -> condition: str
-}
-
-BranchGeneric::FieldIndex *-- FieldIndex
-BranchGeneric -|> InstructionGeneric
-
-class BranchCondition {
-    mask: int
-}
-
-BranchCondition -|> BranchGeneric
-
-class BranchConditionRegister {
-    reg: Register
-}
-
-BranchConditionRegister -|> BranchCondition
-
-class RegisterBranch {
-    reg:Register
-}
-
-RegisterBranch::Register *---- Register
-RegisterBranch -|> BranchGeneric
-
-class RegisterRegisterBranch {
-    reg1:Register
-    reg2:Register
-}
-
-RegisterRegisterBranch::Register *--- Register
-RegisterRegisterBranch -|> BranchGeneric
-
-
-abstract class RealtimeMacroImplementation {
-    +seg_call(line: Line) -> SegmentCall
-    +key_value(line: Line) -> KeyValue
-    +dbred(line: Line) -> KeyValue
-    +globz(line: Line) -> RegisterData
-    +data_macro(line: Line)
-}
-
-RealtimeMacroImplementation --|> InstructionImplementation
-RealtimeMacroImplementation::SegmentCall *... SegmentCall
-RealtimeMacroImplementation::KeyValue *... KeyValue
-RealtimeMacroImplementation::Line *... Line
-
-abstract class UserDefinedMacroImplementation
-
-UserDefinedMacroImplementation --|> RealtimeMacroImplementation
-
-class KeyValue {
-    -operands: List[Tuple[str, Union[Optional[str], List[Tuple[str, Optional[str]]]]]]
-    +branches: List[str]
-    +keys: property -> List[str]
-    +sub_key_value: property -> List[Tuple[str, List]]
-    +next_labels: property -> Set[label]
-    +goes: property -> label: str
-    +get_value(key: str) -> value: Union[Optional[str], List]
-    +is_key(key: str) -> bool
-    +get_sub_value(key: str, sub_key: str) -> sub_value: str
-}
-
-KeyValue -|> InstructionGeneric
-
-class SegmentCall {
-    seg_name: str
-}
-
-SegmentCall --|> KeyValue
-
-class LabelSave {
-    -labels: List[str]
-    +dumps(label: str) -> saved_value:int
-    +loads(saved_value: int) -> label:str
-}
-
-class Segment {
-    +file_name: str
-    +nodes: Dict[label, InstructionGeneric]
-    +bas: LabelSave
-    +root_label: property -> str
-    +root_line: property -> Line
-    +assemble()
-    -build_symbol_table()
-    -assemble_instructions()
-    -update_index()
-    -process_assembler_directives()
-    +get_constant_bytes(label: str, length: int) -> bytearray
-}
-
-Segment -|> UserDefinedMacroImplementation
-Segment::LabelSave *-- LabelSave
-Segment::InstructionGeneric *---InstructionGeneric
-
-class DataMacroCollection <<Singleton>> {
-    +macros: Dict[name, DataMacro]
-}
-
-class SegmentCollection <<Singleton>> {
-    +segments: Dict[name, Segment]
-}
-
-DataMacroCollection::DataMacro *-- DataMacro
-SegmentCollection::Segment *-- Segment
 @enduml

@@ -126,6 +126,7 @@ class FirestoreDocument:
 
     def doc_to_dict(self) -> dict:
         doc_dict = deepcopy(self.__dict__)
+        doc_dict['id'] = doc_dict['_doc_id']
         del doc_dict['_doc_id']
         return doc_dict
 

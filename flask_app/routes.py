@@ -1,3 +1,4 @@
+from functools import wraps
 from typing import Dict, List
 from urllib.parse import unquote
 
@@ -7,10 +8,22 @@ from assembly.mac2_data_macro import macros
 from assembly.seg6_segment import segments
 from execution.ex5_execute import Execute
 from firestore.auth import User
-from firestore.test_data import TestData
+from firestore.test_data import TestData, Core
 from flask_app import tpf1_app
 from flask_app.auth import token_auth
 from flask_app.errors import error_response
+
+
+def test_data_required(func):
+    @wraps(func)
+    def test_data_wrapper(test_data_id, *args, **kwargs):
+        test_data: TestData = TestData.get_test_data(test_data_id)
+        if not test_data:
+            return error_response(404, 'Test data id not found')
+        kwargs[test_data_id] = test_data
+        return func(test_data_id, *args, **kwargs)
+
+    return test_data_wrapper
 
 
 @tpf1_app.route('/users/<string:doc_id>')
@@ -37,9 +50,7 @@ def create_test_data() -> Response:
     if test_data['seg_name'] not in segments:
         return error_response(400, 'Segment is not present')
     test_data_id = TestData.create_test_data(test_data)
-    response_dict = dict()
-    response_dict['test_data_id'] = test_data_id
-    return jsonify(response_dict)
+    return jsonify({'test_data_id': test_data_id})
 
 
 @tpf1_app.route('/test_data')
@@ -58,10 +69,9 @@ def get_test_data_header() -> Response:
 
 @tpf1_app.route('/test_data/<string:test_data_id>/run')
 @token_auth.login_required
-def run_test_data(test_data_id: str) -> Response:
-    test_data: TestData = TestData.get_test_data(test_data_id)
-    if not test_data:
-        return error_response(404, 'Test data id not found')
+@test_data_required
+def run_test_data(test_data_id: str, **kwargs) -> Response:
+    test_data: TestData = kwargs[test_data_id]
     if test_data.seg_name not in segments:
         return error_response(400, 'Segment not present - Test Data might be corrupted')
     tpf_server = Execute()
@@ -71,11 +81,10 @@ def run_test_data(test_data_id: str) -> Response:
 
 @tpf1_app.route('/test_data/<string:test_data_id>')
 @token_auth.login_required
-def get_test_data(test_data_id: str) -> Response:
-    test_data: dict = TestData.get_test_data_dict(test_data_id)
-    if not test_data:
-        return error_response(404, 'Test data id not found')
-    return jsonify(test_data)
+@test_data_required
+def get_test_data(test_data_id: str, **kwargs) -> Response:
+    test_data: TestData = kwargs[test_data_id]
+    return jsonify(test_data.cascade_to_dict())
 
 
 @tpf1_app.route('/test_data/<string:test_data_id>', methods=['DELETE'])
@@ -84,95 +93,151 @@ def delete_test_data(test_data_id: str) -> Response:
     test_data_id: str = TestData.delete_test_data(test_data_id)
     if not test_data_id:
         return error_response(404, 'Test data id not found')
-    response_dict = dict()
-    response_dict['test_data_id'] = test_data_id
-    return jsonify(response_dict)
-
-
-@tpf1_app.route('/test_data/<string:test_data_id>/output/cores', methods=['POST'])
-@token_auth.login_required
-def add_output_core(test_data_id: str) -> Response:
-    test_data: TestData = TestData.get_test_data(test_data_id)
-    if not test_data:
-        return error_response(404, 'Test data id not found')
-    core_dict = request.get_json()
-    if 'macro_name' not in core_dict or not core_dict['macro_name']:
-        return error_response(400, 'Attribute macro_name not present or empty')
-    base_reg = core_dict['base_reg'] if 'base_reg' in core_dict else str()
-    core = test_data.output.create_core(core_dict['macro_name'], base_reg)
-    if not core:
-        return error_response(404, 'Macro does not exists in the tool')
-    return jsonify({'core_id': core.id})
-
-
-@tpf1_app.route('/test_data/<string:test_data_id>/output/cores/<string:macro_name>/fields', methods=['POST'])
-@token_auth.login_required
-def add_output_field(test_data_id: str, macro_name: str) -> Response:
-    field_byte_dict: dict = request.get_json()
-    if 'field' not in field_byte_dict or not field_byte_dict['field']:
-        return error_response(400, 'Attribute field not present or empty')
-    test_data: TestData = TestData.get_test_data(test_data_id)
-    if not test_data:
-        return error_response(404, 'Test data id not found')
-    core = next((core for core in test_data.output.cores if core.macro_name == macro_name), None)
-    if not core:
-        return error_response(400, 'Macro does not exist in test data')
-    field_byte = next((field_byte for field_byte in core.field_bytes if field_byte.field == field_byte_dict['field']),
-                      None)
-    if not field_byte:
-        field_byte = core.create_field_byte(field_byte_dict['field'])
-    if macro_name not in macros:
-        return error_response(404, 'Macro does not exists in the tool')
-    macros[macro_name].load()
-    if not macros[macro_name].check(field_byte_dict['field']):
-        return error_response(400, 'Field name not present in macro')
-    field_byte.length = field_byte_dict['length'] if 'length' in field_byte_dict and field_byte_dict['length'] \
-        else macros[macro_name].evaluate(f"L'{field_byte_dict['field']}")
-    field_byte.save()
-    return jsonify({'field_byte_id': field_byte.id})
-
-
-@tpf1_app.route('/test_data/<string:test_data_id>/output/cores/<string:macro_name>/fields/<string:field_name>',
-                methods=['DELETE'])
-@token_auth.login_required
-def delete_output_field(test_data_id: str, macro_name: str, field_name: str) -> Response:
-    field_name = unquote(field_name)
-    test_data: TestData = TestData.get_test_data(test_data_id)
-    if not test_data:
-        return error_response(404, 'Test data id not found')
-    core = next((core for core in test_data.output.cores if core.macro_name == macro_name), None)
-    if not core:
-        return error_response(404, 'Core not found with this macro name')
-    field_byte_id = core.delete_field_byte(field_name)
-    if not field_byte_id:
-        return error_response(404, 'Field not found with this field name')
-    if not core.field_bytes:
-        test_data.output.delete_core(macro_name)
-    return jsonify({'field_byte_id': field_byte_id})
+    return jsonify({'test_data_id': test_data_id})
 
 
 @tpf1_app.route('/test_data/<string:test_data_id>/output/regs', methods=['POST'])
 @token_auth.login_required
-def add_output_regs(test_data_id: str) -> Response:
-    test_data: TestData = TestData.get_test_data(test_data_id)
-    if not test_data:
-        return error_response(404, 'Test data id not found')
+@test_data_required
+def add_output_regs(test_data_id: str, **kwargs) -> Response:
+    test_data: TestData = kwargs[test_data_id]
     reg_dict = request.get_json()
-    if 'regs' not in reg_dict:
-        return error_response(400, 'Attribute regs not present')
-    if not test_data.output.create_regs(reg_dict['regs']):
+    if not test_data.output.create_regs(reg_dict):
         return error_response(400, 'Invalid format of Registers')
     return jsonify({'test_data_id': test_data_id})
 
 
 @tpf1_app.route('/test_data/<string:test_data_id>/output/regs', methods=['DELETE'])
 @token_auth.login_required
-def delete_output_regs(test_data_id: str) -> Response:
-    test_data: TestData = TestData.get_test_data(test_data_id)
-    if not test_data:
-        return error_response(404, 'Test data id not found')
+@test_data_required
+def delete_output_regs(test_data_id: str, **kwargs) -> Response:
+    test_data: TestData = kwargs[test_data_id]
     test_data.output.delete_regs()
     return jsonify({'test_data_id': test_data_id})
+
+
+@tpf1_app.route('/test_data/<string:test_data_id>/output/cores/<string:macro_name>/fields', methods=['POST'])
+@token_auth.login_required
+@test_data_required
+def add_output_field(test_data_id: str, macro_name: str, **kwargs) -> Response:
+    field_byte_dict: dict = request.get_json()
+    field_byte = kwargs[test_data_id].output.create_field_byte(macro_name, field_byte_dict)
+    if not field_byte:
+        return error_response(400, 'Error in field attribute')
+    return jsonify({'field_byte_id': field_byte.id})
+
+
+@tpf1_app.route('/test_data/<string:test_data_id>/output/cores/<string:macro_name>/fields/<string:field_name>',
+                methods=['DELETE'])
+@token_auth.login_required
+@test_data_required
+def delete_output_field(test_data_id: str, macro_name: str, field_name: str, **kwargs) -> Response:
+    core: Core = next((core for core in kwargs[test_data_id].output.cores if core.macro_name == macro_name), None)
+    if not core:
+        return error_response(400, 'Macro does not exist in test data')
+    field_name = unquote(field_name)
+    field_byte_id = core.delete_field_byte(field_name)
+    if not field_byte_id:
+        return error_response(400, 'Field name not present in macro')
+    if not core.field_bytes:
+        kwargs[test_data_id].output.delete_core(macro_name)
+    return jsonify({'field_byte_id': field_byte_id})
+
+
+@tpf1_app.route('/test_data/<string:test_data_id>/input/cores/<string:macro_name>/fields', methods=['POST'])
+@token_auth.login_required
+@test_data_required
+def add_input_field(test_data_id: str, macro_name: str, **kwargs) -> Response:
+    field_byte_dict: dict = request.get_json()
+    field_byte = kwargs[test_data_id].create_field_byte(macro_name, field_byte_dict)
+    if not field_byte:
+        return error_response(400, 'Error in field attribute')
+    return jsonify({'field_byte_id': field_byte.id})
+
+
+@tpf1_app.route('/test_data/<string:test_data_id>/input/cores/<string:macro_name>/fields/<string:field_name>',
+                methods=['DELETE'])
+@token_auth.login_required
+@test_data_required
+def delete_input_field(test_data_id: str, macro_name: str, field_name: str, **kwargs) -> Response:
+    core: Core = next((core for core in kwargs[test_data_id].cores if core.macro_name == macro_name), None)
+    if not core:
+        return error_response(400, 'Macro does not exist in test data')
+    field_name = unquote(field_name)
+    field_byte_id = core.delete_field_byte(field_name)
+    if not field_byte_id:
+        return error_response(400, 'Field name not present in macro')
+    if not core.field_bytes:
+        kwargs[test_data_id].delete_core(macro_name)
+    return jsonify({'field_byte_id': field_byte_id})
+
+
+@tpf1_app.route('/test_data/<string:test_data_id>/input/regs', methods=['POST'])
+@token_auth.login_required
+@test_data_required
+def add_input_regs(test_data_id: str, **kwargs) -> Response:
+    if not kwargs[test_data_id].add_reg(request.get_json()):
+        return error_response(400, 'Invalid Register Value')
+    return jsonify({'test_data_id': test_data_id})
+
+
+@tpf1_app.route('/test_data/<string:test_data_id>/input/regs/<string:reg>', methods=['DELETE'])
+@token_auth.login_required
+@test_data_required
+def delete_input_regs(test_data_id: str, reg: str, **kwargs) -> Response:
+    if not kwargs[test_data_id].delete_reg(reg):
+        return error_response(400, 'Invalid Register')
+    return jsonify({'test_data_id': test_data_id})
+
+
+@tpf1_app.route('/test_data/<string:test_data_id>/input/pnr', methods=['POST'])
+@token_auth.login_required
+@test_data_required
+def add_input_pnr(test_data_id: str, **kwargs) -> Response:
+    pnr = kwargs[test_data_id].create_pnr_element(request.get_json())
+    if not pnr:
+        return error_response(400, 'Invalid PNR Elements')
+    return jsonify({'pnr_element_id': pnr.id})
+
+
+@tpf1_app.route('/test_data/<string:test_data_id>/input/pnr/<string:pnr_id>/fields', methods=['POST'])
+@token_auth.login_required
+@test_data_required
+def add_pnr_field(test_data_id: str, pnr_id: str, **kwargs) -> Response:
+    pnr = next((pnr for pnr in kwargs[test_data_id].pnr if pnr.id == pnr_id), None)
+    if not pnr:
+        return error_response(400, 'Error retrieving PNR')
+    field_byte = pnr.create_field_byte(request.get_json())
+    if not field_byte:
+        return error_response(400, 'Error in field attribute')
+    return jsonify({'field_byte_id': field_byte.id})
+
+
+@tpf1_app.route('/test_data/<string:test_data_id>/input/pnr/<string:pnr_id>', methods=['DELETE'])
+@token_auth.login_required
+@test_data_required
+def delete_pnr_element(test_data_id: str, pnr_id: str, **kwargs) -> Response:
+    pnr_id = kwargs[test_data_id].delete_pnr_element(pnr_id)
+    if not pnr_id:
+        return error_response(404, 'PNR ID not found')
+    return jsonify({'pnr_id': pnr_id})
+
+
+@tpf1_app.route('/fields/<string:field_name>')
+@token_auth.login_required
+def find_field(field_name: str) -> Response:
+    if not field_name:
+        return error_response(400, 'Field name cannot be empty')
+    field_name = field_name.upper()
+    label_ref = None
+    for _, data_macro in macros.items():
+        data_macro.load()
+        if data_macro.check(field_name):
+            label_ref = data_macro.lookup(field_name)
+            break
+    if label_ref is None:
+        return error_response(404, 'Field name not found')
+    return jsonify(label_ref.to_dict())
 
 
 @tpf1_app.route('/segments')
@@ -213,20 +278,3 @@ def macro_symbol_table(macro_name: str) -> Response:
                     if label_ref.name == macro_name]
     response_dict = {'macro_name': macro_name, 'symbol_table': symbol_table}
     return jsonify(response_dict)
-
-
-@tpf1_app.route('/fields/<string:field_name>')
-@token_auth.login_required
-def find_field(field_name: str) -> Response:
-    if not field_name:
-        return error_response(400, 'Field name cannot be empty')
-    field_name = field_name.upper()
-    label_ref = None
-    for _, data_macro in macros.items():
-        data_macro.load()
-        if data_macro.check(field_name):
-            label_ref = data_macro.lookup(field_name)
-            break
-    if label_ref is None:
-        return error_response(404, 'Field name not found')
-    return jsonify(label_ref.to_dict())
