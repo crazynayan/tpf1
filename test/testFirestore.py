@@ -74,6 +74,12 @@ class FirestoreTest(TestCase):
         User.objects.cascade.filter_by(name='Avani').delete()
         self.nayan: User = User.create_from_dict(self.nayan_dict)
         self.avani: User = User.create_from_dict(self.avani_dict)
+        self.nayan_dict['id'] = self.nayan.id
+        self.nayan_dict['clients'][0]['id'] = self.nayan.clients[0].id
+        self.avani_dict['id'] = self.avani.id
+        self.avani_dict['clients'][0]['id'] = self.avani.clients[0].id
+        self.avani_dict['clients'][1]['id'] = self.avani.clients[1].id
+        self.avani_dict['clients'][2]['id'] = self.avani.clients[2].id
 
     def test_create(self):
         # Nayan - Client #1
@@ -100,6 +106,15 @@ class FirestoreTest(TestCase):
         self.assertEqual('Partnership Firm', self.avani.clients[2].account_type)
 
     def test_read(self):
+        # Set ID in dict for later comparison with cascade_to_dict
+        nayan: User = User.objects.cascade.filter_by(name='Nayan').first()
+        avani: User = User.objects.cascade.filter_by(name='Avani').first()
+        self.nayan_dict['id'] = nayan.id
+        self.nayan_dict['clients'][0]['id'] = nayan.clients[0].id
+        self.avani_dict['id'] = avani.id
+        self.avani_dict['clients'][0]['id'] = avani.clients[0].id
+        self.avani_dict['clients'][1]['id'] = avani.clients[1].id
+        self.avani_dict['clients'][2]['id'] = avani.clients[2].id
         # Test filter_by and first
         nayan: User = User.objects.filter_by(name='Nayan').first()
         self.assertEqual(f"/users/{nayan.id}", str(nayan))

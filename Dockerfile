@@ -15,9 +15,9 @@ COPY db db
 COPY firestore firestore
 COPY flask_app flask_app
 COPY test test
-COPY config.py google-cloud.json ./
+COPY config.py google-cloud-tokyo.json ./
 
-ENV GOOGLE_APPLICATION_CREDENTIALS google-cloud.json
+ENV GOOGLE_APPLICATION_CREDENTIALS google-cloud-tokyo.json
 
 RUN exec python -m unittest discover -s test -v -f
 
