@@ -1,9 +1,10 @@
 from base64 import b64decode, b64encode
 from typing import Dict, List, Tuple, Union, Optional
 
+from firestore_ci import FirestoreDocument
+
 from assembly.mac2_data_macro import macros
 from config import config
-from firestore.firestore_ci import FirestoreDocument
 from utils.data_type import Register
 from utils.errors import InvalidBaseRegError, FileItemSpecificationError, PoolFileSpecificationError
 

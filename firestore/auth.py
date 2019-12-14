@@ -2,10 +2,10 @@ import os
 from base64 import b64encode
 from typing import Optional, Dict
 
+from firestore_ci import FirestoreDocument
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from config import config
-from firestore.firestore_ci import FirestoreDocument
 
 
 class User(FirestoreDocument):
@@ -50,5 +50,3 @@ class User(FirestoreDocument):
 
 
 User.init()
-
-
