@@ -39,17 +39,9 @@ def get_user(doc_id: str) -> Response:
 @token_auth.login_required
 def create_test_data() -> Response:
     test_data: dict = request.get_json()
-    if not test_data:
-        return error_response(400, 'Test data is empty')
-    if 'name' not in test_data or not test_data['name']:
-        return error_response(400, 'Name is required for the test data')
-    if 'seg_name' not in test_data or not test_data['seg_name']:
-        return error_response(400, 'Seg Name is required for the test data')
-    if TestData.name_exists(test_data['name']):
-        return error_response(400, 'Name of the test data should be unique')
-    if test_data['seg_name'] not in segments:
-        return error_response(400, 'Segment is not present')
     test_data_id = TestData.create_test_data(test_data)
+    if not test_data_id:
+        return error_response(400, 'Invalid format of test data. Need unique name and seg_name only.')
     return jsonify({'test_data_id': test_data_id})
 
 
@@ -65,6 +57,26 @@ def get_test_data_header() -> Response:
         return jsonify(test_data.get_header_dict())
     test_data_list = [test_data.get_header_dict() for test_data in TestData.get_all()]
     return jsonify(test_data_list)
+
+
+@tpf1_app.route('/test_data/<string:test_data_id>/rename', methods=['POST'])
+@token_auth.login_required
+@test_data_required
+def rename_test_data(test_data_id: str, **kwargs) -> Response:
+    header: dict = request.get_json()
+    if not kwargs[test_data_id].rename(header):
+        return error_response(400, 'Error in renaming test data')
+    return jsonify({'test_data_id': test_data_id})
+
+
+@tpf1_app.route('/test_data/<string:test_data_id>/copy', methods=['POST'])
+@token_auth.login_required
+@test_data_required
+def copy_test_data(test_data_id: str, **kwargs) -> Response:
+    new_test_data: TestData = kwargs[test_data_id].copy()
+    if not new_test_data:
+        return error_response(400, 'Error in copying test data')
+    return jsonify(new_test_data.get_header_dict())
 
 
 @tpf1_app.route('/test_data/<string:test_data_id>/run')

@@ -4,6 +4,7 @@ from typing import Dict, List, Tuple, Union, Optional
 from firestore_ci import FirestoreDocument
 
 from assembly.mac2_data_macro import macros
+from assembly.seg6_segment import segments
 from config import config
 from utils.data_type import Register
 from utils.errors import InvalidBaseRegError, FileItemSpecificationError, PoolFileSpecificationError
@@ -213,13 +214,39 @@ class TestData(FirestoreDocument):
         return self.outputs[0]
 
     @classmethod
-    def name_exists(cls, name: str) -> bool:
-        return cls.objects.filter_by(name=name).first() is not None
+    def _validate_header(cls, header: dict) -> bool:
+        if 'name' not in header or 'seg_name' not in header:
+            return False
+        if header['seg_name'] not in segments:
+            return False
+        if len(header) != 2:
+            return False
+        if cls.objects.filter_by(name=header['name']).first() is not None:
+            return False
+        return True
 
     @classmethod
-    def create_test_data(cls, test_data_dict: dict) -> str:
-        test_data = cls.create_from_dict(test_data_dict)
+    def create_test_data(cls, header: dict) -> str:
+        if not cls._validate_header(header):
+            return str()
+        test_data = cls.create_from_dict(header)
         return test_data.id
+
+    def rename(self, header: dict) -> str:
+        if not self._validate_header(header):
+            return str()
+        self.name = header['name']
+        self.seg_name = header['seg_name']
+        self.save()
+        return self.id
+
+    def copy(self) -> Optional['TestData']:
+        name_copy = f"{self.name} - Copy"
+        if self.objects.filter_by(name=name_copy).first() is not None:
+            return None
+        test_data_dict = self.cascade_to_dict()
+        test_data_dict['name'] = name_copy
+        return self.create_from_dict(test_data_dict)
 
     @classmethod
     def get_all(cls) -> List['TestData']:
