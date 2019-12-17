@@ -215,11 +215,11 @@ def add_input_pnr(test_data_id: str, **kwargs) -> Response:
 @tpf1_app.route('/test_data/<string:test_data_id>/input/pnr/<string:pnr_id>/fields', methods=['POST'])
 @token_auth.login_required
 @test_data_required
-def add_pnr_field(test_data_id: str, pnr_id: str, **kwargs) -> Response:
+def add_pnr_fields(test_data_id: str, pnr_id: str, **kwargs) -> Response:
     pnr = next((pnr for pnr in kwargs[test_data_id].pnr if pnr.id == pnr_id), None)
     if not pnr:
         return error_response(400, 'Error retrieving PNR')
-    field_byte = pnr.create_field_byte(request.get_json())
+    field_byte = pnr.create_field_bytes(request.get_json())
     if not field_byte:
         return error_response(400, 'Error in field attribute')
     return jsonify({'field_byte_id': field_byte.id})

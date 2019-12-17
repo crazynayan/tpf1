@@ -3,7 +3,7 @@ from typing import Dict, List, Tuple, Union, Optional
 
 from firestore_ci import FirestoreDocument
 
-from assembly.mac2_data_macro import macros
+from assembly.mac2_data_macro import macros, DataMacro
 from assembly.seg6_segment import segments
 from config import config
 from utils.data_type import Register
@@ -57,6 +57,8 @@ class Core(FirestoreDocument):
 
     def create_field_byte(self, macro_name: str, field_dict: dict) -> Optional[FieldByte]:
         if 'field' not in field_dict or not field_dict['field']:
+            return None
+        if macro_name not in macros:
             return None
         macros[macro_name].load()
         if not macros[macro_name].check(field_dict['field']):
@@ -114,6 +116,20 @@ class Pnr(FirestoreDocument):
             field_byte.data = field_dict['data']
             field_byte.save()
         return field_byte
+
+    def create_field_bytes(self, core_dict: dict) -> str:
+        if 'macro_name' not in core_dict or 'field_bytes' not in core_dict:
+            return str()
+        if core_dict['macro_name'] not in macros:
+            return str()
+        macro: DataMacro = macros[core_dict['macro_name']]
+        macro.load()
+        for field, value in core_dict['field_bytes'].items():
+            if not macro.check(field):
+                return str()
+            if not self.create_field_byte({'field': field, 'data': value}):
+                return str()
+        return self.id
 
 
 Pnr.init('pnr')
