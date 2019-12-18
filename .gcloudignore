@@ -9,3 +9,4 @@ trace_log.txt
 docker-compose.yml
 .gitignore
 venv/
+.git/

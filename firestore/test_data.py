@@ -480,7 +480,7 @@ class TestData(FirestoreDocument):
         pnr_dict['field_bytes'] = list()
         pnr = None
         for data in data_list.split(','):
-            pnr_dict['data'] = data
+            pnr_dict['data'] = data.strip()
             pnr = next((pnr for pnr in self.pnr if pnr.key == pnr_dict['key'] and pnr.locator == pnr_dict['locator']
                         and pnr.data == data and pnr.field_bytes == list()), None)
             if not pnr:
