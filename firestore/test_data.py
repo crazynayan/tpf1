@@ -233,20 +233,20 @@ class TestData(FirestoreDocument):
     def _validate_header(cls, header: dict) -> bool:
         if 'name' not in header or 'seg_name' not in header:
             return False
-        if header['seg_name'] not in segments:
+        if header['seg_name'] not in segments or not header['name']:
             return False
         if len(header) != 2:
-            return False
-        if cls.objects.filter_by(name=header['name']).first() is not None:
             return False
         return True
 
     @classmethod
-    def create_test_data(cls, header: dict) -> str:
+    def create_test_data(cls, header: dict) -> Optional['TestData']:
         if not cls._validate_header(header):
-            return str()
+            return None
+        if cls.objects.filter_by(name=header['name']).first() is not None:
+            return None
         test_data = cls.create_from_dict(header)
-        return test_data.id
+        return test_data
 
     def rename(self, header: dict) -> str:
         if not self._validate_header(header):

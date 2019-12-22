@@ -39,10 +39,10 @@ def get_user(doc_id: str) -> Response:
 @token_auth.login_required
 def create_test_data() -> Response:
     test_data: dict = request.get_json()
-    test_data_id = TestData.create_test_data(test_data)
-    if not test_data_id:
+    test_data: TestData = TestData.create_test_data(test_data)
+    if not test_data:
         return error_response(400, 'Invalid format of test data. Need unique name and seg_name only.')
-    return jsonify({'test_data_id': test_data_id})
+    return jsonify(test_data.cascade_to_dict())
 
 
 @tpf1_app.route('/test_data')
