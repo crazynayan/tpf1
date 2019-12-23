@@ -1,0 +1,200 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: TPF Analyzer API
+  license:
+    name: MIT
+components:
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+    BearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    TestData:
+      type: object
+      properties:
+        cores:
+          type: array
+          items:
+            type: object
+          example: []
+        errors:
+          type: array
+          items:
+            type: string
+          example: []
+        fixed_files:
+          type: array
+          items:
+            type: object
+          example: []
+        id:
+          type: string
+          example: IkhI8xpARRIKbLgSWIUL
+        name:
+          type: string
+          example: ETA5 Testing 123
+        outputs:
+          type: array
+          items:
+            $ref: '#/components/schemas/Output'
+        partition:
+          type: string
+          example: ""
+        pnr:
+          type: array
+          example: []
+        regs:
+          type: object
+          additionalProperties:
+            type: integer
+          example: {}
+        seg_name:
+          type: string
+          example: ETA5
+        tpfdf:
+          type: array
+          example: []
+    Output:
+      type:
+        object
+      properties:
+        cores:
+          type: array
+          items:
+            type: object
+          example: []
+        dumps:
+          type: array
+          items:
+            type: string
+          example: []
+        id:
+          type: string
+          example: O1hI8xpARRIKbLgSWIUL
+        last_line:
+          type: string
+          example: ""
+        messages:
+          type: array
+          items:
+            type: string
+          example: []
+        reg_pointers:
+          type: object
+          additionalProperties:
+            type: integer
+          example: {}
+        regs:
+          type: object
+          additionalProperties:
+            type: integer
+          example: {}
+servers:
+  - url: http://localhost:8010
+security:
+  - BearerAuth: []
+paths:
+  /tokens:
+    post:
+      summary: Get an API Token
+      security:
+        - BasicAuth: []
+      operationId: get_token
+      responses:
+        '200':
+          description: A valid token to be used as a Bearer Authorization
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: 0OiSPRqyXCq3ny0yYVKecPtbtoClHwDL
+        '401':
+          description: Authentication failed. Invalid username or password.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Unauthorized
+
+  /test_data:
+    post:
+      summary: Create a Test data with name and seg name
+      security:
+        - BearerAuth: []
+      operationId: create_test_data
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: ETA5 Testing 123
+                seg_name:
+                  type: string
+                  example: ETA5
+      responses:
+        '200':
+          description: A Test Data with just name and seg name
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestData'
+        '400':
+          description: Error in creating test data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Bad Request
+                  message:
+                    type: string
+                    example: "Invalid format of test data. Need unique name and seg_name only."
+
+  /test_data/{test_data_id}:
+    delete:
+      summary: Delete Test Data
+      parameters:
+        - name: test_data_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Test Data deleted. Test Data ID that was deleted is returned.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  test_data_id:
+                    type: string
+                    example: T1hI8xpARRIKbLgSWIUL
+        '401':
+          description: Test Data ID is not present in the DB
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Not Found
+                  message:
+                    type: string
+                    example: "Test data id not found"

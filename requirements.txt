@@ -4,6 +4,7 @@ chardet==3.0.4
 Click==7.0
 firestore-ci==2019.12.22
 Flask==1.1.1
+Flask-Cors==3.0.8
 Flask-HTTPAuth==3.3.0
 google-api-core==1.15.0
 google-auth==1.10.0

@@ -231,8 +231,11 @@ class TestData(FirestoreDocument):
 
     @classmethod
     def _validate_header(cls, header: dict) -> bool:
+        if not header:
+            return False
         if 'name' not in header or 'seg_name' not in header:
             return False
+        header['seg_name'] = header['seg_name'].upper()
         if header['seg_name'] not in segments or not header['name']:
             return False
         if len(header) != 2:
