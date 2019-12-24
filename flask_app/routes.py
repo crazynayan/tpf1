@@ -49,24 +49,25 @@ def create_test_data() -> Response:
 @token_auth.login_required
 def get_test_data_header() -> Response:
     name = request.args.get('name')
-    if name:
+    if name is not None:
         name = unquote(name)
         test_data = TestData.get_test_data_by_name(name)
         if not test_data:
-            return error_response(404, f'No test data found by this name - {name}')
-        return jsonify(test_data.get_header_dict())
+            return error_response(404, f'No test data found by this name')
+        return jsonify([test_data.get_header_dict()])
     test_data_list = [test_data.get_header_dict() for test_data in TestData.get_all()]
     return jsonify(test_data_list)
 
 
-@tpf1_app.route('/test_data/<string:test_data_id>/rename', methods=['POST'])
+@tpf1_app.route('/test_data/<string:test_data_id>/rename', methods=['PATCH'])
 @token_auth.login_required
 @test_data_required
 def rename_test_data(test_data_id: str, **kwargs) -> Response:
     header: dict = request.get_json()
-    if not kwargs[test_data_id].rename(header):
+    test_data = kwargs[test_data_id]
+    if not test_data.rename(header):
         return error_response(400, 'Error in renaming test data')
-    return jsonify({'test_data_id': test_data_id})
+    return jsonify(test_data.get_header_dict())
 
 
 @tpf1_app.route('/test_data/<string:test_data_id>/copy', methods=['POST'])

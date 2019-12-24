@@ -251,13 +251,12 @@ class TestData(FirestoreDocument):
         test_data = cls.create_from_dict(header)
         return test_data
 
-    def rename(self, header: dict) -> str:
+    def rename(self, header: dict) -> bool:
         if not self._validate_header(header):
-            return str()
+            return False
         self.name = header['name']
         self.seg_name = header['seg_name']
-        self.save()
-        return self.id
+        return self.save()
 
     def copy(self) -> Optional['TestData']:
         name_copy = f"{self.name} - Copy"

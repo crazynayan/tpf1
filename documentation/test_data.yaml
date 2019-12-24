@@ -95,6 +95,9 @@ components:
           example: {}
 servers:
   - url: http://localhost:8010
+    description: localhost
+  - url: http://10.0.75.1:8000
+    description: docker
 security:
   - BearerAuth: []
 paths:
@@ -164,10 +167,54 @@ paths:
                   message:
                     type: string
                     example: "Invalid format of test data. Need unique name and seg_name only."
+    get:
+      summary: Get a list of test data
+      security:
+        - BearerAuth: []
+      operationId: get_test_data_header
+      parameters:
+        - name: name
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Get a list of all test data or just one by name if name provided
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: X1hI8xpARRIKbLgSWIUL
+                    name:
+                      type: string
+                      example: ETA5 Testing 123
+                    seg_name:
+                      type: string
+                      example: ETA5
+        '404':
+          description: Test data not found by the name provided
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Not Found
+                  message:
+                    type: string
+                    example: "No test data found by this name"
 
   /test_data/{test_data_id}:
     delete:
       summary: Delete Test Data
+      security:
+        - BearerAuth: []
       parameters:
         - name: test_data_id
           in: path
@@ -198,3 +245,59 @@ paths:
                   message:
                     type: string
                     example: "Test data id not found"
+
+  /test_data/{test_data_id}/rename:
+    patch:
+      summary: Rename Test Data. Also change its seg_name
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: test_data_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: X2hI8xpARRIKbLgSWIUL
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: ETA5 Testing 1234
+                seg_name:
+                  type: string
+                  example: ETA6
+      responses:
+        '200':
+          description: Test Data renamed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: X2hI8xpARRIKbLgSWIUL
+                  name:
+                    type: string
+                    example: ETA2 Testing 123
+                  seg_name:
+                    type: string
+                    example: ETA2
+        '400':
+          description: Error in renaming test data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Bad Request
+                  message:
+                    type: string
+                    example: "Error in renaming test data"
+
