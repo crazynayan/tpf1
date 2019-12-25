@@ -259,7 +259,9 @@ class TestData(FirestoreDocument):
         return self.save()
 
     def copy(self) -> Optional['TestData']:
-        name_copy = f"{self.name} - Copy"
+        if self.name.endswith(config.COPY_SUFFIX):
+            return None
+        name_copy = f"{self.name}{config.COPY_SUFFIX}"
         if self.objects.filter_by(name=name_copy).first() is not None:
             return None
         test_data_dict = self.cascade_to_dict()

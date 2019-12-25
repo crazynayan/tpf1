@@ -94,10 +94,10 @@ components:
             type: integer
           example: {}
 servers:
-  - url: http://localhost:8010
-    description: localhost
   - url: http://10.0.75.1:8000
     description: docker
+  - url: http://localhost:8010
+    description: localhost
 security:
   - BearerAuth: []
 paths:
@@ -232,7 +232,7 @@ paths:
                   test_data_id:
                     type: string
                     example: T1hI8xpARRIKbLgSWIUL
-        '401':
+        '404':
           description: Test Data ID is not present in the DB
           content:
             application/json:
@@ -300,4 +300,72 @@ paths:
                   message:
                     type: string
                     example: "Error in renaming test data"
+        '404':
+          description: Test Data ID is not present in the DB
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Not Found
+                  message:
+                    type: string
+                    example: "Test data id not found"
 
+  /test_data/{test_data_id}/copy:
+    post:
+      summary: Create a copy of the test data with a new name
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: test_data_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: X9hI8xpARRIKbLgSWIUL
+      responses:
+        '200':
+          description: Test Data copied. The ID of the new test data is returned.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: Y4hI8xpARRIKbLgSWIUL
+                  name:
+                    type: string
+                    example: ETA5 Testing 123 - Copy
+                  seg_name:
+                    type: string
+                    example: ETA5
+        '400':
+          description: Error in copying test data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Bad Request
+                  message:
+                    type: string
+                    example: "Error in copying test data"
+        '404':
+          description: Test Data ID is not present in the DB
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Not Found
+                  message:
+                    type: string
+                    example: "Test data id not found"

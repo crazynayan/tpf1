@@ -78,5 +78,8 @@ class Config:
     # Used by db
     AAAPNR: str = 'AAAAAA'
 
+    # Used by test_data model
+    COPY_SUFFIX: str = ' - Copy'
+
 
 config = Config()
