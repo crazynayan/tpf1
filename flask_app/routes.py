@@ -109,7 +109,7 @@ def delete_test_data(test_data_id: str) -> Response:
     return jsonify({'test_data_id': test_data_id})
 
 
-@tpf1_app.route('/test_data/<string:test_data_id>/output/regs', methods=['POST'])
+@tpf1_app.route('/test_data/<string:test_data_id>/output/regs', methods=['PATCH'])
 @token_auth.login_required
 @test_data_required
 def add_output_regs(test_data_id: str, **kwargs) -> Response:

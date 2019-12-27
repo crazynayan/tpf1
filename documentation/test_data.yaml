@@ -93,6 +93,17 @@ components:
           additionalProperties:
             type: integer
           example: {}
+    Error404:
+      type:
+        object
+      properties:
+        error:
+          type: string
+          example: Not Found
+        message:
+          type: string
+          example: "Test data id not found"
+
 servers:
   - url: http://10.0.75.1:8000
     description: docker
@@ -237,14 +248,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: Not Found
-                  message:
-                    type: string
-                    example: "Test data id not found"
+                $ref: '#/components/schemas/Error404'
 
   /test_data/{test_data_id}/rename:
     patch:
@@ -305,14 +309,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: Not Found
-                  message:
-                    type: string
-                    example: "Test data id not found"
+                $ref: '#/components/schemas/Error404'
 
   /test_data/{test_data_id}/copy:
     post:
@@ -361,11 +358,59 @@ paths:
           content:
             application/json:
               schema:
+                $ref: '#/components/schemas/Error404'
+
+  /test_data/{test_data_id}/output/regs:
+    patch:
+      summary: Add output Registers. Send an empty list for regs to remove output Registers.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: test_data_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: Q1hI8xpARRIKbLgSWIUL
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                regs:
+                  type: array
+                  items:
+                    type: string
+                  example: ['R1', 'R3']
+      responses:
+        '200':
+          description: Output Registers Added or Removed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: Q1hI8xpARRIKbLgSWIUL
+        '400':
+          description: Invalid format send in body of request
+          content:
+            application/json:
+              schema:
                 type: object
                 properties:
                   error:
                     type: string
-                    example: Not Found
+                    example: Bad Request
                   message:
                     type: string
-                    example: "Test data id not found"
+                    example: "Invalid format of Registers"
+        '404':
+          description: Test Data ID is not present in the DB
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error404'
+

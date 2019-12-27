@@ -191,16 +191,16 @@ class Output(FirestoreDocument):
         self.save()
         return core.delete(cascade=True)
 
-    def create_regs(self, reg_dict: dict) -> dict:
+    def create_regs(self, reg_dict: dict) -> bool:
         if 'regs' not in reg_dict:
-            return dict()
+            return False
         self.regs = dict()
         try:
             self.add_regs(reg_dict['regs'])
         except InvalidBaseRegError:
-            return dict()
+            return False
         self.save()
-        return self.regs
+        return True
 
     def delete_regs(self) -> None:
         self.regs = dict()
