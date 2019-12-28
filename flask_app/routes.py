@@ -120,24 +120,15 @@ def add_output_regs(test_data_id: str, **kwargs) -> Response:
     return jsonify({'test_data_id': test_data_id})
 
 
-@tpf1_app.route('/test_data/<string:test_data_id>/output/regs', methods=['DELETE'])
-@token_auth.login_required
-@test_data_required
-def delete_output_regs(test_data_id: str, **kwargs) -> Response:
-    test_data: TestData = kwargs[test_data_id]
-    test_data.output.delete_regs()
-    return jsonify({'test_data_id': test_data_id})
-
-
-@tpf1_app.route('/test_data/<string:test_data_id>/output/cores/<string:macro_name>/fields', methods=['POST'])
+@tpf1_app.route('/test_data/<string:test_data_id>/output/cores/<string:macro_name>/fields', methods=['PATCH'])
 @token_auth.login_required
 @test_data_required
 def add_output_field(test_data_id: str, macro_name: str, **kwargs) -> Response:
     field_byte_dict: dict = request.get_json()
     field_byte = kwargs[test_data_id].output.create_field_byte(macro_name, field_byte_dict)
     if not field_byte:
-        return error_response(400, 'Error in field attribute')
-    return jsonify({'field_byte_id': field_byte.id})
+        return error_response(400, 'Error in adding fields')
+    return jsonify(field_byte.cascade_to_dict())
 
 
 @tpf1_app.route('/test_data/<string:test_data_id>/output/cores/<string:macro_name>/fields/<string:field_name>',
@@ -145,16 +136,10 @@ def add_output_field(test_data_id: str, macro_name: str, **kwargs) -> Response:
 @token_auth.login_required
 @test_data_required
 def delete_output_field(test_data_id: str, macro_name: str, field_name: str, **kwargs) -> Response:
-    core: Core = next((core for core in kwargs[test_data_id].output.cores if core.macro_name == macro_name), None)
-    if not core:
-        return error_response(400, 'Macro does not exist in test data')
-    field_name = unquote(field_name)
-    field_byte_id = core.delete_field_byte(field_name)
-    if not field_byte_id:
-        return error_response(400, 'Field name not present in macro')
-    if not core.field_bytes:
-        kwargs[test_data_id].output.delete_core(macro_name)
-    return jsonify({'field_byte_id': field_byte_id})
+    field_byte = kwargs[test_data_id].output.delete_field_byte(macro_name, unquote(field_name))
+    if not field_byte:
+        return error_response(400, 'Error in deleting field')
+    return jsonify(field_byte.cascade_to_dict())
 
 
 @tpf1_app.route('/test_data/<string:test_data_id>/input/cores/<string:macro_name>/fields', methods=['POST'])

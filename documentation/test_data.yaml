@@ -394,6 +394,7 @@ paths:
                   id:
                     type: string
                     example: Q1hI8xpARRIKbLgSWIUL
+
         '400':
           description: Invalid format send in body of request
           content:
@@ -407,6 +408,146 @@ paths:
                   message:
                     type: string
                     example: "Invalid format of Registers"
+        '404':
+          description: Test Data ID is not present in the DB
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error404'
+
+  /test_data/{test_data_id}/output/cores/{macro_name}/fields:
+    patch:
+      summary: Add a field that it to be shown in result
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: test_data_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: Q1hI8xpARRIKbLgSWIUL
+        - name: macro_name
+          in: path
+          required: true
+          schema:
+            type: string
+            example: UI2PF
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                field:
+                  type: string
+                  example: UI2CNN
+                  required: true
+                length:
+                  type: integer
+                  example: 2
+                  required: false
+                base_reg:
+                  type: string
+                  example: R7
+                  required: false
+      responses:
+        '200':
+          description: Field added.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: 1xrCCwXKUHGW0RDU7pUi
+                  field:
+                    type: string
+                    example: UI2CNN
+                  length:
+                    type: integer
+                    example: 2
+                  data:
+                    type: string
+                    example: ""
+        '400':
+          description: Invalid format send in body of request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Bad Request
+                  message:
+                    type: string
+                    example: "Error in adding field"
+        '404':
+          description: Test Data ID is not present in the DB
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error404'
+
+  /test_data/{test_data_id}/output/cores/{macro_name}/fields/{field_name}:
+    delete:
+      summary: Delete an output field
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: test_data_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: Q1hI8xpARRIKbLgSWIUL
+        - name: macro_name
+          in: path
+          required: true
+          schema:
+            type: string
+            example: UI2PF
+        - name: field_name
+          in: path
+          required: true
+          schema:
+            type: string
+            example: UI2CNN
+      responses:
+        '200':
+          description: Field delete.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: 1xrCCwXKUHGW0RDU7pUi
+                  field:
+                    type: string
+                    example: UI2CNN
+                  length:
+                    type: integer
+                    example: 2
+                  data:
+                    type: string
+                    example: ""
+        '400':
+          description: Error in deleting field
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Bad Request
+                  message:
+                    type: string
+                    example: "Error in deleting field"
         '404':
           description: Test Data ID is not present in the DB
           content:

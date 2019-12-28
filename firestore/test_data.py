@@ -1,4 +1,5 @@
 from base64 import b64decode, b64encode
+from copy import deepcopy
 from typing import Dict, List, Tuple, Union, Optional
 
 from firestore_ci import FirestoreDocument
@@ -78,13 +79,15 @@ class Core(FirestoreDocument):
             field_byte.save()
         return field_byte
 
-    def delete_field_byte(self, field_name: str) -> str:
+    def delete_field_byte(self, field_name: str) -> Optional[FieldByte]:
         field_byte = next((field_byte for field_byte in self.field_bytes if field_byte.field == field_name), None)
         if not field_byte:
-            return str()
+            return None
+        copy_field_byte = deepcopy(field_byte)
         self.field_bytes.remove(field_byte)
         self.save()
-        return field_byte.delete()
+        copy_field_byte.delete()
+        return field_byte
 
 
 Core.init()
@@ -163,11 +166,11 @@ class Output(FirestoreDocument):
             self.regs[reg] = 0
         return
 
-    def add_all_reg_pointers(self, length) -> None:
+    def add_all_reg_pointers(self, length: int) -> None:
         for reg in config.REG:
             self.reg_pointers[reg] = length
 
-    def create_field_byte(self, macro_name, field_dict) -> Optional[FieldByte]:
+    def create_field_byte(self, macro_name: str, field_dict: dict) -> Optional[FieldByte]:
         if macro_name not in macros:
             return None
         base_reg = field_dict['base_reg'] if 'base_reg' in field_dict and \
@@ -183,13 +186,18 @@ class Output(FirestoreDocument):
             core.save()
         return core.create_field_byte(macro_name, field_dict)
 
-    def delete_core(self, macro_name: str) -> str:
+    def delete_field_byte(self, macro_name: str, field_name: str) -> Optional[FieldByte]:
         core: Core = next((core for core in self.cores if core.macro_name == macro_name), None)
         if not core:
-            return str()
-        self.cores.remove(core)
-        self.save()
-        return core.delete(cascade=True)
+            return None
+        field_byte: FieldByte = core.delete_field_byte(field_name)
+        if not field_byte:
+            return None
+        if not core.field_bytes:
+            self.cores.remove(core)
+            self.save()
+            core.delete(cascade=True)
+        return field_byte
 
     def create_regs(self, reg_dict: dict) -> bool:
         if 'regs' not in reg_dict:
@@ -201,10 +209,6 @@ class Output(FirestoreDocument):
             return False
         self.save()
         return True
-
-    def delete_regs(self) -> None:
-        self.regs = dict()
-        self.save()
 
 
 Output.init()
