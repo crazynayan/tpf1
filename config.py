@@ -80,6 +80,7 @@ class Config:
 
     # Used by test_data model
     COPY_SUFFIX: str = ' - Copy'
+    DEFAULT_MACROS: dict = {'EB0EB': ECB, 'GLOBAL': GLOBAL, 'WA0AA': AAA, 'MI0MI': IMG}
 
 
 config = Config()

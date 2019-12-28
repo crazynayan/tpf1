@@ -8,7 +8,7 @@ from assembly.mac2_data_macro import macros
 from assembly.seg6_segment import segments
 from execution.ex5_execute import Execute
 from firestore.auth import User
-from firestore.test_data import TestData, Core
+from firestore.test_data import TestData
 from flask_app import tpf1_app
 from flask_app.auth import token_auth
 from flask_app.errors import error_response
@@ -127,7 +127,7 @@ def add_output_field(test_data_id: str, macro_name: str, **kwargs) -> Response:
     field_byte_dict: dict = request.get_json()
     field_byte = kwargs[test_data_id].output.create_field_byte(macro_name, field_byte_dict)
     if not field_byte:
-        return error_response(400, 'Error in adding fields')
+        return error_response(400, 'Error in adding field')
     return jsonify(field_byte.cascade_to_dict())
 
 
@@ -142,15 +142,15 @@ def delete_output_field(test_data_id: str, macro_name: str, field_name: str, **k
     return jsonify(field_byte.cascade_to_dict())
 
 
-@tpf1_app.route('/test_data/<string:test_data_id>/input/cores/<string:macro_name>/fields', methods=['POST'])
+@tpf1_app.route('/test_data/<string:test_data_id>/input/cores/<string:macro_name>/fields', methods=['PATCH'])
 @token_auth.login_required
 @test_data_required
 def add_input_field(test_data_id: str, macro_name: str, **kwargs) -> Response:
     field_byte_dict: dict = request.get_json()
     field_byte = kwargs[test_data_id].create_field_byte(macro_name, field_byte_dict)
     if not field_byte:
-        return error_response(400, 'Error in field attribute')
-    return jsonify({'field_byte_id': field_byte.id})
+        return error_response(400, 'Error in adding field')
+    return jsonify(field_byte.cascade_to_dict())
 
 
 @tpf1_app.route('/test_data/<string:test_data_id>/input/cores/<string:macro_name>/fields/<string:field_name>',
@@ -158,16 +158,10 @@ def add_input_field(test_data_id: str, macro_name: str, **kwargs) -> Response:
 @token_auth.login_required
 @test_data_required
 def delete_input_field(test_data_id: str, macro_name: str, field_name: str, **kwargs) -> Response:
-    core: Core = next((core for core in kwargs[test_data_id].cores if core.macro_name == macro_name), None)
-    if not core:
-        return error_response(400, 'Macro does not exist in test data')
-    field_name = unquote(field_name)
-    field_byte_id = core.delete_field_byte(field_name)
-    if not field_byte_id:
-        return error_response(400, 'Field name not present in macro')
-    if not core.field_bytes:
-        kwargs[test_data_id].delete_core(macro_name)
-    return jsonify({'field_byte_id': field_byte_id})
+    field_byte = kwargs[test_data_id].delete_field_byte(macro_name, unquote(field_name))
+    if not field_byte:
+        return error_response(400, 'Error in deleting field')
+    return jsonify(field_byte.cascade_to_dict())
 
 
 @tpf1_app.route('/test_data/<string:test_data_id>/input/regs', methods=['POST'])
