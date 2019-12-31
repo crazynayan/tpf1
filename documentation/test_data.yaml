@@ -555,3 +555,247 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error404'
 
+  /test_data/{test_data_id}/input/cores/{macro_name}/fields:
+    patch:
+      summary: Add a field and its value that is required to run the segment
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: test_data_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: C1hI8xpARRIKbLgSWIUL
+        - name: macro_name
+          in: path
+          required: true
+          schema:
+            type: string
+            example: WA0AA
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                field:
+                  type: string
+                  example: WA0BBR
+                  required: true
+                data:
+                  type: string
+                  format: byte
+                  example: AQ==
+                  required: true
+      responses:
+        '200':
+          description: Field added.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: 2xrCCwXKUHGW0RDU7pUi
+                  field:
+                    type: string
+                    example: WA0BBR
+                  length:
+                    type: integer
+                    example: 0
+                  data:
+                    type: string
+                    format: byte
+                    example: AQ==
+        '400':
+          description: Invalid format send in body of request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Bad Request
+                  message:
+                    type: string
+                    example: "Error in adding field"
+        '404':
+          description: Test Data ID is not present in the DB
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error404'
+
+  /test_data/{test_data_id}/input/cores/{macro_name}/fields/{field_name}:
+    delete:
+      summary: Delete an input field
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: test_data_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: Q1hI8xpARRIKbLgSWIUL
+        - name: macro_name
+          in: path
+          required: true
+          schema:
+            type: string
+            example: WA0AA
+        - name: field_name
+          in: path
+          required: true
+          schema:
+            type: string
+            example: WA0BBR
+      responses:
+        '200':
+          description: Field delete.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: 2xrCCwXKUHGW0RDU7pUi
+                  field:
+                    type: string
+                    example: WA0BBR
+                  length:
+                    type: integer
+                    example: 0
+                  data:
+                    type: string
+                    format: byte
+                    example: AQ==
+        '400':
+          description: Error in deleting field
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Bad Request
+                  message:
+                    type: string
+                    example: "Error in deleting field"
+        '404':
+          description: Test Data ID is not present in the DB
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error404'
+
+  /test_data/{test_data_id}/input/regs:
+    patch:
+      summary: Add input Register one at a time.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: test_data_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: L1hI8xpARRIKbLgSWIUL
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reg:
+                  type: string
+                  example: 'R2'
+                value:
+                  type: integer
+                  example: -1
+      responses:
+        '200':
+          description: Input Register added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  test_data_id:
+                    type: string
+                    example: L1hI8xpARRIKbLgSWIUL
+
+        '400':
+          description: Invalid format of input Register
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Bad Request
+                  message:
+                    type: string
+                    example: "Invalid format input Register"
+        '404':
+          description: Test Data ID is not present in the DB
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error404'
+
+  /test_data/{test_data_id}/input/regs/{reg}:
+    delete:
+      summary: Delete an input Register
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: test_data_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: M1hI8xpARRIKbLgSWIUL
+        - name: reg
+          in: path
+          required: true
+          schema:
+            type: string
+            example: R1
+      responses:
+        '200':
+          description: Input Register deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  test_data_id:
+                    type: string
+                    example: M1hI8xpARRIKbLgSWIUL
+
+        '400':
+          description: Invalid Register
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Bad Request
+                  message:
+                    type: string
+                    example: "Invalid Register"
+        '404':
+          description: Test Data ID is not present in the DB
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error404'

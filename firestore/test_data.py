@@ -492,21 +492,27 @@ class TestData(FirestoreDocument):
             core.delete(cascade=True)
         return field_byte
 
-    def add_reg(self, reg_dict: dict) -> dict:
+    def add_reg(self, reg_dict: dict) -> bool:
         if 'reg' not in reg_dict or not Register(reg_dict['reg']).is_valid():
-            return dict()
+            return False
         if 'value' not in reg_dict or not isinstance(reg_dict['value'], int):
-            return dict()
+            return False
+        if len(reg_dict) != 2:
+            return False
+        if reg_dict['value'] < -0x80000000 or reg_dict['value'] > 0x7FFFFFFF:
+            return False
         self.regs[reg_dict['reg']] = reg_dict['value']
         self.save()
-        return self.regs
+        return True
 
-    def delete_reg(self, reg: str) -> dict:
+    def delete_reg(self, reg: str) -> bool:
         if not Register(reg).is_valid():
-            return dict()
-        self.regs.pop(reg, None)
+            return False
+        if reg not in self.regs:
+            return False
+        del self.regs[reg]
         self.save()
-        return self.regs
+        return True
 
     def create_pnr_element(self, pnr_dict: dict) -> Optional[Pnr]:
         if 'key' not in pnr_dict:

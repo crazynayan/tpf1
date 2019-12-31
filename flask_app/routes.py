@@ -164,12 +164,12 @@ def delete_input_field(test_data_id: str, macro_name: str, field_name: str, **kw
     return jsonify(field_byte.cascade_to_dict())
 
 
-@tpf1_app.route('/test_data/<string:test_data_id>/input/regs', methods=['POST'])
+@tpf1_app.route('/test_data/<string:test_data_id>/input/regs', methods=['PATCH'])
 @token_auth.login_required
 @test_data_required
 def add_input_regs(test_data_id: str, **kwargs) -> Response:
     if not kwargs[test_data_id].add_reg(request.get_json()):
-        return error_response(400, 'Invalid Register Value')
+        return error_response(400, 'Invalid format of input Register')
     return jsonify({'test_data_id': test_data_id})
 
 
