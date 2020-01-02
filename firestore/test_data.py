@@ -4,6 +4,7 @@ from typing import Dict, List, Tuple, Union, Optional
 
 from firestore_ci import FirestoreDocument
 
+import db.pnr as db_pnr
 from assembly.mac2_data_macro import macros, DataMacro
 from assembly.seg6_segment import segments
 from config import config
@@ -115,35 +116,6 @@ class Pnr(FirestoreDocument):
 
     def __repr__(self):
         return f"{self.locator}:{self.key}:{self.data}:{len(self.field_bytes)}"
-
-    def create_field_byte(self, field_dict: dict) -> Optional[FieldByte]:
-        if 'field' not in field_dict or not field_dict['field']:
-            return None
-        field_dict['data'] = field_dict['data'] if 'data' in field_dict else str()
-        field_byte = next((field_byte for field_byte in self.field_bytes if field_byte.field == field_dict['field']),
-                          None)
-        if not field_byte:
-            field_byte = FieldByte.create_from_dict(field_dict)
-            self.field_bytes.append(field_byte)
-            self.save()
-        else:
-            field_byte.data = field_dict['data']
-            field_byte.save()
-        return field_byte
-
-    def create_field_bytes(self, core_dict: dict) -> str:
-        if 'macro_name' not in core_dict or 'field_bytes' not in core_dict:
-            return str()
-        if core_dict['macro_name'] not in macros:
-            return str()
-        macro: DataMacro = macros[core_dict['macro_name']]
-        macro.load()
-        for field, value in core_dict['field_bytes'].items():
-            if not macro.check(field):
-                return str()
-            if not self.create_field_byte({'field': field, 'data': value}):
-                return str()
-        return self.id
 
 
 Pnr.init('pnr')
@@ -517,29 +489,70 @@ class TestData(FirestoreDocument):
     def create_pnr_element(self, pnr_dict: dict) -> Optional[Pnr]:
         if 'key' not in pnr_dict:
             return None
+        if db_pnr.Pnr.get_attribute_by_name(pnr_dict['key']) is None:
+            return None
         pnr_dict['locator'] = pnr_dict['locator'] if 'locator' in pnr_dict else str()
         if pnr_dict['locator'] and len(pnr_dict['locator']) != 6:
             return None
         data_list = pnr_dict['data'] if 'data' in pnr_dict else str()
+        if 'field_bytes' in pnr_dict:
+            return None
         pnr_dict['field_bytes'] = list()
-        pnr = None
+        pnr_data = list()
         for data in data_list.split(','):
-            pnr_dict['data'] = data.strip()
-            pnr = next((pnr for pnr in self.pnr if pnr.key == pnr_dict['key'] and pnr.locator == pnr_dict['locator']
-                        and pnr.data == data and pnr.field_bytes == list()), None)
-            if not pnr:
-                pnr = Pnr.create_from_dict(pnr_dict)
-                self.pnr.append(pnr)
-                self.save()
+            data = data.strip()
+            if next((pnr for pnr in self.pnr if pnr.key == pnr_dict['key'] and pnr.locator == pnr_dict['locator']
+                                                and pnr.data == data and pnr.field_bytes == list()), None) is not None:
+                return None
+            pnr_data.append(data)
+        pnr = None
+        for data in pnr_data:
+            pnr_dict['data'] = data
+            pnr = Pnr.create_from_dict(pnr_dict)
+            self.pnr.append(pnr)
+            self.save()
         return pnr
 
-    def delete_pnr_element(self, pnr_id: str) -> str:
+    def delete_pnr_element(self, pnr_id: str) -> Optional[Pnr]:
         pnr: Pnr = next((pnr for pnr in self.pnr if pnr.id == pnr_id), None)
         if not pnr:
-            return str()
+            return None
+        copy_pnr = deepcopy(pnr)
         self.pnr.remove(pnr)
         self.save()
-        return pnr.delete(cascade=True)
+        pnr.delete(cascade=True)
+        return copy_pnr
+
+    def create_pnr_field_bytes(self, pnr_id: str, core_dict: dict) -> Optional[Pnr]:
+        pnr = next((pnr for pnr in self.pnr if pnr.id == pnr_id), None)
+        if not pnr:
+            return None
+        if 'macro_name' not in core_dict or 'field_bytes' not in core_dict:
+            return None
+        if core_dict['macro_name'] not in macros:
+            return None
+        macro: DataMacro = macros[core_dict['macro_name']]
+        macro.load()
+        if not isinstance(core_dict['field_bytes'], dict):
+            return None
+        for field, value in core_dict['field_bytes'].items():
+            if not macro.check(field):
+                return None
+            if not isinstance(value, str):
+                return None
+        for field, value in core_dict['field_bytes'].items():
+            field_dict = {'field': field, 'data': value}
+            field_byte = next((field_byte for field_byte in pnr.field_bytes
+                               if field_byte.field == field_dict['field']), None)
+            if not field_byte:
+                field_byte = FieldByte.create_from_dict(field_dict)
+                pnr.field_bytes.append(field_byte)
+            else:
+                field_byte.data = field_dict['data']
+                field_byte.save()
+        pnr.data = str()
+        pnr.save()
+        return pnr
 
 
 TestData.init('test_data')

@@ -799,3 +799,227 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error404'
+
+  /test_data/{test_data_id}/input/pnr:
+    patch:
+      summary: Add a PNR to test data
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: test_data_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: D1hI8xpARRIKbLgSWIUL
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                key:
+                  type: string
+                  example: name
+                  required: true
+                locator:
+                  type: string
+                  example: DGZEWR
+                  required: false
+                data:
+                  type: string
+                  example: 1ZAVERI,1SHAH
+                  required: false
+      responses:
+        '200':
+          description: Field added.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: 3xrCCwXKUHGW0RDU7pUi
+                  key:
+                    type: string
+                    example: name
+                  locator:
+                    type: string
+                    example: DGZEWR
+                  data:
+                    type: string
+                    example: 1SHAH
+                  field_bytes:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+        '400':
+          description: Error in adding PNR element
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Bad Request
+                  message:
+                    type: string
+                    example: "Error in adding PNR element"
+        '404':
+          description: Test Data ID is not present in the DB
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error404'
+
+  /test_data/{test_data_id}/input/pnr/{pnr_id}:
+    delete:
+      summary: Delete a PNR element
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: test_data_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: D1hI8xpARRIKbLgSWIUL
+        - name: pnr_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 3xrCCwXKUHGW0RDU7pUi
+      responses:
+        '200':
+          description: PNR element deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: 3xrCCwXKUHGW0RDU7pUi
+                  key:
+                    type: string
+                    example: name
+                  locator:
+                    type: string
+                    example: DGZEWR
+                  data:
+                    type: string
+                    example: 1SHAH
+                  field_bytes:
+                    type: array
+                    items:
+                      type: object
+                    example: []
+
+        '400':
+          description: Error in deleting PNR
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Bad Request
+                  message:
+                    type: string
+                    example: "Error in deleting PNR"
+        '404':
+          description: Test Data ID is not present in the DB
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error404'
+
+  /test_data/{test_data_id}/input/pnr/{pnr_id}/fields:
+    patch:
+      summary: Add field bytes to PNR element
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: test_data_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: D1hI8xpARRIKbLgSWIUL
+        - name: pnr_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 3xrCCwXKUHGW0RDU7pUi
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                macro_name:
+                  type: string
+                  example: WI0BS
+                  required: true
+                field_bytes:
+                  type: object
+                  additionalProperties:
+                    type: string
+                  example: {'WI0ARC': 'AQ=='}
+      responses:
+        '200':
+          description: PNR element deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: 3xrCCwXKUHGW0RDU7pUi
+                  key:
+                    type: string
+                    example: name
+                  locator:
+                    type: string
+                    example: DGZEWR
+                  data:
+                    type: string
+                    example: ""
+                  field_bytes:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                          example: WI0ARC
+                        data:
+                          type: string
+                          format: byte
+                          example: AQ==
+        '400':
+          description: Error in adding field
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Bad Request
+                  message:
+                    type: string
+                    example: "Error in adding field"
+        '404':
+          description: Test Data ID is not present in the DB
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error404'

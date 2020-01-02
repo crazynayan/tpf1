@@ -42,9 +42,9 @@ class Pnr:
         PnrAttribute('group_plan', 'A0', std_var=bytearray([0x02, 0x01])),
     ]
 
-    @staticmethod
-    def init_db() -> None:
-        Pnr.DB = [{'id': config.AAAPNR, 'doc': list()}]
+    @classmethod
+    def init_db(cls) -> None:
+        cls.DB = [{'id': config.AAAPNR, 'doc': list()}]
 
     @staticmethod
     def get_pnr_data(pnr_locator: str, key: str, item_number: int, packed: bool = False,
@@ -76,22 +76,22 @@ class Pnr:
             raise IndexError
         return len([element for element in pnr_doc if element['key'] == key])
 
-    @staticmethod
-    def get_pnr_doc(pnr_locator: str) -> List[Dict[str, bytearray]]:
+    @classmethod
+    def get_pnr_doc(cls, pnr_locator: str) -> List[Dict[str, bytearray]]:
         try:
-            pnr_doc = next(pnr['doc'] for pnr in Pnr.DB if pnr['id'] == pnr_locator)
+            pnr_doc = next(pnr['doc'] for pnr in cls.DB if pnr['id'] == pnr_locator)
         except StopIteration:
             pnr_doc: List[Dict[str, bytearray]] = list()
             Pnr.DB.append({'id': pnr_locator, 'doc': pnr_doc})
         return pnr_doc
 
-    @staticmethod
-    def get_attribute_by_name(name: str) -> PnrAttribute:
-        return next((attribute for attribute in Pnr.ATTRIBUTES if attribute.name == name), None)
+    @classmethod
+    def get_attribute_by_name(cls, name: str) -> PnrAttribute:
+        return next((attribute for attribute in cls.ATTRIBUTES if attribute.name == name), None)
 
-    @staticmethod
-    def get_attribute_by_key(key: str) -> PnrAttribute:
-        return next((attribute for attribute in Pnr.ATTRIBUTES if attribute.key == key), None)
+    @classmethod
+    def get_attribute_by_key(cls, key: str) -> PnrAttribute:
+        return next((attribute for attribute in cls.ATTRIBUTES if attribute.key == key), None)
 
     @staticmethod
     def add_from_data(data: str, key: str, locator: str):

@@ -182,37 +182,34 @@ def delete_input_regs(test_data_id: str, reg: str, **kwargs) -> Response:
     return jsonify({'test_data_id': test_data_id})
 
 
-@tpf1_app.route('/test_data/<string:test_data_id>/input/pnr', methods=['POST'])
+@tpf1_app.route('/test_data/<string:test_data_id>/input/pnr', methods=['PATCH'])
 @token_auth.login_required
 @test_data_required
 def add_input_pnr(test_data_id: str, **kwargs) -> Response:
     pnr = kwargs[test_data_id].create_pnr_element(request.get_json())
     if not pnr:
-        return error_response(400, 'Invalid PNR Elements')
-    return jsonify({'pnr_element_id': pnr.id})
+        return error_response(400, 'Error in adding PNR element')
+    return jsonify(pnr.cascade_to_dict())
 
 
-@tpf1_app.route('/test_data/<string:test_data_id>/input/pnr/<string:pnr_id>/fields', methods=['POST'])
+@tpf1_app.route('/test_data/<string:test_data_id>/input/pnr/<string:pnr_id>/fields', methods=['PATCH'])
 @token_auth.login_required
 @test_data_required
 def add_pnr_fields(test_data_id: str, pnr_id: str, **kwargs) -> Response:
-    pnr = next((pnr for pnr in kwargs[test_data_id].pnr if pnr.id == pnr_id), None)
+    pnr = kwargs[test_data_id].create_pnr_field_bytes(pnr_id, request.get_json())
     if not pnr:
-        return error_response(400, 'Error retrieving PNR')
-    field_byte = pnr.create_field_bytes(request.get_json())
-    if not field_byte:
-        return error_response(400, 'Error in field attribute')
-    return jsonify({'field_byte_id': field_byte.id})
+        return error_response(400, 'Error in adding PNR field')
+    return jsonify(pnr.cascade_to_dict())
 
 
 @tpf1_app.route('/test_data/<string:test_data_id>/input/pnr/<string:pnr_id>', methods=['DELETE'])
 @token_auth.login_required
 @test_data_required
 def delete_pnr_element(test_data_id: str, pnr_id: str, **kwargs) -> Response:
-    pnr_id = kwargs[test_data_id].delete_pnr_element(pnr_id)
-    if not pnr_id:
-        return error_response(404, 'PNR ID not found')
-    return jsonify({'pnr_id': pnr_id})
+    pnr = kwargs[test_data_id].delete_pnr_element(pnr_id)
+    if not pnr:
+        return error_response(400, 'Error in deleting PNR')
+    return jsonify(pnr.cascade_to_dict())
 
 
 @tpf1_app.route('/fields/<string:field_name>')
