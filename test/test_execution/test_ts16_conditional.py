@@ -2,13 +2,13 @@ import unittest
 from base64 import b64encode
 
 from execution.ex5_execute import Execute
-from firestore.test_data import TestData
+from test import TestDataUTS
 
 
 class Conditional(unittest.TestCase):
     def setUp(self) -> None:
         self.tpf_server = Execute()
-        self.test_data = TestData()
+        self.test_data = TestDataUTS()
         self.output = self.test_data.output
         self.output.add_all_regs()
         ecb_fields = [('EBW020', 4), ('EBW024', 4)]

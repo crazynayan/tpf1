@@ -1,14 +1,14 @@
 import unittest
 
 from execution.ex5_execute import Execute
-from firestore.test_data import TestData
+from test import TestDataUTS
 from test.test_eta5_execution import hfax_2812_gld, fqtv_gld, itin_2811_2812
 from utils.data_type import DataType
 
 
 class PdredHfax(unittest.TestCase):
     def setUp(self) -> None:
-        self.test_data = TestData()
+        self.test_data = TestDataUTS()
         self.tpf_server = Execute()
         self.output = self.test_data.output
         self.ecb = self.test_data.add_core_with_len([('EBW000', 5)], 'EB0EB')

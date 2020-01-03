@@ -2,7 +2,7 @@ import unittest
 
 from assembly.mac2_data_macro import macros
 from execution.ex5_execute import Execute
-from firestore import test_data
+from test import TestDataUTS
 from utils.data_type import DataType
 
 
@@ -13,7 +13,7 @@ class NameGeneral(unittest.TestCase):
 
     def setUp(self) -> None:
         self.tpf_server = Execute()
-        self.test_data = test_data.TestData()
+        self.test_data = TestDataUTS()
         aaa_fields = ['WA0PTY', 'WA0ETG', 'WA0US4', 'WA0UB1', 'WA0PTI', 'WA0ET3', 'WA0ET4', 'WA0ET6', 'WA0ASC',
                       'WA0USE', 'WA0ET2', 'WA0XX3', 'WA0US3']
         self.i_aaa = self.test_data.add_core(aaa_fields, 'WA0AA')

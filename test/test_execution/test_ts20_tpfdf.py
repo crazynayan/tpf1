@@ -1,14 +1,14 @@
 import unittest
 
 from execution.ex5_execute import Execute
-from firestore.test_data import TestData
+from test import TestDataUTS
 from test.test_eta5_execution import tr1gaa
 
 
 class DbTest(unittest.TestCase):
     def setUp(self) -> None:
         self.tpf_server = Execute()
-        self.test_data = TestData()
+        self.test_data = TestDataUTS()
         self.ecb = self.test_data.add_core(['EBW000'], 'EB0EB', output=True)
         self.output = self.test_data.output
         self.output.add_regs(['R0'])

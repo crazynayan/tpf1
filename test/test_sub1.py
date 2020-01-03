@@ -3,14 +3,14 @@ from base64 import b64encode
 
 from assembly.seg6_segment import segments
 from execution.ex5_execute import Execute
-from firestore.test_data import TestData
+from test import TestDataUTS
 from utils.data_type import DataType
 
 
 class Sub1Test(unittest.TestCase):
     def setUp(self) -> None:
         self.tpf_server = Execute()
-        self.test_data = TestData()
+        self.test_data = TestDataUTS()
         self.output = self.test_data.output
         self.i_ecb = self.test_data.add_core(['EBX000', 'EBX003', 'EBX008'], 'EB0EB')
         self.o_ecb = self.test_data.add_core_with_len([('EBX000', 3), ('EBX003', 5), ('EBX008', 3)], 'EB0EB')

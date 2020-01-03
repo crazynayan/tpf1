@@ -4,7 +4,7 @@ from base64 import b64encode
 from assembly.mac2_data_macro import macros
 from config import config
 from execution.ex5_execute import Execute
-from firestore.test_data import TestData
+from test import TestDataUTS
 from utils.data_type import DataType
 
 
@@ -25,7 +25,7 @@ class EtajTest(unittest.TestCase):
 
     def setUp(self) -> None:
         self.tpf_server.init_run()
-        self.test_data = TestData()
+        self.test_data = TestDataUTS()
         self.output = self.test_data.output
         # Test data setup
         self.test_data.add_pnr('group_plan', data='BTS-B4T0/108/11-FINANCIAL SERVICES')

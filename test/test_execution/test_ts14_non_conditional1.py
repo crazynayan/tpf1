@@ -3,13 +3,13 @@ import unittest
 from assembly.mac2_data_macro import macros
 from config import config
 from execution.ex5_execute import Execute
-from firestore.test_data import TestData
+from test import TestDataUTS
 
 
 class NonConditional1(unittest.TestCase):
     def setUp(self) -> None:
         self.tpf_server = Execute()
-        self.test_data = TestData()
+        self.test_data = TestDataUTS()
         self.output = self.test_data.output
         self.output.add_regs(['R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R10', 'R11', 'R12', 'R13', 'R14', 'R15'])
         aaa_fields = [('WA0BBR', 2), ('WA0QHR', 6), ('WA0TKK', 1), ('WA0TY1', 1)]

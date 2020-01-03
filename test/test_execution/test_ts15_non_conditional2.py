@@ -1,13 +1,13 @@
 import unittest
 
 from execution.ex5_execute import Execute
-from firestore.test_data import TestData
+from test import TestDataUTS
 
 
 class NonConditional2(unittest.TestCase):
     def setUp(self) -> None:
         self.tpf_server = Execute()
-        self.test_data = TestData()
+        self.test_data = TestDataUTS()
         self.output = self.test_data.output
         ecb_fields = [('EBW000', 4), ('EBW004', 2), ('EBW008', 12), ('EBW020', 12), ('EBW032', 6), ('EBW040', 8),
                       ('EBW048', 8), ('EBW056', 8), ('EBW064', 6)]
