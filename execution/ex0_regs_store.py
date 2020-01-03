@@ -4,7 +4,7 @@ from typing import Union, Optional, Tuple, Dict
 from assembly.mac2_data_macro import macros
 from config import config
 from utils.data_type import DataType, Register
-from utils.errors import RegisterInvalidError, BaseAddressError
+from utils.errors import RegisterInvalidError, BaseAddressError, MaskError
 
 
 class Registers:
@@ -64,13 +64,7 @@ class Registers:
         try:
             return bytearray([reg_bytes[index] for index, bit in enumerate(f'{mask:04b}') if bit == '1'])
         except IndexError:
-            raise IndexError
-
-    def set_bytes(self, byte_array: bytearray, reg: Register) -> None:
-        self.get_value(reg)
-        if len(byte_array) != config.REG_BYTES:
-            raise ValueError
-        setattr(self, str(reg), DataType('F', bytes=byte_array).value)
+            raise MaskError
 
     def set_value(self, value: int, reg: Union[Register, str]) -> None:
         self.get_value(reg)
@@ -83,12 +77,12 @@ class Registers:
     def set_bytes_from_mask(self,  byte_array: bytearray, reg: Register, mask: int) -> None:
         reg_bytes = self.get_bytes(reg)
         if len(byte_array) < bin(mask).count('1'):
-            raise ValueError
+            raise MaskError
         try:
             reg_bytes = [byte_array.pop(0) if bit == '1' else reg_bytes[index]
                          for index, bit in enumerate(f'{mask:04b}')]
         except IndexError:
-            raise IndexError
+            raise MaskError
         setattr(self, str(reg), DataType('F', bytes=bytearray(reg_bytes)).value)
 
     def get_double_value(self, reg: Register) -> int:

@@ -9,13 +9,15 @@ from db.pnr import Pnr, PnrLocator
 from db.tpfdf import Tpfdf
 from execution.ex1_state import State
 from utils.data_type import Register
+from utils.errors import RegisterInvalidError, Pd0BaseError, PdredFieldError, PdredVerifyError, PdredSearchError, \
+    PdredNotFoundError, PdredPd0Error, DbredError
 
 
 class UserDefinedDbMacro(State):
     def _pd0_base(self, node: KeyValue) -> Optional[int]:
         workarea = node.get_value('WORKAREA')
         if workarea is None:
-            return None
+            raise Pd0BaseError
         if workarea[0] == 'LEV':
             level = f"D{workarea[1]}" if len(workarea[1]) == 1 else workarea[1]
             level_address = self.get_ecb_address(level, 'CE1CR')
@@ -23,10 +25,10 @@ class UserDefinedDbMacro(State):
         elif workarea[0] == 'REG':
             reg = Register(workarea[1])
             if not reg.is_valid():
-                raise TypeError
+                raise RegisterInvalidError
             pd0_base = self.regs.get_value(reg)
         else:
-            raise TypeError
+            raise Pd0BaseError
         return pd0_base
 
     def _get_pnr_locator(self):
@@ -41,9 +43,6 @@ class UserDefinedDbMacro(State):
         return node.fall_down
 
     def pdred(self, node: KeyValue) -> str:
-        # Get the base of PD0WRK
-        pd0_base = self._pd0_base(node)
-
         # Get the key from FIELD= or INDEX=
         self.seg.load_macro('PDEQU')
         self.seg.load_macro('PD0WRK')
@@ -53,7 +52,7 @@ class UserDefinedDbMacro(State):
             key = f"{key_number:2X}"
         except KeyError:
             # TODO Code for INDEX= Not in ETA5
-            raise TypeError
+            raise PdredFieldError
 
         # ERROR=
         error_label = node.get_value('ERROR')
@@ -66,10 +65,13 @@ class UserDefinedDbMacro(State):
             if data is None:
                 not_found = node.get_value('NOTFOUND')
                 if not_found is None:
-                    raise TypeError
+                    raise PdredVerifyError
                 return not_found
             else:
                 return node.fall_down
+
+        # Get the base of PD0WRK
+        pd0_base = self._pd0_base(node)
 
         # Get the item number to read (Item numbers start from 1)
         pd0_ctl_key: LabelReference = self.seg.lookup('PD0_CTL_KEY')
@@ -87,7 +89,7 @@ class UserDefinedDbMacro(State):
                 break
             if search[0] == 'START':
                 if len(search) != 2 or not search[1].startswith("'") or not search[1].endswith("'"):
-                    raise ValueError
+                    raise PdredSearchError
                 starts_with = search[1][1:-1]
 
         # Get the data
@@ -100,7 +102,7 @@ class UserDefinedDbMacro(State):
         if data is None:
             not_found = node.get_value('NOTFOUND')
             if not_found is None:
-                raise IndexError
+                raise PdredNotFoundError
             return not_found
         elif item_number == Pnr.get_len(pnr_locator, key):
             last_item_bit: int = self.seg.evaluate('#PD0_RT_LST')
@@ -111,7 +113,7 @@ class UserDefinedDbMacro(State):
         pd0_itm: LabelReference = self.seg.lookup('PD0_P_DATA') if packed else self.seg.lookup('PD0_C_ITM')
         pd0_rt_adr: LabelReference = self.seg.lookup('PD0_RT_ADR')
         if len(data) > pd0_itm.length:
-            raise ValueError
+            raise PdredPd0Error
         self.vm.set_bytes(data, pd0_base + pd0_itm.dsp, len(data))
         pd0_rt_adr_value = pd0_base + pd0_itm.dsp
         if node.get_value('POINT') == 'YES':
@@ -205,7 +207,7 @@ class TpfdfMacro(State):
             field: FieldBaseDsp = node.get_sub_value(key_n, 'S')
             if field is None:
                 # TODO For M, D, L types
-                raise TypeError
+                raise DbredError
             base_address = self.regs.get_value(field.base)
             length = self.seg.lookup(df_field_name).length
             byte_array = self.vm.get_bytes(base_address + field.dsp, length)

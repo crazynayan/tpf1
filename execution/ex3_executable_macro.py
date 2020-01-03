@@ -4,6 +4,7 @@ from assembly.seg5_exec_macro import KeyValue, SegmentCall
 from db.pnr import PnrLocator
 from execution.ex1_state import State
 from utils.data_type import DataType, Register
+from utils.errors import HeapaExecutionError, RegisterInvalidError, DumpExecutionError
 from utils.ucdr import pars_to_date, date_to_pars
 
 
@@ -63,7 +64,7 @@ class RealTimeMacro(State):
         elif return_code == 'E':
             return None
         else:
-            raise TypeError
+            raise DumpExecutionError
 
     def serrc(self, node: KeyValue) -> Optional[str]:
         return_code = node.keys[0]
@@ -74,7 +75,7 @@ class RealTimeMacro(State):
         elif return_code == 'E':
             return None
         else:
-            raise TypeError
+            raise DumpExecutionError
 
     def entrc(self, node: SegmentCall) -> str:
         self.call_stack.append((node.fall_down, self.seg.name))
@@ -113,7 +114,7 @@ class UserDefinedMacro(State):
         if ref is None:
             sref = node.get_value('SREF')
             if sref is None:
-                raise TypeError
+                raise HeapaExecutionError
             ref_bytes = self.seg.get_constant_bytes(sref, 8)
             ref = DataType('X', bytes=ref_bytes).decode
 
@@ -140,14 +141,14 @@ class UserDefinedMacro(State):
         elif command == 'FREE':
             pass
         else:
-            raise TypeError
+            raise HeapaExecutionError
         return node.fall_down
 
     def pnrcc(self, node: KeyValue) -> str:
         action = node.get_value('ACTION')
         reg = Register(node.get_value('REG'))
         if not reg.is_valid():
-            raise TypeError
+            raise RegisterInvalidError
         pnrcm_base = self.regs.get_value(reg)
         self.seg.load_macro('PNRCM')
         if self.is_error(node.label):

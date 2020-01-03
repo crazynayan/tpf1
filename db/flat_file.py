@@ -1,5 +1,7 @@
 from typing import Dict, Optional
 
+from utils.errors import FaceError
+
 
 class FlatFile:
     DB: Dict[str, bytearray] = dict()
@@ -48,5 +50,5 @@ class FlatFile:
         elif face_type < 0xFFFFFF and ordinal < 0xFF:
             file_address = f"{face_type:06X}{ordinal:02X}"
         else:
-            raise TypeError
+            raise FaceError
         return file_address

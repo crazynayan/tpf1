@@ -2,7 +2,7 @@ import unittest
 
 from execution.ex0_regs_store import Registers, Storage
 from utils.data_type import Register
-from utils.errors import RegisterInvalidError
+from utils.errors import RegisterInvalidError, MaskError
 
 
 class RegistersTest(unittest.TestCase):
@@ -19,7 +19,7 @@ class RegistersTest(unittest.TestCase):
         self.assertEqual(-1, self.regs.get_value('R2'))
         self.assertEqual(0xFFFFFFFF, self.regs.get_unsigned_value('R2'))
         # Check set and get bytes including from mask
-        self.regs.set_bytes(bytearray([0x12, 0x34, 0x56, 0x78]), Register('R03'))
+        self.regs.set_value(0x12345678, Register('R03'))
         self.assertEqual(bytearray([0x12, 0x34, 0x56, 0x78]), self.regs.get_bytes('R3'))
         self.assertEqual(bytearray([0x12, 0x56]), self.regs.get_bytes_from_mask(Register('R3'), 0b1010))
         self.regs.set_bytes_from_mask(bytearray([0x85, 0x23]), Register('R3'), 0b1010)
@@ -51,13 +51,11 @@ class RegistersTest(unittest.TestCase):
         self.assertRaises(RegisterInvalidError, self.regs.next_reg, 'F1')
         self.assertRaises(RegisterInvalidError, self.regs.get_bytes, '-1')
         self.assertRaises(RegisterInvalidError, self.regs.get_bytes_from_mask, '1', 15)
-        self.assertRaises(IndexError, self.regs.get_bytes_from_mask, 'R1', 0b10001)
-        self.assertRaises(RegisterInvalidError, self.regs.set_bytes, bytearray([0x00] * 4), 23)
-        self.assertRaises(ValueError, self.regs.set_bytes, bytearray([0x00] * 3), 'R9')
+        self.assertRaises(MaskError, self.regs.get_bytes_from_mask, 'R1', 0b10001)
         self.assertRaises(RegisterInvalidError, self.regs.set_value, 0, '0')
         self.assertRaises(RegisterInvalidError, self.regs.set_bytes_from_mask, bytearray([0x00] * 4), 'R04', 0b1111)
-        self.assertRaises(ValueError, self.regs.set_bytes_from_mask, bytearray([0x00] * 2), 'R9', 0b0111)
-        self.assertRaises(IndexError, self.regs.set_bytes_from_mask, bytearray([0x00] * 2), 'R1', 0b10000)
+        self.assertRaises(MaskError, self.regs.set_bytes_from_mask, bytearray([0x00] * 2), 'R9', 0b0111)
+        self.assertRaises(MaskError, self.regs.set_bytes_from_mask, bytearray([0x00] * 2), 'R1', 0b10000)
 
 
 class StorageTest(unittest.TestCase):

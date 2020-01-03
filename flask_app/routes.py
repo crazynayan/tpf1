@@ -12,6 +12,7 @@ from firestore.test_data import TestData
 from flask_app import tpf1_app
 from flask_app.auth import token_auth
 from flask_app.errors import error_response
+from utils.errors import ExecutionError
 
 
 def test_data_required(func):
@@ -88,7 +89,10 @@ def run_test_data(test_data_id: str, **kwargs) -> Response:
     if test_data.seg_name not in segments:
         return error_response(400, 'Segment not present - Test Data might be corrupted')
     tpf_server = Execute()
-    tpf_server.run(test_data.seg_name, test_data)
+    try:
+        tpf_server.run(test_data.seg_name, test_data)
+    except ExecutionError:
+        return error_response(501, 'Error in executing segment')
     return jsonify(test_data.get_output_dict())
 
 

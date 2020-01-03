@@ -3,6 +3,7 @@ from typing import Tuple
 
 from config import config
 from utils.data_type import DataType
+from utils.errors import UcdrError
 
 
 def date_to_pars(date_bytes: bytearray) -> Tuple[int, int]:
@@ -21,7 +22,7 @@ def date_to_pars(date_bytes: bytearray) -> Tuple[int, int]:
 
 def pars_to_date(days_from_start: int) -> bytearray:
     if not 0 <= days_from_start <= 0x7FFF:
-        raise ValueError
+        raise UcdrError
     date = config.START + timedelta(days=days_from_start)
     date_str = date.strftime('%d%b').upper()
     date_bytes = DataType('C', input=date_str).to_bytes()

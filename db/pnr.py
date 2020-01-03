@@ -4,7 +4,7 @@ from assembly.mac2_data_macro import macros
 from config import config
 from db.stream import Stream
 from utils.data_type import DataType
-from utils.errors import PnrElementError
+from utils.errors import PnrElementError, PnrLocatorNotFoundError
 
 
 class PnrAttribute:
@@ -54,7 +54,7 @@ class Pnr:
             pnr_doc = next(pnr['doc'] for pnr in Pnr.DB if pnr['id'] == pnr_locator)
             data_list = [element['data'] for element in pnr_doc if element['key'] == key]
         except StopIteration:
-            raise IndexError
+            raise PnrLocatorNotFoundError
         starts_with = DataType('C', input=starts_with).to_bytes() if starts_with is not None else None
         attribute = Pnr.get_attribute_by_key(key)
         start = (len(Pnr.HEADER) + len(attribute.std_fix) + len(attribute.std_var)) \
@@ -73,7 +73,7 @@ class Pnr:
         try:
             pnr_doc = next(pnr['doc'] for pnr in Pnr.DB if pnr['id'] == pnr_locator)
         except StopIteration:
-            raise IndexError
+            raise PnrLocatorNotFoundError
         return len([element for element in pnr_doc if element['key'] == key])
 
     @classmethod

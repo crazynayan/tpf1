@@ -6,7 +6,7 @@ from assembly.seg3_ins_type import RegisterRegister, RegisterFieldIndex, Registe
 from config import config
 from execution.ex1_state import State
 from utils.data_type import DataType, Register
-from utils.errors import PackExecutionError, BctExecutionError
+from utils.errors import PackExecutionError, BctExecutionError, ExExecutionError
 
 
 class LoadStore(State):
@@ -408,7 +408,7 @@ class LogicalUsefulConversion(State):
         elif value == 0:
             self._ex_command(exec_node)
         else:
-            raise TypeError
+            raise ExExecutionError
         return node.fall_down
 
     def pack(self, node: FieldLenFieldLen) -> str:

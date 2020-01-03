@@ -172,9 +172,9 @@ class Output(FirestoreDocument):
             return False
         self.regs = dict()
         for reg in reg_dict['regs']:
-            if not Register.is_valid(reg):
+            if not Register(reg).is_valid():
                 return False
-            self.regs['reg'] = 0
+            self.regs[reg] = 0
         self.save()
         return True
 

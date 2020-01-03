@@ -74,6 +74,18 @@ class BctExecutionError(ExecutionError):
     pass
 
 
+class ExExecutionError(ExecutionError):
+    pass
+
+
+class DumpExecutionError(ExecutionError):
+    pass
+
+
+class HeapaExecutionError(ExecutionError):
+    pass
+
+
 class SegmentNotFoundError(ExecutionError):
     pass
 
@@ -83,6 +95,50 @@ class EcbLevelFormatError(ExecutionError):
 
 
 class PartitionError(ExecutionError):
+    pass
+
+
+class MaskError(ExecutionError):
+    pass
+
+
+class Pd0BaseError(ExecutionError):
+    pass
+
+
+class PdredFieldError(ExecutionError):
+    pass
+
+
+class PdredVerifyError(ExecutionError):
+    pass
+
+
+class PdredSearchError(ExecutionError):
+    pass
+
+
+class PdredNotFoundError(ExecutionError):
+    pass
+
+
+class PdredPd0Error(ExecutionError):
+    pass
+
+
+class DbredError(ExecutionError):
+    pass
+
+
+class FaceError(ExecutionError):
+    pass
+
+
+class PnrLocatorNotFoundError(ExecutionError):
+    pass
+
+
+class UcdrError(ExecutionError):
     pass
 
 
