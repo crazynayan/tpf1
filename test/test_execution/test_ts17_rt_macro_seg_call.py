@@ -29,11 +29,11 @@ class RealTimeMacro(unittest.TestCase):
         # Flow is TS10 <-> TS01 -> TS02 -< TS10 => TS13
         self.tpf_server.run('TS10', self.test_data)
         # Check if OI EBT000,1 is executed (Proof of execution of TS01)
-        self.assertEqual('01', self.ecb['EBT000'].hex)
+        self.assertEqual('01', self.test_data.hex(self.ecb['EBT000']['data']))
         # Check if BCTR R5,0 is executed (Proof of execution of TS02)
         self.assertEqual(-1, self.output.regs['R5'])
         # Check if MVC EBW000,EBT000 is executed (Proof of execution of TS13)
-        self.assertEqual('01', self.ecb['EBW000'].hex)
+        self.assertEqual('01', self.test_data.hex(self.ecb['EBW000']['data']))
 
 
 if __name__ == '__main__':

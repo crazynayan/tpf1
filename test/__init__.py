@@ -1,8 +1,8 @@
-from base64 import b64encode
+from base64 import b64encode, b64decode
 from typing import Dict, List, Tuple
 
 from config import config
-from db.test_data import TestData, Core, FieldByte, Pnr, Tpfdf, FileItem, PoolFile, FixedFile, Output
+from db.test_data import TestData, Core, Pnr, Tpfdf, FileItem, PoolFile, FixedFile, Output
 from utils.data_type import Register
 from utils.errors import PoolFileSpecificationError, FileItemSpecificationError, InvalidBaseRegError
 
@@ -55,25 +55,22 @@ class TestDataUTS(TestData):
         return core
 
     def add_core(self, fields: List[str], macro_name: str, output: bool = False,
-                 base_reg: str = 'R0') -> Dict[str, 'FieldByte']:
+                 base_reg: str = 'R0') -> Dict[str, dict]:
         core = self._get_core(macro_name, output, base_reg)
         core_dict = dict()
         for field in fields:
-            field_byte: FieldByte = FieldByte()
-            field_byte.field = field
-            core.field_bytes.append(field_byte)
+            field_byte = {'field': field, 'data': str(), 'length': 0}
+            core.field_data.append(field_byte)
             core_dict[field] = field_byte
         return core_dict
 
     def add_core_with_len(self, fields: List[Tuple[str, int]], macro_name: str,
-                          base_reg: str = 'R0') -> Dict[str, 'FieldByte']:
+                          base_reg: str = 'R0') -> Dict[str, dict]:
         core = self._get_core(macro_name, True, base_reg)
         core_dict = dict()
         for field, length in fields:
-            field_byte: FieldByte = FieldByte()
-            field_byte.field = field
-            field_byte.length = length
-            core.field_bytes.append(field_byte)
+            field_byte = {'field': field, 'length': length, 'data': str()}
+            core.field_data.append(field_byte)
             core_dict[field] = field_byte
         return core_dict
 
@@ -184,3 +181,34 @@ class TestDataUTS(TestData):
             fixed_file.macro_name = macro_name
             self.fixed_files.append(fixed_file)
         return fixed_file
+
+    @staticmethod
+    def hex(data: str):
+        return b64decode(data).hex().upper()
+
+
+class FieldByte:
+
+    def __init__(self):
+        super().__init__()
+        self.field: str = str()
+        self.data: str = str()
+        self.length: int = 0
+
+    def __repr__(self):
+        return f"{self.field}"
+
+    @classmethod
+    def from_dict(cls, field_byte_array: Dict[str, bytearray]) -> List['FieldByte']:
+        field_bytes: List[cls] = list()
+        for field, byte_array in field_byte_array.items():
+            field_byte = cls()
+            field_byte.field = field
+            field_byte.data = b64encode(byte_array).decode()
+            field_bytes.append(field_byte)
+        return field_bytes
+
+    @classmethod
+    def to_dict(cls, field_bytes: List['FieldByte']) -> Dict[str, bytearray]:
+        return {field_byte.field.upper(): bytearray(b64decode(field_byte.data)) for field_byte in field_bytes
+                if field_byte.data}

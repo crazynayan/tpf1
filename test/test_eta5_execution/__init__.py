@@ -34,6 +34,7 @@ class NameGeneral(unittest.TestCase):
         # Registers
         self.test_data.output.add_regs(['R6', 'R1', 'R15'])
         # Equates
+        macros['UI2PF'].load()
         self.wa0pn2 = macros['WA0AA'].evaluate('#WA0PN2')
         self.wa0any = macros['WA0AA'].evaluate('#WA0ANY')
         self.wa0tty = macros['WA0AA'].evaluate('#WA0TTY')

@@ -17,7 +17,7 @@ class DbTest(unittest.TestCase):
         self.test_data.add_tpfdf(tr1gaa, '40', 'TR1GAA')
         self.tpf_server.run('TS20', self.test_data)
         self.assertEqual(21, self.output.regs['R0'])
-        self.assertEqual('80', self.ecb['EBW000'].hex)
+        self.assertEqual('80', self.test_data.hex(self.ecb['EBW000']['data']))
 
 
 if __name__ == '__main__':

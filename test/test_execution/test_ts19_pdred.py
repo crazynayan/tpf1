@@ -23,7 +23,7 @@ class PdredHfax(unittest.TestCase):
         self.assertEqual(0xF2F8F1F2, self.output.get_unsigned_value('R1'))
         self.assertEqual(0xF9F0F8F7, self.output.get_unsigned_value('R2'))
         self.assertEqual(0x00D6D9C4, self.output.get_unsigned_value('R3'))
-        self.assertEqual('24OCT', DataType('X', input=self.ecb['EBW000'].hex).decode)
+        self.assertEqual('24OCT', DataType('X', input=self.test_data.hex(self.ecb['EBW000']['data'])).decode)
         self.assertEqual(12, self.output.regs['R12'])
 
 

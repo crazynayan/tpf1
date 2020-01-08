@@ -10,10 +10,11 @@ from config import config
 from db.flat_file import FlatFile
 from db.pnr import Pnr
 from db.stream import Stream
-from db.test_data import TestData, FieldByte, Output
+from db.test_data import TestData, Output
 from db.tpfdf import Tpfdf
 from execution.debug import Debug
 from execution.ex0_regs_store import Registers, Storage
+from test import FieldByte
 from utils.data_type import DataType, Register
 from utils.errors import SegmentNotFoundError, EcbLevelFormatError, InvalidBaseRegError, TpfdfError, PartitionError, \
     FileItemSpecificationError, PoolFileSpecificationError, BaseAddressError
@@ -137,18 +138,18 @@ class State:
         self.vm.set_value(control_value, control_address, 2)
         self.vm.set_value(size_value, size_address, 2)
 
+    @staticmethod
+    def _field_data_to_bytearray(field_data: List[dict]):
+        return {field_dict['field']: bytearray(b64decode(field_dict['data'])) for field_dict in field_data}
+
     def _set_from_test_data(self, test_data: TestData) -> None:
         self.errors = set(test_data.errors)
         if test_data.partition:
             self.set_partition(test_data.partition)
         for core in test_data.cores:
             macro_name = core.macro_name.upper()
-            if macro_name == 'WA0AA':
-                self._set_core(core.field_bytes, macro_name, config.AAA)
-            elif macro_name == 'EB0EB':
-                self._set_core(core.field_bytes, macro_name, config.ECB)
-            elif macro_name == 'MI0MI':
-                self._set_core(core.field_bytes, macro_name, config.IMG)
+            if macro_name in config.DEFAULT_MACROS:
+                self._set_core(core.field_data, macro_name, config.DEFAULT_MACROS[macro_name])
         for reg, value in test_data.regs.items():
             self.regs.set_value(value, reg)
         Pnr.init_db()
@@ -157,8 +158,7 @@ class State:
             if pnr.data:
                 Pnr.add_from_data(pnr.data, pnr.key, pnr_locator)
             else:
-                Pnr.add_from_byte_array({field_dict['field']: bytearray(b64decode(field_dict['data']))
-                                         for field_dict in pnr.field_data}, pnr.key, pnr_locator)
+                Pnr.add_from_byte_array(self._field_data_to_bytearray(pnr.field_data), pnr.key, pnr_locator)
         Tpfdf.init_db()
         for lrec in test_data.tpfdf:
             if lrec.macro_name not in macros:
@@ -219,8 +219,8 @@ class State:
             # TODO Fixed File items and multiple level indexes to be coded later when scenario is with us
         return
 
-    def _set_core(self, field_bytes: List[FieldByte], macro_name: str, base_address: int) -> None:
-        field_byte_array: Dict[str, bytearray] = FieldByte.to_dict(field_bytes)
+    def _set_core(self, field_bytes: List[dict], macro_name: str, base_address: int) -> None:
+        field_byte_array: Dict[str, bytearray] = self._field_data_to_bytearray(field_bytes)
         for field, byte_array in field_byte_array.items():
             address = macros[macro_name].evaluate(field) + base_address
             self.vm.set_bytes(byte_array, address, len(byte_array))
@@ -237,11 +237,11 @@ class State:
         for core in output.cores:
             macro_name = core.macro_name.upper()
             if macro_name in config.DEFAULT_MACROS:
-                self._capture_core(core.field_bytes, macro_name, config.DEFAULT_MACROS[macro_name])
+                self._capture_core(core.field_data, macro_name, config.DEFAULT_MACROS[macro_name])
             elif macro_name in macros:
                 if not Register(core.base_reg).is_valid():
                     raise InvalidBaseRegError
-                self._capture_core(core.field_bytes, macro_name, self.regs.get_unsigned_value(core.base_reg))
+                self._capture_core(core.field_data, macro_name, self.regs.get_unsigned_value(core.base_reg))
         for reg in output.regs:
             output.regs[reg] = self.regs.get_value(reg)
         for reg in output.reg_pointers:
@@ -252,10 +252,10 @@ class State:
                 continue
         return
 
-    def _capture_core(self, field_bytes: List[FieldByte], macro_name: str, base_address: int) -> None:
+    def _capture_core(self, field_bytes: List[dict], macro_name: str, base_address: int) -> None:
         for field_byte in field_bytes:
-            field: LabelReference = macros[macro_name].lookup(field_byte.field.upper())
+            field: LabelReference = macros[macro_name].lookup(field_byte['field'].upper())
             address = field.dsp + base_address
-            length = field_byte.length if field_byte.length > 0 else field.length
-            field_byte.data = b64encode(self.vm.get_bytes(address, length)).decode()
+            length = field_byte['length'] if field_byte['length'] > 0 else field.length
+            field_byte['data'] = b64encode(self.vm.get_bytes(address, length)).decode()
         return

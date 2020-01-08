@@ -1,4 +1,3 @@
-from base64 import b64decode, b64encode
 from copy import deepcopy
 from typing import Dict, List, Union, Optional
 
@@ -11,47 +10,14 @@ from config import config
 from utils.data_type import Register
 
 
-class FieldByte(FirestoreDocument):
-
-    def __init__(self):
-        super().__init__()
-        self.field: str = str()
-        self.data: str = str()
-        self.length: int = 0
-
-    def __repr__(self):
-        return f"{self.field}:{self.hex}"
-
-    @property
-    def hex(self):
-        return b64decode(self.data).hex().upper()
-
-    @classmethod
-    def from_dict(cls, field_byte_array: Dict[str, bytearray]) -> List['FieldByte']:
-        field_bytes: List[cls] = list()
-        for field, byte_array in field_byte_array.items():
-            field_byte = cls()
-            field_byte.field = field
-            field_byte.data = b64encode(byte_array).decode()
-            field_bytes.append(field_byte)
-        return field_bytes
-
-    @classmethod
-    def to_dict(cls, field_bytes: List['FieldByte']) -> Dict[str, bytearray]:
-        return {field_byte.field.upper(): bytearray(b64decode(field_byte.data)) for field_byte in field_bytes
-                if field_byte.data}
-
-
-FieldByte.init('field_bytes')
-
-
 class Core(FirestoreDocument):
 
     def __init__(self):
         super().__init__()
         self.macro_name: str = str()
         self.base_reg: str = str()
-        self.field_bytes: List[FieldByte] = list()
+        self.variation: int = 0
+        self.field_data: List[dict] = list()
 
     def __repr__(self):
         return self.macro_name
@@ -71,33 +37,30 @@ class Core(FirestoreDocument):
             return False
         return True
 
-    def create_field_byte(self, field_dict: dict) -> FieldByte:
-        field_byte = next((field_byte for field_byte in self.field_bytes if field_byte.field == field_dict['field']),
+    def create_field_byte(self, field_dict: dict) -> dict:
+        field_byte = next((field_byte for field_byte in self.field_data if field_byte['field'] == field_dict['field']),
                           None)
         base_reg = field_dict['base_reg'] if 'base_reg' in field_dict else None
+        if base_reg is not None:
+            self.base_reg = base_reg
         field_dict.pop('base_reg', None)
         if not field_byte:
-            field_byte = FieldByte.create_from_dict(field_dict)
-            self.field_bytes.append(field_byte)
-            self.base_reg = base_reg if base_reg is not None else self.base_reg
-            self.save()
+            field_byte = field_dict
+            self.field_data.append(field_byte)
         else:
-            field_byte.length = field_dict['length'] if 'length' in field_dict else field_byte.length
-            field_byte.data = field_dict['data'] if 'data' in field_dict else field_byte.data
-            field_byte.save()
-            if base_reg is not None and self.base_reg != base_reg:
-                self.base_reg = base_reg
-                self.save()
+            if 'length' in field_dict:
+                field_byte['length'] = field_dict['length']
+            if 'data' in field_dict:
+                field_byte['data'] = field_dict['data']
+        self.save()
         return field_byte
 
-    def delete_field_byte(self, field_name: str) -> Optional[FieldByte]:
-        field_byte = next((field_byte for field_byte in self.field_bytes if field_byte.field == field_name), None)
+    def delete_field_byte(self, field_name: str) -> dict:
+        field_byte = next((field_byte for field_byte in self.field_data if field_byte['field'] == field_name), None)
         if not field_byte:
-            return None
-        copy_field_byte = deepcopy(field_byte)
-        self.field_bytes.remove(field_byte)
+            return dict()
+        self.field_data.remove(field_byte)
         self.save()
-        copy_field_byte.delete()
         return field_byte
 
 
@@ -132,18 +95,18 @@ class Output(FirestoreDocument):
         self.messages: List[str] = list()
         self.last_line: str = str()
 
-    def create_field_byte(self, macro_name: str, field_dict: dict) -> Optional[FieldByte]:
+    def create_field_byte(self, macro_name: str, field_dict: dict) -> dict:
         if not Core.validate_field_dict(macro_name, field_dict):
-            return None
+            return dict()
         if 'data' in field_dict:
-            return None
+            return dict()
         base_reg = field_dict['base_reg'] if 'base_reg' in field_dict and field_dict['base_reg'] != 'R0' else str()
         if not base_reg and macro_name not in config.DEFAULT_MACROS:
-            return None
+            return dict()
         if base_reg and macro_name in config.DEFAULT_MACROS:
-            return None
+            return dict()
         if base_reg and not Register(base_reg).is_valid():
-            return None
+            return dict()
         field_dict['base_reg'] = base_reg
         field_dict['length'] = field_dict['length'] if 'length' in field_dict and field_dict['length'] \
             else macros[macro_name].evaluate(f"L'{field_dict['field']}")
@@ -155,14 +118,14 @@ class Output(FirestoreDocument):
         field_byte = core.create_field_byte(field_dict)
         return field_byte
 
-    def delete_field_byte(self, macro_name: str, field_name: str) -> Optional[FieldByte]:
+    def delete_field_byte(self, macro_name: str, field_name: str) -> dict:
         core: Core = next((core for core in self.cores if core.macro_name == macro_name), None)
         if not core:
-            return None
-        field_byte: FieldByte = core.delete_field_byte(field_name)
+            return dict()
+        field_byte = core.delete_field_byte(field_name)
         if not field_byte:
-            return None
-        if not core.field_bytes:
+            return dict()
+        if not core.field_data:
             self.cores.remove(core)
             self.save()
             core.delete(cascade=True)
@@ -266,15 +229,15 @@ class TestData(FirestoreDocument):
     def get_header_dict(self) -> dict:
         return {'id': self.id, 'name': self.name, 'seg_name': self.seg_name}
 
-    def create_field_byte(self, macro_name, field_dict) -> Optional[FieldByte]:
+    def create_field_byte(self, macro_name, field_dict) -> dict:
         if not Core.validate_field_dict(macro_name, field_dict):
-            return None
+            return dict()
         if 'data' not in field_dict:
-            return None
+            return dict()
         if 'base_reg' in field_dict:
-            return None
+            return dict()
         if 'length' in field_dict:
-            return None
+            return dict()
         core = next((core for core in self.cores if core.macro_name == macro_name), None)
         if not core:
             core: Core = Core.create_from_dict({'macro_name': macro_name})
@@ -283,14 +246,14 @@ class TestData(FirestoreDocument):
         field_byte = core.create_field_byte(field_dict)
         return field_byte
 
-    def delete_field_byte(self, macro_name: str, field_name: str) -> Optional[FieldByte]:
+    def delete_field_byte(self, macro_name: str, field_name: str) -> dict:
         core: Core = next((core for core in self.cores if core.macro_name == macro_name), None)
         if not core:
-            return None
-        field_byte: FieldByte = core.delete_field_byte(field_name)
+            return dict()
+        field_byte = core.delete_field_byte(field_name)
         if not field_byte:
-            return None
-        if not core.field_bytes:
+            return dict()
+        if not core.field_data:
             self.cores.remove(core)
             self.save()
             core.delete(cascade=True)
@@ -396,7 +359,7 @@ class Tpfdf(FirestoreDocument):
         super().__init__()
         self.macro_name: str = str()
         self.key: str = str()
-        self.field_bytes: List[FieldByte] = list()
+        self.field_bytes: list = list()
 
 
 Tpfdf.init('tpfdf')
@@ -413,7 +376,7 @@ class FlatFile(FirestoreDocument):
         self.pool_files: List[PoolFile] = list()
         self.forward_chain_label: str = str()
         self.forward_chain_count: int = 0
-        self.field_bytes: List[FieldByte] = list()
+        self.field_bytes: list = list()
 
 
 class FixedFile(FlatFile):
@@ -452,7 +415,7 @@ class FileItem(FirestoreDocument):
         self.field: str = str()
         self.count_field: str = str()
         self.position: int = 0
-        self.field_bytes: List[FieldByte] = list()
+        self.field_bytes: list = list()
 
     def __repr__(self):
         return f"{self.field}:{self.field_bytes}"

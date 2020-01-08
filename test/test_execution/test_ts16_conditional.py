@@ -29,23 +29,23 @@ class Conditional(unittest.TestCase):
         self.assertEqual(1, self.output.regs['R3'])
         self.assertEqual(1, self.output.regs['R4'])
         self.assertEqual(1, self.output.regs['R5'])
-        self.assertEqual('C2C2C200', self.ecb['EBW020'].hex)
+        self.assertEqual('C2C2C200', self.test_data.hex(self.ecb['EBW020']['data']))
         self.assertEqual(0x32, self.output.regs['R7'])
-        self.assertEqual('0000123C', self.ecb['EBW024'].hex)
-        self.assertEqual('10', self.ecb['EBW015'].hex)
-        self.assertEqual('02', self.ecb['EBW016'].hex)
+        self.assertEqual('0000123C', self.test_data.hex(self.ecb['EBW024']['data']))
+        self.assertEqual('10', self.test_data.hex(self.ecb['EBW015']['data']))
+        self.assertEqual('02', self.test_data.hex(self.ecb['EBW016']['data']))
         # Test subroutines
-        self.assertEqual('0A', self.ecb['EBW010'].hex)
-        self.assertEqual('00', self.ecb['EBW011'].hex)
-        self.assertEqual('0C', self.ecb['EBW012'].hex)
-        self.assertEqual('0D', self.ecb['EBW013'].hex)
+        self.assertEqual('0A', self.test_data.hex(self.ecb['EBW010']['data']))
+        self.assertEqual('00', self.test_data.hex(self.ecb['EBW011']['data']))
+        self.assertEqual('0C', self.test_data.hex(self.ecb['EBW012']['data']))
+        self.assertEqual('0D', self.test_data.hex(self.ecb['EBW013']['data']))
 
     def test_ts16_2(self):
         # Update state to 1.2, 2.2, 3.2, 4.2, 5.2, 7.1.2, 7.2.2, 7.3.2, 7.4.2
-        self.i_ecb['EBW000'].data = b64encode(bytearray([0xC1, 0xC2, 0xC3, 0xC4])).decode()
-        self.i_ecb['EBW004'].data = b64encode(bytearray([0xC1, 0xC2, 0xC3, 0xC5])).decode()
-        self.i_ecb['EBW008'].data = b64encode(bytearray([0xC1])).decode()
-        self.i_ecb['EBW009'].data = b64encode(bytearray([0x11])).decode()
+        self.i_ecb['EBW000']['data'] = b64encode(bytearray([0xC1, 0xC2, 0xC3, 0xC4])).decode()
+        self.i_ecb['EBW004']['data'] = b64encode(bytearray([0xC1, 0xC2, 0xC3, 0xC5])).decode()
+        self.i_ecb['EBW008']['data'] = b64encode(bytearray([0xC1])).decode()
+        self.i_ecb['EBW009']['data'] = b64encode(bytearray([0x11])).decode()
         self.i_regs['R15'] = -10
         self.i_regs['R14'] = 23
         self.tpf_server.run('TS16', self.test_data)
@@ -55,17 +55,17 @@ class Conditional(unittest.TestCase):
         self.assertEqual(1, self.output.regs['R3'])
         self.assertEqual(2, self.output.regs['R4'])
         self.assertEqual(2, self.output.regs['R5'])
-        self.assertEqual('0B', self.ecb['EBW011'].hex)
-        self.assertEqual('C2C2C2C2', self.ecb['EBW020'].hex)
+        self.assertEqual('0B', self.test_data.hex(self.ecb['EBW011']['data']))
+        self.assertEqual('C2C2C2C2', self.test_data.hex(self.ecb['EBW020']['data']))
         self.assertEqual(0x33, self.output.regs['R7'])
-        self.assertEqual('0001234C', self.ecb['EBW024'].hex)
-        self.assertEqual('0F', self.ecb['EBW015'].hex)
-        self.assertEqual('03', self.ecb['EBW016'].hex)
+        self.assertEqual('0001234C', self.test_data.hex(self.ecb['EBW024']['data']))
+        self.assertEqual('0F', self.test_data.hex(self.ecb['EBW015']['data']))
+        self.assertEqual('03', self.test_data.hex(self.ecb['EBW016']['data']))
 
     def test_ts16_3(self) -> None:
         # Update state to 3.3, 5.3
         self.i_regs['R15'] = 10
-        self.i_ecb['EBW009'].data = b64encode(bytearray([0x10])).decode()
+        self.i_ecb['EBW009']['data'] = b64encode(bytearray([0x10])).decode()
         self.tpf_server.run('TS16', self.test_data)
         self.assertEqual(3, self.output.regs['R2'])
         self.assertEqual(2, self.output.regs['R3'])

@@ -131,7 +131,7 @@ def add_output_field(test_data_id: str, macro_name: str, **kwargs) -> Response:
     field_byte = kwargs[test_data_id].output.create_field_byte(macro_name, field_byte_dict)
     if not field_byte:
         return error_response(400, 'Error in adding field')
-    return jsonify(field_byte.cascade_to_dict())
+    return jsonify(field_byte)
 
 
 @tpf1_app.route('/test_data/<string:test_data_id>/output/cores/<string:macro_name>/fields/<string:field_name>',
@@ -142,7 +142,7 @@ def delete_output_field(test_data_id: str, macro_name: str, field_name: str, **k
     field_byte = kwargs[test_data_id].output.delete_field_byte(macro_name, unquote(field_name))
     if not field_byte:
         return error_response(400, 'Error in deleting field')
-    return jsonify(field_byte.cascade_to_dict())
+    return jsonify(field_byte)
 
 
 @tpf1_app.route('/test_data/<string:test_data_id>/input/cores/<string:macro_name>/fields', methods=['PATCH'])
@@ -153,7 +153,7 @@ def add_input_field(test_data_id: str, macro_name: str, **kwargs) -> Response:
     field_byte = kwargs[test_data_id].create_field_byte(macro_name, field_byte_dict)
     if not field_byte:
         return error_response(400, 'Error in adding field')
-    return jsonify(field_byte.cascade_to_dict())
+    return jsonify(field_byte)
 
 
 @tpf1_app.route('/test_data/<string:test_data_id>/input/cores/<string:macro_name>/fields/<string:field_name>',
@@ -164,7 +164,7 @@ def delete_input_field(test_data_id: str, macro_name: str, field_name: str, **kw
     field_byte = kwargs[test_data_id].delete_field_byte(macro_name, unquote(field_name))
     if not field_byte:
         return error_response(400, 'Error in deleting field')
-    return jsonify(field_byte.cascade_to_dict())
+    return jsonify(field_byte)
 
 
 @tpf1_app.route('/test_data/<string:test_data_id>/input/regs', methods=['PATCH'])
