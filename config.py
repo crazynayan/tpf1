@@ -78,7 +78,7 @@ class Config:
     # Used by db
     AAAPNR: str = 'AAAAAA'
 
-    # Used by test_data model
+    # Used by test_data model and execution
     COPY_SUFFIX: str = ' - Copy'
     DEFAULT_MACROS: dict = {'EB0EB': ECB, 'GLOBAL': GLOBAL, 'WA0AA': AAA, 'MI0MI': IMG}
 

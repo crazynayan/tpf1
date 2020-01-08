@@ -10,10 +10,10 @@ from config import config
 from db.flat_file import FlatFile
 from db.pnr import Pnr
 from db.stream import Stream
+from db.test_data import TestData, FieldByte, Output
 from db.tpfdf import Tpfdf
 from execution.debug import Debug
 from execution.ex0_regs_store import Registers, Storage
-from firestore.test_data import TestData, FieldByte, Output
 from utils.data_type import DataType, Register
 from utils.errors import SegmentNotFoundError, EcbLevelFormatError, InvalidBaseRegError, TpfdfError, PartitionError, \
     FileItemSpecificationError, PoolFileSpecificationError, BaseAddressError
@@ -235,12 +235,8 @@ class State:
         output.last_line = last_line
         for core in output.cores:
             macro_name = core.macro_name.upper()
-            if macro_name == 'WA0AA':
-                self._capture_core(core.field_bytes, macro_name, config.AAA)
-            elif macro_name == 'EB0EB':
-                self._capture_core(core.field_bytes, macro_name, config.ECB)
-            elif macro_name == 'MI0MI':
-                self._capture_core(core.field_bytes, macro_name, config.IMG)
+            if macro_name in config.DEFAULT_MACROS:
+                self._capture_core(core.field_bytes, macro_name, config.DEFAULT_MACROS[macro_name])
             elif macro_name in macros:
                 if not Register(core.base_reg).is_valid():
                     raise InvalidBaseRegError

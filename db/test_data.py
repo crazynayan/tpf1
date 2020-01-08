@@ -332,8 +332,9 @@ class TestData(FirestoreDocument):
         pnr_data = list()
         for data in data_list.split(','):
             data = data.strip()
-            if next((pnr for pnr in self.pnr if pnr.key == pnr_dict['key'] and pnr.locator == pnr_dict['locator']
-                                                and pnr.data == data and pnr.field_bytes == list()), None) is not None:
+            pnr = next((pnr for pnr in self.pnr if pnr.key == pnr_dict['key'] and pnr.locator == pnr_dict['locator']
+                        and pnr.data == data and pnr.field_bytes == list()), None)
+            if pnr is not None:
                 return None
             pnr_data.append(data)
         pnr = None

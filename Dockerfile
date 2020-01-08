@@ -12,7 +12,6 @@ COPY utils utils
 COPY assembly assembly
 COPY execution execution
 COPY db db
-COPY firestore firestore
 COPY flask_app flask_app
 COPY test test
 COPY config.py google-cloud-tokyo.json ./

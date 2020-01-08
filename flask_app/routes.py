@@ -6,11 +6,10 @@ from flask import Response, jsonify, request
 
 from assembly.mac2_data_macro import macros
 from assembly.seg6_segment import segments
+from db.test_data import TestData
 from execution.ex5_execute import Execute
-from firestore.auth import User
-from firestore.test_data import TestData
 from flask_app import tpf1_app
-from flask_app.auth import token_auth
+from flask_app.auth import token_auth, User
 from flask_app.errors import error_response
 from utils.errors import ExecutionError
 

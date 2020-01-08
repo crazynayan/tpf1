@@ -1,7 +1,7 @@
 from typing import Dict, List, Tuple
 
 from config import config
-from firestore.test_data import TestData, Core, FieldByte, Pnr, Tpfdf, FileItem, PoolFile, FixedFile, Output
+from db.test_data import TestData, Core, FieldByte, Pnr, Tpfdf, FileItem, PoolFile, FixedFile, Output
 from utils.data_type import Register
 from utils.errors import PoolFileSpecificationError, FileItemSpecificationError, InvalidBaseRegError
 
