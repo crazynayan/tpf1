@@ -1,4 +1,4 @@
-from base64 import b64encode
+from base64 import b64encode, b64decode
 from typing import Callable, Optional, Tuple, Dict, List, Set
 
 from assembly.mac0_generic import LabelReference
@@ -157,7 +157,8 @@ class State:
             if pnr.data:
                 Pnr.add_from_data(pnr.data, pnr.key, pnr_locator)
             else:
-                Pnr.add_from_byte_array(FieldByte.to_dict(pnr.field_bytes), pnr.key, pnr_locator)
+                Pnr.add_from_byte_array({field_dict['field']: bytearray(b64decode(field_dict['data']))
+                                         for field_dict in pnr.field_data}, pnr.key, pnr_locator)
         Tpfdf.init_db()
         for lrec in test_data.tpfdf:
             if lrec.macro_name not in macros:

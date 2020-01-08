@@ -111,10 +111,11 @@ class Pnr(FirestoreDocument):
         self.locator: str = str()
         self.key: str = str()
         self.data: str = str()
-        self.field_bytes: List[FieldByte] = list()
+        self.field_data: List[dict] = list()
+        self.variation: int = 0
 
     def __repr__(self):
-        return f"{self.locator}:{self.key}:{self.data}:{len(self.field_bytes)}"
+        return f"{self.locator}:{self.variation}:{self.key}:{self.data}:{len(self.field_data)}"
 
 
 Pnr.init('pnr')
@@ -326,14 +327,14 @@ class TestData(FirestoreDocument):
         if pnr_dict['locator'] and len(pnr_dict['locator']) != 6:
             return None
         data_list = pnr_dict['data'] if 'data' in pnr_dict else str()
-        if 'field_bytes' in pnr_dict:
+        if 'field_data' in pnr_dict:
             return None
-        pnr_dict['field_bytes'] = list()
+        pnr_dict['field_data'] = list()
         pnr_data = list()
         for data in data_list.split(','):
             data = data.strip()
             pnr = next((pnr for pnr in self.pnr if pnr.key == pnr_dict['key'] and pnr.locator == pnr_dict['locator']
-                        and pnr.data == data and pnr.field_bytes == list()), None)
+                        and pnr.data == data and pnr.field_data == list()), None)
             if pnr is not None:
                 return None
             pnr_data.append(data)
@@ -359,29 +360,28 @@ class TestData(FirestoreDocument):
         pnr = next((pnr for pnr in self.pnr if pnr.id == pnr_id), None)
         if not pnr:
             return None
-        if 'macro_name' not in core_dict or 'field_bytes' not in core_dict:
+        if 'macro_name' not in core_dict or 'field_data' not in core_dict:
             return None
         if core_dict['macro_name'] not in macros:
             return None
         macro: DataMacro = macros[core_dict['macro_name']]
         macro.load()
-        if not isinstance(core_dict['field_bytes'], dict):
+        if not isinstance(core_dict['field_data'], dict):
             return None
-        for field, value in core_dict['field_bytes'].items():
+        for field, value in core_dict['field_data'].items():
             if not macro.check(field):
                 return None
             if not isinstance(value, str):
                 return None
-        for field, value in core_dict['field_bytes'].items():
+        for field, value in core_dict['field_data'].items():
             field_dict = {'field': field, 'data': value}
-            field_byte = next((field_byte for field_byte in pnr.field_bytes
-                               if field_byte.field == field_dict['field']), None)
+            field_byte = next((field_byte for field_byte in pnr.field_data
+                               if field_byte['field'] == field_dict['field']), None)
             if not field_byte:
-                field_byte = FieldByte.create_from_dict(field_dict)
-                pnr.field_bytes.append(field_byte)
+                field_byte = field_dict
+                pnr.field_data.append(field_byte)
             else:
-                field_byte.data = field_dict['data']
-                field_byte.save()
+                field_byte['data'] = field_dict['data']
         pnr.data = str()
         pnr.save()
         return pnr

@@ -1,3 +1,4 @@
+from base64 import b64encode
 from typing import Dict, List, Tuple
 
 from config import config
@@ -81,7 +82,8 @@ class TestDataUTS(TestData):
         pnr = Pnr()
         pnr.key = key
         pnr.data = data if data else str()
-        pnr.field_bytes = FieldByte.from_dict(field_byte_array) if field_byte_array else list()
+        pnr.field_data = [{'field': field, 'data': b64encode(data_bytes).decode()}
+                          for field, data_bytes in field_byte_array.items()] if field_byte_array else list()
         pnr.locator = locator if locator else str()
         self.pnr.append(pnr)
 
