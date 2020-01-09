@@ -1,4 +1,5 @@
 import unittest
+from base64 import b64encode
 
 from assembly.mac2_data_macro import macros
 from execution.ex5_execute import Execute
@@ -16,21 +17,21 @@ class NameGeneral(unittest.TestCase):
         self.test_data = TestDataUTS()
         aaa_fields = ['WA0PTY', 'WA0ETG', 'WA0US4', 'WA0UB1', 'WA0PTI', 'WA0ET3', 'WA0ET4', 'WA0ET6', 'WA0ASC',
                       'WA0USE', 'WA0ET2', 'WA0XX3', 'WA0US3']
-        self.i_aaa = self.test_data.add_core(aaa_fields, 'WA0AA')
+        self.i_aaa = self.test_data.add_fields(aaa_fields, 'WA0AA')
         # === OUTPUT ====
         self.output = self.test_data.outputs[0]
         # AAA
         aaa_fields = ['WA0EXT', 'WA0PTY', 'WA0ETG', 'WA0PTI', 'WA0ET4', 'WA0ET5']
-        self.o_aaa = self.test_data.add_core(aaa_fields, 'WA0AA', output=True)
+        self.o_aaa = self.test_data.add_fields(aaa_fields, 'WA0AA', output=True)
         # ECB
         ecb_fields = ['EBW015', 'EBW014', 'EBW038', 'EBSW01', 'EBW010', 'EBW016', 'EBRS01']
-        self.o_ecb = self.test_data.add_core(ecb_fields, 'EB0EB', output=True)
+        self.o_ecb = self.test_data.add_fields(ecb_fields, 'EB0EB', output=True)
         ecb_fields = [('EBX000', 4), ('EBX004', 4), ('EBX008', 4), ('EBX012', 4)]
-        self.ecb_len = self.test_data.add_core_with_len(ecb_fields, 'EB0EB')
+        self.ecb_len = self.test_data.add_fields(ecb_fields, 'EB0EB')
         self.o_ecb = {**self.o_ecb, **self.ecb_len}
         # UI2PF
         ui2_fields = [('UI2CNN', 1), ('UI2INC', 3)]
-        self.o_ui2 = self.test_data.add_core_with_len(ui2_fields, 'UI2PF', base_reg='R7')
+        self.o_ui2 = self.test_data.add_fields(ui2_fields, 'UI2PF', base_reg='R7')
         # Registers
         self.test_data.output.add_regs(['R6', 'R1', 'R15'])
         # Equates
@@ -67,52 +68,52 @@ hfax_2812_gld = [
 
 fqtv_gld = [
     {
-        'PR00_60_FQT_CXR': DataType('C', input='BA').to_bytes(),
-        'PR00_60_FQT_FTN': DataType('C', input='NKE9086').to_bytes(),
-        'PR00_60_FQT_TYP': DataType('X', input='60').to_bytes(),
+        'PR00_60_FQT_CXR': b64encode(DataType('C', input='BA').to_bytes()).decode(),
+        'PR00_60_FQT_FTN': b64encode(DataType('C', input='NKE9086').to_bytes()).decode(),
+        'PR00_60_FQT_TYP': b64encode(DataType('X', input='60').to_bytes()).decode(),
     },
     {
-        'PR00_60_FQT_CXR': DataType('C', input='AA').to_bytes(),
-        'PR00_60_FQT_FTN': DataType('C', input='NKE9087').to_bytes(),
-        'PR00_60_FQT_TYP': DataType('X', input='80').to_bytes(),  # GLD
+        'PR00_60_FQT_CXR': b64encode(DataType('C', input='AA').to_bytes()).decode(),
+        'PR00_60_FQT_FTN': b64encode(DataType('C', input='NKE9087').to_bytes()).decode(),
+        'PR00_60_FQT_TYP': b64encode(DataType('X', input='80').to_bytes()).decode(),  # GLD
     },
 ]
 
 itin_2811_2812 = [
     {
-        'WI0ARC': DataType('C', input='BA').to_bytes(),
-        'WI0FNB': DataType('H', input='2812').to_bytes(),
-        'WI0DTE': DataType('X', input='4E2F').to_bytes(),
-        'WI0BRD': DataType('C', input='DFW').to_bytes(),
-        'WI0OFF': DataType('C', input='ORZ').to_bytes(),
+        'WI0ARC': b64encode(DataType('C', input='BA').to_bytes()).decode(),
+        'WI0FNB': b64encode(DataType('H', input='2812').to_bytes()).decode(),
+        'WI0DTE': b64encode(DataType('X', input='4E2F').to_bytes()).decode(),
+        'WI0BRD': b64encode(DataType('C', input='DFW').to_bytes()).decode(),
+        'WI0OFF': b64encode(DataType('C', input='ORZ').to_bytes()).decode(),
     },
     {
-        'WI0ARC': DataType('C', input='AA').to_bytes(),
-        'WI0FNB': DataType('H', input='2811').to_bytes(),
-        'WI0DTE': DataType('X', input='4E2F').to_bytes(),
-        'WI0BRD': DataType('C', input='DFW').to_bytes(),
-        'WI0OFF': DataType('C', input='ORD').to_bytes(),
+        'WI0ARC': b64encode(DataType('C', input='AA').to_bytes()).decode(),
+        'WI0FNB': b64encode(DataType('H', input='2811').to_bytes()).decode(),
+        'WI0DTE': b64encode(DataType('X', input='4E2F').to_bytes()).decode(),
+        'WI0BRD': b64encode(DataType('C', input='DFW').to_bytes()).decode(),
+        'WI0OFF': b64encode(DataType('C', input='ORD').to_bytes()).decode(),
     },
     {
-        'WI0ARC': DataType('C', input='AA').to_bytes(),
-        'WI0FNB': DataType('H', input='2812').to_bytes(),
-        'WI0DTE': DataType('X', input='4CC0').to_bytes(),
-        'WI0BRD': DataType('C', input='DFW').to_bytes(),
-        'WI0OFF': DataType('C', input='ORB').to_bytes(),
+        'WI0ARC': b64encode(DataType('C', input='AA').to_bytes()).decode(),
+        'WI0FNB': b64encode(DataType('H', input='2812').to_bytes()).decode(),
+        'WI0DTE': b64encode(DataType('X', input='4CC0').to_bytes()).decode(),
+        'WI0BRD': b64encode(DataType('C', input='DFW').to_bytes()).decode(),
+        'WI0OFF': b64encode(DataType('C', input='ORB').to_bytes()).decode(),
     },
     {
-        'WI0ARC': DataType('C', input='AA').to_bytes(),
-        'WI0FNB': DataType('H', input='2812').to_bytes(),
-        'WI0DTE': DataType('X', input='4E2F').to_bytes(),
-        'WI0BRD': DataType('C', input='DFX').to_bytes(),
-        'WI0OFF': DataType('C', input='ORC').to_bytes(),
+        'WI0ARC': b64encode(DataType('C', input='AA').to_bytes()).decode(),
+        'WI0FNB': b64encode(DataType('H', input='2812').to_bytes()).decode(),
+        'WI0DTE': b64encode(DataType('X', input='4E2F').to_bytes()).decode(),
+        'WI0BRD': b64encode(DataType('C', input='DFX').to_bytes()).decode(),
+        'WI0OFF': b64encode(DataType('C', input='ORC').to_bytes()).decode(),
     },
     {
-        'WI0ARC': DataType('C', input='AA').to_bytes(),
-        'WI0FNB': DataType('H', input='2812').to_bytes(),
-        'WI0DTE': DataType('X', input='4E2F').to_bytes(),
-        'WI0BRD': DataType('C', input='DFW').to_bytes(),
-        'WI0OFF': DataType('C', input='ORD').to_bytes(),
+        'WI0ARC': b64encode(DataType('C', input='AA').to_bytes()).decode(),
+        'WI0FNB': b64encode(DataType('H', input='2812').to_bytes()).decode(),
+        'WI0DTE': b64encode(DataType('X', input='4E2F').to_bytes()).decode(),
+        'WI0BRD': b64encode(DataType('C', input='DFW').to_bytes()).decode(),
+        'WI0OFF': b64encode(DataType('C', input='ORD').to_bytes()).decode(),
     },
 ]
 

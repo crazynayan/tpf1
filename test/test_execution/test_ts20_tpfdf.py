@@ -9,7 +9,7 @@ class DbTest(unittest.TestCase):
     def setUp(self) -> None:
         self.tpf_server = Execute()
         self.test_data = TestDataUTS()
-        self.ecb = self.test_data.add_core(['EBW000'], 'EB0EB', output=True)
+        self.ecb = self.test_data.add_fields(['EBW000'], 'EB0EB', output=True)
         self.output = self.test_data.output
         self.output.add_regs(['R0'])
 

@@ -12,12 +12,12 @@ class Conditional(unittest.TestCase):
         self.output = self.test_data.output
         self.output.add_all_regs()
         ecb_fields = [('EBW020', 4), ('EBW024', 4)]
-        self.ecb = self.test_data.add_core_with_len(ecb_fields, 'EB0EB')
+        self.ecb = self.test_data.add_fields(ecb_fields, 'EB0EB')
         ecb_fields = ['EBW015', 'EBW016', 'EBW010', 'EBW011', 'EBW012', 'EBW013']
-        ecb_len = self.test_data.add_core(ecb_fields, 'EB0EB', output=True)
+        ecb_len = self.test_data.add_fields(ecb_fields, 'EB0EB', output=True)
         self.ecb = {**self.ecb, **ecb_len}
         ecb_fields = ['EBW000', 'EBW004', 'EBW008', 'EBW009']
-        self.i_ecb = self.test_data.add_core(ecb_fields, 'EB0EB')
+        self.i_ecb = self.test_data.add_fields(ecb_fields, 'EB0EB')
         self.i_regs = self.test_data.add_all_regs()
 
     def test_ts16_1(self):

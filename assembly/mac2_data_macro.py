@@ -1,5 +1,5 @@
 import os
-from typing import Dict, List, Tuple, Set
+from typing import Dict, List, Tuple, Set, Optional
 
 from assembly.mac0_generic import LabelReference
 from assembly.mac1_implementation import DataMacroImplementation
@@ -51,6 +51,14 @@ class DataMacro(DataMacroImplementation):
     @property
     def loaded(self):
         return self.all_labels != dict()
+
+    @classmethod
+    def get_label_reference(cls, field_name) -> Optional[LabelReference]:
+        for _, data_macro in macros.items():
+            data_macro.load()
+            if data_macro.check(field_name):
+                return data_macro.lookup(field_name)
+        return None
 
 
 class _DataMacroCollection:

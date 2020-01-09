@@ -11,7 +11,7 @@ class RealTimeMacro(unittest.TestCase):
         self.output = self.test_data.output
         self.output.add_all_reg_pointers(2)
         self.output.add_regs(['R5'])
-        self.ecb = self.test_data.add_core(['EBT000', 'EBW000'], 'EB0EB', output=True)
+        self.ecb = self.test_data.add_fields(['EBT000', 'EBW000'], 'EB0EB', output=True)
 
     def test_ts17(self):
         self.tpf_server.run('TS17', self.test_data)

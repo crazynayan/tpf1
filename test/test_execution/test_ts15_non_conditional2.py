@@ -11,7 +11,7 @@ class NonConditional2(unittest.TestCase):
         self.output = self.test_data.output
         ecb_fields = [('EBW000', 4), ('EBW004', 2), ('EBW008', 12), ('EBW020', 12), ('EBW032', 6), ('EBW040', 8),
                       ('EBW048', 8), ('EBW056', 8), ('EBW064', 6)]
-        self.ecb = self.test_data.add_core_with_len(ecb_fields, 'EB0EB')
+        self.ecb = self.test_data.add_fields(ecb_fields, 'EB0EB')
         self.output.add_all_regs()
 
     def test_ts15(self):

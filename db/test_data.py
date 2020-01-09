@@ -37,22 +37,19 @@ class Core(FirestoreDocument):
             return False
         return True
 
-    def create_field_byte(self, field_dict: dict) -> dict:
+    def create_field_byte(self, field_dict: dict, persistence: bool) -> dict:
         field_byte = next((field_byte for field_byte in self.field_data if field_byte['field'] == field_dict['field']),
                           None)
-        base_reg = field_dict['base_reg'] if 'base_reg' in field_dict else None
-        if base_reg is not None:
-            self.base_reg = base_reg
-        field_dict.pop('base_reg', None)
         if not field_byte:
-            field_byte = field_dict
+            field_byte = field_dict.copy()
             self.field_data.append(field_byte)
         else:
             if 'length' in field_dict:
                 field_byte['length'] = field_dict['length']
             if 'data' in field_dict:
                 field_byte['data'] = field_dict['data']
-        self.save()
+        if persistence:
+            self.save()
         return field_byte
 
     def delete_field_byte(self, field_name: str) -> dict:
@@ -95,27 +92,34 @@ class Output(FirestoreDocument):
         self.messages: List[str] = list()
         self.last_line: str = str()
 
-    def create_field_byte(self, macro_name: str, field_dict: dict) -> dict:
+    def create_field_byte(self, macro_name: str, field_dict: dict, persistence=True) -> dict:
         if not Core.validate_field_dict(macro_name, field_dict):
             return dict()
         if 'data' in field_dict:
             return dict()
-        base_reg = field_dict['base_reg'] if 'base_reg' in field_dict and field_dict['base_reg'] != 'R0' else str()
+        base_reg = str()
+        if 'base_reg' in field_dict:
+            base_reg = field_dict['base_reg'] if field_dict['base_reg'] != 'R0' else str()
+            field_dict = field_dict.copy()
+            del field_dict['base_reg']
         if not base_reg and macro_name not in config.DEFAULT_MACROS:
             return dict()
         if base_reg and macro_name in config.DEFAULT_MACROS:
             return dict()
         if base_reg and not Register(base_reg).is_valid():
             return dict()
-        field_dict['base_reg'] = base_reg
         field_dict['length'] = field_dict['length'] if 'length' in field_dict and field_dict['length'] \
             else macros[macro_name].evaluate(f"L'{field_dict['field']}")
         core = next((core for core in self.cores if core.macro_name == macro_name), None)
-        if not core:
-            core: Core = Core.create_from_dict({'macro_name': macro_name, 'base_reg': base_reg})
+        if core:
+            core.base_reg = base_reg
+        else:
+            core_dict = {'macro_name': macro_name, 'base_reg': base_reg}
+            core: Core = Core.create_from_dict(core_dict) if persistence else Core.dict_to_doc(core_dict)
             self.cores.append(core)
-            self.save()
-        field_byte = core.create_field_byte(field_dict)
+            if persistence:
+                self.save()
+        field_byte = core.create_field_byte(field_dict, persistence)
         return field_byte
 
     def delete_field_byte(self, macro_name: str, field_name: str) -> dict:
@@ -229,7 +233,7 @@ class TestData(FirestoreDocument):
     def get_header_dict(self) -> dict:
         return {'id': self.id, 'name': self.name, 'seg_name': self.seg_name}
 
-    def create_field_byte(self, macro_name, field_dict) -> dict:
+    def create_field_byte(self, macro_name, field_dict, persistence=True) -> dict:
         if not Core.validate_field_dict(macro_name, field_dict):
             return dict()
         if 'data' not in field_dict:
@@ -240,10 +244,12 @@ class TestData(FirestoreDocument):
             return dict()
         core = next((core for core in self.cores if core.macro_name == macro_name), None)
         if not core:
-            core: Core = Core.create_from_dict({'macro_name': macro_name})
+            core: Core = Core.create_from_dict({'macro_name': macro_name}) if persistence \
+                else Core.dict_to_doc({'macro_name': macro_name})
             self.cores.append(core)
-            self.save()
-        field_byte = core.create_field_byte(field_dict)
+            if persistence:
+                self.save()
+        field_byte = core.create_field_byte(field_dict, persistence)
         return field_byte
 
     def delete_field_byte(self, macro_name: str, field_name: str) -> dict:
@@ -281,7 +287,7 @@ class TestData(FirestoreDocument):
         self.save()
         return True
 
-    def create_pnr_element(self, pnr_dict: dict) -> Optional[Pnr]:
+    def create_pnr_element(self, pnr_dict: dict, persistence: bool = True) -> Optional[Pnr]:
         if 'key' not in pnr_dict:
             return None
         if db_pnr.Pnr.get_attribute_by_name(pnr_dict['key']) is None:
@@ -304,9 +310,10 @@ class TestData(FirestoreDocument):
         pnr = None
         for data in pnr_data:
             pnr_dict['data'] = data
-            pnr = Pnr.create_from_dict(pnr_dict)
+            pnr = Pnr.create_from_dict(pnr_dict) if persistence else Pnr.dict_to_doc(pnr_dict, cascade=True)
             self.pnr.append(pnr)
-            self.save()
+            if persistence:
+                self.save()
         return pnr
 
     def delete_pnr_element(self, pnr_id: str) -> Optional[Pnr]:
@@ -319,7 +326,7 @@ class TestData(FirestoreDocument):
         pnr.delete(cascade=True)
         return copy_pnr
 
-    def create_pnr_field_bytes(self, pnr_id: str, core_dict: dict) -> Optional[Pnr]:
+    def create_pnr_field_bytes(self, pnr_id: str, core_dict: dict, persistence=True) -> Optional[Pnr]:
         pnr = next((pnr for pnr in self.pnr if pnr.id == pnr_id), None)
         if not pnr:
             return None
@@ -346,7 +353,8 @@ class TestData(FirestoreDocument):
             else:
                 field_byte['data'] = field_dict['data']
         pnr.data = str()
-        pnr.save()
+        if persistence:
+            pnr.save()
         return pnr
 
 

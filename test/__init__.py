@@ -1,8 +1,11 @@
+import random
+import string
 from base64 import b64encode, b64decode
-from typing import Dict, List, Tuple
+from typing import Dict, List, Union
 
+from assembly.mac2_data_macro import DataMacro
 from config import config
-from db.test_data import TestData, Core, Pnr, Tpfdf, FileItem, PoolFile, FixedFile, Output
+from db.test_data import TestData, Pnr, Tpfdf, FileItem, PoolFile, FixedFile, Output
 from utils.data_type import Register
 from utils.errors import PoolFileSpecificationError, FileItemSpecificationError, InvalidBaseRegError
 
@@ -44,54 +47,41 @@ class TestDataUTS(TestData):
             self.regs[reg] = 0
         return self.regs
 
-    def _get_core(self, macro_name: str, output: bool, base_reg) -> 'Core':
-        cores = self.outputs[0].cores if output else self.cores
-        core: Core = next((core for core in cores if core.macro_name == macro_name), None)
-        if not core:
-            core = Core()
-            core.macro_name = macro_name
-            core.base_reg = base_reg
-            cores.append(core)
-        return core
-
-    def add_core(self, fields: List[str], macro_name: str, output: bool = False,
-                 base_reg: str = 'R0') -> Dict[str, dict]:
-        core = self._get_core(macro_name, output, base_reg)
+    def add_fields(self, fields: List[Union[str, tuple]], macro_name: str, output: bool = False,
+                   base_reg: str = None) -> Dict[str, dict]:
         core_dict = dict()
+        field_dict = dict()
+        if base_reg:
+            field_dict['base_reg'] = base_reg
+            output = True
+        if isinstance(fields[0], tuple):
+            output = True
         for field in fields:
-            field_byte = {'field': field, 'data': str(), 'length': 0}
-            core.field_data.append(field_byte)
-            core_dict[field] = field_byte
+            field, length = field if isinstance(field, tuple) else (field, 0)
+            field_dict['field'] = field
+            if output:
+                field_dict['length'] = length
+                field_data = self.output.create_field_byte(macro_name, field_dict, persistence=False)
+            else:
+                field_dict['data'] = b64encode(bytes([0x00])).decode()
+                field_data = self.create_field_byte(macro_name, field_dict, persistence=False)
+            core_dict[field] = field_data
         return core_dict
 
-    def add_core_with_len(self, fields: List[Tuple[str, int]], macro_name: str,
-                          base_reg: str = 'R0') -> Dict[str, dict]:
-        core = self._get_core(macro_name, True, base_reg)
-        core_dict = dict()
-        for field, length in fields:
-            field_byte = {'field': field, 'length': length, 'data': str()}
-            core.field_data.append(field_byte)
-            core_dict[field] = field_byte
-        return core_dict
+    def add_pnr_element(self, data_list: List[str], key: str, locator: str = None) -> Pnr:
+        pnr_dict = {'key': key, 'data': ','.join(data_list)}
+        if locator:
+            pnr_dict['locator'] = locator
+        pnr = self.create_pnr_element(pnr_dict, persistence=False)
+        pnr.set_id(''.join(random.choices(string.ascii_uppercase + string.ascii_lowercase + string.digits, k=20)))
+        return pnr
 
-    def add_pnr(self, key: str, data: str = None, field_byte_array: Dict[str, bytearray] = None,
-                locator: str = None) -> None:
-        pnr = Pnr()
-        pnr.key = key
-        pnr.data = data if data else str()
-        pnr.field_data = [{'field': field, 'data': b64encode(data_bytes).decode()}
-                          for field, data_bytes in field_byte_array.items()] if field_byte_array else list()
-        pnr.locator = locator if locator else str()
-        self.pnr.append(pnr)
-
-    def add_pnr_from_data(self, data_list: List[str], key: str, locator: str = None) -> None:
-        for data in data_list:
-            self.add_pnr(key, data=data, locator=locator)
-        return
-
-    def add_pnr_from_byte_array(self, byte_array_list: List[Dict[str, bytearray]], key, locator: str = None):
-        for byte_array in byte_array_list:
-            self.add_pnr(key, field_byte_array=byte_array, locator=locator)
+    def add_pnr_field_data(self, field_data_list: List[Dict[str, str]], key, locator: str = None) -> None:
+        core_dict = {'macro_name': DataMacro.get_label_reference(next(iter(field_data_list[0].keys()))).name}
+        for field_data in field_data_list:
+            core_dict['field_data'] = field_data
+            pnr = self.add_pnr_element(list(), key, locator)
+            self.create_pnr_field_bytes(pnr.id, core_dict, persistence=False)
         return
 
     def add_tpfdf(self, byte_array_list: List[Dict[str, bytearray]], key, macro_name: str):

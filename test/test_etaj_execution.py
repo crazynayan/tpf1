@@ -28,8 +28,8 @@ class EtajTest(unittest.TestCase):
         self.test_data = TestDataUTS()
         self.output = self.test_data.output
         # Test data setup
-        self.test_data.add_pnr('group_plan', data='BTS-B4T0/108/11-FINANCIAL SERVICES')
-        self.aaa = self.test_data.add_core(['WA0POR', 'WA0FNS'], 'WA0AA')
+        self.test_data.add_pnr_element(['BTS-B4T0/108/11-FINANCIAL SERVICES'], 'group_plan')
+        self.aaa = self.test_data.add_fields(['WA0POR', 'WA0FNS'], 'WA0AA')
         self.aaa['WA0POR']['data'] = b64encode(DataType('X', input='006F2F').to_bytes()).decode()
         self.aaa['WA0FNS']['data'] = b64encode(bytes([macros['WA0AA'].evaluate('#WA0TVL')])).decode()
         self.output.add_regs(['R6'])

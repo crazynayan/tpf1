@@ -13,11 +13,11 @@ class NonConditional1(unittest.TestCase):
         self.output = self.test_data.output
         self.output.add_regs(['R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R10', 'R11', 'R12', 'R13', 'R14', 'R15'])
         aaa_fields = [('WA0BBR', 2), ('WA0QHR', 6), ('WA0TKK', 1), ('WA0TY1', 1)]
-        self.aaa = self.test_data.add_core_with_len(aaa_fields, 'WA0AA')
+        self.aaa = self.test_data.add_fields(aaa_fields, 'WA0AA')
         ecb_fields = [('EBW001', 6), ('EBW008', 6)]
-        self.ecb = self.test_data.add_core_with_len(ecb_fields, 'EB0EB')
+        self.ecb = self.test_data.add_fields(ecb_fields, 'EB0EB')
         ecb_fields = ['EBW000', 'EBW016', 'EBW017', 'EBW018']
-        ecb_len = self.test_data.add_core(ecb_fields, 'EB0EB', output=True)
+        ecb_len = self.test_data.add_fields(ecb_fields, 'EB0EB', output=True)
         self.ecb = {**self.ecb, **ecb_len}
 
     def test_ts14(self):

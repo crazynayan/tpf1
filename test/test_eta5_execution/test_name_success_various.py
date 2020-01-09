@@ -9,7 +9,7 @@ class NameSuccessVarious(NameGeneral):
         super().setUp()
 
     def test_infant_group_call_from_TOQ1(self) -> None:
-        self.test_data.add_pnr_from_data(['I/5ZAVERI', '3ZAVERI', 'C/25TOURS', '6SHAH', 'I/2SHAH'], 'name')
+        self.test_data.add_pnr_element(['I/5ZAVERI', '3ZAVERI', 'C/25TOURS', '6SHAH', 'I/2SHAH'], 'name')
         self.tpf_server.run('TOQ1', self.test_data)
         self.assertEqual('$$TOQ1$$.4', self.output.last_line)
         self.assertListEqual(list(), self.output.dumps)
@@ -21,7 +21,7 @@ class NameSuccessVarious(NameGeneral):
         self.assertEqual('00', self.test_data.hex(self.o_aaa['WA0PTI']['data']))  # Infants
 
     def test_infant_group_with_error_from_itinerary_police_not_file_rec_mode_ETA2(self) -> None:
-        self.test_data.add_pnr_from_data(['I/5ZAVERI', '3ZAVERI', 'C/25TOURS', '6SHAH', 'I/2SHAH'], 'name')
+        self.test_data.add_pnr_element(['I/5ZAVERI', '3ZAVERI', 'C/25TOURS', '6SHAH', 'I/2SHAH'], 'name')
         self.i_aaa['WA0PTI']['data'] = b64encode(bytes([7])).decode()
         self.i_aaa['WA0PTY']['data'] = b64encode(bytes([32])).decode()
         self.i_aaa['WA0ET3']['data'] = b64encode(bytes([0x00])).decode()
@@ -37,7 +37,7 @@ class NameSuccessVarious(NameGeneral):
         self.assertEqual('07', self.test_data.hex(self.o_aaa['WA0PTI']['data']))  # Infants
 
     def test_infant_group_with_error_from_itinerary_police_file_rec_mode_FRD1(self) -> None:
-        self.test_data.add_pnr_from_data(['I/5ZAVERI', '3ZAVERI', 'C/25TOURS', '6SHAH', 'I/2SHAH'], 'name')
+        self.test_data.add_pnr_element(['I/5ZAVERI', '3ZAVERI', 'C/25TOURS', '6SHAH', 'I/2SHAH'], 'name')
         self.i_aaa['WA0PTI']['data'] = b64encode(bytes([0x00])).decode()
         self.i_aaa['WA0PTY']['data'] = b64encode(bytes([0x00])).decode()
         self.i_aaa['WA0ET3']['data'] = b64encode(bytes([0x10])).decode()

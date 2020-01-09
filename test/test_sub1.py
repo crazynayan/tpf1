@@ -12,8 +12,8 @@ class Sub1Test(unittest.TestCase):
         self.tpf_server = Execute()
         self.test_data = TestDataUTS()
         self.output = self.test_data.output
-        self.i_ecb = self.test_data.add_core(['EBX000', 'EBX003', 'EBX008'], 'EB0EB')
-        self.o_ecb = self.test_data.add_core_with_len([('EBX000', 3), ('EBX003', 5), ('EBX008', 3)], 'EB0EB')
+        self.i_ecb = self.test_data.add_fields(['EBX000', 'EBX003', 'EBX008'], 'EB0EB')
+        self.o_ecb = self.test_data.add_fields([('EBX000', 3), ('EBX003', 5), ('EBX008', 3)], 'EB0EB')
         self.output.regs['R0'] = 0
 
     def test_b4t0(self):

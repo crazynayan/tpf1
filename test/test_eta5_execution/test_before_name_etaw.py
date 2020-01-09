@@ -8,7 +8,7 @@ class BeforeNameETAW(NameGeneral):
 
     def setUp(self) -> None:
         super().setUp()
-        self.test_data.add_pnr_from_data(['1ZAVERI'], 'name')
+        self.test_data.add_pnr_element(['1ZAVERI'], 'name')
 
     def test_HFX_BA_TKV_SRT5(self):
         self.i_aaa['WA0ET6']['data'] = b64encode(bytes([self.wa0hfx])).decode()
@@ -29,7 +29,7 @@ class BeforeNameETAW(NameGeneral):
     def test_ASC_ITN_fqtv_ETAS(self):
         self.i_aaa['WA0ASC']['data'] = b64encode(bytes([0x01])).decode()
         self.i_aaa['WA0ET2']['data'] = b64encode(bytes([self.wa0itn])).decode()
-        self.test_data.add_pnr_from_byte_array(fqtv_gld, 'fqtv', config.AAAPNR)
+        self.test_data.add_pnr_field_data(fqtv_gld, 'fqtv', config.AAAPNR)
         self.tpf_server.run('ETA5', self.test_data)
         self.assertEqual('$$ETAW$$.1', self.output.last_line)
         self.assertEqual('C5E3C1E2', self.test_data.hex(self.o_ecb['EBX008']['data']))  # ETAS
@@ -43,7 +43,7 @@ class BeforeNameETAW(NameGeneral):
 
     def test_ASC_fqtv_ETAS(self):
         self.i_aaa['WA0ASC']['data'] = b64encode(bytes([0x01])).decode()
-        self.test_data.add_pnr_from_byte_array(fqtv_gld, 'fqtv', config.AAAPNR)
+        self.test_data.add_pnr_field_data(fqtv_gld, 'fqtv', config.AAAPNR)
         self.tpf_server.run('ETA5', self.test_data)
         self.assertEqual('$$ETAW$$.1', self.output.last_line)
         self.assertNotEqual('C5E3C1E2', self.test_data.hex(self.o_ecb['EBX008']['data']))  # ETAS
@@ -56,7 +56,7 @@ class BeforeNameETAW(NameGeneral):
 
     def test_AFU_subs_ETGN(self):
         self.i_aaa['WA0USE']['data'] = b64encode(bytes([self.wa0afu])).decode()
-        self.test_data.add_pnr_from_data(['TEST'], 'subs_card_seg')
+        self.test_data.add_pnr_element(['TEST'], 'subs_card_seg')
         self.tpf_server.run('ETA5', self.test_data)
         self.assertEqual('$$ETAW$$.1', self.output.last_line)
         self.assertEqual('C5E3C7D5', self.test_data.hex(self.o_ecb['EBX012']['data']))  # ETGN
