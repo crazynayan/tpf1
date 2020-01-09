@@ -5,7 +5,7 @@ from typing import Dict, List, Union
 
 from assembly.mac2_data_macro import DataMacro
 from config import config
-from db.test_data import TestData, Pnr, Tpfdf, FileItem, PoolFile, FixedFile, Output
+from db.test_data import TestData, Pnr, FileItem, PoolFile, FixedFile, Output
 from utils.data_type import Register
 from utils.errors import PoolFileSpecificationError, FileItemSpecificationError, InvalidBaseRegError
 
@@ -84,13 +84,11 @@ class TestDataUTS(TestData):
             self.create_pnr_field_bytes(pnr.id, core_dict, persistence=False)
         return
 
-    def add_tpfdf(self, byte_array_list: List[Dict[str, bytearray]], key, macro_name: str):
-        for byte_array in byte_array_list:
-            lrec = Tpfdf()
-            lrec.key = key
-            lrec.macro_name = macro_name
-            lrec.field_bytes = FieldByte.from_dict(byte_array)
-            self.tpfdf.append(lrec)
+    def add_tpfdf(self, field_data_list: List[Dict[str, str]], key: str, macro_name: str):
+        df_dict = {'key': key, 'macro_name': macro_name, 'variation': 0}
+        for field_data in field_data_list:
+            df_dict['field_data'] = field_data
+            self.create_tpfdf_lrec(df_dict, persistence=False)
         return
 
     def add_file(self, fixed_rec_id: int, fixed_file_type: int, fixed_file_ordinal: int, fixed_macro_name: str,

@@ -163,7 +163,7 @@ class State:
         for lrec in test_data.tpfdf:
             if lrec.macro_name not in macros:
                 raise TpfdfError
-            lrec_data = FieldByte.to_dict(lrec.field_bytes)
+            lrec_data = self._field_data_to_bytearray(lrec.field_data)
             Tpfdf.add(lrec_data, lrec.key, lrec.macro_name)
         self._capture_file(test_data)
         return

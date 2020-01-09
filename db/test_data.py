@@ -81,6 +81,19 @@ class Pnr(FirestoreDocument):
 Pnr.init('pnr')
 
 
+class Tpfdf(FirestoreDocument):
+
+    def __init__(self):
+        super().__init__()
+        self.macro_name: str = str()
+        self.key: str = str()
+        self.field_data: list = list()
+        self.variation: int = 0
+
+
+Tpfdf.init('tpfdf')
+
+
 class Output(FirestoreDocument):
 
     def __init__(self):
@@ -357,20 +370,40 @@ class TestData(FirestoreDocument):
             pnr.save()
         return pnr
 
+    def create_tpfdf_lrec(self, df_dict: dict, persistence=True) -> Optional[Tpfdf]:
+        if set(df_dict) != {'key', 'field_data', 'macro_name', 'variation'}:
+            return None
+        if not isinstance(df_dict['key'], str) or len(df_dict['key']) != 2 or not df_dict['key'].isalnum():
+            return None
+        if df_dict['macro_name'] not in macros:
+            return None
+        df_macro = macros[df_dict['macro_name']]
+        df_macro.load()
+        if not isinstance(df_dict['field_data'], dict) or not df_dict['field_data']:
+            return None
+        if not isinstance(df_dict['variation'], int):
+            return None
+        for field, value in df_dict['field_data'].items():
+            if not df_macro.check(field):
+                return None
+            if not isinstance(value, str):
+                return None
+        df_dict = df_dict.copy()
+        df_dict['key'] = df_dict['key'].upper()
+        df_dict['field_data'] = [{'field': field, 'data': value} for field, value in df_dict['field_data'].items()]
+        df_lrec = next((lrec for lrec in self.tpfdf if lrec.field_data == df_dict['field_data'] and
+                        lrec.macro_name == df_dict['macro_name'] and lrec.key == df_dict['key'] and
+                        lrec.variation == df_dict['variation']), None)
+        if df_lrec:
+            return None
+        df_doc = Tpfdf.create_from_dict(df_dict) if persistence else Tpfdf.dict_to_doc(df_dict)
+        self.tpfdf.append(df_doc)
+        if persistence:
+            self.save()
+        return df_doc
+
 
 TestData.init('test_data')
-
-
-class Tpfdf(FirestoreDocument):
-
-    def __init__(self):
-        super().__init__()
-        self.macro_name: str = str()
-        self.key: str = str()
-        self.field_bytes: list = list()
-
-
-Tpfdf.init('tpfdf')
 
 
 class FlatFile(FirestoreDocument):
