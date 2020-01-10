@@ -93,6 +93,42 @@ components:
           additionalProperties:
             type: integer
           example: {}
+    Tpfdf:
+      type:
+        object
+      properties:
+        id:
+          type: string
+          example: 4xrCCwXKUHGW0RDU7pUi
+          required: true
+        macro_name:
+          type: string
+          example: TR1GAA
+          required: true
+        key:
+          type: string
+          example: 40
+          required: true
+          maxLength: 2
+          minLength: 2
+        field_data:
+          type: array
+          required: True
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                example: TR1G_40_PTI
+              data:
+                type: string
+                format: byte
+                example: AQ==
+        variation:
+          type: integer
+          example: 0
+          required: true
+          minimum: 0
     Error404:
       type:
         object
@@ -1017,6 +1053,117 @@ paths:
                   message:
                     type: string
                     example: "Error in adding field"
+        '404':
+          description: Test Data ID is not present in the DB
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error404'
+
+  /test_data/{test_data_id}/input/tpfdf:
+    patch:
+      summary: Add a Tpfdf lrec
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: test_data_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: E1hI8xpARRIKbLgSWIUL
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                macro_name:
+                  type: string
+                  example: TR1GAA
+                  required: true
+                key:
+                  type: string
+                  example: '40'
+                  required: true
+                  maxLength: 2
+                  minLength: 2
+                field_data:
+                  type: object
+                  required: True
+                  additionalProperties:
+                    type: string
+                  example: {'TR1G_40_PTI': 'AQ=='}
+                variation:
+                  type: integer
+                  example: 0
+                  required: true
+                  minimum: 0
+      responses:
+        '200':
+          description: Tpfdf lrec added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tpfdf'
+        '400':
+          description: Error in adding field
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Bad Request
+                  message:
+                    type: string
+                    example: "Error in adding Tpfdf lrec"
+        '404':
+          description: Test Data ID is not present in the DB
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error404'
+
+  /test_data/{test_data_id}/input/tpfdf/{tpfdf_id}:
+    delete:
+      summary: Delete a Tpfdf lrec
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: test_data_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: E1hI8xpARRIKbLgSWIUL
+        - name: tpfdf_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 4xrCCwXKUHGW0RDU7pUi
+      responses:
+        '200':
+          description: Tpfdf lrec deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tpfdf'
+        '400':
+          description: Error in deleting Tpfdf lrec
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Bad Request
+                  message:
+                    type: string
+                    example: "Error in deleting Tpfdf lrec"
         '404':
           description: Test Data ID is not present in the DB
           content:
