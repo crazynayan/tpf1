@@ -10,7 +10,8 @@ from config import config
 from db.flat_file import FlatFile
 from db.pnr import Pnr
 from db.stream import Stream
-from db.test_data import TestData, Output
+from db.test_data import TestData
+from db.test_data_elements import Output
 from db.tpfdf import Tpfdf
 from execution.debug import Debug
 from execution.ex0_regs_store import Registers, Storage

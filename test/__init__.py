@@ -5,7 +5,8 @@ from typing import Dict, List, Union
 
 from assembly.mac2_data_macro import DataMacro
 from config import config
-from db.test_data import TestData, Pnr, FileItem, PoolFile, FixedFile, Output
+from db.test_data import TestData
+from db.test_data_elements import Pnr, Output, FixedFile, PoolFile, FileItem
 from utils.data_type import Register
 from utils.errors import PoolFileSpecificationError, FileItemSpecificationError, InvalidBaseRegError
 

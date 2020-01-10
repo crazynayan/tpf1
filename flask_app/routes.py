@@ -7,6 +7,7 @@ from flask import Response, jsonify, request
 from assembly.mac2_data_macro import macros
 from assembly.seg6_segment import segments
 from db.test_data import TestData
+from db.test_data_elements import Pnr, Tpfdf
 from execution.ex5_execute import Execute
 from flask_app import tpf1_app
 from flask_app.auth import token_auth, User
@@ -48,10 +49,10 @@ def create_test_data() -> Response:
 @tpf1_app.route('/test_data')
 @token_auth.login_required
 def get_test_data_header() -> Response:
-    name = request.args.get('name')
+    name: str = request.args.get('name')
     if name is not None:
         name = unquote(name)
-        test_data = TestData.get_test_data_by_name(name)
+        test_data: TestData = TestData.get_test_data_by_name(name)
         if not test_data:
             return error_response(404, f'No test data found by this name')
         return jsonify([test_data.get_header_dict()])
@@ -64,7 +65,7 @@ def get_test_data_header() -> Response:
 @test_data_required
 def rename_test_data(test_data_id: str, **kwargs) -> Response:
     header: dict = request.get_json()
-    test_data = kwargs[test_data_id]
+    test_data: TestData = kwargs[test_data_id]
     if not test_data.rename(header):
         return error_response(400, 'Error in renaming test data')
     return jsonify(test_data.get_header_dict())
@@ -117,7 +118,7 @@ def delete_test_data(test_data_id: str) -> Response:
 @test_data_required
 def add_output_regs(test_data_id: str, **kwargs) -> Response:
     test_data: TestData = kwargs[test_data_id]
-    reg_dict = request.get_json()
+    reg_dict: dict = request.get_json()
     if not test_data.output.create_regs(reg_dict):
         return error_response(400, 'Invalid format of Registers')
     return jsonify({'test_data_id': test_data_id})
@@ -128,7 +129,7 @@ def add_output_regs(test_data_id: str, **kwargs) -> Response:
 @test_data_required
 def add_output_field(test_data_id: str, macro_name: str, **kwargs) -> Response:
     field_byte_dict: dict = request.get_json()
-    field_byte = kwargs[test_data_id].output.create_field_byte(macro_name, field_byte_dict)
+    field_byte: dict = kwargs[test_data_id].output.create_field_byte(macro_name, field_byte_dict)
     if not field_byte:
         return error_response(400, 'Error in adding field')
     return jsonify(field_byte)
@@ -139,7 +140,7 @@ def add_output_field(test_data_id: str, macro_name: str, **kwargs) -> Response:
 @token_auth.login_required
 @test_data_required
 def delete_output_field(test_data_id: str, macro_name: str, field_name: str, **kwargs) -> Response:
-    field_byte = kwargs[test_data_id].output.delete_field_byte(macro_name, unquote(field_name))
+    field_byte: dict = kwargs[test_data_id].output.delete_field_byte(macro_name, unquote(field_name))
     if not field_byte:
         return error_response(400, 'Error in deleting field')
     return jsonify(field_byte)
@@ -150,7 +151,7 @@ def delete_output_field(test_data_id: str, macro_name: str, field_name: str, **k
 @test_data_required
 def add_input_field(test_data_id: str, macro_name: str, **kwargs) -> Response:
     field_byte_dict: dict = request.get_json()
-    field_byte = kwargs[test_data_id].create_field_byte(macro_name, field_byte_dict)
+    field_byte: dict = kwargs[test_data_id].create_field_byte(macro_name, field_byte_dict)
     if not field_byte:
         return error_response(400, 'Error in adding field')
     return jsonify(field_byte)
@@ -161,7 +162,7 @@ def add_input_field(test_data_id: str, macro_name: str, **kwargs) -> Response:
 @token_auth.login_required
 @test_data_required
 def delete_input_field(test_data_id: str, macro_name: str, field_name: str, **kwargs) -> Response:
-    field_byte = kwargs[test_data_id].delete_field_byte(macro_name, unquote(field_name))
+    field_byte: dict = kwargs[test_data_id].delete_field_byte(macro_name, unquote(field_name))
     if not field_byte:
         return error_response(400, 'Error in deleting field')
     return jsonify(field_byte)
@@ -189,7 +190,7 @@ def delete_input_regs(test_data_id: str, reg: str, **kwargs) -> Response:
 @token_auth.login_required
 @test_data_required
 def add_input_pnr(test_data_id: str, **kwargs) -> Response:
-    pnr = kwargs[test_data_id].create_pnr_element(request.get_json())
+    pnr: Pnr = kwargs[test_data_id].create_pnr_element(request.get_json())
     if not pnr:
         return error_response(400, 'Error in adding PNR element')
     return jsonify(pnr.cascade_to_dict())
@@ -199,7 +200,7 @@ def add_input_pnr(test_data_id: str, **kwargs) -> Response:
 @token_auth.login_required
 @test_data_required
 def add_pnr_fields(test_data_id: str, pnr_id: str, **kwargs) -> Response:
-    pnr = kwargs[test_data_id].create_pnr_field_bytes(pnr_id, request.get_json())
+    pnr: Pnr = kwargs[test_data_id].create_pnr_field_bytes(pnr_id, request.get_json())
     if not pnr:
         return error_response(400, 'Error in adding PNR field')
     return jsonify(pnr.cascade_to_dict())
@@ -209,10 +210,30 @@ def add_pnr_fields(test_data_id: str, pnr_id: str, **kwargs) -> Response:
 @token_auth.login_required
 @test_data_required
 def delete_pnr_element(test_data_id: str, pnr_id: str, **kwargs) -> Response:
-    pnr = kwargs[test_data_id].delete_pnr_element(pnr_id)
+    pnr: Pnr = kwargs[test_data_id].delete_pnr_element(pnr_id)
     if not pnr:
         return error_response(400, 'Error in deleting PNR')
     return jsonify(pnr.cascade_to_dict())
+
+
+@tpf1_app.route('/test_data/<string:test_data_id>/input/tpfdf', methods=['PATCH'])
+@token_auth.login_required
+@test_data_required
+def add_tpfdf_lrec(test_data_id: str, **kwargs) -> Response:
+    df: Tpfdf = kwargs[test_data_id].create_tpfdf_lrec(request.get_json())
+    if not df:
+        return error_response(400, 'Error in adding Tpfdf lrec')
+    return jsonify(df.cascade_to_dict())
+
+
+@tpf1_app.route('/test_data/<string:test_data_id>/input/tpfdf/<string:df_id>', methods=['DELETE'])
+@token_auth.login_required
+@test_data_required
+def delete_tpfdf_lrec(test_data_id: str, df_id: str, **kwargs) -> Response:
+    df: Tpfdf = kwargs[test_data_id].delete_tpfdf_lrec(df_id)
+    if not df:
+        return error_response(400, 'Error in deleting Tpfdf lrec')
+    return jsonify(df.cascade_to_dict())
 
 
 @tpf1_app.route('/fields/<string:field_name>')
