@@ -4,6 +4,7 @@ from urllib.parse import unquote
 
 from flask import Response, jsonify, request
 
+from assembly.mac0_generic import LabelReference
 from assembly.mac2_data_macro import macros
 from assembly.seg6_segment import segments
 from db.test_data import TestData
@@ -242,6 +243,8 @@ def find_field(field_name: str) -> Response:
     if not field_name:
         return error_response(400, 'Field name cannot be empty')
     field_name = field_name.upper()
+    if field_name in macros:
+        return jsonify(LabelReference(name=field_name, label=field_name, dsp=0, length=0).to_dict())
     label_ref = None
     for _, data_macro in macros.items():
         data_macro.load()

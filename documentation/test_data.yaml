@@ -886,7 +886,7 @@ paths:
                   data:
                     type: string
                     example: 1SHAH
-                  field_bytes:
+                  field_data:
                     type: array
                     items:
                       type: object
@@ -949,7 +949,7 @@ paths:
                   data:
                     type: string
                     example: 1SHAH
-                  field_bytes:
+                  field_data:
                     type: array
                     items:
                       type: object
@@ -1003,7 +1003,7 @@ paths:
                   type: string
                   example: WI0BS
                   required: true
-                field_bytes:
+                field_data:
                   type: object
                   additionalProperties:
                     type: string
@@ -1028,7 +1028,7 @@ paths:
                   data:
                     type: string
                     example: ""
-                  field_bytes:
+                  field_data:
                     type: array
                     items:
                       type: object
