@@ -145,6 +145,8 @@ class State:
 
     def _set_from_test_data(self, test_data: TestData) -> None:
         self.errors = set(test_data.errors)
+        if test_data.output.debug:
+            self.init_debug(test_data.output.debug)
         if test_data.partition:
             self.set_partition(test_data.partition)
         for core in test_data.cores:
@@ -235,6 +237,8 @@ class State:
         output.messages = self.messages.copy()
         output.dumps.extend(self.dumps)
         output.last_line = last_line
+        if output.debug:
+            output.debug = self.DEBUG.get_trace()
         for core in output.cores:
             macro_name = core.macro_name.upper()
             if macro_name in config.DEFAULT_MACROS:

@@ -3,6 +3,7 @@ from typing import List, Dict, Union
 from firestore_ci import FirestoreDocument
 
 from assembly.mac2_data_macro import macros
+from assembly.seg6_segment import segments
 from config import config
 from utils.data_type import Register
 
@@ -101,6 +102,7 @@ class Output(FirestoreDocument):
         self.dumps: List[str] = list()
         self.messages: List[str] = list()
         self.last_line: str = str()
+        self.debug: List[str] = list()
 
     def create_field_byte(self, macro_name: str, field_dict: dict, persistence=True) -> dict:
         if not Core.validate_field_dict(macro_name, field_dict):
@@ -155,6 +157,27 @@ class Output(FirestoreDocument):
             self.regs[reg] = 0
         self.save()
         return True
+
+    def add_debug_seg(self, debug: dict, persistence=True) -> list:
+        if 'traces' not in debug or not debug['traces'] or not isinstance(debug['traces'], list):
+            return list()
+        for seg in debug['traces']:
+            if seg.upper() not in segments:
+                return list()
+        for seg in debug['traces']:
+            self.debug.append(seg.upper())
+        if persistence:
+            self.save()
+        return self.debug
+
+    def delete_debug_seg(self, seg_name: str, persistence=True) -> str:
+        seg_name = seg_name.upper()
+        if not seg_name or seg_name not in self.debug:
+            return str()
+        self.debug.remove(seg_name)
+        if persistence:
+            self.save()
+        return seg_name
 
 
 Output.init()

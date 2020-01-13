@@ -21,6 +21,9 @@ class Trace:
     def is_not_hit(self) -> bool:
         return True if self.hits == 0 or any(next_hit == 0 for _, next_hit in self.next_hits.items()) else False
 
+    def is_hit(self) -> bool:
+        return True if self.hits > 0 else False
+
 
 class Debug:
     def __init__(self):
@@ -39,3 +42,9 @@ class Debug:
 
     def get_no_hit(self) -> List[Trace]:
         return [trace for _, trace in self.traces.items() if trace.is_not_hit()]
+
+    def get_trace(self) -> List[dict]:
+        traces = [{'index': trace.index, 'line': trace.line, 'hits': trace.hits, 'next_hits': trace.next_hits}
+                  for _, trace in self.traces.items() if trace.is_hit()]
+        traces.sort(key=lambda trace_item: trace_item['index'])
+        return traces

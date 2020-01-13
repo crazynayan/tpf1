@@ -237,6 +237,24 @@ def delete_tpfdf_lrec(test_data_id: str, df_id: str, **kwargs) -> Response:
     return jsonify(df.cascade_to_dict())
 
 
+@tpf1_app.route('/test_data/<string:test_data_id>/output/debug', methods=['PATCH'])
+@token_auth.login_required
+@test_data_required
+def add_debug(test_data_id: str, **kwargs) -> Response:
+    if not kwargs[test_data_id].output.add_debug_seg(request.get_json()):
+        return error_response(400, 'Error in adding debug segments')
+    return jsonify(kwargs[test_data_id].cascade_to_dict())
+
+
+@tpf1_app.route('/test_data/<string:test_data_id>/output/debug/<string:seg_name>', methods=['DELETE'])
+@token_auth.login_required
+@test_data_required
+def delete_debug(test_data_id: str, seg_name: str, **kwargs) -> Response:
+    if not kwargs[test_data_id].output.delete_debug_seg(seg_name):
+        return error_response(400, 'Error in deleting debug segment')
+    return jsonify(kwargs[test_data_id].cascade_to_dict())
+
+
 @tpf1_app.route('/fields/<string:field_name>')
 @token_auth.login_required
 def find_field(field_name: str) -> Response:
