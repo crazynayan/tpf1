@@ -9,6 +9,12 @@ class Trace:
         self.line: str = str(node)
         self.hits: int = 0
         self.next_hits: Dict[str, int] = {label: 0 for label in node.next_labels}
+        self.label: str = node.label
+        self.command: str = node.command
+        self.operands: str = str()
+        line_list = str(node).split(':')
+        if len(line_list) > 3:
+            self.operands = line_list[3]
 
     def __repr__(self) -> str:
         return f"{self.hits:4} ::{str(self.next_hits):50}:: {self.line}"
@@ -44,7 +50,8 @@ class Debug:
         return [trace for _, trace in self.traces.items() if trace.is_not_hit()]
 
     def get_trace(self) -> List[dict]:
-        traces = [{'index': trace.index, 'line': trace.line, 'hits': trace.hits, 'next_hits': trace.next_hits}
+        traces = [{'index': trace.index, 'line': trace.line, 'hits': trace.hits, 'next_hits': trace.next_hits,
+                   'label': trace.label, 'command': trace.command, 'operands': trace.operands}
                   for _, trace in self.traces.items() if trace.is_hit()]
         traces.sort(key=lambda trace_item: trace_item['index'])
         return traces
