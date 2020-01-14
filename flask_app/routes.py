@@ -91,7 +91,7 @@ def run_test_data(test_data_id: str, **kwargs) -> Response:
         return error_response(400, 'Segment not present - Test Data might be corrupted')
     tpf_server = Execute()
     try:
-        tpf_server.run(test_data.seg_name, test_data)
+        test_data = tpf_server.run(test_data.seg_name, test_data)
     except ExecutionError:
         return error_response(501, 'Error in executing segment')
     return jsonify(test_data.get_output_dict())
