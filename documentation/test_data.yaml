@@ -861,11 +861,15 @@ paths:
                 locator:
                   type: string
                   example: DGZEWR
-                  required: false
+                  required: true
                 data:
                   type: string
                   example: 1ZAVERI,1SHAH
-                  required: false
+                  required: true
+                variation:
+                  type: integer
+                  example: 0
+                  required: true
       responses:
         '200':
           description: Field added.
@@ -891,6 +895,9 @@ paths:
                     items:
                       type: object
                     example: []
+                  variation:
+                    type: integer
+                    example: 0
         '400':
           description: Error in adding PNR element
           content:
@@ -954,7 +961,9 @@ paths:
                     items:
                       type: object
                     example: []
-
+                  variation:
+                    type: integer
+                    example: 0
         '400':
           description: Error in deleting PNR
           content:
@@ -1028,6 +1037,9 @@ paths:
                   data:
                     type: string
                     example: ""
+                  variation:
+                    type: integer
+                    example: 0
                   field_data:
                     type: array
                     items:

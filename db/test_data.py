@@ -149,32 +149,24 @@ class TestData(FirestoreDocument):
         return True
 
     def create_pnr_element(self, pnr_dict: dict, persistence: bool = True) -> Optional[Pnr]:
-        if 'key' not in pnr_dict:
+        if not isinstance(pnr_dict, dict) or set(pnr_dict) != {'key', 'locator', 'data', 'variation'}:
+            return None
+        if not (isinstance(pnr_dict['key'], str) and isinstance(pnr_dict['locator'], str) and
+                isinstance(pnr_dict['data'], str) and isinstance(pnr_dict['variation'], int)):
             return None
         if db_pnr.Pnr.get_attribute_by_name(pnr_dict['key']) is None:
             return None
-        pnr_dict['locator'] = pnr_dict['locator'] if 'locator' in pnr_dict else str()
         if pnr_dict['locator'] and len(pnr_dict['locator']) != 6:
             return None
-        data_list = pnr_dict['data'] if 'data' in pnr_dict else str()
-        if 'field_data' in pnr_dict:
-            return None
         pnr_dict['field_data'] = list()
-        pnr_data = list()
-        for data in data_list.split(','):
-            data = data.strip()
-            pnr = next((pnr for pnr in self.pnr if pnr.key == pnr_dict['key'] and pnr.locator == pnr_dict['locator']
-                        and pnr.data == data and pnr.field_data == list()), None)
-            if pnr is not None:
-                return None
-            pnr_data.append(data)
+        pnr_data = pnr_dict['data'].split(',')
         pnr = None
         for data in pnr_data:
-            pnr_dict['data'] = data
-            pnr = Pnr.create_from_dict(pnr_dict) if persistence else Pnr.dict_to_doc(pnr_dict, cascade=True)
+            pnr_dict['data'] = data.strip()
+            pnr = Pnr.create_from_dict(pnr_dict) if persistence else Pnr.dict_to_doc(pnr_dict)
             self.pnr.append(pnr)
-            if persistence:
-                self.save()
+        if persistence:
+            self.save()
         return pnr
 
     def delete_pnr_element(self, pnr_id: str) -> Optional[Pnr]:
@@ -191,7 +183,7 @@ class TestData(FirestoreDocument):
         pnr = next((pnr for pnr in self.pnr if pnr.id == pnr_id), None)
         if not pnr:
             return None
-        if 'macro_name' not in core_dict or 'field_data' not in core_dict:
+        if not isinstance(core_dict, dict) or 'macro_name' not in core_dict or 'field_data' not in core_dict:
             return None
         if core_dict['macro_name'] not in macros:
             return None
