@@ -1,4 +1,5 @@
 from base64 import b64encode, b64decode
+from copy import deepcopy
 from typing import Callable, Optional, Tuple, Dict, List, Set
 
 from assembly.mac0_generic import LabelReference
@@ -75,25 +76,29 @@ class State:
     def init_run(self) -> None:
         self.__init__()
 
-    def run(self, seg_name: str, test_data: TestData = None) -> str:
+    def run(self, seg_name: str, test_data: TestData) -> TestData:
         if seg_name not in segments:
             raise SegmentNotFoundError
-        self._init_seg(seg_name)
-        self.regs.R9 = config.ECB
-        self._core_block(config.AAA, 'D1')
-        self._core_block(config.IMG, 'D0')
-        if test_data:
-            self._set_from_test_data(test_data)
-        label = self.seg.root_label()
-        node = self.seg.nodes[label]
-        while True:
-            label = self._ex_command(node)
-            if label is None:
-                break
+        outputs = list()
+        for test_data_variant in test_data.yield_variation():
+            self.init_run()
+            self._init_seg(seg_name)
+            self.regs.R9 = config.ECB
+            self._core_block(config.AAA, 'D1')
+            self._core_block(config.IMG, 'D0')
+            self._set_from_test_data(test_data_variant)
+            label = self.seg.root_label()
             node = self.seg.nodes[label]
-        if test_data:
-            self._capture_output(test_data.outputs, node.label)
-        return node.label
+            while True:
+                label = self._ex_command(node)
+                if label is None:
+                    break
+                node = self.seg.nodes[label]
+            self._capture_output(test_data_variant.output, node.label)
+            outputs.append(test_data_variant.output)
+        test_data = deepcopy(test_data)
+        test_data.outputs = outputs
+        return test_data
 
     def _ex_command(self, node: InstructionType) -> str:
         label = self._ex[node.command](node)
@@ -229,11 +234,7 @@ class State:
             self.vm.set_bytes(byte_array, address, len(byte_array))
         return
 
-    def _capture_output(self, outputs: List[Output], last_line: str) -> None:
-        if not outputs:
-            output = Output()
-            outputs.append(output)
-        output = outputs[0]
+    def _capture_output(self, output: Output, last_line: str) -> None:
         output.messages = self.messages.copy()
         output.dumps.extend(self.dumps)
         output.last_line = last_line

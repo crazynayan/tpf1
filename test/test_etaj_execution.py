@@ -57,24 +57,24 @@ class EtajTest(unittest.TestCase):
     def test_branch_validation_fail_lok_off(self) -> None:
         self.iy_item['IY9AON'] = DataType('X', input='00006F2F').to_bytes()
         self._tjr_setup(2)
-        self.tpf_server.run('TS21', self.test_data)
-        self.assertEqual('$$ETK4$$.1', self.output.last_line)
-        self.assertEqual(8, self.output.regs['R6'])
+        test_data = self.tpf_server.run('TS21', self.test_data)
+        self.assertEqual('$$ETK4$$.1', test_data.output.last_line)
+        self.assertEqual(8, test_data.output.regs['R6'])
 
     def test_branch_validation_pass_lok_on(self) -> None:
         self.iy_item['IY9AON'] = DataType('X', input='00006F2F').to_bytes()
         self.iy_item['IY9AGY'] = bytearray([macros['IY1IY'].evaluate('#IY1LOK')])
         self._tjr_setup()
-        self.tpf_server.run('TS21', self.test_data)
-        self.assertEqual('TS21EXIT.1', self.output.last_line)
+        test_data = self.tpf_server.run('TS21', self.test_data)
+        self.assertEqual('TS21EXIT.1', test_data.output.last_line)
 
     def test_finwc_fail(self) -> None:
         self.iy_item['IY9AON'] = DataType('X', input='00006F2F').to_bytes()
         self._tjr_setup()
         self.test_data.errors.append('$$ETAJ$$.35')
-        self.tpf_server.run('TS21', self.test_data)
-        self.assertEqual('ETAJ500.1', self.output.last_line)
-        self.assertIn('0140F1', self.output.dumps)
+        test_data = self.tpf_server.run('TS21', self.test_data)
+        self.assertEqual('ETAJ500.1', test_data.output.last_line)
+        self.assertIn('0140F1', test_data.output.dumps)
 
 
 if __name__ == '__main__':

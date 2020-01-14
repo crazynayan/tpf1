@@ -18,8 +18,6 @@ class NameGeneral(unittest.TestCase):
         aaa_fields = ['WA0PTY', 'WA0ETG', 'WA0US4', 'WA0UB1', 'WA0PTI', 'WA0ET3', 'WA0ET4', 'WA0ET6', 'WA0ASC',
                       'WA0USE', 'WA0ET2', 'WA0XX3', 'WA0US3']
         self.i_aaa = self.test_data.add_fields(aaa_fields, 'WA0AA')
-        # === OUTPUT ====
-        self.output = self.test_data.outputs[0]
         # AAA
         aaa_fields = ['WA0EXT', 'WA0PTY', 'WA0ETG', 'WA0PTI', 'WA0ET4', 'WA0ET5']
         self.o_aaa = self.test_data.add_fields(aaa_fields, 'WA0AA', output=True)

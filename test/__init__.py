@@ -69,8 +69,8 @@ class TestDataUTS(TestData):
             core_dict[field] = field_data
         return core_dict
 
-    def add_pnr_element(self, data_list: List[str], key: str, locator: str = None) -> Pnr:
-        pnr_dict = {'key': key, 'data': ','.join(data_list), 'variation': 0, 'locator': str()}
+    def add_pnr_element(self, data_list: List[str], key: str, locator: str = None, variation: int = 0) -> Pnr:
+        pnr_dict = {'key': key, 'data': ','.join(data_list), 'variation': variation, 'locator': str()}
         if locator:
             pnr_dict['locator'] = locator
         pnr = self.create_pnr_element(pnr_dict, persistence=False)

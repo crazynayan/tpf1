@@ -1,4 +1,6 @@
+from base64 import b64decode
 from copy import deepcopy
+from itertools import product
 from typing import Dict, List, Optional
 
 from firestore_ci import FirestoreDocument
@@ -29,6 +31,24 @@ class TestData(FirestoreDocument):
     @property
     def output(self):
         return self.outputs[0]
+
+    def field(self, field_name: str, variation: int = 0):
+        output = self.outputs[variation]
+        field_data = next(field_data for core in output.cores for field_data in core.field_data
+                          if field_data['field'] == field_name)
+        return b64decode(field_data['data']).hex().upper()
+
+    def yield_variation(self):
+        core_variation = max(core.variation for core in self.cores) if self.cores else 0
+        pnr_variation = max(pnr.variation for pnr in self.pnr) if self.pnr else 0
+        df_variation = max(df.variation for df in self.tpfdf) if self.tpfdf else 0
+        for variation in product(range(0, core_variation + 1), range(0, pnr_variation + 1), range(0, df_variation + 1)):
+            test_data = deepcopy(self)
+            test_data.cores = [core for core in test_data.cores if core.variation == variation[0]]
+            test_data.pnr = [pnr for pnr in test_data.pnr if pnr.variation == variation[1]]
+            test_data.tpfdf = [df for df in test_data.tpfdf if df.variation == variation[2]]
+            yield test_data
+        return
 
     @classmethod
     def _validate_header(cls, header: dict) -> bool:
@@ -157,6 +177,9 @@ class TestData(FirestoreDocument):
         if db_pnr.Pnr.get_attribute_by_name(pnr_dict['key']) is None:
             return None
         if pnr_dict['locator'] and len(pnr_dict['locator']) != 6:
+            return None
+        max_variation = max(pnr.variation for pnr in self.pnr) + 1 if self.pnr else 0
+        if pnr_dict['variation'] not in range(0, max_variation + 1):
             return None
         pnr_dict['field_data'] = list()
         pnr_data = pnr_dict['data'].split(',')

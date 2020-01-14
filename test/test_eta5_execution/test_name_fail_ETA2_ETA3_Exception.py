@@ -10,53 +10,53 @@ class NameFailETA2(NameGeneral):
     def test_invalid_name_ETA2(self) -> None:
         # Without number in party at start
         self.test_data.add_pnr_element(['ZAVERI'], 'name')
-        self.tpf_server.run('ETA5', self.test_data)
-        self.assertEqual('$$ETA2$$.1', self.output.last_line)
-        self.assertIn('19000', self.output.dumps)
-        self.assertEqual(1, self.output.regs['R1'])
+        test_data = self.tpf_server.run('ETA5', self.test_data)
+        self.assertEqual('$$ETA2$$.1', test_data.output.last_line)
+        self.assertIn('19000', test_data.output.dumps)
+        self.assertEqual(1, test_data.output.regs['R1'])
 
     def test_invalid_name_after_group_ETA2(self):
         self.test_data.add_pnr_element(['Z/25SABRE', 'ZAVERI', '1SHAH'], 'name')
-        self.tpf_server.run('ETA5', self.test_data)
-        self.assertEqual('$$ETA2$$.1', self.output.last_line)
-        self.assertIn('19000', self.output.dumps)
-        self.assertEqual(1, self.output.regs['R1'])
+        test_data = self.tpf_server.run('ETA5', self.test_data)
+        self.assertEqual('$$ETA2$$.1', test_data.output.last_line)
+        self.assertIn('19000', test_data.output.dumps)
+        self.assertEqual(1, test_data.output.regs['R1'])
 
     def test_invalid_name_high_after_group_ETA2(self):
         self.test_data.add_pnr_element(['Z/25SABRE', chr(0xDB) + 'ZAVERI', '1SHAH'], 'name')
-        self.tpf_server.run('ETA5', self.test_data)
-        self.assertEqual('$$ETA2$$.1', self.output.last_line)
-        self.assertIn('19000', self.output.dumps)
-        self.assertEqual(1, self.output.regs['R1'])
+        test_data = self.tpf_server.run('ETA5', self.test_data)
+        self.assertEqual('$$ETA2$$.1', test_data.output.last_line)
+        self.assertIn('19000', test_data.output.dumps)
+        self.assertEqual(1, test_data.output.regs['R1'])
 
     def test_invalid_infant_less_ETA2(self) -> None:
         self.test_data.add_pnr_element(['I/ZAVERI'], 'name')
-        self.tpf_server.run('ETA5', self.test_data)
-        self.assertEqual('$$ETA2$$.1', self.output.last_line)
-        self.assertIn('19000', self.output.dumps)
-        self.assertEqual(1, self.output.regs['R1'])
+        test_data = self.tpf_server.run('ETA5', self.test_data)
+        self.assertEqual('$$ETA2$$.1', test_data.output.last_line)
+        self.assertIn('19000', test_data.output.dumps)
+        self.assertEqual(1, test_data.output.regs['R1'])
 
     def test_invalid_infant_high_ETA2(self) -> None:
         # Without number in party at start
         self.test_data.add_pnr_element(['I/' + chr(0xDB) + 'TOURS'], 'name')
-        self.tpf_server.run('ETA5', self.test_data)
-        self.assertEqual('$$ETA2$$.1', self.output.last_line)
-        self.assertIn('19000', self.output.dumps)
-        self.assertEqual(1, self.output.regs['R1'])
+        test_data = self.tpf_server.run('ETA5', self.test_data)
+        self.assertEqual('$$ETA2$$.1', test_data.output.last_line)
+        self.assertIn('19000', test_data.output.dumps)
+        self.assertEqual(1, test_data.output.regs['R1'])
 
     def test_invalid_infant_after_adult_ETA2(self) -> None:
         self.test_data.add_pnr_element(['1ZAVERI', 'I/ZAVERI'], 'name')
-        self.tpf_server.run('ETA5', self.test_data)
-        self.assertEqual('$$ETA2$$.1', self.output.last_line)
-        self.assertIn('19000', self.output.dumps)
-        self.assertEqual(1, self.output.regs['R1'])
+        test_data = self.tpf_server.run('ETA5', self.test_data)
+        self.assertEqual('$$ETA2$$.1', test_data.output.last_line)
+        self.assertIn('19000', test_data.output.dumps)
+        self.assertEqual(1, test_data.output.regs['R1'])
 
     def test_invalid_infant_after_group_ETA2(self) -> None:
         self.test_data.add_pnr_element(['C/21TOURS', 'I/ZAVERI'], 'name')
-        self.tpf_server.run('ETA5', self.test_data)
-        self.assertEqual('$$ETA2$$.1', self.output.last_line)
-        self.assertIn('19000', self.output.dumps)
-        self.assertEqual(1, self.output.regs['R1'])
+        test_data = self.tpf_server.run('ETA5', self.test_data)
+        self.assertEqual('$$ETA2$$.1', test_data.output.last_line)
+        self.assertIn('19000', test_data.output.dumps)
+        self.assertEqual(1, test_data.output.regs['R1'])
 
 
 class NameFailETA3(NameGeneral):
@@ -67,8 +67,8 @@ class NameFailETA3(NameGeneral):
     def test_name_error_ETA3(self) -> None:
         self.test_data.add_pnr_element(['1ZAVERI'], 'name')
         self.test_data.errors.append('ETA5090.1')
-        self.tpf_server.run('ETA5', self.test_data)
-        self.assertEqual('$$ETA3$$.1', self.output.last_line)
+        test_data = self.tpf_server.run('ETA5', self.test_data)
+        self.assertEqual('$$ETA3$$.1', test_data.output.last_line)
 
 
 class NameFailException(NameGeneral):
