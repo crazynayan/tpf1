@@ -90,7 +90,7 @@ def run_test_data(test_data_id: str, **kwargs) -> Response:
         return error_response(400, 'Error in segment name')
     tpf_server = Execute()
     test_data = tpf_server.run(test_data.seg_name, test_data)
-    return jsonify(test_data.get_output_dict())
+    return jsonify(test_data.cascade_to_dict())
 
 
 @tpf1_app.route('/test_data/<string:test_data_id>')
