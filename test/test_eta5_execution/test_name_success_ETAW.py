@@ -107,7 +107,7 @@ class NameSuccessETAW(NameGeneral):
         self.assertEqual(f'{99:02X}', test_data.get_field('EBW015'))
 
     def test_pn2_on_group_Z_wa0pty_history_match_ETAW(self):
-        # T.wa0PN2 OFF behaves the same way
+        # wa0PN2 OFF behaves the same way
         self.test_data.add_pnr_element(['Z/99W/SABRE', '3SHAH'], 'name')
         self.test_data.set_field('WA0UB1', bytearray([self.wa0pn2]))
         self.test_data.set_field('WA0PTY', bytearray([0xE3]))  # 99 = 0x63 with bit0 on is 0xE3

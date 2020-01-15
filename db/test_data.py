@@ -33,11 +33,14 @@ class TestData(FirestoreDocument):
         return self.outputs[0]
 
     def get_field(self, field_name: str, core_variation: int = 0, pnr_variation: int = 0, tpfdf_variation: int = 0):
-        output = next(output for output in self.outputs if output.variation['core'] == core_variation and
-                      output.variation['pnr'] == pnr_variation and output.variation['tpfdf'] == tpfdf_variation)
+        output = self.get_output(core_variation, pnr_variation, tpfdf_variation)
         field_data = next(field_data for core in output.cores for field_data in core.field_data
                           if field_data['field'] == field_name)
         return b64decode(field_data['data']).hex().upper()
+
+    def get_output(self, core_variation: int = 0, pnr_variation: int = 0, tpfdf_variation: int = 0) -> Output:
+        return next(output for output in self.outputs if output.variation['core'] == core_variation and
+                    output.variation['pnr'] == pnr_variation and output.variation['tpfdf'] == tpfdf_variation)
 
     def set_field(self, field_name: str, data: Union[bytearray, bytes], variation: int = 0) -> None:
         macro_name = DataMacro.get_label_reference(field_name).name
