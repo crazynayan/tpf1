@@ -28,6 +28,7 @@ class NameVariation(NameGeneral):
         self.test_data.add_pnr_element(['C/99W/TOURS', '3SHAH'], 'name', variation=0)
         self.test_data.add_pnr_element(['C/999W/TOURS', '3SHAH'], 'name', variation=1)
         self.test_data.add_pnr_element(['Z/99W/TOURS', '3SHAH'], 'name', variation=2)
+        self.test_data.set_field('WA0UB1', bytes([0x00]), variation=0)
         self.test_data.set_field('WA0UB1', bytes([0x80]), variation=1)
         test_data = self.tpf_server.run('ETA5', self.test_data)
         self.assertEqual('F9F6', test_data.get_field('WA0EXT', core_variation=0, pnr_variation=0))

@@ -118,11 +118,6 @@ class TestData(FirestoreDocument):
         test_data: cls = cls.get_by_id(test_data_id, cascade=True)
         return test_data.delete(cascade=True) if test_data else str()
 
-    def get_output_dict(self) -> dict:
-        output_dict = self.get_header_dict()
-        output_dict['outputs'] = self.outputs[0].cascade_to_dict() if self.outputs[0] else dict()
-        return output_dict
-
     def get_header_dict(self) -> dict:
         return {'id': self.id, 'name': self.name, 'seg_name': self.seg_name}
 
@@ -132,6 +127,9 @@ class TestData(FirestoreDocument):
         if set(field_dict) != {'field', 'data', 'variation'}:
             return dict()
         if not isinstance(field_dict['data'], str) or not field_dict['data']:
+            return dict()
+        max_variation = max(core.variation for core in self.cores) + 1 if self.cores else 0
+        if field_dict['variation'] not in range(max_variation + 1):
             return dict()
         core_dict = {'macro_name': macro_name, 'variation': field_dict['variation']}
         field_dict = field_dict.copy()
@@ -192,7 +190,7 @@ class TestData(FirestoreDocument):
         if pnr_dict['locator'] and len(pnr_dict['locator']) != 6:
             return None
         max_variation = max(pnr.variation for pnr in self.pnr) + 1 if self.pnr else 0
-        if pnr_dict['variation'] not in range(0, max_variation + 1):
+        if pnr_dict['variation'] not in range(max_variation + 1):
             return None
         pnr_dict['field_data'] = list()
         pnr_data = pnr_dict['data'].split(',')
