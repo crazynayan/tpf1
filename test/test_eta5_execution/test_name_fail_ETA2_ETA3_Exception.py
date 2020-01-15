@@ -1,5 +1,4 @@
 from test.test_eta5_execution import NameGeneral
-from utils.errors import PackExecutionError
 
 
 class NameFailETA2(NameGeneral):
@@ -80,10 +79,14 @@ class NameFailException(NameGeneral):
         # Both C/ and Z/ will give an exception.
         # I/ will NOT give an exception.
         self.test_data.add_pnr_element(['Z/SABRE', '1ZAVERI'], 'name')
-        self.assertRaises(PackExecutionError, self.tpf_server.run, 'ETA5', self.test_data)
+        test_data = self.tpf_server.run('ETA5', self.test_data)
+        self.assertIn('000003', test_data.output.dumps)
+        self.assertIn('EXECUTION ERROR', test_data.output.messages)
 
     def test_invalid_group_C_not_at_start_Exception(self):
         # Preceding adult for invalid C/  will give an exception.
         # Preceding adult for invalid Z/ will NOT give an exception.
         self.test_data.add_pnr_element(['1ZAVERI', 'C/TOURS'], 'name')
-        self.assertRaises(PackExecutionError, self.tpf_server.run, 'ETA5', self.test_data)
+        test_data = self.tpf_server.run('ETA5', self.test_data)
+        self.assertIn('000003', test_data.output.dumps)
+        self.assertIn('EXECUTION ERROR', test_data.output.messages)

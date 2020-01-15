@@ -48,26 +48,15 @@ class TestDataUTS(TestData):
             self.regs[reg] = 0
         return self.regs
 
-    def add_fields(self, fields: List[Union[str, tuple]], macro_name: str, output: bool = False,
-                   base_reg: str = None) -> Dict[str, dict]:
-        core_dict = dict()
+    def add_fields(self, fields: List[Union[str, tuple]], macro_name: str, base_reg: str = None) -> None:
         field_dict = dict()
-        if base_reg:
-            field_dict['base_reg'] = base_reg
-            output = True
-        if isinstance(fields[0], tuple):
-            output = True
         for field in fields:
             field, length = field if isinstance(field, tuple) else (field, 0)
             field_dict['field'] = field
-            if output:
-                field_dict['length'] = length
-                field_data = self.output.create_field_byte(macro_name, field_dict, persistence=False)
-            else:
-                field_dict['data'] = b64encode(bytes([0x00])).decode()
-                field_data = self.create_field_byte(macro_name, field_dict, persistence=False)
-            core_dict[field] = field_data
-        return core_dict
+            field_dict['base_reg'] = base_reg if base_reg else str()
+            field_dict['length'] = length
+            self.output.create_field_byte(macro_name, field_dict, persistence=False)
+        return
 
     def add_pnr_element(self, data_list: List[str], key: str, locator: str = None, variation: int = 0) -> Pnr:
         pnr_dict = {'key': key, 'data': ','.join(data_list), 'variation': variation, 'locator': str()}

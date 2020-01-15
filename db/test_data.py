@@ -1,7 +1,7 @@
-from base64 import b64decode
+from base64 import b64decode, b64encode
 from copy import deepcopy
 from itertools import product
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 from firestore_ci import FirestoreDocument
 
@@ -32,11 +32,17 @@ class TestData(FirestoreDocument):
     def output(self):
         return self.outputs[0]
 
-    def field(self, field_name: str, variation: int = 0):
-        output = self.outputs[variation]
+    def get_field(self, field_name: str, core_variation: int = 0, pnr_variation: int = 0, tpfdf_variation: int = 0):
+        output = next(output for output in self.outputs if output.variation['core'] == core_variation and
+                      output.variation['pnr'] == pnr_variation and output.variation['tpfdf'] == tpfdf_variation)
         field_data = next(field_data for core in output.cores for field_data in core.field_data
                           if field_data['field'] == field_name)
         return b64decode(field_data['data']).hex().upper()
+
+    def set_field(self, field_name: str, data: Union[bytearray, bytes], variation: int = 0) -> None:
+        macro_name = DataMacro.get_label_reference(field_name).name
+        field_dict = {'field': field_name, 'data': b64encode(data).decode(), 'variation': variation}
+        self.create_field_byte(macro_name, field_dict, persistence=False)
 
     def yield_variation(self):
         core_variation = max(core.variation for core in self.cores) if self.cores else 0
@@ -47,6 +53,9 @@ class TestData(FirestoreDocument):
             test_data.cores = [core for core in test_data.cores if core.variation == variation[0]]
             test_data.pnr = [pnr for pnr in test_data.pnr if pnr.variation == variation[1]]
             test_data.tpfdf = [df for df in test_data.tpfdf if df.variation == variation[2]]
+            test_data.output.variation['core'] = variation[0]
+            test_data.output.variation['pnr'] = variation[1]
+            test_data.output.variation['tpfdf'] = variation[2]
             yield test_data
         return
 
@@ -117,16 +126,17 @@ class TestData(FirestoreDocument):
     def create_field_byte(self, macro_name, field_dict, persistence=True) -> dict:
         if not Core.validate_field_dict(macro_name, field_dict):
             return dict()
-        if 'data' not in field_dict:
+        if set(field_dict) != {'field', 'data', 'variation'}:
             return dict()
-        if 'base_reg' in field_dict:
+        if not isinstance(field_dict['data'], str) or not field_dict['data']:
             return dict()
-        if 'length' in field_dict:
-            return dict()
-        core = next((core for core in self.cores if core.macro_name == macro_name), None)
+        core_dict = {'macro_name': macro_name, 'variation': field_dict['variation']}
+        field_dict = field_dict.copy()
+        del field_dict['variation']
+        core = next((core for core in self.cores if core.macro_name == core_dict['macro_name'] and
+                     core.variation == core_dict['variation']), None)
         if not core:
-            core: Core = Core.create_from_dict({'macro_name': macro_name}) if persistence \
-                else Core.dict_to_doc({'macro_name': macro_name})
+            core: Core = Core.create_from_dict(core_dict) if persistence else Core.dict_to_doc(core_dict)
             self.cores.append(core)
             if persistence:
                 self.save()

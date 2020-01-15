@@ -1,5 +1,4 @@
 import unittest
-from base64 import b64encode
 
 from assembly.mac2_data_macro import macros
 from config import config
@@ -29,9 +28,9 @@ class EtajTest(unittest.TestCase):
         self.output = self.test_data.output
         # Test data setup
         self.test_data.add_pnr_element(['BTS-B4T0/108/11-FINANCIAL SERVICES'], 'group_plan')
-        self.aaa = self.test_data.add_fields(['WA0POR', 'WA0FNS'], 'WA0AA')
-        self.aaa['WA0POR']['data'] = b64encode(DataType('X', input='006F2F').to_bytes()).decode()
-        self.aaa['WA0FNS']['data'] = b64encode(bytes([macros['WA0AA'].evaluate('#WA0TVL')])).decode()
+        self.test_data.add_fields(['WA0POR', 'WA0FNS'], 'WA0AA')
+        self.test_data.set_field('WA0POR', DataType('X', input='006F2F').to_bytes())
+        self.test_data.set_field('WA0FNS', bytes([macros['WA0AA'].evaluate('#WA0TVL')]))
         self.output.add_regs(['R6'])
         # Item setup
         self.iy_item = dict()

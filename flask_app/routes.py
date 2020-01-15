@@ -13,7 +13,6 @@ from execution.ex5_execute import Execute
 from flask_app import tpf1_app
 from flask_app.auth import token_auth, User
 from flask_app.errors import error_response
-from utils.errors import ExecutionError
 
 
 def test_data_required(func):
@@ -88,12 +87,9 @@ def copy_test_data(test_data_id: str, **kwargs) -> Response:
 def run_test_data(test_data_id: str, **kwargs) -> Response:
     test_data: TestData = kwargs[test_data_id]
     if test_data.seg_name not in segments:
-        return error_response(400, 'Segment not present - Test Data might be corrupted')
+        return error_response(400, 'Error in segment name')
     tpf_server = Execute()
-    try:
-        test_data = tpf_server.run(test_data.seg_name, test_data)
-    except ExecutionError:
-        return error_response(501, 'Error in executing segment')
+    test_data = tpf_server.run(test_data.seg_name, test_data)
     return jsonify(test_data.get_output_dict())
 
 

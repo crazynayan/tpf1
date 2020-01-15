@@ -15,21 +15,16 @@ class NameGeneral(unittest.TestCase):
     def setUp(self) -> None:
         self.tpf_server = Execute()
         self.test_data = TestDataUTS()
-        aaa_fields = ['WA0PTY', 'WA0ETG', 'WA0US4', 'WA0UB1', 'WA0PTI', 'WA0ET3', 'WA0ET4', 'WA0ET6', 'WA0ASC',
-                      'WA0USE', 'WA0ET2', 'WA0XX3', 'WA0US3']
-        self.i_aaa = self.test_data.add_fields(aaa_fields, 'WA0AA')
         # AAA
         aaa_fields = ['WA0EXT', 'WA0PTY', 'WA0ETG', 'WA0PTI', 'WA0ET4', 'WA0ET5']
-        self.o_aaa = self.test_data.add_fields(aaa_fields, 'WA0AA', output=True)
+        self.test_data.add_fields(aaa_fields, 'WA0AA')
         # ECB
-        ecb_fields = ['EBW015', 'EBW014', 'EBW038', 'EBSW01', 'EBW010', 'EBW016', 'EBRS01']
-        self.o_ecb = self.test_data.add_fields(ecb_fields, 'EB0EB', output=True)
-        ecb_fields = [('EBX000', 4), ('EBX004', 4), ('EBX008', 4), ('EBX012', 4)]
-        self.ecb_len = self.test_data.add_fields(ecb_fields, 'EB0EB')
-        self.o_ecb = {**self.o_ecb, **self.ecb_len}
+        ecb_fields = [('EBX000', 4), ('EBX004', 4), ('EBX008', 4), ('EBX012', 4), 'EBW015', 'EBW014', 'EBW038',
+                      'EBSW01', 'EBW010', 'EBW016', 'EBRS01']
+        self.test_data.add_fields(ecb_fields, 'EB0EB')
         # UI2PF
-        ui2_fields = [('UI2CNN', 1), ('UI2INC', 3)]
-        self.o_ui2 = self.test_data.add_fields(ui2_fields, 'UI2PF', base_reg='R7')
+        ui2_fields = ['UI2CNN', ('UI2INC', 3)]
+        self.test_data.add_fields(ui2_fields, 'UI2PF', base_reg='R7')
         # Registers
         self.test_data.output.add_regs(['R6', 'R1', 'R15'])
         # Equates

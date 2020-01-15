@@ -22,6 +22,8 @@ class Core(FirestoreDocument):
 
     @staticmethod
     def validate_field_dict(macro_name: str, field_dict: dict) -> bool:
+        if not isinstance(field_dict, dict):
+            return False
         if 'field' not in field_dict or not field_dict['field']:
             return False
         if macro_name not in macros:
@@ -29,10 +31,10 @@ class Core(FirestoreDocument):
         macros[macro_name].load()
         if not macros[macro_name].check(field_dict['field']):
             return False
-        if 'length' in field_dict and not isinstance(field_dict['length'], int):
-            return False
-        if 'data' in field_dict and not (isinstance(field_dict['data'], str) and field_dict['data']):
-            return False
+        # if 'length' in field_dict and not isinstance(field_dict['length'], int):
+        #     return False
+        # if 'data' in field_dict and not (isinstance(field_dict['data'], str) and field_dict['data']):
+        #     return False
         return True
 
     def create_field_byte(self, field_dict: dict, persistence: bool) -> dict:
@@ -103,30 +105,31 @@ class Output(FirestoreDocument):
         self.messages: List[str] = list()
         self.last_line: str = str()
         self.debug: List[str] = list()
+        self.variation: Dict[str, int] = {'core': 0, 'pnr': 0, 'tpfdf': 0}
 
     def create_field_byte(self, macro_name: str, field_dict: dict, persistence=True) -> dict:
         if not Core.validate_field_dict(macro_name, field_dict):
             return dict()
-        if 'data' in field_dict:
+        if set(field_dict) != {'field', 'length', 'base_reg'}:
             return dict()
-        base_reg = str()
-        if 'base_reg' in field_dict:
-            base_reg = field_dict['base_reg'] if field_dict['base_reg'] != 'R0' else str()
-            field_dict = field_dict.copy()
-            del field_dict['base_reg']
-        if not base_reg and macro_name not in config.DEFAULT_MACROS:
+        if not isinstance(field_dict['length'], int) or field_dict['length'] < 0:
             return dict()
-        if base_reg and macro_name in config.DEFAULT_MACROS:
+        if field_dict['base_reg'] and not Register(field_dict['base_reg']).is_valid():
             return dict()
-        if base_reg and not Register(base_reg).is_valid():
+        core_dict = {'macro_name': macro_name, 'base_reg': field_dict['base_reg']}
+        field_dict = field_dict.copy()
+        del field_dict['base_reg']
+        core_dict['base_reg'] = core_dict['base_reg'] if core_dict['base_reg'] != 'R0' else str()
+        if not core_dict['base_reg'] and macro_name not in config.DEFAULT_MACROS:
+            return dict()
+        if core_dict['base_reg'] and macro_name in config.DEFAULT_MACROS:
             return dict()
         field_dict['length'] = field_dict['length'] if 'length' in field_dict and field_dict['length'] \
             else macros[macro_name].evaluate(f"L'{field_dict['field']}")
-        core = next((core for core in self.cores if core.macro_name == macro_name), None)
+        core = next((core for core in self.cores if core.macro_name == core_dict['macro_name']), None)
         if core:
-            core.base_reg = base_reg
+            core.base_reg = core_dict['base_reg']
         else:
-            core_dict = {'macro_name': macro_name, 'base_reg': base_reg}
             core: Core = Core.create_from_dict(core_dict) if persistence else Core.dict_to_doc(core_dict)
             self.cores.append(core)
             if persistence:

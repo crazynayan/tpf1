@@ -19,7 +19,7 @@ from execution.ex0_regs_store import Registers, Storage
 from test import FieldByte
 from utils.data_type import DataType, Register
 from utils.errors import SegmentNotFoundError, EcbLevelFormatError, InvalidBaseRegError, TpfdfError, PartitionError, \
-    FileItemSpecificationError, PoolFileSpecificationError, BaseAddressError
+    FileItemSpecificationError, PoolFileSpecificationError, BaseAddressError, ExecutionError
 
 
 class State:
@@ -89,11 +89,18 @@ class State:
             self._set_from_test_data(test_data_variant)
             label = self.seg.root_label()
             node = self.seg.nodes[label]
-            while True:
-                label = self._ex_command(node)
-                if label is None:
-                    break
-                node = self.seg.nodes[label]
+            try:
+                for _ in range(10000000):
+                    label = self._ex_command(node)
+                    if label is None:
+                        break
+                    node = self.seg.nodes[label]
+            except ExecutionError:
+                self.dumps.append('000003')
+                self.messages.append('EXECUTION ERROR')
+            if label is not None:
+                self.dumps.append('000010')
+                self.messages.append('INFINITE LOOP ERROR')
             self._capture_output(test_data_variant.output, node.label)
             outputs.append(test_data_variant.output)
         test_data = deepcopy(test_data)

@@ -11,7 +11,7 @@ class RealTimeMacro(unittest.TestCase):
         self.output = self.test_data.output
         self.output.add_all_reg_pointers(2)
         self.output.add_regs(['R5'])
-        self.ecb = self.test_data.add_fields(['EBT000', 'EBW000'], 'EB0EB', output=True)
+        self.test_data.add_fields(['EBT000', 'EBW000'], 'EB0EB')
 
     def test_ts17(self):
         test_data = self.tpf_server.run('TS17', self.test_data)
@@ -29,11 +29,11 @@ class RealTimeMacro(unittest.TestCase):
         # Flow is TS10 <-> TS01 -> TS02 -< TS10 => TS13
         test_data = self.tpf_server.run('TS10', self.test_data)
         # Check if OI EBT000,1 is executed (Proof of execution of TS01)
-        self.assertEqual('01', test_data.field('EBT000'))
+        self.assertEqual('01', test_data.get_field('EBT000'))
         # Check if BCTR R5,0 is executed (Proof of execution of TS02)
         self.assertEqual(-1, test_data.output.regs['R5'])
         # Check if MVC EBW000,EBT000 is executed (Proof of execution of TS13)
-        self.assertEqual('01', test_data.field('EBW000'))
+        self.assertEqual('01', test_data.get_field('EBW000'))
 
 
 if __name__ == '__main__':
