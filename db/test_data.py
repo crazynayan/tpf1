@@ -255,7 +255,8 @@ class TestData(FirestoreDocument):
         df_macro.load()
         if not isinstance(df_dict['field_data'], dict) or not df_dict['field_data']:
             return None
-        if not isinstance(df_dict['variation'], int):
+        max_variation = max(df.variation for df in self.tpfdf) + 1 if self.tpfdf else 0
+        if df_dict['variation'] not in range(max_variation + 1):
             return None
         for field, value in df_dict['field_data'].items():
             if not df_macro.check(field):

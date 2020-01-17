@@ -1,9 +1,11 @@
+from base64 import b64encode
 from itertools import product
 
 from test.test_eta5_execution import NameGeneral
+from utils.data_type import DataType
 
 
-class NameVariation(NameGeneral):
+class Variation(NameGeneral):
 
     def test_multiple_name(self):
         self.test_data.add_pnr_element(['2ZAVERI', '6SHAH'], 'name', variation=0)
@@ -46,3 +48,43 @@ class NameVariation(NameGeneral):
         for core_variation, pnr_variation in product(range(2), range(3)):
             self.assertEqual(list(), test_data.get_output(core_variation, pnr_variation).messages)
             self.assertEqual(list(), test_data.get_output(core_variation, pnr_variation).dumps)
+
+    def test_tpfdf_variation(self):
+        self.test_data.add_pnr_element(['1ZAVERI'], 'name')
+        self.test_data.add_pnr_element(['SSRFQTUAA2812Y20OCTDFW  ORD  0510GLD*DGHWCL RR    '], 'hfax')
+        self.test_data.add_pnr_field_data([{
+            'PR00_60_FQT_CXR': b64encode(DataType('C', input='AA').to_bytes()).decode(),
+            'PR00_60_FQT_FTN': b64encode(DataType('C', input='NKE9087').to_bytes()).decode(),
+            'PR00_60_FQT_TYP': b64encode(DataType('X', input='80').to_bytes()).decode(),
+        }], 'fqtv', 'DGHWCL')
+        self.test_data.add_pnr_field_data([{
+            'WI0ARC': b64encode(DataType('C', input='AA').to_bytes()).decode(),
+            'WI0FNB': b64encode(DataType('H', input='2812').to_bytes()).decode(),
+            'WI0DTE': b64encode(DataType('X', input='4E2F').to_bytes()).decode(),
+            'WI0BRD': b64encode(DataType('C', input='DFW').to_bytes()).decode(),
+            'WI0OFF': b64encode(DataType('C', input='ORD').to_bytes()).decode(),
+        }], 'itin', 'DGHWCL')
+        self.test_data.set_field('WA0ET6', bytes([0x10]))
+        self.test_data.add_tpfdf([{
+            'TR1G_40_OCC': b64encode(DataType('C', input='AA').to_bytes()).decode(),
+            'TR1G_40_ACSTIERCODE': b64encode(DataType('C', input='GLD').to_bytes()).decode(),
+            'TR1G_40_TIER_EFFD': b64encode(DataType('X', input='47D3').to_bytes()).decode(),
+            'TR1G_40_TIER_DISD': b64encode(DataType('X', input='7FFF').to_bytes()).decode(),
+            'TR1G_40_PTI': b64encode(DataType('X', input='80').to_bytes()).decode(),
+        }], '40', 'TR1GAA', variation=0)
+        self.test_data.add_tpfdf([{
+            'TR1G_40_OCC': b64encode(DataType('C', input='AA').to_bytes()).decode(),
+            'TR1G_40_ACSTIERCODE': b64encode(DataType('C', input='EXP').to_bytes()).decode(),
+            'TR1G_40_TIER_EFFD': b64encode(DataType('X', input='47D3').to_bytes()).decode(),
+            'TR1G_40_TIER_DISD': b64encode(DataType('X', input='7FFF').to_bytes()).decode(),
+            'TR1G_40_PTI': b64encode(DataType('X', input='40').to_bytes()).decode(),
+        }], '40', 'TR1GAA', variation=1)
+        test_data = self.tpf_server.run('ETA5', self.test_data)
+        self.assertEqual('ETK20100.1', test_data.outputs[0].last_line)
+        self.assertEqual('$$ETAW$$.1', test_data.outputs[1].last_line)
+        self.assertEqual('60', test_data.get_field('EBRS01', tpfdf_variation=0))
+        self.assertEqual('00', test_data.get_field('EBRS01', tpfdf_variation=1))
+        self.assertEqual(116, test_data.outputs[0].regs['R6'])
+        self.assertEqual(0, test_data.outputs[1].regs['R6'])
+        self.assertEqual('00', test_data.get_field('WA0PTY', tpfdf_variation=0))
+        self.assertEqual('01', test_data.get_field('WA0PTY', tpfdf_variation=1))

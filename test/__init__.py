@@ -74,8 +74,8 @@ class TestDataUTS(TestData):
             self.create_pnr_field_bytes(pnr.id, core_dict, persistence=False)
         return
 
-    def add_tpfdf(self, field_data_list: List[Dict[str, str]], key: str, macro_name: str):
-        df_dict = {'key': key, 'macro_name': macro_name, 'variation': 0}
+    def add_tpfdf(self, field_data_list: List[Dict[str, str]], key: str, macro_name: str, variation: int = 0):
+        df_dict = {'key': key, 'macro_name': macro_name, 'variation': variation}
         for field_data in field_data_list:
             df_dict['field_data'] = field_data
             self.create_tpfdf_lrec(df_dict, persistence=False)
