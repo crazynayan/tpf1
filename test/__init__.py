@@ -66,11 +66,12 @@ class TestDataUTS(TestData):
         pnr.set_id(''.join(random.choices(string.ascii_uppercase + string.ascii_lowercase + string.digits, k=20)))
         return pnr
 
-    def add_pnr_field_data(self, field_data_list: List[Dict[str, str]], key, locator: str = None) -> None:
+    def add_pnr_field_data(self, field_data_list: List[Dict[str, str]], key, locator: str = None,
+                           variation: int = 0) -> None:
         core_dict = {'macro_name': DataMacro.get_label_reference(next(iter(field_data_list[0].keys()))).name}
         for field_data in field_data_list:
             core_dict['field_data'] = field_data
-            pnr = self.add_pnr_element(list(), key, locator)
+            pnr = self.add_pnr_element(list(), key, locator, variation)
             self.create_pnr_field_bytes(pnr.id, core_dict, persistence=False)
         return
 

@@ -50,6 +50,7 @@ class Variation(NameGeneral):
             self.assertEqual(list(), test_data.get_output(core_variation, pnr_variation).dumps)
 
     def test_tpfdf_variation(self):
+        self.test_data.set_field('WA0ET6', bytes([0x10]))
         self.test_data.add_pnr_element(['1ZAVERI'], 'name')
         self.test_data.add_pnr_element(['SSRFQTUAA2812Y20OCTDFW  ORD  0510GLD*DGHWCL RR    '], 'hfax')
         self.test_data.add_pnr_field_data([{
@@ -64,7 +65,13 @@ class Variation(NameGeneral):
             'WI0BRD': b64encode(DataType('C', input='DFW').to_bytes()).decode(),
             'WI0OFF': b64encode(DataType('C', input='ORD').to_bytes()).decode(),
         }], 'itin', 'DGHWCL')
-        self.test_data.set_field('WA0ET6', bytes([0x10]))
+        self.test_data.add_pnr_element(['1ZAVERI'], 'name', variation=1)
+        self.test_data.add_pnr_element(['SSRFQTUAA2812Y20OCTDFW  ORD  0510GLD*DGHWCL RR    '], 'hfax', variation=1)
+        self.test_data.add_pnr_field_data([{
+            'PR00_60_FQT_CXR': b64encode(DataType('C', input='AA').to_bytes()).decode(),
+            'PR00_60_FQT_FTN': b64encode(DataType('C', input='NKE9087').to_bytes()).decode(),
+            'PR00_60_FQT_TYP': b64encode(DataType('X', input='40').to_bytes()).decode(),
+        }], 'fqtv', 'DGHWCL', variation=1)
         self.test_data.add_tpfdf([{
             'TR1G_40_OCC': b64encode(DataType('C', input='AA').to_bytes()).decode(),
             'TR1G_40_ACSTIERCODE': b64encode(DataType('C', input='GLD').to_bytes()).decode(),
@@ -82,9 +89,17 @@ class Variation(NameGeneral):
         test_data = self.tpf_server.run('ETA5', self.test_data)
         self.assertEqual('ETK20100.1', test_data.outputs[0].last_line)
         self.assertEqual('$$ETAW$$.1', test_data.outputs[1].last_line)
-        self.assertEqual('60', test_data.get_field('EBRS01', tpfdf_variation=0))
-        self.assertEqual('00', test_data.get_field('EBRS01', tpfdf_variation=1))
+        self.assertEqual('ETK20100.1', test_data.outputs[2].last_line)
+        self.assertEqual('$$ETAW$$.1', test_data.outputs[3].last_line)
+        self.assertEqual('60', test_data.get_field('EBRS01', pnr_variation=0, tpfdf_variation=0))
+        self.assertEqual('00', test_data.get_field('EBRS01', pnr_variation=0, tpfdf_variation=1))
+        self.assertEqual('60', test_data.get_field('EBRS01', pnr_variation=1, tpfdf_variation=0))
+        self.assertEqual('00', test_data.get_field('EBRS01', pnr_variation=1, tpfdf_variation=1))
         self.assertEqual(116, test_data.outputs[0].regs['R6'])
         self.assertEqual(0, test_data.outputs[1].regs['R6'])
-        self.assertEqual('00', test_data.get_field('WA0PTY', tpfdf_variation=0))
-        self.assertEqual('01', test_data.get_field('WA0PTY', tpfdf_variation=1))
+        self.assertEqual(116, test_data.outputs[2].regs['R6'])
+        self.assertEqual(0, test_data.outputs[3].regs['R6'])
+        self.assertEqual('00', test_data.get_field('WA0PTY', pnr_variation=0, tpfdf_variation=0))
+        self.assertEqual('01', test_data.get_field('WA0PTY', pnr_variation=0, tpfdf_variation=1))
+        self.assertEqual('00', test_data.get_field('WA0PTY', pnr_variation=1, tpfdf_variation=0))
+        self.assertEqual('01', test_data.get_field('WA0PTY', pnr_variation=1, tpfdf_variation=1))

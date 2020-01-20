@@ -186,9 +186,10 @@ class Sub1Test(unittest.TestCase):
         self.assertEqual(3, test_data.output.regs['R0'])
 
     def tearDown(self) -> None:
-        if 'SUB1' in self.tpf_server.DEBUG.seg_list:
-            with open('trace_log.txt', 'w') as trace_log:
-                trace_log.write('\n'.join([str(trace) for trace in self.tpf_server.DEBUG.get_no_hit()]))
+        pass
+        # if 'SUB1' in self.tpf_server.DEBUG.seg_list:
+        #     with open('trace_log.txt', 'w') as trace_log:
+        #         trace_log.write('\n'.join([str(trace) for trace in self.tpf_server.DEBUG.get_no_hit()]))
 
 
 if __name__ == '__main__':

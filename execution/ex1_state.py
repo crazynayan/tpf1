@@ -23,7 +23,6 @@ from utils.errors import SegmentNotFoundError, EcbLevelFormatError, InvalidBaseR
 
 
 class State:
-    DEBUG: Debug = Debug()
 
     def __init__(self):
         self.seg: Optional[Segment] = None
@@ -39,6 +38,7 @@ class State:
         self.loaded_seg: Dict[str, Tuple[Segment, int]] = dict()
         self.tpfdf_ref: Dict[str, int] = dict()
         self.errors: Set[str] = set()
+        self.debug: Debug = Debug()
 
     def __repr__(self) -> str:
         return f"State:{self.seg}:{self.regs}:{self.vm}"
@@ -61,7 +61,7 @@ class State:
         for seg_name in seg_list:
             segments[seg_name].assemble()
             nodes = {**nodes, **segments[seg_name].nodes}
-        self.DEBUG.init_trace(nodes, seg_list)
+        self.debug.init_trace(nodes, seg_list)
 
     @staticmethod
     def get_ecb_address(level: str, ecb_label: str) -> int:
@@ -109,7 +109,7 @@ class State:
 
     def _ex_command(self, node: InstructionType) -> str:
         label = self._ex[node.command](node)
-        self.DEBUG.hit(node, label)
+        self.debug.hit(node, label)
         return label
 
     def set_number_cc(self, number: int) -> None:
@@ -246,7 +246,7 @@ class State:
         output.dumps.extend(self.dumps)
         output.last_line = last_line
         if output.debug:
-            output.debug = self.DEBUG.get_trace()
+            output.debug = self.debug.get_trace()
         for core in output.cores:
             macro_name = core.macro_name.upper()
             if macro_name in config.DEFAULT_MACROS:

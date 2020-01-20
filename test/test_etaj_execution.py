@@ -17,9 +17,9 @@ class EtajTest(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls) -> None:
-        if 'ETAJ' in cls.tpf_server.DEBUG.seg_list:
-            with open('trace_log.txt', 'w') as trace_log:
-                trace_log.write('\n'.join([str(trace) for trace in cls.tpf_server.DEBUG.get_no_hit()]))
+        # if 'ETAJ' in cls.tpf_server.DEBUG.seg_list:
+        #     with open('trace_log.txt', 'w') as trace_log:
+        #         trace_log.write('\n'.join([str(trace) for trace in cls.tpf_server.DEBUG.get_no_hit()]))
         return
 
     def setUp(self) -> None:
