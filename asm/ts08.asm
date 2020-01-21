@@ -32,7 +32,9 @@ TS080010 DS    0H                   30
          MVC   TS08AAC-TS08REGS(L'TS08AAC,R14),TS08PGR
          MVC   TS08REC,$X_00        36
          LA    R2,PD0_C_ITM         42
-         POP   USING
+         DROP  R1
+         WA0AA REG=R1
+         WI0BS REG=R14
          OI    WA0ET4,#WA0TTY       46
          MVC   EBW000(2),WI0ARC     50
          BACKC                      56

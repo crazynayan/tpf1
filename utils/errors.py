@@ -34,6 +34,10 @@ class UsingInvalidError(AssemblyError):
     pass
 
 
+class DropInvalidError(AssemblyError):
+    pass
+
+
 class FieldDspInvalidError(AssemblyError):
     pass
 

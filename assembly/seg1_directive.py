@@ -3,7 +3,7 @@ from typing import List
 from assembly.mac1_implementation import Dsdc
 from assembly.seg0_generic import SegmentGeneric
 from utils.data_type import Register
-from utils.errors import UsingInvalidError
+from utils.errors import UsingInvalidError, DropInvalidError
 from utils.file_line import Line
 
 
@@ -17,6 +17,7 @@ class DirectiveImplementation(SegmentGeneric):
         self._command['BEGIN'] = self.begin
         self._command['PUSH'] = self.push
         self._command['POP'] = self.pop
+        self._command['DROP'] = self.drop
         self._command['USING'] = self.using
         self._command['LTORG'] = self.no_operation
         self._command['FINIS'] = self.no_operation
@@ -62,6 +63,13 @@ class DirectiveImplementation(SegmentGeneric):
 
     def pop(self, _) -> None:
         self._using = self._using_stack.pop()
+
+    def drop(self, line: Line) -> None:
+        operands = line.split_operands()
+        if len(operands) != 1 or not Register(operands[0]).is_valid():
+            raise DropInvalidError
+        self._using = {macro_name: register for macro_name, register in self._using.items()
+                       if register.reg != Register(operands[0]).reg}
 
     def using(self, line: Line) -> None:
         operands = line.split_operands()

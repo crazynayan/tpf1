@@ -5,7 +5,7 @@ from typing import Dict, List, Set
 
 
 class Config:
-    # Used by firestore.auth
+    # Used by flask_app.auth
     DEFAULT_PASSWORD = b64encode(os.urandom(24)).decode()
     DEFAULT_TOKEN = b64encode(os.urandom(24)).decode()
 
@@ -30,8 +30,8 @@ class Config:
     TRIM: Dict[str, int] = {'0': 7, ' ': 1}
     COMMENT_C1: Set[str] = {'*', '.'}
     DIRECTIVE: Set[str] = {'PUSH', 'USING', 'DSECT', 'PGMID', 'LTORG', 'FINIS', 'END', 'ORG', 'POP', 'CSECT',
-                           'EQU', 'DS', 'DC', 'EJECT', 'SPACE', 'PRINT', 'BEGIN'}
-    DIRECTIVE_SECOND_PASS: tuple = ('PUSH', 'USING', 'POP')
+                           'EQU', 'DS', 'DC', 'EJECT', 'SPACE', 'PRINT', 'BEGIN', 'DROP'}
+    DIRECTIVE_SECOND_PASS: tuple = ('PUSH', 'USING', 'POP', 'DROP')
     DIRECTIVE_NODE: Set[str] = {'EQU', 'DS'}
     INSTRUCTION_LEN_DEFAULT: int = 4
     INSTRUCTION_LEN_2: Set[str] = {'BCTR', 'BR', 'LR', 'LTR', 'AR', 'SR', 'BER', 'BNER', 'BHR', 'BNHR', 'BLR', 'BNLR',
