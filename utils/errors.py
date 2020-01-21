@@ -86,6 +86,10 @@ class HeapaExecutionError(ExecutionError):
     pass
 
 
+class LevtaExecutionError(ExecutionError):
+    pass
+
+
 class SegmentNotFoundError(ExecutionError):
     pass
 

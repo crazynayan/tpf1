@@ -7,7 +7,7 @@ from utils.file_line import Line, File
 
 
 class SegmentTest(unittest.TestCase):
-    NUMBER_OF_FILES: int = 42
+    NUMBER_OF_FILES: int = 43
     SEG_NAME: str = 'SUB1'
 
     def test_files(self):

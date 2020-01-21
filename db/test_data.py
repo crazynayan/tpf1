@@ -213,7 +213,7 @@ class TestData(FirestoreDocument):
         pnr.delete(cascade=True)
         return copy_pnr
 
-    def create_pnr_field_bytes(self, pnr_id: str, core_dict: dict, persistence=True) -> Optional[Pnr]:
+    def create_pnr_field_data(self, pnr_id: str, core_dict: dict, persistence=True) -> Optional[Pnr]:
         pnr = next((pnr for pnr in self.pnr if pnr.id == pnr_id), None)
         if not pnr:
             return None

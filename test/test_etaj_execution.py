@@ -48,7 +48,7 @@ class EtajTest(unittest.TestCase):
                                 pool_forward_chain_label='IY1FCH',
                                 pool_item_field='IY1ATH',
                                 pool_item_count_field='IY1CTR',
-                                pool_item_field_bytes=self.iy_item,
+                                pool_item_field_data=self.iy_item,
                                 pool_item_forward_chain_count=iy_chain_count,
                                 )
         return
@@ -62,6 +62,7 @@ class EtajTest(unittest.TestCase):
 
     def test_branch_validation_pass_lok_on(self) -> None:
         self.iy_item['IY9AON'] = DataType('X', input='00006F2F').to_bytes()
+        macros['IY1IY'].load()
         self.iy_item['IY9AGY'] = bytearray([macros['IY1IY'].evaluate('#IY1LOK')])
         self._tjr_setup()
         test_data = self.tpf_server.run('TS21', self.test_data)

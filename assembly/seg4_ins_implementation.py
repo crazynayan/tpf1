@@ -67,6 +67,7 @@ class InstructionImplementation(InstructionOperand):
         self._command['L'] = self.reg_field_index
         self._command['LH'] = self.reg_field_index
         self._command['LA'] = self.reg_field_index
+        self._command['LARL'] = self.reg_field_index
         self._command['IC'] = self.reg_field_index
         self._command['STH'] = self.reg_field_index
         self._command['N'] = self.reg_field_index
@@ -108,6 +109,7 @@ class InstructionImplementation(InstructionOperand):
         self._command['BAS'] = self.reg_branch
         self._command['JAS'] = self.reg_branch
         self._command['BCT'] = self.reg_branch
+        self._command['JCT'] = self.reg_branch
         self._command['BXH'] = self.reg_reg_branch
         self._command['BXLE'] = self.reg_reg_branch
         self._command['EX'] = self.reg_label

@@ -16,7 +16,6 @@ from db.test_data_elements import Output
 from db.tpfdf import Tpfdf
 from execution.debug import Debug
 from execution.ex0_regs_store import Registers, Storage
-from test import FieldByte
 from utils.data_type import DataType, Register
 from utils.errors import SegmentNotFoundError, EcbLevelFormatError, InvalidBaseRegError, TpfdfError, PartitionError, \
     FileItemSpecificationError, PoolFileSpecificationError, BaseAddressError, ExecutionError
@@ -183,8 +182,7 @@ class State:
         self._capture_file(test_data)
         return
 
-    @staticmethod
-    def _capture_file(test_data: TestData):
+    def _capture_file(self, test_data: TestData):
         FlatFile.init_db()
         for fixed_file in test_data.fixed_files:
             fixed_dict = dict()
@@ -200,8 +198,9 @@ class State:
                             raise FileItemSpecificationError
                         count_field = item.count_field
                     item_field = item.field
-                    item_list.append(FieldByte.to_dict(item.field_bytes))
-                pool_file_bytes_dict = FieldByte.to_dict(pool_file.field_bytes) if pool_file.field_bytes else None
+                    item_list.append(self._field_data_to_bytearray(item.field_data))
+                pool_file_bytes_dict = self._field_data_to_bytearray(pool_file.field_data) if pool_file.field_data \
+                    else None
                 if item_field:
                     data_bytes = Stream(macros[pool_file.macro_name]).item_to_bytes(item_list, item_field, count_field,
                                                                                     pool_file_bytes_dict)
@@ -225,8 +224,8 @@ class State:
                 index_dict = {pool_file.index_field: DataType('F', input=str(pool_address)).to_bytes()}
                 fixed_dict = {**fixed_dict, **index_dict}
             # Fixed File
-            if fixed_file.field_bytes:
-                fixed_dict = {**fixed_dict, **FieldByte.to_dict(fixed_file.field_bytes)}
+            if fixed_file.field_data:
+                fixed_dict = {**fixed_dict, **self._field_data_to_bytearray(fixed_file.field_data)}
             if not fixed_dict:
                 raise PoolFileSpecificationError
             data_bytes = Stream(macros[fixed_file.macro_name]).to_bytes(fixed_dict)
@@ -234,8 +233,8 @@ class State:
             # TODO Fixed File items and multiple level indexes to be coded later when scenario is with us
         return
 
-    def _set_core(self, field_bytes: List[dict], macro_name: str, base_address: int) -> None:
-        field_byte_array: Dict[str, bytearray] = self._field_data_to_bytearray(field_bytes)
+    def _set_core(self, field_data: List[dict], macro_name: str, base_address: int) -> None:
+        field_byte_array: Dict[str, bytearray] = self._field_data_to_bytearray(field_data)
         for field, byte_array in field_byte_array.items():
             address = macros[macro_name].evaluate(field) + base_address
             self.vm.set_bytes(byte_array, address, len(byte_array))
@@ -265,8 +264,8 @@ class State:
                 continue
         return
 
-    def _capture_core(self, field_bytes: List[dict], macro_name: str, base_address: int) -> None:
-        for field_byte in field_bytes:
+    def _capture_core(self, field_data: List[dict], macro_name: str, base_address: int) -> None:
+        for field_byte in field_data:
             field: LabelReference = macros[macro_name].lookup(field_byte['field'].upper())
             address = field.dsp + base_address
             length = field_byte['length'] if field_byte['length'] > 0 else field.length

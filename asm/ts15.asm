@@ -1,7 +1,7 @@
 **********************************************************************
 *        EXECUTION OF NON CONDITIONAL INSTRUCTION (PART 2)
 **********************************************************************
-         PGMID 'TS15'
+         BEGIN NAME=TS15,VERSION=T0,BASELESS=YES
 TS15WK   DSECT
 SUM      DS    CL6          EBW032      40
 DWD1     DS    FD           EBW040      48
@@ -35,6 +35,8 @@ TS15MVI  MVI   EBW001,23
          UNPK  SUM,DWD3
          MVC   FIN,SUM
          OI    FIN+L'FIN-1,X'F0'
+         LARL  R13,NUM1
+         MVC   EBT000(4),0(R13)
 TS15IDX  LA    R7,4
          B     TS15SKIP(R7)
 TS15SKIP LA    R7,8

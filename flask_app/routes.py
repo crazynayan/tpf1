@@ -197,7 +197,7 @@ def add_input_pnr(test_data_id: str, **kwargs) -> Response:
 @token_auth.login_required
 @test_data_required
 def add_pnr_fields(test_data_id: str, pnr_id: str, **kwargs) -> Response:
-    pnr: Pnr = kwargs[test_data_id].create_pnr_field_bytes(pnr_id, request.get_json())
+    pnr: Pnr = kwargs[test_data_id].create_pnr_field_data(pnr_id, request.get_json())
     if not pnr:
         return error_response(400, 'Error in adding PNR field')
     return jsonify(pnr.cascade_to_dict())

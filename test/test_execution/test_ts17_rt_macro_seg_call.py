@@ -24,6 +24,7 @@ class RealTimeMacro(unittest.TestCase):
         self.assertEqual(self.tpf_server.heap['TS17PDWK'], self.tpf_server.regs.get_value('R4'))
         self.assertEqual(1, len(self.tpf_server.detac_stack['2']))
         self.assertEqual(0, len(self.tpf_server.detac_stack['1']))
+        self.assertEqual(20, test_data.output.regs['R5'])
 
     def test_segment_call(self):
         # Flow is TS10 <-> TS01 -> TS02 -< TS10 => TS13

@@ -23,8 +23,13 @@
          HEAPA LOADADD,REF=TS17PDWK,REG=R4
          MVI   1(R4),C'D'
          HEAPA FREE,SREF=TS17PDWK
+         LHI   R5,10
+         GETCC D3,L4
+         LEVTA LEVEL=3,NOTUSED=TS170100
+         LHI   R5,20
          SENDA MSG='MAXIMUM NUMBER OF NAMES PER PNR IS 99 - CREATE NEW X
                PNR'
+TS170100 DS    0H
 *
 *        CONSTANTS
 *

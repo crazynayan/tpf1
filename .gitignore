@@ -9,6 +9,7 @@ macro/
 asm/eta5.asm
 asm/etaj.asm
 asm/sub1.asm
+asm/wgu4.asm
 v1/eta5.asm
 test/trace_log.txt
 trace_log.txt

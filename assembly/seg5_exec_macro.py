@@ -78,6 +78,7 @@ class RealtimeMacroImplementation(InstructionImplementation):
         self._command['BACKC'] = self.instruction_generic
         self._command['EXITC'] = self.instruction_generic
         self._command['GETCC'] = self.key_value
+        self._command['LEVTA'] = self.key_value
         self._command['RELCC'] = self.key_value
         self._command['CRUSA'] = self.key_value
         self._command['DETAC'] = self.key_value

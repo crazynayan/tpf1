@@ -197,7 +197,7 @@ class FlatFile(FirestoreDocument):
         self.pool_files: List[PoolFile] = list()
         self.forward_chain_label: str = str()
         self.forward_chain_count: int = 0
-        self.field_bytes: list = list()
+        self.field_data: list = list()
 
 
 class FixedFile(FlatFile):
@@ -236,10 +236,10 @@ class FileItem(FirestoreDocument):
         self.field: str = str()
         self.count_field: str = str()
         self.position: int = 0
-        self.field_bytes: list = list()
+        self.field_data: list = list()
 
     def __repr__(self):
-        return f"{self.field}:{self.field_bytes}"
+        return f"{self.field}:{self.field_data}"
 
 
 FileItem.init('file_items')

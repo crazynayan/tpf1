@@ -14,6 +14,7 @@ class DirectiveImplementation(SegmentGeneric):
         self._command['DC'] = self.dc
         self._command['CSECT'] = self.csect
         self._command['PGMID'] = self.begin
+        self._command['BEGIN'] = self.begin
         self._command['PUSH'] = self.push
         self._command['POP'] = self.pop
         self._command['USING'] = self.using

@@ -26,7 +26,7 @@ return Test Data View
 
 == Evaluate TPF code ==
 User -> Frontend ++ : Run a segment
-    Frontend -> Backend ++ : GET execution result \n /test_data/{test_data_id}?seg=
+    Frontend -> Backend ++ : GET execution result \n /test_data/{test_data_id}/run
     Backend -> Firestore ++ : retrieve test data
     return test data
     Backend -> Backend : Execute segments

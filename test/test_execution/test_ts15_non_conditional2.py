@@ -10,7 +10,7 @@ class NonConditional2(unittest.TestCase):
         self.test_data = TestDataUTS()
         self.output = self.test_data.output
         ecb_fields = [('EBW000', 4), ('EBW004', 2), ('EBW008', 12), ('EBW020', 12), ('EBW032', 6), ('EBW040', 8),
-                      ('EBW048', 8), ('EBW056', 8), ('EBW064', 6)]
+                      ('EBW048', 8), ('EBW056', 8), ('EBW064', 6), ('EBT000', 4)]
         self.test_data.add_fields(ecb_fields, 'EB0EB')
         self.output.add_all_regs()
 
@@ -34,8 +34,8 @@ class NonConditional2(unittest.TestCase):
         self.assertEqual('F0F1F4F0F9C6', test_data.get_field('EBW032'))
         self.assertEqual('F0F1F4F0F9F6', test_data.get_field('EBW064'))
         self.assertEqual(4, test_data.output.regs['R7'])
-        # self.assertEqual(22, test_data.output.regs['R11'] - self.output.regs['R8'])
         self.assertEqual(2, test_data.output.regs['R12'])
+        self.assertEqual('F0F2F0F4', test_data.get_field('EBT000'))
 
 
 if __name__ == '__main__':

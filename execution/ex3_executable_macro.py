@@ -4,7 +4,7 @@ from assembly.seg5_exec_macro import KeyValue, SegmentCall
 from db.pnr import PnrLocator
 from execution.ex1_state import State
 from utils.data_type import DataType, Register
-from utils.errors import HeapaExecutionError, RegisterInvalidError, DumpExecutionError
+from utils.errors import HeapaExecutionError, RegisterInvalidError, DumpExecutionError, LevtaExecutionError
 from utils.ucdr import pars_to_date, date_to_pars
 
 
@@ -14,6 +14,16 @@ class RealTimeMacro(State):
         self._core_block(address, node.keys[0], node.keys[1])
         self.regs.R14 = address
         return node.fall_down
+
+    def levta(self, node: KeyValue) -> str:
+        level = node.get_value('LEVEL')
+        if not level or len(level) != 1:
+            raise LevtaExecutionError
+        in_use = node.get_value('INUSE') if node.get_value('INUSE') else node.fall_down
+        not_used = node.get_value('NOTUSED') if node.get_value('NOTUSED') else node.fall_down
+        if self.vm.get_value(self.get_ecb_address(f"D{level}", 'CE1CT'), 2) == 0x01:
+            return not_used
+        return in_use
 
     def relcc(self, node: KeyValue) -> str:
         control_address = self.get_ecb_address(node.keys[0], 'CE1CT')

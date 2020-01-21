@@ -20,6 +20,7 @@ class Execute(Instruction, ExecutableMacro, DbMacro):
         self._ex['L'] = self.load_fullword
         self._ex['ST'] = self.store_fullword
         self._ex['LA'] = self.load_address
+        self._ex['LARL'] = self.load_address
         self._ex['LH'] = self.load_halfword
         self._ex['LHI'] = self.load_halfword_immediate
         self._ex['STH'] = self.store_halfword
@@ -50,6 +51,7 @@ class Execute(Instruction, ExecutableMacro, DbMacro):
         # MVCL - Not in ETA5
         # MVZ, MVO, MVN - Not in ETA5
         self._ex['BCT'] = self.branch_on_count
+        self._ex['JCT'] = self.branch_on_count
         self._ex['BCTR'] = self.branch_on_count_register
         # BXH, BXLE - Not in ETA5
         self._ex['BAS'] = self.branch_and_save
@@ -154,6 +156,7 @@ class Execute(Instruction, ExecutableMacro, DbMacro):
 
         # Realtime Macros
         self._ex['GETCC'] = self.getcc
+        self._ex['LEVTA'] = self.levta
         self._ex['MODEC'] = self.no_operation
         self._ex['DETAC'] = self.detac
         self._ex['ATTAC'] = self.attac
