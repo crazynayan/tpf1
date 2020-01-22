@@ -4,7 +4,7 @@ from assembly.mac2_data_macro import DataMacro, macros
 
 
 class MacroTest(unittest.TestCase):
-    NUMBER_OF_FILES = 22
+    NUMBER_OF_FILES = 29
 
     def test_files(self):
         self.assertIn('EB0EB', macros)
@@ -215,6 +215,32 @@ class MacroTest(unittest.TestCase):
         macro_name = 'PDEQU'
         self._common_checks(macro_name)
         self.assertEqual(0x50, self.macro.lookup('#PD_NAME_K').dsp)
+
+    def test_FT3FT(self):
+        self._common_checks('FT3FT')
+        self.assertEqual(0x000, self.macro.lookup('FT3REG').dsp)
+        self.assertEqual(4, self.macro.lookup('FT3REG').length)
+        self.assertEqual(0x020, self.macro.lookup('FT3SAV').dsp)
+        self.assertEqual(0x020, self.macro.lookup('FT3R13').dsp)
+        self.assertEqual(0x092, self.macro.lookup('FT3END').dsp)
+
+    def test_MH0HM(self):
+        self._common_checks('MH0HM')
+
+    def test_NNM1WK(self):
+        self._common_checks('NNM1WK')
+
+    def test_NM0WK(self):
+        self._common_checks('NM0WK')
+
+    def test_SV0SV(self):
+        self._common_checks('SV0SV')
+
+    def test_FT0FT(self):
+        self._common_checks('FT0FT')
+
+    def test_S40S4(self):
+        self._common_checks('S40S4')
 
 
 if __name__ == '__main__':

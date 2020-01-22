@@ -28,43 +28,46 @@ class DataMacroImplementation(MacroGeneric):
         self._command['DSECT'] = self.dsect
 
     def _dsdc(self, operand: str) -> Dsdc:
-        # (^\d*)([CXHFDBZPAY]D?)(?:L([\d]+))?(?:L[(]([^)]+)[)])?(?:[']([^']+)['])?(?:[(]([^)]+)[)])?
+        # (^\d+)?(?:[(]([^)]+)[)])?([CXHFDBZPAY]D?)(?:L([\d]+))?(?:L[(]([^)]+)[)])?(?:[']([^']+)['])?(?:[(]([^)]+)[)])?
         operands = next(iter(re.findall(
-            r"(^\d*)"  # 0 Duplication Factor - A number. (Optional)
-            r"([CXHFDBZPAY]D?)"  # 1 Data Type - Valid Single character Data type. (Note: FD is valid)
-            r"(?:L([\d]+))?"  # 2 Length - L followed by a number. (Optional)
-            r"(?:L[(]([^)]*)[)])?"  # 3 Length - L followed by a expression enclosed in paranthesis. (Optional)
-            r"(?:[']([^']*)['])?"  # 4 Data - Enclosed in quotes. (Optional)
-            r"(?:[(]([^)]*)[)])?",  # 5 Data - Enclosed in parenthesis. (Optional)
+            r"(^\d+)?"  # 0 Duplication Factor - A number. (Optional)
+            r"(?:[(]([^)]+)[)])?"  # 1 Duplication Factor - Expression enclosed in paranthesis (Optional)
+            r"([CXHFDBZPAY]D?)"  # 2 Data Type - Valid Single character Data type. (Note: FD is valid)
+            r"(?:L([\d]+))?"  # 3 Length - L followed by a number. (Optional)
+            r"(?:L[(]([^)]+)[)])?"  # 4 Length - L followed by a expression enclosed in paranthesis. (Optional)
+            r"(?:[']([^']+)['])?"  # 5 Data - Enclosed in quotes. (Optional)
+            r"(?:[(]([^)]+)[)])?",  # 6 Data - Enclosed in parenthesis. (Optional)
             operand)))
         # Duplication Factor
         duplication_factor = int(operands[0]) if operands[0] else 1
+        if operands[1]:
+            duplication_factor = self.get_value(operands[1])
         # Data Type
-        data_type = operands[1]
+        data_type = operands[2]
         # Align to boundary
         align_to_boundary = 0
         boundary = DataType(data_type).align_to_boundary
         if boundary > 0 and self._location_counter % boundary > 0:
             align_to_boundary = boundary - self._location_counter % boundary
         # Length
-        if operands[2]:
-            length = int(operands[2])
+        if operands[3]:
+            length = int(operands[3])
             align_to_boundary = 0
-        elif operands[3]:
-            length = self.get_value(operands[3])
+        elif operands[4]:
+            length = self.get_value(operands[4])
             align_to_boundary = 0
         else:
             length = None
         # Data
         number_of_data_operands = 1
-        if operands[4]:
-            data_type_object = DataType(data_type, input=operands[4])
+        if operands[5]:
+            data_type_object = DataType(data_type, input=operands[5])
             length = length or data_type_object.length
             data = data_type_object.to_bytes(length)
-        elif operands[5]:
+        elif operands[6]:
             data = bytearray()
-            number_of_data_operands = len(operands[5].split(','))
-            for operand in operands[5].split(','):
+            number_of_data_operands = len(operands[6].split(','))
+            for operand in operands[6].split(','):
                 number = self.get_value(operand)
                 data_type_object = DataType(data_type, input=str(number))
                 length = length or data_type_object.default_length

@@ -161,6 +161,9 @@ class Execute(Instruction, ExecutableMacro, DbMacro):
         self._ex['DETAC'] = self.detac
         self._ex['ATTAC'] = self.attac
         self._ex['RELCC'] = self.relcc
+        self._ex['RCUNC'] = self.relcc
+        self._ex['RELFC'] = self.no_operation
+        self._ex['RLCHA'] = self.no_operation
         self._ex['CRUSA'] = self.crusa
         self._ex['SENDA'] = self.senda
         self._ex['SYSRA'] = self.sysra

@@ -80,6 +80,9 @@ class RealtimeMacroImplementation(InstructionImplementation):
         self._command['GETCC'] = self.key_value
         self._command['LEVTA'] = self.key_value
         self._command['RELCC'] = self.key_value
+        self._command['RCUNC'] = self.key_value
+        self._command['RELFC'] = self.key_value
+        self._command['RLCHA'] = self.key_value
         self._command['CRUSA'] = self.key_value
         self._command['DETAC'] = self.key_value
         self._command['ATTAC'] = self.key_value
