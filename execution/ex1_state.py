@@ -32,7 +32,7 @@ class State:
         self.detac_stack: Dict[str, List] = {level: list() for level in config.ECB_LEVELS}
         self.messages: List[str] = list()
         self.dumps: List[str] = list()
-        self.heap: Dict[str, int] = dict()
+        self.heap: Dict[str, Dict[str, int]] = {'old': dict(), 'new': dict()}
         self.call_stack: List[Tuple[str, str]] = list()
         self.loaded_seg: Dict[str, Tuple[Segment, int]] = dict()
         self.tpfdf_ref: Dict[str, int] = dict()

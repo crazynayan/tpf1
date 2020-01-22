@@ -135,21 +135,22 @@ class UserDefinedMacro(State):
                 self.regs.set_value(0, reg)
             return error_label
 
-        # HEAPA / CFCMA command types
+        # HEAPA / CFCMA / EHEAPA command types
         command = node.keys[0]
+        heap = self.heap['new'] if node.command == 'EHEAPA' else self.heap['old']
         if command == 'ALLOCATE':
             address = self.vm.allocate()
-            self.heap[ref] = address
+            heap[ref] = address
             if reg.is_valid():
                 self.regs.set_value(address, reg)
         elif command == 'LOADADD':
-            address = self.heap[ref] if ref in self.heap else 0
+            address = heap[ref] if ref in heap else 0
             if reg.is_valid():
                 self.regs.set_value(address, reg)
             if address == 0 and error_label:
                 return error_label
         elif command == 'FREE':
-            pass
+            heap.pop(ref, None)
         else:
             raise HeapaExecutionError
         return node.fall_down
