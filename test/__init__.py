@@ -6,47 +6,22 @@ from typing import Dict, List, Union
 from assembly.mac2_data_macro import DataMacro
 from config import config
 from db.test_data import TestData
-from db.test_data_elements import Pnr, Output, FixedFile, PoolFile, FileItem
-from utils.data_type import Register
-from utils.errors import PoolFileSpecificationError, FileItemSpecificationError, InvalidBaseRegError
-
-
-class OutputUTS(Output):
-
-    def add_regs(self, reg_list: List[str]) -> None:
-        for reg in reg_list:
-            if not Register(reg).is_valid():
-                raise InvalidBaseRegError
-            self.regs[reg] = 0
-        return
-
-    def get_unsigned_value(self, reg: str) -> int:
-        if reg not in self.regs:
-            raise InvalidBaseRegError
-        return self.regs[reg] & config.REG_MAX
-
-    def add_all_regs(self) -> None:
-        for reg in config.REG:
-            self.regs[reg] = 0
-        return
-
-    def add_all_reg_pointers(self, length: int) -> None:
-        for reg in config.REG:
-            self.reg_pointers[reg] = length
+from db.test_data_elements import Pnr, FixedFile, PoolFile, FileItem
+from utils.errors import PoolFileSpecificationError, FileItemSpecificationError
 
 
 class TestDataUTS(TestData):
 
-    def __init__(self):
-        super().__init__()
-        self.outputs = [OutputUTS()]
-
-    def add_all_regs(self) -> Dict[str, int]:
+    def add_all_regs(self) -> None:
         for reg in config.REG:
             if reg in ['R8', 'R9']:
                 continue
-            self.regs[reg] = 0
-        return self.regs
+            self.output.regs[reg] = 0
+        return
+
+    def add_all_reg_pointers(self, length: int) -> None:
+        for reg in config.REG:
+            self.output.reg_pointers[reg] = length
 
     def add_fields(self, fields: List[Union[str, tuple]], macro_name: str, base_reg: str = None) -> None:
         field_dict = dict()

@@ -10,8 +10,7 @@ class NonConditional1(unittest.TestCase):
     def setUp(self) -> None:
         self.tpf_server = Execute()
         self.test_data = TestDataUTS()
-        self.output = self.test_data.output
-        self.output.add_regs(['R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R10', 'R11', 'R12', 'R13', 'R14', 'R15'])
+        self.test_data.add_all_regs()
         aaa_fields = [('WA0BBR', 2), ('WA0QHR', 6), 'WA0TKK', 'WA0TY1']
         self.test_data.add_fields(aaa_fields, 'WA0AA')
         ecb_fields = [('EBW001', 6), ('EBW008', 6), 'EBW000', 'EBW016', 'EBW017', 'EBW018']
@@ -20,7 +19,7 @@ class NonConditional1(unittest.TestCase):
     def test_ts14(self):
         test_data = self.tpf_server.run('TS14', self.test_data)
         aaa = config.AAA
-        self.assertEqual(0xFFFFC1C1, test_data.output.get_unsigned_value('R2'))
+        self.assertEqual(0xFFFFC1C1, test_data.get_unsigned_value('R2'))
         self.assertEqual('C1C1', test_data.get_field('WA0BBR'))
         self.assertEqual('00000000C1C1', test_data.get_field('WA0QHR'))
         self.assertEqual(2, test_data.output.regs['R3'])

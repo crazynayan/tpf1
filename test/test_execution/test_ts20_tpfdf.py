@@ -10,8 +10,7 @@ class DbTest(unittest.TestCase):
         self.tpf_server = Execute()
         self.test_data = TestDataUTS()
         self.test_data.add_fields(['EBW000'], 'EB0EB')
-        self.output = self.test_data.output
-        self.output.add_regs(['R0'])
+        self.test_data.add_all_regs()
 
     def test_tpfdf_ts20(self):
         self.test_data.add_tpfdf(tr1gaa, '40', 'TR1GAA')

@@ -8,8 +8,7 @@ class PdredNames(unittest.TestCase):
     def setUp(self) -> None:
         self.tpf_server = Execute()
         self.test_data = TestDataUTS()
-        self.output = self.test_data.output
-        self.output.add_regs(['R1'])
+        self.test_data.add_all_regs()
 
     def test_multiple_names(self):
         self.test_data.add_pnr_element(['C/21TOURS', '2ZAVERI', 'I/2ZAVERI/S'], 'name')

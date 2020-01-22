@@ -94,6 +94,10 @@ class MhinfExecutionError(ExecutionError):
     pass
 
 
+class PrimaExecutionError(ExecutionError):
+    pass
+
+
 class LevtaExecutionError(ExecutionError):
     pass
 

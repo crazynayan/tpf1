@@ -8,11 +8,10 @@ class Conditional(unittest.TestCase):
     def setUp(self) -> None:
         self.tpf_server = Execute()
         self.test_data = TestDataUTS()
-        self.output = self.test_data.output
-        self.output.add_all_regs()
+        self.test_data.add_all_regs()
         ecb_fields = ['EBW015', 'EBW016', 'EBW010', 'EBW011', 'EBW012', 'EBW013', ('EBW020', 4), ('EBW024', 4)]
         self.test_data.add_fields(ecb_fields, 'EB0EB')
-        self.i_regs = self.test_data.add_all_regs()
+        # self.i_regs = self.test_data.output.add_all_regs()
 
     def test_ts16_1(self):
         # Default state is 1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 7.1.1, 7.2.1, 7.3.1, 7.4.1
@@ -40,8 +39,8 @@ class Conditional(unittest.TestCase):
         self.test_data.set_field('EBW004', bytearray([0xC1, 0xC2, 0xC3, 0xC5]))
         self.test_data.set_field('EBW008', bytearray([0xC1]))
         self.test_data.set_field('EBW009', bytearray([0x11]))
-        self.i_regs['R15'] = -10
-        self.i_regs['R14'] = 23
+        self.test_data.regs['R15'] = -10
+        self.test_data.regs['R14'] = 23
         test_data = self.tpf_server.run('TS16', self.test_data)
         self.assertEqual(2, test_data.output.regs['R0'])
         self.assertEqual(3, test_data.output.regs['R1'])
@@ -58,7 +57,7 @@ class Conditional(unittest.TestCase):
 
     def test_ts16_3(self) -> None:
         # Update state to 3.3, 5.3
-        self.i_regs['R15'] = 10
+        self.test_data.regs['R15'] = 10
         self.test_data.set_field('EBW009', bytearray([0x10]))
         test_data = self.tpf_server.run('TS16', self.test_data)
         self.assertEqual(3, test_data.output.regs['R2'])

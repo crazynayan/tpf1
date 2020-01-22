@@ -25,13 +25,12 @@ class EtajTest(unittest.TestCase):
     def setUp(self) -> None:
         self.tpf_server.init_run()
         self.test_data = TestDataUTS()
-        self.output = self.test_data.output
         # Test data setup
         self.test_data.add_pnr_element(['BTS-B4T0/108/11-FINANCIAL SERVICES'], 'group_plan')
         self.test_data.add_fields(['WA0POR', 'WA0FNS'], 'WA0AA')
         self.test_data.set_field('WA0POR', DataType('X', input='006F2F').to_bytes())
         self.test_data.set_field('WA0FNS', bytes([macros['WA0AA'].evaluate('#WA0TVL')]))
-        self.output.add_regs(['R6'])
+        self.test_data.add_all_regs()
         # Item setup
         self.iy_item = dict()
         self.iy_item['IY9AON'] = bytearray([config.ZERO] * 4)

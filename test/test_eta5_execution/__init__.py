@@ -26,7 +26,7 @@ class NameGeneral(unittest.TestCase):
         ui2_fields = ['UI2CNN', ('UI2INC', 3)]
         self.test_data.add_fields(ui2_fields, 'UI2PF', base_reg='R7')
         # Registers
-        self.test_data.output.add_regs(['R6', 'R1', 'R15'])
+        self.test_data.add_all_regs()
         # Equates
         macros['UI2PF'].load()
         self.wa0pn2 = macros['WA0AA'].evaluate('#WA0PN2')

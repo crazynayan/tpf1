@@ -8,11 +8,10 @@ class NonConditional2(unittest.TestCase):
     def setUp(self) -> None:
         self.tpf_server = Execute()
         self.test_data = TestDataUTS()
-        self.output = self.test_data.output
         ecb_fields = [('EBW000', 4), ('EBW004', 2), ('EBW008', 12), ('EBW020', 12), ('EBW032', 6), ('EBW040', 8),
                       ('EBW048', 8), ('EBW056', 8), ('EBW064', 6), ('EBT000', 4)]
         self.test_data.add_fields(ecb_fields, 'EB0EB')
-        self.output.add_all_regs()
+        self.test_data.add_all_regs()
 
     def test_ts15(self):
         test_data = self.tpf_server.run('TS15', self.test_data)
@@ -21,7 +20,7 @@ class NonConditional2(unittest.TestCase):
         self.assertEqual(-2, test_data.output.regs['R3'])
         self.assertEqual('FF00', test_data.get_field('EBW004'))
         self.assertEqual(0x40404040, test_data.output.regs['R15'])
-        self.assertEqual(0xC1404040, test_data.output.get_unsigned_value('R0'))
+        self.assertEqual(0xC1404040, test_data.get_unsigned_value('R0'))
         self.assertEqual(0x40C14040, test_data.output.regs['R1'])
         self.assertEqual('40404040C140404040C14040', test_data.get_field('EBW008'))
         self.assertEqual('40404040C140404040C14040', test_data.get_field('EBW020'))

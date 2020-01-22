@@ -2,11 +2,12 @@ from typing import Optional
 
 from assembly.mac2_data_macro import macros
 from assembly.seg5_exec_macro import KeyValue, SegmentCall
+from config import config
 from db.pnr import PnrLocator
 from execution.ex1_state import State
 from utils.data_type import DataType, Register
 from utils.errors import HeapaExecutionError, RegisterInvalidError, DumpExecutionError, LevtaExecutionError, \
-    MhinfExecutionError
+    MhinfExecutionError, PrimaExecutionError
 from utils.ucdr import pars_to_date, date_to_pars
 
 
@@ -178,6 +179,30 @@ class UserDefinedMacro(State):
         else:
             raise MhinfExecutionError
         return node.fall_down
+
+    def nmsea(self, node: KeyValue) -> str:
+        # TODO Finish NMSEA when data on NM0ID or WGL1 is available
+        error = node.get_value('ERROR')
+        self.regs.get_value('R14')
+        return error if error else node.fall_down
+
+    def prima(self, node: KeyValue) -> str:
+        if node.keys[0] != 'AAA':
+            raise PrimaExecutionError
+        if node.get_value('MODE') != 'CHECK':
+            raise PrimaExecutionError
+        match_label = node.get_value('YES') if node.get_value('YES') else node.fall_down
+        not_match_label = node.get_value('NO') if node.get_value('NO') else node.fall_down
+        prime_host = self.vm.get_value(config.AAA + macros['WA0AA'].evaluate('WA0PHA'), 1) & 0x0F
+        input_type = node.get_value('PH')
+        if prime_host == 0:
+            return not_match_label
+        elif prime_host == 2:
+            return match_label if input_type in ('1F', 'ANY') else not_match_label
+        elif prime_host == 3:
+            return match_label if input_type in ('1B', 'ANY') else not_match_label
+        else:
+            raise PrimaExecutionError
 
     def pnrcc(self, node: KeyValue) -> str:
         action = node.get_value('ACTION')

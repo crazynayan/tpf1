@@ -8,9 +8,8 @@ class RealTimeMacro(unittest.TestCase):
     def setUp(self) -> None:
         self.tpf_server = Execute()
         self.test_data = TestDataUTS()
-        self.output = self.test_data.output
-        self.output.add_all_reg_pointers(2)
-        self.output.add_regs(['R5'])
+        self.test_data.add_all_reg_pointers(2)
+        self.test_data.add_all_regs()
         self.test_data.add_fields(['EBT000', 'EBW000'], 'EB0EB')
 
     def test_ts17(self):

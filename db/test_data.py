@@ -11,6 +11,7 @@ from assembly.seg6_segment import segments
 from config import config
 from db.test_data_elements import Core, Pnr, Tpfdf, Output, FixedFile
 from utils.data_type import Register
+from utils.errors import InvalidBaseRegError
 
 
 class TestData(FirestoreDocument):
@@ -41,6 +42,11 @@ class TestData(FirestoreDocument):
     def get_output(self, core_variation: int = 0, pnr_variation: int = 0, tpfdf_variation: int = 0) -> Output:
         return next(output for output in self.outputs if output.variation['core'] == core_variation and
                     output.variation['pnr'] == pnr_variation and output.variation['tpfdf'] == tpfdf_variation)
+
+    def get_unsigned_value(self, reg: str) -> int:
+        if reg not in self.output.regs:
+            raise InvalidBaseRegError
+        return self.output.regs[reg] & config.REG_MAX
 
     def set_field(self, field_name: str, data: Union[bytearray, bytes], variation: int = 0) -> None:
         macro_name = DataMacro.get_label_reference(field_name).name

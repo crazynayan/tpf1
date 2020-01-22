@@ -1,7 +1,8 @@
 **********************************************************************
-*        TEST REALTIME MACROS
+*        TEST REALTIME AND USER DEFINED MACROS
 *        1) ALASC
 *        2) MHINF
+*        3) PRIMA
 **********************************************************************
          PGMID 'TS2301'
 FTNWK    DSECT
@@ -16,6 +17,10 @@ FTNRGE   DS    F               SAVE R6
 FTNRGF   DS    F               SAVE R7
 $IS$     CSECT
          USING FTNWK,R4
+*
+*        1) ALASC
+*
+TS230100 EQU   *
          LHI   R1,1
          LHI   R2,2
          LHI   R3,3
@@ -28,8 +33,26 @@ $IS$     CSECT
          L     R4,CE1AUT
          MVC   FTNRGF,8(R4)
          MVC   EBW000(28),FTNREG
+*
+*        2) MHINF
+*
+TS230200 EQU   *
          LA    R10,VX
          MHINF ECB,REG=R10,INPTR=NAME
+*
+*        3) PRIMA
+*
+TS230300 EQU   *
+         LHI   R11,1
+         PRIMA AAA,PH=ANY,NO=TS230400,MODE=CHECK
+         AHI   R11,1
+         PRIMA AAA,PH=1F,YES=TS230390,MODE=CHECK
+         PRIMA AAA,PH=1B,NO=TS230400,MODE=CHECK
+         AHI   R11,3
+         J     TS230400
+TS230390 EQU   *
+         AHI   R11,2
+TS230400 EQU   *
 TS23EXIT EQU   *
          EXITC
 VX       DC    C'VX'
