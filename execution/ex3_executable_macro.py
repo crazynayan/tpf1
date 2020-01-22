@@ -1,5 +1,6 @@
 from typing import Optional
 
+from assembly.mac2_data_macro import macros
 from assembly.seg5_exec_macro import KeyValue, SegmentCall
 from db.pnr import PnrLocator
 from execution.ex1_state import State
@@ -13,6 +14,14 @@ class RealTimeMacro(State):
         address = self.vm.allocate()
         self._core_block(address, node.keys[0], node.keys[1])
         self.regs.R14 = address
+        return node.fall_down
+
+    def alasc(self, node: KeyValue) -> str:
+        address = self.vm.allocate()
+        self.vm.set_value(self.regs.get_value('R7'), address + 8)
+        self.regs.set_value(address + 8, 'R7')
+        ce1aut = self.regs.get_value('R9') + macros['EB0EB'].evaluate('CE1AUT')
+        self.vm.set_value(address, ce1aut)
         return node.fall_down
 
     def levta(self, node: KeyValue) -> str:

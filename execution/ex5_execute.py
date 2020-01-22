@@ -172,6 +172,7 @@ class Execute(Instruction, ExecutableMacro, DbMacro):
         self._ex['ENTNC'] = self.entnc
         self._ex['ENTDC'] = self.entdc
         self._ex['BACKC'] = self.backc
+        self._ex['ALASC'] = self.alasc
 
         # User Defined Executable Macros
         self._ex['AAGET'] = self.aaget
