@@ -73,7 +73,15 @@ class Config:
     BLOCK_TYPE: Dict[str, int] = {'L0': 0x11, 'L1': 0x21, 'L2': 0x31, 'L4': 0x41}
     START: datetime = datetime(1966, 1, 2, 0, 0, 0)
     GROSS_DAYS: int = 333
-    PARTITION: Dict[str, int] = {'AA': 0x00, 'BA': 0xE0}
+    PARTITION: Dict[str, int] = {'AA': 0x00, 'KM': 0x01, 'WS': 0x02, 'AS': 0x04, 'GF': 0x05, 'ET': 0x06, 'UP': 0x09,
+                                 'W1': 0x0B, 'AR': 0x0C, 'SL': 0x0E, 'HA': 0x0F, 'ID': 0x10, '7N': 0x11, '6S': 0x14,
+                                 'K0': 0x16, '9W': 0x18, 'AM': 0x19, 'KX': 0x1A, 'WY': 0x1B, 'B2': 0x1C, 'JJ': 0x1E,
+                                 'CO': 0x1F, 'JT': 0x22, 'JU': 0x23, 'AZ': 0x24, 'YF': 0x25, '7H': 0x26, 'ZL': 0x29,
+                                 'B6': 0x2A, 'R7': 0x2C, 'FC': 0x2D, '7F': 0x2F, '5T': 0x30, 'PX': 0x31, 'K6': 0x32,
+                                 'F7': 0x33, 'I0': 0x36, 'VN': 0x37, 'KS': 0x3A, 'AX': 0x3F, 'T3': 0x41, 'VX': 0x44,
+                                 'VA': 0x45, 'S2': 0x46, 'SU': 0x48, 'MN': 0x49, 'IW': 0x4A, 'EY': 0x4B, '9V': 0x4C,
+                                 '8U': 0x4D, '3M': 0x4E, 'F0': 0x50, 'XH': 0x51, 'HM': 0x55, 'XL': 0x59, 'LA': 0x5A,
+                                 '4M': 0x5B}
 
     # Used by db
     AAAPNR: str = 'AAAAAA'

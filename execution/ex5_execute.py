@@ -179,6 +179,7 @@ class Execute(Instruction, ExecutableMacro, DbMacro):
         self._ex['CFCMA'] = self.heapa
         self._ex['HEAPA'] = self.heapa
         self._ex['EHEAPA'] = self.heapa
+        self._ex['MHINF'] = self.mhinf
         self._ex['PNRCC'] = self.pnrcc
 
         # User Defined Executable Macros created for this tool

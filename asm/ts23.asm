@@ -1,6 +1,7 @@
 **********************************************************************
 *        TEST REALTIME MACROS
 *        1) ALASC
+*        2) MHINF
 **********************************************************************
          PGMID 'TS2301'
 FTNWK    DSECT
@@ -27,5 +28,8 @@ $IS$     CSECT
          L     R4,CE1AUT
          MVC   FTNRGF,8(R4)
          MVC   EBW000(28),FTNREG
+         LA    R10,VX
+         MHINF ECB,REG=R10,INPTR=NAME
 TS23EXIT EQU   *
          EXITC
+VX       DC    C'VX'

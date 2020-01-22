@@ -5,7 +5,8 @@ from assembly.seg5_exec_macro import KeyValue, SegmentCall
 from db.pnr import PnrLocator
 from execution.ex1_state import State
 from utils.data_type import DataType, Register
-from utils.errors import HeapaExecutionError, RegisterInvalidError, DumpExecutionError, LevtaExecutionError
+from utils.errors import HeapaExecutionError, RegisterInvalidError, DumpExecutionError, LevtaExecutionError, \
+    MhinfExecutionError
 from utils.ucdr import pars_to_date, date_to_pars
 
 
@@ -162,6 +163,20 @@ class UserDefinedMacro(State):
             heap.pop(ref, None)
         else:
             raise HeapaExecutionError
+        return node.fall_down
+
+    def mhinf(self, node: KeyValue) -> str:
+        if node.keys[0] != 'ECB':
+            raise MhinfExecutionError
+        reg = Register(node.get_value('REG'))
+        if not reg.is_valid():
+            raise MhinfExecutionError
+        option = node.get_value('INPTR')
+        if option == 'NAME':
+            airline_code = self.vm.get_bytes(self.regs.get_value(reg), 2)
+            self.set_partition(DataType('X', bytes=airline_code).decode)
+        else:
+            raise MhinfExecutionError
         return node.fall_down
 
     def pnrcc(self, node: KeyValue) -> str:

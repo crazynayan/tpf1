@@ -90,6 +90,10 @@ class HeapaExecutionError(ExecutionError):
     pass
 
 
+class MhinfExecutionError(ExecutionError):
+    pass
+
+
 class LevtaExecutionError(ExecutionError):
     pass
 

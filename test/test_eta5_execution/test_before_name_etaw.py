@@ -10,7 +10,7 @@ class BeforeNameETAW(NameGeneral):
 
     def test_HFX_BA_TKV_SRT5(self):
         self.test_data.set_field('WA0ET6', bytes([self.wa0hfx]))
-        self.test_data.partition = 'BA'
+        self.test_data.partition = 'VA'
         self.test_data.set_field('WA0US3', bytes([self.wa0tkv]))
         test_data = self.tpf_server.run('ETA5', self.test_data)
         self.assertEqual('$$ETAW$$.1', test_data.output.last_line)
