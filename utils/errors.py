@@ -94,6 +94,10 @@ class MhinfExecutionError(ExecutionError):
     pass
 
 
+class McpckExecutionError(ExecutionError):
+    pass
+
+
 class PrimaExecutionError(ExecutionError):
     pass
 

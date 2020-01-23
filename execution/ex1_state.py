@@ -130,6 +130,10 @@ class State:
         self.vm.set_bytes(DataType('C', input=partition).to_bytes(), haalc, 2)
         self.vm.set_value(config.PARTITION[partition], ce1uid, 1)
 
+    def get_partition(self) -> str:
+        airline_code = self.vm.get_bytes(config.GLOBAL + macros['GLOBAL'].evaluate('@HAALC'), 2)
+        return DataType('X', bytes=airline_code).decode
+
     def is_error(self, label: str) -> bool:
         return label in self.errors
 

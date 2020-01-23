@@ -7,7 +7,7 @@ from db.pnr import PnrLocator
 from execution.ex1_state import State
 from utils.data_type import DataType, Register
 from utils.errors import HeapaExecutionError, RegisterInvalidError, DumpExecutionError, LevtaExecutionError, \
-    MhinfExecutionError, PrimaExecutionError
+    MhinfExecutionError, PrimaExecutionError, McpckExecutionError
 from utils.ucdr import pars_to_date, date_to_pars
 
 
@@ -179,6 +179,13 @@ class UserDefinedMacro(State):
         else:
             raise MhinfExecutionError
         return node.fall_down
+
+    def mcpck(self, node: KeyValue) -> str:
+        if node.get_value('GROUP') != 'LAN':
+            raise McpckExecutionError
+        match_label = node.get_value('YES') if node.get_value('YES') else node.fall_down
+        not_match_label = node.get_value('NO') if node.get_value('NO') else node.fall_down
+        return match_label if self.get_partition() in ('LA', '4M', 'XL') else not_match_label
 
     def nmsea(self, node: KeyValue) -> str:
         # TODO Finish NMSEA when data on NM0ID or WGL1 is available

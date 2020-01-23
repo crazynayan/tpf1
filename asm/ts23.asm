@@ -1,8 +1,9 @@
 **********************************************************************
 *        TEST REALTIME AND USER DEFINED MACROS
-*        1) ALASC
 *        2) MHINF
-*        3) PRIMA
+*        2) PRIMA
+*        3) MCPCK
+*        4) MHINF
 **********************************************************************
          PGMID 'TS2301'
 FTNWK    DSECT
@@ -34,13 +35,7 @@ TS230100 EQU   *
          MVC   FTNRGF,8(R4)
          MVC   EBW000(28),FTNREG
 *
-*        2) MHINF
-*
-TS230200 EQU   *
-         LA    R10,VX
-         MHINF ECB,REG=R10,INPTR=NAME
-*
-*        3) PRIMA
+*        2) PRIMA
 *
 TS230300 EQU   *
          LHI   R11,1
@@ -52,7 +47,20 @@ TS230300 EQU   *
          J     TS230400
 TS230390 EQU   *
          AHI   R11,2
+*
+*        3) MCPCK
+*
 TS230400 EQU   *
+         LHI   R12,1
+         MCPCK GROUP=LAN,NO=TS230500
+         LHI   R12,2
+*
+*        4) MHINF
+*
+TS230500 EQU   *
+         LA    R10,VX
+         MHINF ECB,REG=R10,INPTR=NAME
+TS230600 EQU   *
 TS23EXIT EQU   *
          EXITC
 VX       DC    C'VX'
