@@ -6,7 +6,7 @@ from assembly.mac2_data_macro import macros
 from assembly.seg2_ins_operand import Label
 from assembly.seg5_exec_macro import UserDefinedMacroImplementation
 from config import config
-from utils.data_type import Register
+from utils.data_type import Register, DataType
 from utils.file_line import Line, File
 
 
@@ -43,7 +43,9 @@ class Segment(UserDefinedMacroImplementation):
         self._build_symbol_table(lines)
         # Update index of each line
         lines = self._update_index(lines)
-        # Second pass - Assemble instructions and populates n odes.
+        # Generate constants
+        self._generate_constants()
+        # Second pass - Assemble instructions and populates nodes.
         self._assemble_instructions(lines)
         return
 
@@ -67,6 +69,15 @@ class Segment(UserDefinedMacroImplementation):
                 self.add_label(line.label, self._location_counter, length, self.name)
                 self._symbol_table[line.label].set_branch()
                 self._location_counter += length
+        return
+
+    def _generate_constants(self) -> None:
+        for dc in self.dc_list:
+            if dc.expression:
+                dc.data = bytearray()
+                for operand in dc.expression:
+                    dc.data.extend(DataType(dc.data_type, input=str(self.get_value(operand))).to_bytes(dc.length))
+            self.data.set_constant(dc.data * dc.duplication_factor, dc.start)
         return
 
     def _assemble_instructions(self, lines: List[Line]) -> None:

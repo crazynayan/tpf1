@@ -81,13 +81,13 @@ class MacroGeneric:
             for data in data_list:
                 value = DataType(data[0], input=data[2:-1]).value
                 value_list.insert(0, value)
-        exp_list = re.split(r"([+*()-])", operand)
+        exp_list = re.split(r"([+*()/-])", operand)
         if len(exp_list) == 1 and data_list:
             return value_list.pop()
         exp_list = [expression for expression in exp_list if expression and expression not in '()']
         eval_list = list()
         for index, expression in enumerate(exp_list):
-            if expression == '+' or expression == '-' or (expression == '*' and index % 2 == 1):
+            if expression in ('-', '+', '/') or (expression == '*' and index % 2 == 1):
                 eval_list.append(expression)
             else:
                 if expression == '~':

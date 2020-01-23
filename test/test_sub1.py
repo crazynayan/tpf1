@@ -11,7 +11,6 @@ class Sub1Test(unittest.TestCase):
         self.tpf_server = Execute()
         self.test_data = TestDataUTS()
         self.output = self.test_data.output
-        self.test_data.add_fields(['EBX000', 'EBX003', 'EBX008'], 'EB0EB')
         self.test_data.add_fields([('EBX000', 3), ('EBX003', 5), ('EBX008', 3)], 'EB0EB')
         self.output.regs['R0'] = 0
 

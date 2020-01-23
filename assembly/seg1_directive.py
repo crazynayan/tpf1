@@ -27,16 +27,15 @@ class DirectiveImplementation(SegmentGeneric):
         self._command['SPACE'] = self.no_operation
 
     def dc(self, line: Line) -> None:
-        dsdc_list: List[Dsdc] = super().ds(line)
-        for dsdc in dsdc_list:
-            self.data.set_constant(dsdc.data * dsdc.duplication_factor, dsdc.start)
+        dc_list: List[Dsdc] = super().ds(line)
+        self.dc_list.extend(dc_list)
         return
 
-    def ds(self, line: Line) -> List[Dsdc]:
-        dsdc_list: List[Dsdc] = super().ds(line)
+    def ds(self, line: Line) -> None:
+        super().ds(line)
         if line.label and self.name == self.seg_name:
             self.lookup(line.label).set_branch()
-        return dsdc_list
+        return
 
     def equ(self, line: Line) -> None:
         super().equ(line)

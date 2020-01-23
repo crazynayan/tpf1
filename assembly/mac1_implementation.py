@@ -10,12 +10,13 @@ from utils.file_line import Line
 class Dsdc:
 
     def __init__(self, duplication_factor: int, data_type: str, length: int, start: int,
-                 data: Optional[bytearray] = None):
+                 data: Optional[bytearray], expression: List[str]):
         self.duplication_factor: int = duplication_factor
         self.data_type: str = data_type
         self.length: int = length
         self.start: int = start
         self.data: Optional[bytearray] = data
+        self.expression: List[str] = expression
 
 
 class DataMacroImplementation(MacroGeneric):
@@ -27,7 +28,7 @@ class DataMacroImplementation(MacroGeneric):
         self._command['ORG'] = self.org
         self._command['DSECT'] = self.dsect
 
-    def _dsdc(self, operand: str) -> Dsdc:
+    def _dsdc(self, operand: str, literal: bool = False) -> Dsdc:
         # (^\d+)?(?:[(]([^)]+)[)])?([CXHFDBZPAY]D?)(?:L([\d]+))?(?:L[(]([^)]+)[)])?(?:[']([^']+)['])?(?:[(]([^)]+)[)])?
         operands = next(iter(re.findall(
             r"(^\d+)?"  # 0 Duplication Factor - A number. (Optional)
@@ -60,27 +61,29 @@ class DataMacroImplementation(MacroGeneric):
             length = None
         # Data
         number_of_data_operands = 1
+        data = list()
+        expression = list()
         if operands[5]:
             data_type_object = DataType(data_type, input=operands[5])
             length = length or data_type_object.length
             data = data_type_object.to_bytes(length)
         elif operands[6]:
-            data = bytearray()
-            number_of_data_operands = len(operands[6].split(','))
-            for operand in operands[6].split(','):
-                number = self.get_value(operand)
-                data_type_object = DataType(data_type, input=str(number))
-                length = length or data_type_object.default_length
-                data.extend(data_type_object.to_bytes(length))
+            expression = operands[6].split(',')
+            number_of_data_operands = len(expression)
+            length = length or DataType(data_type).default_length
+            # Only for literal generate address constants. For DC, they will be generated separately.
+            if literal:
+                data = bytearray()
+                for operand in expression:
+                    data.extend(DataType(data_type, input=str(self.get_value(operand))).to_bytes(length))
         else:
-            data = None
             length = length or DataType(data_type).default_length
         # Start (after boundary alignment) and End (After duplication factor)
         start = self._location_counter + align_to_boundary
         self._location_counter = start + duplication_factor * length * number_of_data_operands
         if self._location_counter > self._max_counter:
             self._max_counter = self._location_counter
-        dsdc = Dsdc(duplication_factor, data_type, length, start, data)
+        dsdc = Dsdc(duplication_factor, data_type, length, start, data, expression)
         return dsdc
 
     def ds(self, line: Line) -> List[Dsdc]:

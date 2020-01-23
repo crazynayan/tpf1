@@ -59,7 +59,7 @@ class Line:
             words[-1] = words[-1][:-1]
         else:
             # Split the line in words. Keep words within single quotes together.
-            words = re.findall(r"(?:'.*?'|\S)+", file_line)
+            words = re.findall(r"(?:[^L\s]'[^']*'|\S)+", file_line)
         if file_line[0] == ' ':
             # The label is None for lines with first character space (No label)
             words.insert(0, None)
