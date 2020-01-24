@@ -146,6 +146,13 @@ class ArithmeticShiftAlgebraic(State):
         self.set_number_cc(value)
         return node.fall_down
 
+    def subtract_halfword(self, node: RegisterFieldIndex) -> str:
+        address = self.regs.get_address(node.field.base, node.field.dsp, node.field.index)
+        value = self.regs.get_value(node.reg) - self.vm.get_value(address, 2)
+        self.regs.set_value(value, node.reg)
+        self.set_number_cc(value)
+        return node.fall_down
+
     def multiply_fullword(self, node: RegisterFieldIndex) -> str:
         address = self.regs.get_address(node.field.base, node.field.dsp, node.field.index)
         odd_reg = self.regs.next_reg(node.reg)
@@ -248,6 +255,11 @@ class CompareLogical(State):
         value = self.vm.get_value(address, 2)
         reg_value = self.regs.get_value(node.reg)
         self.set_number_cc(reg_value - value)
+        return node.fall_down
+
+    def compare_halfword_immediate(self, node: RegisterData) -> str:
+        reg_value = self.regs.get_value(node.reg)
+        self.set_number_cc(reg_value - node.data)
         return node.fall_down
 
     def compare_fullword(self, node: RegisterFieldIndex) -> str:

@@ -38,7 +38,7 @@ class Execute(Instruction, ExecutableMacro, DbMacro):
         self._ex['AHI'] = self.add_halfword_immediate
         self._ex['SR'] = self.subtract_register
         self._ex['S'] = self.subtract_fullword
-        # SH - Not in ETA5
+        self._ex['SH'] = self.subtract_halfword
         self._ex['M'] = self.multiply_fullword
         self._ex['MH'] = self.multiply_halfword
         self._ex['D'] = self.divide_fullword
@@ -55,6 +55,7 @@ class Execute(Instruction, ExecutableMacro, DbMacro):
         self._ex['BCTR'] = self.branch_on_count_register
         # BXH, BXLE - Not in ETA5
         self._ex['BAS'] = self.branch_and_save
+        self._ex['JAS'] = self.branch_and_save
         # BASR - Not in ETA5
         self._ex['B'] = self.branch
         self._ex['NOP'] = self.branch
@@ -111,7 +112,7 @@ class Execute(Instruction, ExecutableMacro, DbMacro):
         self._ex['CR'] = self.compare_register
         self._ex['C'] = self.compare_fullword
         self._ex['CH'] = self.compare_halfword
-        # CHI - Not in ETA5
+        self._ex['CHI'] = self.compare_halfword_immediate
         # CL, CLR - Not in ETA5
         self._ex['CLI'] = self.compare_logical_immediate
         self._ex['CLC'] = self.compare_logical_character
