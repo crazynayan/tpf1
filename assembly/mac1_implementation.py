@@ -18,6 +18,10 @@ class Dsdc:
         self.data: Optional[bytearray] = data
         self.expression: List[str] = expression
 
+    def __repr__(self) -> str:
+        return f"{self.duplication_factor}:{self.data_type}:L{self.length}:S{self.start}" \
+               f":{self.data}:{len(self.expression)}"
+
 
 class DataMacroImplementation(MacroGeneric):
 
@@ -105,7 +109,7 @@ class DataMacroImplementation(MacroGeneric):
         length = 1
         if dsp_operand == '*':
             dsp = self._location_counter
-        elif not set("+-*").intersection(dsp_operand):
+        elif not set("+-*/").intersection(dsp_operand):
             if dsp_operand.isdigit():
                 dsp = int(dsp_operand)
             elif re.match(r"^[CXHFDBZPAY]'[^']+'$", dsp_operand) is not None:

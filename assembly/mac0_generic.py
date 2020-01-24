@@ -82,13 +82,18 @@ class MacroGeneric:
                 value = DataType(data[0], input=data[2:-1]).value
                 value_list.insert(0, value)
         exp_list = re.split(r"([+*()/-])", operand)
-        if len(exp_list) == 1 and data_list:
-            return value_list.pop()
-        exp_list = [expression for expression in exp_list if expression and expression not in '()']
+        if len(exp_list) == 1:
+            if exp_list[0] == '~':
+                return value_list.pop()
+            return self._location_counter if exp_list[0] == '*' else self.evaluate(exp_list[0])
+        exp_list = [expression for expression in exp_list if expression]
+        exp_list = [(index, expression) for index, expression in enumerate(exp_list)]
+        parenthesis = [indexed_expression for indexed_expression in exp_list if indexed_expression[1] in '()']
+        exp_list = [indexed_expression for indexed_expression in exp_list if indexed_expression[1] not in '()']
         eval_list = list()
-        for index, expression in enumerate(exp_list):
+        for index, (position, expression) in enumerate(exp_list):
             if expression in ('-', '+', '/') or (expression == '*' and index % 2 == 1):
-                eval_list.append(expression)
+                eval_list.append((position, expression))
             else:
                 if expression == '~':
                     value = value_list.pop()
@@ -96,8 +101,11 @@ class MacroGeneric:
                     value = self._location_counter
                 else:
                     value = self.evaluate(expression)
-                eval_list.append(str(value))
-        return eval(''.join(eval_list))
+                eval_list.append((position, str(value)))
+        eval_list.extend(parenthesis)
+        eval_list.sort(key=lambda item: item[0])
+        eval_list = [expression for _, expression in eval_list]
+        return int(eval(''.join(eval_list)))
 
     def add_label(self, label: str, dsp: int, length: int, name: str) -> LabelReference:
         label_ref = LabelReference(label, dsp, length, name)

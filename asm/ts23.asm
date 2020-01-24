@@ -4,8 +4,10 @@
 *        2) PRIMA
 *        3) MCPCK
 *        4) MHINF
+*        5) DIVISION IN EQU
 **********************************************************************
          PGMID 'TS2301'
+START    EQU   *-8
 FTNWK    DSECT
          DS    XL16            AUTO STORAGE HEADER
 FTNREG   DS    (0*7)F          REGISTER SAVE AREA
@@ -18,6 +20,11 @@ FTNRGE   DS    F               SAVE R6
 FTNRGF   DS    F               SAVE R7
 $IS$     CSECT
          USING FTNWK,R4
+         J     TS230100
+TABLE    DS    0XL(2+2+1)      LENGTH OF EACH ITEM
+         DC    C'AA',YL2(TS230100-START),AL1(0)
+         DC    C'BA',YL2(TS230300-START),AL1(11)
+NOI      EQU   (*-TABLE)/L'TABLE
 *
 *        1) ALASC
 *
@@ -61,6 +68,10 @@ TS230500 EQU   *
          LA    R10,VX
          MHINF ECB,REG=R10,INPTR=NAME
 TS230600 EQU   *
+*
+*        5) DIVISION IN EQU
+*
+         LHI   R13,NOI
 TS23EXIT EQU   *
          EXITC
 VX       DC    C'VX'

@@ -27,7 +27,7 @@ class State:
         self.seg: Optional[Segment] = None
         self.regs: Registers = Registers()
         self.vm: Storage = Storage()
-        self.cc: Optional[int] = None
+        self.cc: int = 0
         self._ex: Dict[str, Callable] = dict()
         self.detac_stack: Dict[str, List] = {level: list() for level in config.ECB_LEVELS}
         self.messages: List[str] = list()
@@ -94,12 +94,12 @@ class State:
                     if label is None:
                         break
                     node = self.seg.nodes[label]
+                if label is not None:
+                    self.dumps.append('000010')
+                    self.messages.append('INFINITE LOOP ERROR')
             except ExecutionError:
                 self.dumps.append('000003')
                 self.messages.append('EXECUTION ERROR')
-            if label is not None:
-                self.dumps.append('000010')
-                self.messages.append('INFINITE LOOP ERROR')
             self._capture_output(test_data_variant.output, node.label)
             outputs.append(test_data_variant.output)
         test_data = deepcopy(test_data)

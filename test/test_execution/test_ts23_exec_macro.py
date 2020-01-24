@@ -19,6 +19,7 @@ class Ts23Test(unittest.TestCase):
         self.assertEqual('44', test_data.get_field('CE1$UID'))
         self.assertEqual(1, test_data.output.regs['R11'])
         self.assertEqual(1, test_data.output.regs['R12'])
+        self.assertEqual(2, test_data.output.regs['R13'])
 
     def test_prima_1f(self):
         self.test_data.set_field('WA0PHA', bytes([0x02]))
