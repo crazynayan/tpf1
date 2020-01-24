@@ -129,6 +129,7 @@ class State:
         ce1uid = config.ECB + macros['EB0EB'].evaluate('CE1$UID')
         self.vm.set_bytes(DataType('C', input=partition).to_bytes(), haalc, 2)
         self.vm.set_value(config.PARTITION[partition], ce1uid, 1)
+        # TODO Switch MH Base
 
     def get_partition(self) -> str:
         airline_code = self.vm.get_bytes(config.GLOBAL + macros['GLOBAL'].evaluate('@HAALC'), 2)

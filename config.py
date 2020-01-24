@@ -67,7 +67,8 @@ class Config:
     ECB: int = F4K * 1
     GLOBAL: int = F4K * 2
     AAA: int = F4K * 3
-    IMG: int = F4K * 4  # 12 more fixed frames are spare
+    IMG: int = F4K * 4
+    MULTI_HOST: int = F4K * 5  # 11 more fixed frames are spare
     ECB_LEVELS: tuple = ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F')
     BLOCK_SIZE: Dict[str, int] = {'L0': 128, 'L1': 381, 'L2': 1055, 'L4': 4095}
     BLOCK_TYPE: Dict[str, int] = {'L0': 0x11, 'L1': 0x21, 'L2': 0x31, 'L4': 0x41}

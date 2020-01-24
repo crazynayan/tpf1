@@ -10,9 +10,8 @@ class Sub1Test(unittest.TestCase):
     def setUp(self) -> None:
         self.tpf_server = Execute()
         self.test_data = TestDataUTS()
-        self.output = self.test_data.output
         self.test_data.add_fields([('EBX000', 3), ('EBX003', 5), ('EBX008', 3)], 'EB0EB')
-        self.output.regs['R0'] = 0
+        self.test_data.output.regs['R0'] = 0
 
     def test_b4t0(self):
         self.test_data.set_field('EBX003', DataType('C', input='B4T0').to_bytes())

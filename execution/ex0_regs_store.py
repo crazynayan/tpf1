@@ -139,6 +139,8 @@ class Storage:
         self.set_value(pars_today, u1dmo, 2)
         tjord = config.GLOBAL + macros['GLOBAL'].evaluate('@TJORD')
         self.set_value(0x00088EDC, tjord)
+        multi_host = config.GLOBAL + macros['GLOBAL'].evaluate('@MHSTC')
+        self.set_value(config.MULTI_HOST, multi_host)
 
     def get_allocated_address(self) -> bytearray:
         return DataType('F', input=str(self.nab - config.F4K)).to_bytes(config.REG_BYTES)
