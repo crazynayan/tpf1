@@ -107,8 +107,10 @@ class DataMacroImplementation(MacroGeneric):
         operands = line.split_operands()
         dsp_operand = operands[0]
         length = 1
+        based = False
         if dsp_operand == '*':
             dsp = self._location_counter
+            based = True
         elif not set("+-*/").intersection(dsp_operand):
             if dsp_operand.isdigit():
                 dsp = int(dsp_operand)
@@ -123,10 +125,11 @@ class DataMacroImplementation(MacroGeneric):
                 dsp = field.dsp
                 length = field.length
         else:
+            based = True
             dsp = self.get_value(dsp_operand)
         if len(operands) > 1:
             length = self.get_value(operands[1])
-        self.add_label(line.label, dsp, length, self.name)
+        self.add_label(line.label, dsp, length, self.name, based)
         return
 
     def org(self, line: Line) -> None:

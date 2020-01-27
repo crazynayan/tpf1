@@ -2,12 +2,13 @@ from typing import Optional
 
 from assembly.mac2_data_macro import macros
 from assembly.seg5_exec_macro import KeyValue, SegmentCall
+from assembly.seg6_segment import segments
 from config import config
 from db.pnr import PnrLocator
 from execution.ex1_state import State
 from utils.data_type import DataType, Register
 from utils.errors import HeapaExecutionError, RegisterInvalidError, DumpExecutionError, LevtaExecutionError, \
-    MhinfExecutionError, PrimaExecutionError, McpckExecutionError
+    MhinfExecutionError, PrimaExecutionError, McpckExecutionError, SegmentNotFoundError
 from utils.ucdr import pars_to_date, date_to_pars
 
 
@@ -99,15 +100,21 @@ class RealTimeMacro(State):
             raise DumpExecutionError
 
     def entrc(self, node: SegmentCall) -> str:
+        if node.keys[0] not in segments:
+            raise SegmentNotFoundError
         self.call_stack.append((node.fall_down, self.seg.name))
         self._init_seg(node.keys[0])
         return node.goes
 
     def entnc(self, node: SegmentCall) -> str:
+        if node.keys[0] not in segments:
+            raise SegmentNotFoundError
         self._init_seg(node.keys[0])
         return node.goes
 
     def entdc(self, node: SegmentCall) -> str:
+        if node.keys[0] not in segments:
+            raise SegmentNotFoundError
         del self.call_stack[:]
         self._init_seg(node.keys[0])
         return node.goes

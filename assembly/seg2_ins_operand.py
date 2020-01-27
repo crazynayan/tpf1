@@ -116,8 +116,8 @@ class InstructionOperand(DirectiveImplementation):
 
     def _get_field_by_name(self, name: str) -> FieldBaseDsp:
         dsp = self.get_value(name)
-        possible_name = next(iter(re.split(r"['+-]", name)))
-        if self.check(possible_name):
+        possible_name = next(iter(re.split(r"['+*/-]", name)))
+        if self.is_based(name):
             # Field type of NAME+L'NAME or NAME
             base = self.get_base(self.lookup(possible_name).name)
             name = possible_name

@@ -7,12 +7,13 @@ from utils.errors import NotFoundInSymbolTableError
 
 class LabelReference:
 
-    def __init__(self, label=None, dsp=None, length=None, name=None):
+    def __init__(self, label=None, dsp=None, length=None, name=None, based=True):
         self.label: Optional[str] = label
         self.dsp: Optional[int] = dsp
         self.length: Optional[int] = length
         self.name: Optional[str] = name  # Macro name or Segment name or Dsect name
         self._branch: int = 0  # Code cannot branch to this label.
+        self.based: bool = based
 
     def __repr__(self):
         return f'{self.label}:{self.dsp}:{self.length}:{self.name}'
@@ -107,8 +108,8 @@ class MacroGeneric:
         eval_list = [expression for _, expression in eval_list]
         return int(eval(''.join(eval_list)))
 
-    def add_label(self, label: str, dsp: int, length: int, name: str) -> LabelReference:
-        label_ref = LabelReference(label, dsp, length, name)
+    def add_label(self, label: str, dsp: int, length: int, name: str, based: bool = True) -> LabelReference:
+        label_ref = LabelReference(label, dsp, length, name, based)
         self._symbol_table[label] = label_ref
         index_label = name + str(dsp)
         if index_label not in self._index:
