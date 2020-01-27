@@ -7,8 +7,8 @@ from utils.file_line import Line, File
 
 
 class SegmentTest(unittest.TestCase):
-    NUMBER_OF_FILES: int = 44
-    SEG_NAME: str = 'WGU4'
+    NUMBER_OF_FILES: int = 45
+    SEG_NAME: str = 'TS24'
 
     def test_files(self):
         self.assertTrue('TS02' in segments)

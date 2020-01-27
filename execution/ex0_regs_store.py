@@ -112,6 +112,7 @@ class Storage:
         self.allocate_fixed(config.GLOBAL)
         self.allocate_fixed(config.AAA)
         self.allocate_fixed(config.IMG)
+        self.allocate_fixed(config.MULTI_HOST)
         self._setup_global()
 
     def __repr__(self) -> str:
