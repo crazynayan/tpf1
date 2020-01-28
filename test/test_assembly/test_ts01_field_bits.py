@@ -21,7 +21,7 @@ class FieldBits(unittest.TestCase):
         node = seg.nodes['$$TS01$$.1']
         self.assertEqual('R9', node.field.base.reg)
         self.assertEqual(8, node.field.dsp)
-        self.assertEqual('EBW000', node.field.name)
+        self.assertEqual('R9_AREA', node.field.name)
         self.assertTrue(node.bits.bit7.on)
         self.assertEqual("#BIT7", node.bits.bit7.name)
         # Check EBW000,X'80'
@@ -34,7 +34,7 @@ class FieldBits(unittest.TestCase):
         self.assertEqual(0x80, node.bits.value)
         # Check 23(R9),23
         node = seg.nodes['$$TS01$$.3']
-        self.assertEqual('EBW015', node.field.name)
+        self.assertEqual('R9_AREA', node.field.name)
         self.assertEqual('R9', node.field.base.reg)
         self.assertEqual(23, node.field.dsp)
         self.assertTrue(node.bits.bit7.on)
@@ -42,7 +42,7 @@ class FieldBits(unittest.TestCase):
         self.assertEqual(0b00010111, node.bits.value)
         # Check EBT000+L'CE1DSTMP(R9),CE1SEW+CE1CPS+CE1DTX+CE1SNP
         node = seg.nodes['$$TS01$$.4']
-        self.assertEqual('EBT008', node.field.name)
+        self.assertEqual('R9_AREA', node.field.name)
         self.assertEqual('R9', node.field.base.reg)
         self.assertEqual(0x78, node.field.dsp)
         self.assertEqual("CE1SEW=0x80+CE1CPS=0x40+CE1DTX=0x20+CE1SNP=0x10", str(node.bits))
@@ -50,7 +50,7 @@ class FieldBits(unittest.TestCase):
         self.assertFalse(node.bits.bit6.on)
         # Check L'EBW000+3+EBW008-EBW000(9),X'FF'-CE1SEW-CE1CPS
         node = seg.nodes['$$TS01$$.5']
-        self.assertEqual('EBW004', node.field.name)
+        self.assertEqual('R9_AREA', node.field.name)
         self.assertEqual('R9', node.field.base.reg)
         self.assertEqual(0x0c, node.field.dsp)
         self.assertEqual("#BITA-CE1SEW=0x80-CE1CPS=0x40", str(node.bits))

@@ -57,7 +57,7 @@ class RegisterVariants(unittest.TestCase):
         self.assertEqual('R7', node.reg2.reg)
         self.assertEqual('R9', node.field.base.reg)
         self.assertEqual(0x290, node.field.dsp)
-        self.assertEqual('CE1DSTMP', node.field.name)
+        self.assertEqual('R9_AREA', node.field.name)
         # LM    RDB,RGF,CE1DSTMP
         node = seg.nodes['TS050200.2']
         self.assertEqual('R14', node.reg1.reg)
@@ -76,7 +76,7 @@ class RegisterVariants(unittest.TestCase):
         # STCM  R3,B'1111',10(R9)
         node = seg.nodes['TS050300.2']
         self.assertEqual(15, node.data)
-        self.assertEqual('EBW002', node.field.name)
+        self.assertEqual('R9_AREA', node.field.name)
         self.assertEqual('R9', node.field.base.reg)
         self.assertEqual(10, node.field.dsp)
         # ICM   R3,3,=H'-3'

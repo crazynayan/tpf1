@@ -29,7 +29,7 @@ class Dsect(unittest.TestCase):
         self.assertEqual(60, seg.nodes['$$TS08$$.5'].field.dsp)
         self.assertEqual(60, seg.lookup('$C_AA').dsp)
         self.assertEqual(bytearray([0xC1, 0xC1]), seg.get_constant_bytes('$C_AA'))
-        self.assertEqual('TS08AAC', seg.nodes['TS080010.1'].field_len.name)
+        self.assertEqual('R14_AREA', seg.nodes['TS080010.1'].field_len.name)
         self.assertEqual('R14', seg.nodes['TS080010.1'].field_len.base.reg)
         self.assertEqual(1, seg.nodes['TS080010.1'].field_len.length)
         self.assertEqual('R1', seg.nodes['TS080010.1'].field.base.reg)

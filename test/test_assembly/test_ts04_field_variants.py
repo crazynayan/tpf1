@@ -21,11 +21,11 @@ class FieldVariants(unittest.TestCase):
         self.assertEqual(211, node.field_len.length)
         # CLC   L'CE1WKA+EBW000+4(CE1FA1-CE1FA0,R9),CE1FA1(R9) with BNE   TS040110
         node = seg.nodes['TS040100.2']
-        self.assertEqual('EBCID0', node.field_len.name)
+        self.assertEqual('R9_AREA', node.field_len.name)
         self.assertEqual('R9', node.field_len.base.reg)
         self.assertEqual(0xe0, node.field_len.dsp)
         self.assertEqual(7, node.field_len.length)
-        self.assertEqual('EBCID1', node.field.name)
+        self.assertEqual('R9_AREA', node.field.name)
         self.assertEqual(0xe8, node.field.dsp)
         node = seg.nodes['TS040100.3']
         self.assertEqual('BNE', node.on)

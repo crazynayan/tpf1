@@ -57,14 +57,14 @@ class RegFieldIndex(unittest.TestCase):
         # STC   5,EBT000(0,9)
         node = seg.nodes['$$TS03$$.7']
         self.assertEqual('R5', node.reg.reg)
-        self.assertEqual('EBT000', node.field.name)
+        self.assertEqual('R9_AREA', node.field.name)
         self.assertEqual('R9', node.field.base.reg)
         self.assertEqual(0x070, node.field.dsp)
         self.assertEqual('R0', node.field.index.reg)
         # STC   CVB   RGC,L'CE1CR1+EBW000(,REB)
         node = seg.nodes['$$TS03$$.8']
         self.assertEqual('R4', node.reg.reg)
-        self.assertEqual('EBW004', node.field.name)
+        self.assertEqual('R9_AREA', node.field.name)
         self.assertEqual('R9', node.field.base.reg)
         self.assertEqual(12, node.field.dsp)
         self.assertEqual('R0', node.field.index.reg)

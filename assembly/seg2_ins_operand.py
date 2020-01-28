@@ -123,7 +123,6 @@ class InstructionOperand(DirectiveImplementation):
             name = possible_name if name[0] != '*' else 'R8_AREA'
         else:
             base = Register('R0')
-            # name = 'R0_AREA'
         return FieldBaseDsp(name, base, dsp)
 
     def _get_field_by_base_dsp(self, base: str, dsp: str, length: Optional[int] = None) -> FieldBaseDsp:
@@ -136,8 +135,7 @@ class InstructionOperand(DirectiveImplementation):
         if not 0 <= dsp <= 4095:
             raise FieldDspInvalidError
         # Set name
-        possible_name = self.get_field_name(base, dsp, length)
-        name = base.reg + '_AREA' if possible_name is None else possible_name
+        name = base.reg + '_AREA'
         return FieldBaseDsp(name, base, dsp)
 
     def _literal(self, operand: str) -> LabelReference:
