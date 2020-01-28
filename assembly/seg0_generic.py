@@ -1,4 +1,3 @@
-import re
 from typing import Optional, Tuple, Dict, List, Set
 
 from assembly.mac0_generic import LabelReference
@@ -75,15 +74,7 @@ class SegmentGeneric(DataMacroImplementation):
         return next((name for name, reg in self._using.items() if reg.reg == base.reg), None)
 
     def get_base(self, macro_name: str) -> Register:
-        return self._using[macro_name] if macro_name in self._using else None
-
-    def is_based(self, expression: str) -> bool:
-        field_name = next(iter(re.split(r"['+*/-]", expression)))
-        if '-' in expression:
-            second_field = expression.split('-')[1]
-            if self.check(second_field) and self.lookup(second_field).based:
-                return False
-        return True if self.check(field_name) and self.lookup(field_name).based else False
+        return self._using[macro_name] if macro_name in self._using else Register('R0')
 
     def get_field_name(self, base: Register, dsp: int, length: Optional[int]) -> Optional[str]:
         length = 1 if length is None else length

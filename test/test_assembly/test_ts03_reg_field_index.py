@@ -22,7 +22,7 @@ class RegFieldIndex(unittest.TestCase):
         # LA    R2,2
         node = seg.nodes['$$TS03$$.2']
         self.assertEqual('R2', node.reg.reg)
-        self.assertEqual('R0_AREA', node.field.name)
+        self.assertEqual('2', node.field.name)
         self.assertEqual('R0', node.field.base.reg)
         self.assertEqual(2, node.field.dsp)
         self.assertEqual('R0', node.field.index.reg)
@@ -36,7 +36,7 @@ class RegFieldIndex(unittest.TestCase):
         # STH   R3,L'CE1CR1
         node = seg.nodes['$$TS03$$.4']
         self.assertEqual('R3', node.reg.reg)
-        self.assertEqual('R0_AREA', node.field.name)
+        self.assertEqual("L'CE1CR1", node.field.name)
         self.assertEqual('R0', node.field.base.reg)
         self.assertEqual(4, node.field.dsp)
         self.assertEqual('R0', node.field.index.reg)
@@ -92,7 +92,7 @@ class RegFieldIndex(unittest.TestCase):
         # L     R1,12
         node = seg.nodes['$$TS03$$.12']
         self.assertEqual('R1', node.reg.reg)
-        self.assertEqual('R0_AREA', node.field.name)
+        self.assertEqual('12', node.field.name)
         self.assertEqual('R0', node.field.base.reg)
         self.assertEqual(12, node.field.dsp)
         self.assertEqual('R0', node.field.index.reg)

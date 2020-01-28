@@ -74,7 +74,7 @@ class FieldBits(unittest.TestCase):
         self.assertEqual(0xC1, seg.nodes['TS010010.3'].field.dsp)
         # Check OI    PD0_C_ITM,1
         self.assertEqual('PD0_C_ITM', seg.nodes['TS010010.4'].field.name)
-        self.assertIsNone(seg.nodes['TS010010.4'].field.base)
+        self.assertEqual('R0', seg.nodes['TS010010.4'].field.base.reg)
         # Check OI    EBW000,#PD0_FLDEMP
         self.assertEqual(0x03, seg.nodes['TS010010.5'].bits.value)
 

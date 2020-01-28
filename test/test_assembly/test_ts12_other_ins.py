@@ -113,7 +113,7 @@ class OtherInstruction(unittest.TestCase):
         self.assertEqual('SRA', node.command)
         self.assertEqual('R3', node.reg.reg)
         self.assertEqual('R0', node.field.index.reg)
-        self.assertEqual('R0_AREA', node.field.name)
+        self.assertEqual('12', node.field.name)
         self.assertEqual('R0', node.field.base.reg)
         self.assertEqual(12, node.field.dsp)
         # SLDA  R2,4

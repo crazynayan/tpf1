@@ -107,29 +107,12 @@ class DataMacroImplementation(MacroGeneric):
         operands = line.split_operands()
         dsp_operand = operands[0]
         length = 1
-        based = False
-        if dsp_operand == '*':
-            dsp = self._location_counter
-            based = True
-        elif not set("+-*/").intersection(dsp_operand):
-            if dsp_operand.isdigit():
-                dsp = int(dsp_operand)
-            elif re.match(r"^[CXHFDBZPAY]'[^']+'$", dsp_operand) is not None:
-                if '&' in dsp_operand:
-                    raise EquDataTypeHasAmpersandError
-                dsp = DataType(dsp_operand[0], input=dsp_operand[2:-1]).value
-            else:
-                if dsp_operand[0] == '&':
-                    raise EquDataTypeHasAmpersandError
-                field = self.lookup(dsp_operand)
-                dsp = field.dsp
-                length = field.length
-        else:
-            based = True
-            dsp = self.get_value(dsp_operand)
+        if dsp_operand[0] == '&' or (len(dsp_operand) > 1 and dsp_operand[1] == "'" and dsp_operand[0] != 'L'
+                                     and '&' in dsp_operand):
+            raise EquDataTypeHasAmpersandError
         if len(operands) > 1:
             length = self.get_value(operands[1])
-        self.add_label(line.label, dsp, length, self.name, based)
+        self.add_label(line.label, self.get_value(dsp_operand), length, self.name, self.is_based(dsp_operand))
         return
 
     def org(self, line: Line) -> None:

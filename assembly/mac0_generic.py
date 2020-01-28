@@ -56,6 +56,10 @@ class MacroGeneric:
     def check(self, label: str) -> bool:
         return label in self._symbol_table
 
+    def checked_lookup(self, label: str) -> Optional[LabelReference]:
+        field = next(iter(label.split('&')))
+        return self._symbol_table[field] if field in self._symbol_table else None
+
     def lookup(self, label: str) -> LabelReference:
         field = next(iter(label.split('&')))
         try:
@@ -107,6 +111,25 @@ class MacroGeneric:
         eval_list.sort(key=lambda item: item[0])
         eval_list = [expression for _, expression in eval_list]
         return int(eval(''.join(eval_list)))
+
+    def is_based(self, operand: str) -> bool:
+        if operand == "*":
+            return True
+        if not set("+*()/-").intersection(operand):
+            return self.checked_lookup(operand).based if self.checked_lookup(operand) else False
+        exp_list = re.split(r"([+*()/-])", operand)
+        exp_list = [expression for expression in exp_list if expression and expression not in '()']
+        based = any(expression == '*' or
+                    (self.checked_lookup(expression) is not None and self.checked_lookup(expression).based)
+                    for index, expression in enumerate(exp_list) if index % 2 == 0)
+        if based and '-' in operand:
+            exp_list = [expression for index, expression in enumerate(exp_list)
+                        if (index > 0 and exp_list[index - 1] == '-') or
+                        (index < len(exp_list) - 1 and exp_list[index + 1]) == '-']
+            if (exp_list[0] == '*' or self.checked_lookup(exp_list[0])) and \
+                    (exp_list[1] == '*' or self.checked_lookup(exp_list[1])):
+                based = False
+        return based
 
     def add_label(self, label: str, dsp: int, length: int, name: str, based: bool = True) -> LabelReference:
         label_ref = LabelReference(label, dsp, length, name, based)

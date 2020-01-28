@@ -71,7 +71,7 @@ TS230600 EQU   *
 *
 *        5) DIVISION IN EQU
 *
-         LHI   R13,NOI
+         LA    R13,NOI
 TS23EXIT EQU   *
          EXITC
 VX       DC    C'VX'

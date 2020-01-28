@@ -116,14 +116,14 @@ class InstructionOperand(DirectiveImplementation):
 
     def _get_field_by_name(self, name: str) -> FieldBaseDsp:
         dsp = self.get_value(name)
-        possible_name = next(iter(re.split(r"['+*/-]", name)))
         if self.is_based(name):
+            possible_name = next(iter(re.split(r"[+*/-]", name)))
             # Field type of NAME+L'NAME or NAME
-            base = self.get_base(self.lookup(possible_name).name)
-            name = possible_name
+            base = self.get_base(self.lookup(possible_name).name) if name[0] != '*' else Register('R8')
+            name = possible_name if name[0] != '*' else 'R8_AREA'
         else:
             base = Register('R0')
-            name = 'R0_AREA'
+            # name = 'R0_AREA'
         return FieldBaseDsp(name, base, dsp)
 
     def _get_field_by_base_dsp(self, base: str, dsp: str, length: Optional[int] = None) -> FieldBaseDsp:
