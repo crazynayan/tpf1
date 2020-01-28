@@ -1,4 +1,3 @@
-import re
 from typing import List, Optional
 
 from assembly.mac0_generic import MacroGeneric
@@ -32,54 +31,101 @@ class DataMacroImplementation(MacroGeneric):
         self._command['ORG'] = self.org
         self._command['DSECT'] = self.dsect
 
+    @staticmethod
+    def get_parameter_in_parenthesis(operand: str) -> str:
+        if len(operand) < 3 or operand[0] != '(':
+            return str()
+        parenthesis = 0
+        end = 0
+        for index, char in enumerate(operand):
+            if char == '(':
+                parenthesis += 1
+            if char == ')':
+                parenthesis -= 1
+            if parenthesis == 0:
+                end = index + 1
+                break
+        if not end:
+            return str()
+        return operand[: end]
+
+    @staticmethod
+    def get_digits(operand: str) -> str:
+        index = 0
+        for char in operand[index:]:
+            if not char.isdigit():
+                break
+            index += 1
+        return operand[:index]
+
     def _dsdc(self, operand: str, literal: bool = False) -> Dsdc:
-        # (^\d+)?(?:[(]([^)]+)[)])?([CXHFDBZPAY]D?)(?:L([\d]+))?(?:L[(]([^)]+)[)])?(?:[']([^']+)['])?(?:[(]([^)]+)[)])?
-        operands = next(iter(re.findall(
-            r"(^\d+)?"  # 0 Duplication Factor - A number. (Optional)
-            r"(?:[(]([^)]+)[)])?"  # 1 Duplication Factor - Expression enclosed in paranthesis (Optional)
-            r"([CXHFDBZPAY]D?)"  # 2 Data Type - Valid Single character Data type. (Note: FD is valid)
-            r"(?:L([\d]+))?"  # 3 Length - L followed by a number. (Optional)
-            r"(?:L[(]([^)]+)[)])?"  # 4 Length - L followed by a expression enclosed in paranthesis. (Optional)
-            r"(?:[']([^']+)['])?"  # 5 Data - Enclosed in quotes. (Optional)
-            r"(?:[(]([^)]+)[)])?",  # 6 Data - Enclosed in parenthesis. (Optional)
-            operand)))
+        index = 0
         # Duplication Factor
-        duplication_factor = int(operands[0]) if operands[0] else 1
-        if operands[1]:
-            duplication_factor = self.get_value(operands[1])
+        if operand[0] == "Z":
+            a = 1
+        duplication_factor = 1
+        duplication_factor_text = self.get_digits(operand)
+        if duplication_factor_text:
+            duplication_factor = int(duplication_factor_text)
+            index = len(duplication_factor_text)
+        elif operand[0] == '(':
+            duplication_factor_text = self.get_parameter_in_parenthesis(operand)
+            if not duplication_factor_text:
+                raise TypeError
+            duplication_factor = self.get_value(duplication_factor_text[1:-1])
+            index = len(duplication_factor_text)
         # Data Type
-        data_type = operands[2]
+        data_type = operand[index]
+        if data_type not in 'CXHFDBZPAY':
+            raise TypeError
+        index += 1
+        if data_type == 'F' and len(operand) > index and operand[index] == 'D':
+            data_type = 'FD'
+            index += 1
         # Align to boundary
         align_to_boundary = 0
         boundary = DataType(data_type).align_to_boundary
         if boundary > 0 and self._location_counter % boundary > 0:
             align_to_boundary = boundary - self._location_counter % boundary
         # Length
-        if operands[3]:
-            length = int(operands[3])
+        length = None
+        if len(operand) > index and operand[index] == 'L':
             align_to_boundary = 0
-        elif operands[4]:
-            length = self.get_value(operands[4])
-            align_to_boundary = 0
-        else:
-            length = None
+            index += 1
+            length_text = self.get_digits(operand[index:])
+            if length_text:
+                length = int(length_text)
+            elif operand[index] == '(':
+                length_text = self.get_parameter_in_parenthesis(operand[index:])
+                length = self.get_value(length_text[1:-1])
+            else:
+                raise TypeError
+            index += len(length_text)
         # Data
         number_of_data_operands = 1
         data = list()
         expression = list()
-        if operands[5]:
-            data_type_object = DataType(data_type, input=operands[5])
-            length = length or data_type_object.length
-            data = data_type_object.to_bytes(length)
-        elif operands[6]:
-            expression = operands[6].split(',')
-            number_of_data_operands = len(expression)
-            length = length or DataType(data_type).default_length
-            # Only for literal generate address constants. For DC, they will be generated separately.
-            if literal:
-                data = bytearray()
-                for operand in expression:
-                    data.extend(DataType(data_type, input=str(self.get_value(operand))).to_bytes(length))
+        if len(operand) > index:
+            if operand[index] == "'":
+                if operand[-1] != "'":
+                    raise TypeError
+                data_type_object = DataType(data_type, input=operand[index + 1: -1])
+                length = length or data_type_object.length
+                data = data_type_object.to_bytes(length)
+            elif operand[index] == '(':
+                data_text = self.get_parameter_in_parenthesis(operand[index:])
+                expression = data_text[1:-1].split(',')
+                if len(expression) == 0 or not expression[0]:
+                    raise TypeError
+                number_of_data_operands = len(expression)
+                length = length or DataType(data_type).default_length
+                # Only for literal generate address constants. For DC, they will be generated separately.
+                if literal:
+                    data = bytearray()
+                    for operand in expression:
+                        data.extend(DataType(data_type, input=str(self.get_value(operand))).to_bytes(length))
+            else:
+                raise TypeError
         else:
             length = length or DataType(data_type).default_length
         # Start (after boundary alignment) and End (After duplication factor)

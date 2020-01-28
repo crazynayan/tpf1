@@ -13,7 +13,7 @@ class Wgu4Test(unittest.TestCase):
 
     def test_wgu4(self):
         self.test_data.output.debug = ['WGU4']
-        self.test_data.add_pnr_element(['1ZAVERI/NAYAN' + 70 * ' ' + 'A'], 'name')
+        self.test_data.add_pnr_element(['1ZAVERI/NAYAN'], 'name')  # Add spaces in TS24
         self.test_data.set_field('MI0ACC', DataType('C', input='FFAAC416M24').to_bytes())
         test_data = self.tpf_server.run('TS24', self.test_data)
         # self.assertEqual('TS24EXIT.1', test_data.output.last_line)
