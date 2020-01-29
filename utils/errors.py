@@ -30,6 +30,10 @@ class RegisterInvalidError(AssemblyError, ExecutionError):
     pass
 
 
+class DcInvalidError(AssemblyError):
+    pass
+
+
 class UsingInvalidError(AssemblyError):
     pass
 

@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from assembly.mac0_generic import MacroGeneric
 from utils.data_type import DataType
-from utils.errors import EquLabelRequiredError, EquDataTypeHasAmpersandError
+from utils.errors import EquLabelRequiredError, EquDataTypeHasAmpersandError, DcInvalidError
 from utils.file_line import Line
 
 
@@ -69,13 +69,13 @@ class DataMacroImplementation(MacroGeneric):
         elif operand[0] == '(':
             duplication_factor_text = self.get_parameter_in_parenthesis(operand)
             if not duplication_factor_text:
-                raise TypeError
+                raise DcInvalidError
             duplication_factor = self.get_value(duplication_factor_text[1:-1])
             index = len(duplication_factor_text)
         # Data Type
         data_type = operand[index]
         if data_type not in 'CXHFDBZPAY':
-            raise TypeError
+            raise DcInvalidError
         index += 1
         if data_type == 'F' and len(operand) > index and operand[index] == 'D':
             data_type = 'FD'
@@ -97,7 +97,7 @@ class DataMacroImplementation(MacroGeneric):
                 length_text = self.get_parameter_in_parenthesis(operand[index:])
                 length = self.get_value(length_text[1:-1])
             else:
-                raise TypeError
+                raise DcInvalidError
             index += len(length_text)
         # Data
         number_of_data_operands = 1
@@ -106,7 +106,7 @@ class DataMacroImplementation(MacroGeneric):
         if len(operand) > index:
             if operand[index] == "'":
                 if operand[-1] != "'":
-                    raise TypeError
+                    raise DcInvalidError
                 data_type_object = DataType(data_type, input=operand[index + 1: -1])
                 length = length or data_type_object.length
                 data = data_type_object.to_bytes(length)
@@ -114,7 +114,7 @@ class DataMacroImplementation(MacroGeneric):
                 data_text = self.get_parameter_in_parenthesis(operand[index:])
                 expression = data_text[1:-1].split(',')
                 if len(expression) == 0 or not expression[0]:
-                    raise TypeError
+                    raise DcInvalidError
                 number_of_data_operands = len(expression)
                 length = length or DataType(data_type).default_length
                 # Only for literal generate address constants. For DC, they will be generated separately.
@@ -123,7 +123,7 @@ class DataMacroImplementation(MacroGeneric):
                     for operand in expression:
                         data.extend(DataType(data_type, input=str(self.get_value(operand))).to_bytes(length))
             else:
-                raise TypeError
+                raise DcInvalidError
         else:
             length = length or DataType(data_type).default_length
         # Start (after boundary alignment) and End (After duplication factor)
