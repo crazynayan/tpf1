@@ -6,7 +6,7 @@ from utils.errors import EquLabelRequiredError, EquDataTypeHasAmpersandError
 from utils.file_line import Line
 
 
-class Dsdc:
+class Dc:
 
     def __init__(self, duplication_factor: int, data_type: str, length: int, start: int,
                  data: Optional[bytearray], expression: List[str]):
@@ -58,11 +58,9 @@ class DataMacroImplementation(MacroGeneric):
             index += 1
         return operand[:index]
 
-    def _dsdc(self, operand: str, literal: bool = False) -> Dsdc:
+    def _get_dc(self, operand: str, literal: bool = False) -> Dc:
         index = 0
         # Duplication Factor
-        if operand[0] == "Z":
-            a = 1
         duplication_factor = 1
         duplication_factor_text = self.get_digits(operand)
         if duplication_factor_text:
@@ -133,19 +131,19 @@ class DataMacroImplementation(MacroGeneric):
         self._location_counter = start + duplication_factor * length * number_of_data_operands
         if self._location_counter > self._max_counter:
             self._max_counter = self._location_counter
-        dsdc = Dsdc(duplication_factor, data_type, length, start, data, expression)
+        dsdc = Dc(duplication_factor, data_type, length, start, data, expression)
         return dsdc
 
-    def ds(self, line: Line) -> List[Dsdc]:
+    def ds(self, line: Line) -> List[Dc]:
         operands = line.split_operands()
-        dsdc: Dsdc = self._dsdc(operands[0])
-        dsdc_list: List[Dsdc] = [dsdc]
+        ds: Dc = self._get_dc(operands[0])
+        dc_list: List[Dc] = [ds]
         if line.label:
-            self.add_label(line.label, dsdc.start, dsdc.length, self.name)
+            self.add_label(line.label, ds.start, ds.length, self.name)
         if len(operands) > 1:
             for operand in operands[1:]:
-                dsdc_list.append(self._dsdc(operand))  # Increment location counter for multiple values
-        return dsdc_list
+                dc_list.append(self._get_dc(operand))  # Increment location counter for multiple values
+        return dc_list
 
     def equ(self, line: Line) -> None:
         if line.label is None:
@@ -162,10 +160,7 @@ class DataMacroImplementation(MacroGeneric):
         return
 
     def org(self, line: Line) -> None:
-        if line.operand is None:
-            self._location_counter = self._max_counter
-        else:
-            self._location_counter = self.get_value(line.operand)
+        self._location_counter = self.get_value(line.operand) if line.operand else self._max_counter
         return
 
     def dsect(self, line: Line) -> None:

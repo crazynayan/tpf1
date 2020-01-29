@@ -9,7 +9,7 @@ from assembly.mac2_data_macro import macros
 from assembly.seg6_segment import segments
 from db.test_data import TestData
 from db.test_data_elements import Pnr, Tpfdf
-from execution.ex5_execute import Execute
+from execution.ex5_execute import TpfServer
 from flask_app import tpf1_app
 from flask_app.auth import token_auth, User
 from flask_app.errors import error_response
@@ -88,7 +88,7 @@ def run_test_data(test_data_id: str, **kwargs) -> Response:
     test_data: TestData = kwargs[test_data_id]
     if test_data.seg_name not in segments:
         return error_response(400, 'Error in segment name')
-    tpf_server = Execute()
+    tpf_server = TpfServer()
     test_data = tpf_server.run(test_data.seg_name, test_data)
     return jsonify(test_data.cascade_to_dict())
 

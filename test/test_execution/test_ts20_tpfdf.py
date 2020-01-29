@@ -1,13 +1,13 @@
 import unittest
 
-from execution.ex5_execute import Execute
+from execution.ex5_execute import TpfServer
 from test import TestDataUTS
 from test.test_eta5_execution import tr1gaa
 
 
 class DbTest(unittest.TestCase):
     def setUp(self) -> None:
-        self.tpf_server = Execute()
+        self.tpf_server = TpfServer()
         self.test_data = TestDataUTS()
         self.test_data.add_fields(['EBW000'], 'EB0EB')
         self.test_data.add_all_regs()

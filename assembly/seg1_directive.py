@@ -1,6 +1,6 @@
 from typing import List
 
-from assembly.mac1_implementation import Dsdc
+from assembly.mac1_implementation import Dc
 from assembly.seg0_generic import SegmentGeneric
 from utils.data_type import Register
 from utils.errors import UsingInvalidError, DropInvalidError
@@ -27,7 +27,7 @@ class DirectiveImplementation(SegmentGeneric):
         self._command['SPACE'] = self.no_operation
 
     def dc(self, line: Line) -> None:
-        dc_list: List[Dsdc] = super().ds(line)
+        dc_list: List[Dc] = super().ds(line)
         self.dc_list.extend(dc_list)
         return
 

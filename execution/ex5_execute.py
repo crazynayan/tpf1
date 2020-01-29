@@ -6,7 +6,7 @@ from execution.ex3_executable_macro import ExecutableMacro
 from execution.ex4_db_macro import DbMacro
 
 
-class Execute(Instruction, ExecutableMacro, DbMacro):
+class TpfServer(Instruction, ExecutableMacro, DbMacro):
     def __init__(self):
         super().__init__()
         self._ex: Dict[str, callable] = dict()

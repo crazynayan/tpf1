@@ -2,13 +2,13 @@ import unittest
 
 from assembly.mac2_data_macro import macros
 from config import config
-from execution.ex5_execute import Execute
+from execution.ex5_execute import TpfServer
 from test import TestDataUTS
 
 
 class NonConditional1(unittest.TestCase):
     def setUp(self) -> None:
-        self.tpf_server = Execute()
+        self.tpf_server = TpfServer()
         self.test_data = TestDataUTS()
         self.test_data.add_all_regs()
         aaa_fields = [('WA0BBR', 2), ('WA0QHR', 6), 'WA0TKK', 'WA0TY1']

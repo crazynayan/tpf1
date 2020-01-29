@@ -1,7 +1,7 @@
 from typing import Optional, Tuple, Dict, List, Set
 
 from assembly.mac0_generic import LabelReference
-from assembly.mac1_implementation import DataMacroImplementation, Dsdc
+from assembly.mac1_implementation import DataMacroImplementation, Dc
 from assembly.mac2_data_macro import macros
 from config import config
 from utils.data_type import Register
@@ -40,7 +40,7 @@ class SegmentGeneric(DataMacroImplementation):
         self._using_stack: List[Dict[str, Register]] = list()  # A stack of using dicts
         self.data_macro: Set[str] = set()  # Set of data macro names which are already loaded.
         self.data: Data = Data()
-        self.dc_list: List[Dsdc] = list()
+        self.dc_list: List[Dc] = list()
 
     def root_label(self, name: Optional[str] = None) -> str:
         return '$$' + self.seg_name + '$$' if name is None else '$$' + name + '$$'

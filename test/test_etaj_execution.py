@@ -2,17 +2,17 @@ import unittest
 
 from assembly.mac2_data_macro import macros
 from config import config
-from execution.ex5_execute import Execute
+from execution.ex5_execute import TpfServer
 from test import TestDataUTS
 from utils.data_type import DataType
 
 
 class EtajTest(unittest.TestCase):
-    tpf_server: Execute = None
+    tpf_server: TpfServer = None
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.tpf_server = Execute()
+        cls.tpf_server = TpfServer()
         # cls.tpf_server.init_debug(['ETAJ'])
 
     @classmethod

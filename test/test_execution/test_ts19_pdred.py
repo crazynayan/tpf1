@@ -1,6 +1,6 @@
 import unittest
 
-from execution.ex5_execute import Execute
+from execution.ex5_execute import TpfServer
 from test import TestDataUTS
 from test.test_eta5_execution import hfax_2812_gld, fqtv_gld, itin_2811_2812
 from utils.data_type import DataType
@@ -9,7 +9,7 @@ from utils.data_type import DataType
 class PdredHfax(unittest.TestCase):
     def setUp(self) -> None:
         self.test_data = TestDataUTS()
-        self.tpf_server = Execute()
+        self.tpf_server = TpfServer()
         self.test_data.add_fields([('EBW000', 5)], 'EB0EB')
         self.test_data.add_all_regs()
 

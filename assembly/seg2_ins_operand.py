@@ -139,7 +139,7 @@ class InstructionOperand(DirectiveImplementation):
         return FieldBaseDsp(name, base, dsp)
 
     def _literal(self, operand: str) -> LabelReference:
-        literal = self._dsdc(operand, literal=True)
+        literal = self._get_dc(operand, literal=True)
         dsp = self.data.next_literal + config.F4K
         self.data.literal.extend(literal.data * literal.duplication_factor)
         label = f"L{Label.SEPARATOR * 2}{dsp:05X}"

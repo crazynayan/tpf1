@@ -1,14 +1,14 @@
 import unittest
 
 from assembly.seg6_segment import segments
-from execution.ex5_execute import Execute
+from execution.ex5_execute import TpfServer
 from test import TestDataUTS
 from utils.data_type import DataType
 
 
 class Sub1Test(unittest.TestCase):
     def setUp(self) -> None:
-        self.tpf_server = Execute()
+        self.tpf_server = TpfServer()
         self.test_data = TestDataUTS()
         self.test_data.add_fields([('EBX000', 3), ('EBX003', 5), ('EBX008', 3)], 'EB0EB')
         self.test_data.output.regs['R0'] = 0

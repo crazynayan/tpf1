@@ -1,12 +1,12 @@
 import unittest
 
-from execution.ex5_execute import Execute
+from execution.ex5_execute import TpfServer
 from test import TestDataUTS
 
 
 class NonConditional2(unittest.TestCase):
     def setUp(self) -> None:
-        self.tpf_server = Execute()
+        self.tpf_server = TpfServer()
         self.test_data = TestDataUTS()
         ecb_fields = [('EBW000', 4), ('EBW004', 2), ('EBW008', 12), ('EBW020', 12), ('EBW032', 6), ('EBW040', 8),
                       ('EBW048', 8), ('EBW056', 8), ('EBW064', 6), ('EBT000', 4)]

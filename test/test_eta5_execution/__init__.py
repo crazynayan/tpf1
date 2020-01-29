@@ -2,7 +2,7 @@ import unittest
 from base64 import b64encode
 
 from assembly.mac2_data_macro import macros
-from execution.ex5_execute import Execute
+from execution.ex5_execute import TpfServer
 from test import TestDataUTS
 from utils.data_type import DataType
 
@@ -13,7 +13,7 @@ from utils.data_type import DataType
 class NameGeneral(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.tpf_server = Execute()
+        self.tpf_server = TpfServer()
         self.test_data = TestDataUTS()
         # AAA
         aaa_fields = ['WA0EXT', 'WA0PTY', 'WA0ETG', 'WA0PTI', 'WA0ET4', 'WA0ET5']
