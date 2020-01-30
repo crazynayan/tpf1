@@ -91,6 +91,10 @@ class RealtimeMacroImplementation(InstructionImplementation):
         self._command['GLOBZ'] = self.globz
         self._command['FACE'] = self.instruction_generic
         self._command['FINWC'] = self.key_value
+        self._command['FIWHC'] = self.key_value
+        self._command['FILEC'] = self.key_value
+        self._command['GETFC'] = self.key_value
+        self._command['PNAMC'] = self.key_value
         self._command['SYSRA'] = self.key_value
         self._command['SERRC'] = self.key_value
         self._command['SENDA'] = self.key_value

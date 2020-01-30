@@ -166,6 +166,10 @@ class UcdrError(ExecutionError):
     pass
 
 
+class NotImplementedExecutionError(ExecutionError):
+    pass
+
+
 class PnrElementError(TestDataError):
     pass
 

@@ -193,8 +193,11 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
 
         # Realtime Db Macros - Not in ETA5
         self._ex['FINWC'] = self.finwc
-        # FINWC, FIWHC, FINDC, FINHC
-        # FILEC, FILNC
+        self._ex['FIWHC'] = self.finwc
+        self._ex['FILEC'] = self.not_implemented
+        self._ex['GETFC'] = self.not_implemented
+        # FINWC, FINDC, FINHC
+        # FILNC
 
         # User defined Db Macros
         self._ex['PDRED'] = self.pdred

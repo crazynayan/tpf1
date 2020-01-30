@@ -8,7 +8,7 @@ from db.pnr import PnrLocator
 from execution.ex1_state import State
 from utils.data_type import DataType, Register
 from utils.errors import HeapaExecutionError, RegisterInvalidError, DumpExecutionError, LevtaExecutionError, \
-    MhinfExecutionError, PrimaExecutionError, McpckExecutionError, SegmentNotFoundError
+    MhinfExecutionError, PrimaExecutionError, McpckExecutionError, SegmentNotFoundError, NotImplementedExecutionError
 from utils.ucdr import pars_to_date, date_to_pars
 
 
@@ -272,6 +272,9 @@ class UserDefinedMacro(State):
             byte_array = DataType('X', input=node.get_value('XVALUE')).to_bytes()
             self.vm.set_bytes(byte_array, address, len(byte_array))
         return node.fall_down
+
+    def not_implemented(self, _) -> None:
+        raise NotImplementedExecutionError
 
 
 class ExecutableMacro(RealTimeMacro, UserDefinedMacro):
