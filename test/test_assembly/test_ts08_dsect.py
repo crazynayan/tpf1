@@ -41,6 +41,10 @@ class Dsect(unittest.TestCase):
         self.assertEqual('R2', seg.nodes['TS080010.3'].field.base.reg)
         self.assertEqual('R1', seg.nodes['TS080010.4'].field.base.reg)
         self.assertEqual('R14', seg.nodes['TS080010.5'].field.base.reg)
+        self.assertEqual('R6', seg.nodes['TS08A010'].field_len.base.reg)
+        self.assertEqual('R5', seg.nodes['TS08A010'].field.base.reg)
+        self.assertEqual('R6', seg.nodes['TS08A020'].field_len.base.reg)
+        self.assertEqual('R5', seg.nodes['TS08A020'].field.base.reg)
 
 
 if __name__ == '__main__':

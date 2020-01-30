@@ -1,6 +1,7 @@
-from typing import List
+from typing import List, Optional
 
 from assembly.mac1_implementation import Dc
+from assembly.mac2_data_macro import macros
 from assembly.seg0_generic import SegmentGeneric
 from utils.data_type import Register
 from utils.errors import UsingInvalidError, DropInvalidError
@@ -25,6 +26,7 @@ class DirectiveImplementation(SegmentGeneric):
         self._command['EJECT'] = self.no_operation
         self._command['PRINT'] = self.no_operation
         self._command['SPACE'] = self.no_operation
+        self._command['DATAS'] = self.datas
 
     def dc(self, line: Line) -> None:
         dc_list: List[Dc] = super().ds(line)
@@ -79,6 +81,19 @@ class DirectiveImplementation(SegmentGeneric):
             raise UsingInvalidError
         dsect_name = self.name if operands[0] == '*' else operands[0]
         self.set_using(dsect_name, base)
+
+    def datas(self, line: Line) -> None:
+        operands = line.split_operands()
+        if len(operands) < 3:
+            raise UsingInvalidError
+        if not Register(operands[0]).is_valid():
+            raise UsingInvalidError
+        suffix: Optional[str] = operands[1] if operands[1] else None
+        for operand in operands[2:]:
+            if operand not in macros:
+                raise UsingInvalidError
+            self.load_macro(operand, base=operands[0], suffix=suffix, override=False)
+        return
 
     def no_operation(self, _) -> None:
         return

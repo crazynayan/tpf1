@@ -45,7 +45,8 @@ class SegmentGeneric(DataMacroImplementation):
     def root_label(self, name: Optional[str] = None) -> str:
         return '$$' + self.seg_name + '$$' if name is None else '$$' + name + '$$'
 
-    def load_macro(self, name: str, base: Optional[str] = None, suffix: Optional[str] = None) -> None:
+    def load_macro(self, name: str, base: Optional[str] = None, suffix: Optional[str] = None,
+                   override: bool = True) -> None:
         macros[name].load()
         if suffix is not None:
             original_name = name
@@ -59,14 +60,14 @@ class SegmentGeneric(DataMacroImplementation):
         if base is not None:
             base = Register(base)
             if base.is_valid():
-                self.set_using(name, base)
+                self.set_using(name, base, override)
             else:
                 raise RegisterInvalidError
         return
 
-    def set_using(self, dsect: str, reg: Register) -> None:
+    def set_using(self, dsect: str, reg: Register, override: bool = True) -> None:
         using_name = next((name for name, using_reg in self._using.items() if using_reg.reg == reg.reg), None)
-        if using_name is not None:
+        if override and using_name is not None:
             del self._using[using_name]
         self._using[dsect] = reg
 

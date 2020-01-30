@@ -19,6 +19,8 @@ TS08AWD  DSECT
 TS08PGR  DS    CL4
 TS08ERR  DS    XL1
 $IS$     CSECT
+         DATAS R5,,SV0SV,SUBID
+         DATAS R6,X,NM0WK,NNM1WK
          L     R1,CE1CR1             8
          LA    R7,EBW040            12
          TM    WA0ET4,#WA0TTY       16
@@ -41,3 +43,5 @@ TS080010 DS    0H                   30
 $C_AA    DC    C'AA'                60
 $X_00    DS    0XL256               62
          DC    256X'0'              62
+TS08A010 MVC   NM0INDX,SV0ID1
+TS08A020 MVC   NNM1_I_IND1X,SUB0TY

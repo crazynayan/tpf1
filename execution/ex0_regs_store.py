@@ -136,7 +136,7 @@ class Storage:
         u1dmo = config.GLOBAL + macros['GLOBAL'].evaluate('@U1DMO')
         today = datetime.today()
         today = datetime(year=today.year, month=today.month, day=today.day)
-        pars_today = (today - config.START).days
+        pars_today = (today - config.PARS_DAY_1).days
         self.set_value(pars_today, u1dmo, 2)
         tjord = config.GLOBAL + macros['GLOBAL'].evaluate('@TJORD')
         self.set_value(0x00088EDC, tjord)

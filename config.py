@@ -30,8 +30,8 @@ class Config:
     TRIM: Dict[str, int] = {'0': 7, ' ': 1}
     COMMENT_C1: Set[str] = {'*', '.'}
     DIRECTIVE: Set[str] = {'PUSH', 'USING', 'DSECT', 'PGMID', 'LTORG', 'FINIS', 'END', 'ORG', 'POP', 'CSECT',
-                           'EQU', 'DS', 'DC', 'EJECT', 'SPACE', 'PRINT', 'BEGIN', 'DROP'}
-    DIRECTIVE_SECOND_PASS: tuple = ('PUSH', 'USING', 'POP', 'DROP')
+                           'EQU', 'DS', 'DC', 'EJECT', 'SPACE', 'PRINT', 'BEGIN', 'DROP', 'DATAS'}
+    DIRECTIVE_SECOND_PASS: Set[str] = {'PUSH', 'USING', 'POP', 'DROP', 'DATAS'}
     DIRECTIVE_NODE: Set[str] = {'EQU', 'DS'}
     INSTRUCTION_LEN_DEFAULT: int = 4
     INSTRUCTION_LEN_2: Set[str] = {'BCTR', 'BR', 'LR', 'LTR', 'AR', 'SR', 'BER', 'BNER', 'BHR', 'BNHR', 'BLR', 'BNLR',
@@ -72,7 +72,7 @@ class Config:
     ECB_LEVELS: tuple = ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F')
     BLOCK_SIZE: Dict[str, int] = {'L0': 128, 'L1': 381, 'L2': 1055, 'L4': 4095}
     BLOCK_TYPE: Dict[str, int] = {'L0': 0x11, 'L1': 0x21, 'L2': 0x31, 'L4': 0x41}
-    START: datetime = datetime(1966, 1, 2, 0, 0, 0)
+    PARS_DAY_1: datetime = datetime(1966, 1, 2, 0, 0, 0)
     GROSS_DAYS: int = 333
     PARTITION: Dict[str, int] = {'AA': 0x00, 'KM': 0x01, 'WS': 0x02, 'AS': 0x04, 'GF': 0x05, 'ET': 0x06, 'UP': 0x09,
                                  'W1': 0x0B, 'AR': 0x0C, 'SL': 0x0E, 'HA': 0x0F, 'ID': 0x10, '7N': 0x11, '6S': 0x14,
