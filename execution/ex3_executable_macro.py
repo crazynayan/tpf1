@@ -1,6 +1,7 @@
 from typing import Optional
 
 from assembly.mac2_data_macro import macros
+from assembly.seg2_ins_operand import FieldBaseDsp
 from assembly.seg5_exec_macro import KeyValue, SegmentCall
 from assembly.seg6_segment import segments
 from config import config
@@ -102,6 +103,7 @@ class RealTimeMacro(State):
     def entrc(self, node: SegmentCall) -> str:
         if node.keys[0] not in segments:
             raise SegmentNotFoundError
+        self.fields['CE3ENTPGM'] = DataType('C', input=self.seg.name).to_bytes()
         self.call_stack.append((node.fall_down, self.seg.name))
         self._init_seg(node.keys[0])
         return node.goes
@@ -109,12 +111,14 @@ class RealTimeMacro(State):
     def entnc(self, node: SegmentCall) -> str:
         if node.keys[0] not in segments:
             raise SegmentNotFoundError
+        self.fields['CE3ENTPGM'] = DataType('C', input=self.seg.name).to_bytes()
         self._init_seg(node.keys[0])
         return node.goes
 
     def entdc(self, node: SegmentCall) -> str:
         if node.keys[0] not in segments:
             raise SegmentNotFoundError
+        self.fields['CE3ENTPGM'] = DataType('C', input=self.seg.name).to_bytes()
         del self.call_stack[:]
         self._init_seg(node.keys[0])
         return node.goes
@@ -123,6 +127,11 @@ class RealTimeMacro(State):
         branch, seg_name = self.call_stack.pop()
         self._init_seg(seg_name)
         return branch
+
+    def pnamc(self, node: KeyValue) -> str:
+        field: FieldBaseDsp = node.get_value('FIELD')
+        self.vm.set_bytes(self.fields['CE3ENTPGM'], self.regs.get_value(field.base) + field.dsp, 4)
+        return node.fall_down
 
 
 class UserDefinedMacro(State):

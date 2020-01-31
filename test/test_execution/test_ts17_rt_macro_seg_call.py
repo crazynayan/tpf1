@@ -10,7 +10,7 @@ class RealTimeMacro(unittest.TestCase):
         self.test_data = TestDataUTS()
         self.test_data.add_all_reg_pointers(2)
         self.test_data.add_all_regs()
-        self.test_data.add_fields(['EBT000', 'EBW000'], 'EB0EB')
+        self.test_data.add_fields(['EBT000', 'EBW000', ('EBX000', 4)], 'EB0EB')
 
     def test_ts17(self):
         test_data = self.tpf_server.run('TS17', self.test_data)
@@ -35,6 +35,8 @@ class RealTimeMacro(unittest.TestCase):
         self.assertEqual(-1, test_data.output.regs['R5'])
         # Check if MVC EBW000,EBT000 is executed (Proof of execution of TS13)
         self.assertEqual('01', test_data.get_field('EBW000'))
+        # Check PNAMC
+        self.assertEqual('E3E2F1F0', test_data.get_field('EBX000'))
 
 
 if __name__ == '__main__':

@@ -38,6 +38,7 @@ class State:
         self.tpfdf_ref: Dict[str, int] = dict()
         self.errors: Set[str] = set()
         self.debug: Debug = Debug()
+        self.fields: dict = {'CE3ENTPGM': bytearray()}
 
     def __repr__(self) -> str:
         return f"State:{self.seg}:{self.regs}:{self.vm}"

@@ -6,7 +6,7 @@ from assembly.seg3_ins_type import InstructionGeneric, RegisterData
 from assembly.seg4_ins_implementation import InstructionImplementation
 from config import config
 from utils.data_type import Register
-from utils.errors import RegisterInvalidError
+from utils.errors import RegisterInvalidError, AssemblyError
 from utils.file_line import Line
 
 
@@ -16,7 +16,7 @@ class KeyValue(InstructionGeneric):
                  operands: List[Tuple[str, Union[Optional[str], List[Tuple[str, Optional[str]]]]]],
                  branches: List[str]):
         super().__init__(line)
-        self._operands: List[Tuple[str, Union[Optional[str], List[Tuple[str, Optional[str]]]]]] = operands
+        self._operands: List[Tuple[str, Union[Optional[str], FieldBaseDsp, List[Tuple[str, Optional[str]]]]]] = operands
         self.branches: List[str] = branches
 
     def __repr__(self) -> str:
@@ -42,7 +42,8 @@ class KeyValue(InstructionGeneric):
     def goes(self) -> str:
         return next(iter(self.branches), None)
 
-    def get_value(self, key: str) -> Union[Optional[str], List[Tuple[str, Union[Optional[str], FieldBaseDsp]]]]:
+    def get_value(self, key: str) -> Union[Optional[str], FieldBaseDsp,
+                                           List[Tuple[str, Union[Optional[str], FieldBaseDsp]]]]:
         # Returns
         # None - For key not found
         # value: str - For KEY=VALUE
@@ -61,6 +62,10 @@ class KeyValue(InstructionGeneric):
         key_value_list = self.get_value(key)
         key_value_list.remove((sub_key, original_value))
         key_value_list.append((sub_key, value))
+
+    def set_value(self, value: FieldBaseDsp, original_value: str, key: str) -> None:
+        self._operands.remove((key, original_value))
+        self._operands.append((key, value))
 
 
 class SegmentCall(KeyValue):
@@ -94,7 +99,7 @@ class RealtimeMacroImplementation(InstructionImplementation):
         self._command['FIWHC'] = self.key_value
         self._command['FILEC'] = self.key_value
         self._command['GETFC'] = self.key_value
-        self._command['PNAMC'] = self.key_value
+        self._command['PNAMC'] = self.pnamc
         self._command['SYSRA'] = self.key_value
         self._command['SERRC'] = self.key_value
         self._command['SENDA'] = self.key_value
@@ -154,6 +159,16 @@ class RealtimeMacroImplementation(InstructionImplementation):
             field: FieldBaseDsp = self.field_base_dsp(field_name)
             dbred_key.set_sub_value(field, field_name, key_n, 'S')
         return dbred_key
+
+    def pnamc(self, line: Line) -> KeyValue:
+        pnamc_key_value = self.key_value(line)
+        if pnamc_key_value.get_value('NAMETYPE') != 'ENTER':
+            raise AssemblyError
+        field_name = pnamc_key_value.get_value('FIELD')
+        if not field_name:
+            raise AssemblyError
+        pnamc_key_value.set_value(self.field_base_dsp(field_name), field_name, 'FIELD')
+        return pnamc_key_value
 
     def load_macro_from_line(self, line: Line) -> None:
         macro_key_value: KeyValue = self.key_value(line)

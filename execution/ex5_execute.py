@@ -174,6 +174,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex['ENTDC'] = self.entdc
         self._ex['BACKC'] = self.backc
         self._ex['ALASC'] = self.alasc
+        self._ex['PNAMC'] = self.pnamc
 
         # User Defined Executable Macros
         self._ex['AAGET'] = self.aaget
