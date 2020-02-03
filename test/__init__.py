@@ -1,13 +1,11 @@
 import random
 import string
-from base64 import b64encode
 from typing import Dict, List, Union
 
 from assembly.mac2_data_macro import DataMacro
 from config import config
 from db.test_data import TestData
-from db.test_data_elements import Pnr, FixedFile, PoolFile, FileItem
-from utils.errors import PoolFileSpecificationError, FileItemSpecificationError
+from db.test_data_elements import Pnr
 
 
 class TestDataUTS(TestData):
@@ -56,86 +54,3 @@ class TestDataUTS(TestData):
             df_dict['field_data'] = field_data
             self.create_tpfdf_lrec(df_dict, persistence=False)
         return
-
-    def add_file(self, fixed_rec_id: int, fixed_file_type: int, fixed_file_ordinal: int, fixed_macro_name: str,
-                 fixed_forward_chain_label: str = str(),
-                 fixed_field_data: Dict[str, bytearray] = None,
-                 fixed_item_field: str = str(),
-                 fixed_item_count_field: str = str(),
-                 fixed_item_position: int = 0,
-                 fixed_item_forward_chain_count: int = 0,
-                 fixed_item_field_data: Dict[str, bytearray] = None,
-                 pool_rec_id: int = 0,
-                 pool_macro_name: str = str(),
-                 pool_index_field: str = str(),
-                 pool_index_count: int = 0,
-                 pool_index_forward_chain_count: int = 0,
-                 pool_forward_chain_label: str = str(),
-                 pool_field_data: Dict[str, bytearray] = None,
-                 pool_item_field: str = str(),
-                 pool_item_count_field: str = str(),
-                 pool_item_position: int = 0,
-                 pool_item_forward_chain_count: int = 0,
-                 pool_item_field_data: Dict[str, bytearray] = None,
-                 ) -> None:
-        fixed_file = self._get_or_create_fixed_file(fixed_rec_id, fixed_file_type, fixed_file_ordinal, fixed_macro_name)
-        fixed_file.forward_chain_label = fixed_forward_chain_label
-        fixed_file.forward_chain_count = fixed_item_forward_chain_count
-        if fixed_item_forward_chain_count and not fixed_forward_chain_label:
-            raise PoolFileSpecificationError
-        if fixed_field_data:
-            fixed_file.field_data = self._bytearray_to_field_data(fixed_field_data)
-        if fixed_item_field:
-            if not fixed_item_field_data:
-                raise FileItemSpecificationError
-            item = FileItem()
-            fixed_file.file_items.append(item)
-            item.field = fixed_item_field
-            item.position = fixed_item_position
-            item.count_field = fixed_item_count_field
-            item.field_data = self._bytearray_to_field_data(fixed_item_field_data)
-        if pool_rec_id or pool_macro_name or pool_index_field:
-            if not (pool_rec_id and pool_macro_name and pool_index_field):
-                raise PoolFileSpecificationError
-            pool = PoolFile()
-            fixed_file.pool_files.append(pool)
-            pool.rec_id = pool_rec_id
-            pool.macro_name = pool_macro_name
-            pool.index_field = pool_index_field
-            pool.index_count = pool_index_count
-            pool.index_forward_chain_count = pool_index_forward_chain_count
-            pool.forward_chain_label = pool_forward_chain_label
-            pool.forward_chain_count = pool_item_forward_chain_count
-            if pool_item_forward_chain_count and not pool_forward_chain_label:
-                raise PoolFileSpecificationError
-            if pool_field_data:
-                pool.field_data = self._bytearray_to_field_data(pool_field_data)
-            if pool_item_field:
-                if not pool_item_field_data:
-                    raise FileItemSpecificationError
-                item = FileItem()
-                pool.file_items.append(item)
-                item.field = pool_item_field
-                item.position = pool_item_position
-                item.count_field = pool_item_count_field
-                item.field_data = self._bytearray_to_field_data(pool_item_field_data)
-        return
-
-    def _get_or_create_fixed_file(self, rec_id, file_type, file_ordinal, macro_name) -> 'FixedFile':
-        fixed_file: FixedFile = next((file for file in self.fixed_files
-                                      if file.rec_id == rec_id
-                                      and file.fixed_type == file_type
-                                      and file.fixed_ordinal == file_ordinal
-                                      and file.macro_name == macro_name), None)
-        if not fixed_file:
-            fixed_file: FixedFile = FixedFile()
-            fixed_file.rec_id = rec_id
-            fixed_file.fixed_type = file_type
-            fixed_file.fixed_ordinal = file_ordinal
-            fixed_file.macro_name = macro_name
-            self.fixed_files.append(fixed_file)
-        return fixed_file
-
-    @staticmethod
-    def _bytearray_to_field_data(field_bytes: Dict[str, bytearray]):
-        return [{'field': field, 'data': b64encode(data).decode()} for field, data in field_bytes.items()]

@@ -190,14 +190,52 @@ class FlatFile(FirestoreDocument):
 
     def __init__(self):
         super().__init__()
+        self.variation: int = 0
         self.macro_name: str = str()
         self.rec_id: int = 0
-        self.item_field: str = str()
         self.file_items: List[FileItem] = list()
         self.pool_files: List[PoolFile] = list()
         self.forward_chain_label: str = str()
         self.forward_chain_count: int = 0
         self.field_data: list = list()
+
+    @classmethod
+    def validate(cls, file_dict: dict) -> bool:
+        template = cls().__dict__
+        if not isinstance(file_dict, dict) or not file_dict:
+            return False
+        if not set(file_dict).issubset(template):
+            return False
+        if not all(isinstance(value, type(template[field])) for field, value in file_dict.items()):
+            return False
+        if not {'variation', 'macro_name', 'rec_id'}.issubset(file_dict):
+            return False
+        file = cls.dict_to_doc(file_dict, cascade=False)
+        if file.rec_id <= 0 or file.variation < 0:
+            return False
+        if file.macro_name not in macros:
+            return False
+        macro = macros[file.macro_name]
+        macro.load()
+        if not all(FileItem.validate(file_item) for file_item in file.file_items):
+            return False
+        if not all(PoolFile.validate(pool_file) for pool_file in file.pool_files):
+            return False
+        if file.forward_chain_count or file.forward_chain_label:
+            if not macro.check(file.forward_chain_label):
+                return False
+            if file.forward_chain_count < 0:
+                return False
+        for field_value in file.field_data:
+            if not isinstance(field_value, dict):
+                return False
+            if set(field_value) != {'field', 'data'}:
+                return False
+            if not macro.check(field_value['field']):
+                return False
+            if not isinstance(field_value['data'], str):
+                return False
+        return True
 
 
 class FixedFile(FlatFile):
@@ -210,6 +248,16 @@ class FixedFile(FlatFile):
     def __repr__(self):
         return f"{self.rec_id:04X}:{self.macro_name}:{self.fixed_type}:{self.fixed_ordinal}"
 
+    @classmethod
+    def validate(cls, file_dict: dict) -> bool:
+        if not super().validate(file_dict):
+            return False
+        if not {'fixed_type', 'fixed_ordinal'}.issubset(file_dict):
+            return False
+        if file_dict['fixed_type'] < 0 or file_dict['fixed_ordinal'] < 0:
+            return False
+        return True
+
 
 FixedFile.init('fixed_files')
 
@@ -219,11 +267,27 @@ class PoolFile(FlatFile):
     def __init__(self):
         super().__init__()
         self.index_field: str = str()
-        self.index_forward_chain_count: int = 0
-        self.index_item_count: int = 0
+        self.index_macro_name: str = str()
+        # self.index_forward_chain_count: int = 0
+        # self.index_item_count: int = 0
 
     def __repr__(self):
         return f"{self.rec_id:04X}:{self.macro_name}:{self.index_field}"
+
+    @classmethod
+    def validate(cls, file_dict: dict) -> bool:
+        if not super().validate(file_dict):
+            return False
+        if not {'index_field', 'index_macro_name'}.issubset(file_dict):
+            return False
+        file = cls.dict_to_doc(file_dict, cascade=False)
+        if file.index_macro_name not in macros:
+            return False
+        macro = macros[file.index_macro_name]
+        macro.load()
+        if not macro.check(file.index_field):
+            return False
+        return True
 
 
 PoolFile.init('pool_files')
@@ -233,13 +297,46 @@ class FileItem(FirestoreDocument):
 
     def __init__(self):
         super().__init__()
+        self.macro_name: str = str()
         self.field: str = str()
         self.count_field: str = str()
-        self.position: int = 0
         self.field_data: list = list()
 
     def __repr__(self):
         return f"{self.field}:{self.field_data}"
+
+    @classmethod
+    def validate(cls, item_dict: dict) -> bool:
+        template = cls().__dict__
+        if not isinstance(item_dict, dict) or not item_dict:
+            return False
+        if not set(item_dict).issubset(template):
+            return False
+        if not all(isinstance(value, type(template[field])) for field, value in item_dict.items()):
+            return False
+        if not {'field', 'macro_name', 'field_data'}.issubset(item_dict):
+            return False
+        item = cls.dict_to_doc(item_dict, cascade=False)
+        if item.macro_name not in macros:
+            return False
+        macro = macros[item.macro_name]
+        macro.load()
+        if not macro.check(item.field):
+            return False
+        if item.count_field and not macro.check(item.count_field):
+            return False
+        if not item.field_data:
+            return False
+        for field_value in item.field_data:
+            if not isinstance(field_value, dict):
+                return False
+            if set(field_value) != {'field', 'data'}:
+                return False
+            if not macro.check(field_value['field']):
+                return False
+            if not isinstance(field_value['data'], str):
+                return False
+        return True
 
 
 FileItem.init('file_items')

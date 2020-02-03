@@ -1,7 +1,9 @@
 import unittest
+from base64 import b64encode
 
 from assembly.mac2_data_macro import macros
 from config import config
+from db.test_data_elements import FixedFile, PoolFile, FileItem
 from execution.ex5_execute import TpfServer
 from test import TestDataUTS
 from utils.data_type import DataType
@@ -32,43 +34,53 @@ class EtajTest(unittest.TestCase):
         self.test_data.set_field('WA0FNS', bytes([macros['WA0AA'].evaluate('#WA0TVL')]))
         self.test_data.add_all_regs()
         # Item setup
-        self.iy_item = dict()
-        self.iy_item['IY9AON'] = bytearray([config.ZERO] * 4)
-        self.iy_item['IY9AGY'] = bytearray([config.ZERO])
+        self.iy_item = [{'field': 'IY9AON', 'data': b64encode(bytearray([config.ZERO] * 4)).decode()},
+                        {'field': 'IY9AGY', 'data': b64encode(bytearray([config.ZERO])).decode()}]
 
     def _tjr_setup(self, iy_chain_count: int = 0):
-        self.test_data.add_file(fixed_rec_id=DataType('C', input='TJ').value,
-                                fixed_file_type=macros['SYSEQC'].evaluate('#TJRRI'),
-                                fixed_file_ordinal=0x17F,
-                                fixed_macro_name='TJ1TJ',
-                                pool_rec_id=DataType('C', input='IY').value,
-                                pool_macro_name='IY1IY',
-                                pool_index_field='TJ1IY1',
-                                pool_forward_chain_label='IY1FCH',
-                                pool_item_field='IY1ATH',
-                                pool_item_count_field='IY1CTR',
-                                pool_item_field_data=self.iy_item,
-                                pool_item_forward_chain_count=iy_chain_count,
-                                )
+        fixed_file = FixedFile()
+        fixed_file.rec_id = DataType('C', input='TJ').value
+        fixed_file.macro_name = 'TJ1TJ'
+        fixed_file.fixed_type = macros['SYSEQC'].evaluate('#TJRRI')
+        fixed_file.fixed_ordinal = 0x17F
+        pool_file = PoolFile()
+        fixed_file.pool_files.append(pool_file)
+        pool_file.macro_name = 'IY1IY'
+        pool_file.rec_id = DataType('C', input='IY').value
+        pool_file.index_macro_name = 'TJ1TJ'
+        pool_file.index_field = 'TJ1IY1'
+        pool_file.forward_chain_label = 'IY1FCH'
+        pool_file.forward_chain_count = iy_chain_count
+        item = FileItem()
+        pool_file.file_items.append(item)
+        item.macro_name = 'IY1IY'
+        item.field = 'IY1ATH'
+        item.field_data = self.iy_item
+        item.count_field = 'IY1CTR'
+        file_dict = fixed_file.cascade_to_dict()
+        del file_dict['id']
+        del file_dict['pool_files'][0]['id']
+        del file_dict['pool_files'][0]['file_items'][0]['id']
+        self.test_data.create_fixed_file(file_dict, persistence=False)
         return
 
     def test_branch_validation_fail_lok_off(self) -> None:
-        self.iy_item['IY9AON'] = DataType('X', input='00006F2F').to_bytes()
+        self.iy_item[0]['data'] = b64encode(DataType('X', input='00006F2F').to_bytes()).decode()
         self._tjr_setup(2)
         test_data = self.tpf_server.run('TS21', self.test_data)
         self.assertEqual('$$ETK4$$.1', test_data.output.last_line)
         self.assertEqual(8, test_data.output.regs['R6'])
 
     def test_branch_validation_pass_lok_on(self) -> None:
-        self.iy_item['IY9AON'] = DataType('X', input='00006F2F').to_bytes()
+        self.iy_item[0]['data'] = b64encode(DataType('X', input='00006F2F').to_bytes()).decode()
         macros['IY1IY'].load()
-        self.iy_item['IY9AGY'] = bytearray([macros['IY1IY'].evaluate('#IY1LOK')])
+        self.iy_item[1]['data'] = b64encode(bytearray([macros['IY1IY'].evaluate('#IY1LOK')])).decode()
         self._tjr_setup()
         test_data = self.tpf_server.run('TS21', self.test_data)
         self.assertEqual('TS21EXIT.1', test_data.output.last_line)
 
     def test_finwc_fail(self) -> None:
-        self.iy_item['IY9AON'] = DataType('X', input='00006F2F').to_bytes()
+        self.iy_item[0]['data'] = b64encode(DataType('X', input='00006F2F').to_bytes()).decode()
         self._tjr_setup()
         self.test_data.errors.append('$$ETAJ$$.35')
         test_data = self.tpf_server.run('TS21', self.test_data)

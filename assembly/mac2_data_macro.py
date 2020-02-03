@@ -14,6 +14,9 @@ class DataMacro(DataMacroImplementation):
         self.file_name: str = file_name
         self.default_macros: Dict[str, LabelReference] = default_macros
 
+    def __repr__(self) -> str:
+        return f"{self.name} ({len(self._symbol_table)})"
+
     def _second_pass(self, command: str, second_list: List[Tuple[Line, int]]):
         for line, location_counter in second_list:
             if line.command != command:

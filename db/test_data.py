@@ -293,5 +293,30 @@ class TestData(FirestoreDocument):
         lrec.delete(cascade=True)
         return copy_lrec
 
+    def create_fixed_file(self, file_dict: dict, persistence: bool = True) -> Optional[FixedFile]:
+        if not FixedFile.validate(file_dict):
+            return None
+        max_variation = max(file.variation for file in self.fixed_files) + 1 if self.fixed_files else 0
+        if file_dict['variation'] not in range(max_variation + 1):
+            return None
+        if 'pool_files' in file_dict:
+            if not all(file_dict['macro_name'] == pool_file['index_macro_name']
+                       for pool_file in file_dict['pool_files']):
+                return None
+        fixed_file = next((file for file in self.fixed_files
+                           if file.macro_name == file_dict['macro_name'] and
+                           file.rec_id == file_dict['rec_id'] and
+                           file.fixed_ordinal == file_dict['fixed_ordinal'] and
+                           file.fixed_type == file_dict['fixed_type'] and
+                           file.variation == file_dict['variation']), None)
+        if fixed_file:
+            return None
+        fixed_file = FixedFile.create_from_dict(file_dict) if persistence else \
+            FixedFile.dict_to_doc(file_dict, cascade=True)
+        self.fixed_files.append(fixed_file)
+        if persistence:
+            self.save()
+        return fixed_file
+
 
 TestData.init('test_data')
