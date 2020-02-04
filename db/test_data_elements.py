@@ -190,7 +190,6 @@ class FlatFile(FirestoreDocument):
 
     def __init__(self):
         super().__init__()
-        self.variation: int = 0
         self.macro_name: str = str()
         self.rec_id: int = 0
         self.file_items: List[FileItem] = list()
@@ -208,10 +207,10 @@ class FlatFile(FirestoreDocument):
             return False
         if not all(isinstance(value, type(template[field])) for field, value in file_dict.items()):
             return False
-        if not {'variation', 'macro_name', 'rec_id'}.issubset(file_dict):
+        if not {'macro_name', 'rec_id'}.issubset(file_dict):
             return False
         file = cls.dict_to_doc(file_dict, cascade=False)
-        if file.rec_id <= 0 or file.variation < 0:
+        if file.rec_id <= 0:
             return False
         if file.macro_name not in macros:
             return False
@@ -244,6 +243,7 @@ class FixedFile(FlatFile):
         super().__init__()
         self.fixed_type: int = 0
         self.fixed_ordinal: int = 0
+        self.variation: int = 0
 
     def __repr__(self):
         return f"{self.rec_id:04X}:{self.macro_name}:{self.fixed_type}:{self.fixed_ordinal}"
@@ -252,9 +252,9 @@ class FixedFile(FlatFile):
     def validate(cls, file_dict: dict) -> bool:
         if not super().validate(file_dict):
             return False
-        if not {'fixed_type', 'fixed_ordinal'}.issubset(file_dict):
+        if not {'variation', 'fixed_type', 'fixed_ordinal'}.issubset(file_dict):
             return False
-        if file_dict['fixed_type'] < 0 or file_dict['fixed_ordinal'] < 0:
+        if file_dict['fixed_type'] < 0 or file_dict['fixed_ordinal'] < 0 or file_dict['variation'] < 0:
             return False
         return True
 

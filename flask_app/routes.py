@@ -8,7 +8,7 @@ from assembly.mac0_generic import LabelReference
 from assembly.mac2_data_macro import macros
 from assembly.seg6_segment import segments
 from db.test_data import TestData
-from db.test_data_elements import Pnr, Tpfdf
+from db.test_data_elements import Pnr, Tpfdf, FixedFile
 from execution.ex5_execute import TpfServer
 from flask_app import tpf1_app
 from flask_app.auth import token_auth, User
@@ -231,6 +231,26 @@ def delete_tpfdf_lrec(test_data_id: str, df_id: str, **kwargs) -> Response:
     if not df:
         return error_response(400, 'Error in deleting Tpfdf lrec')
     return jsonify(df.cascade_to_dict())
+
+
+@tpf1_app.route('/test_data/<string:test_data_id>/input/fixed_file', methods=['PATCH'])
+@token_auth.login_required
+@test_data_required
+def add_fixed_file(test_data_id: str, **kwargs) -> Response:
+    file: FixedFile = kwargs[test_data_id].create_fixed_file(request.get_json())
+    if not file:
+        return error_response(400, 'Error in adding Fixed File')
+    return jsonify(file.cascade_to_dict())
+
+
+@tpf1_app.route('/test_data/<string:test_data_id>/input/fixed_file/<string:file_id>', methods=['DELETE'])
+@token_auth.login_required
+@test_data_required
+def delete_fixed_file(test_data_id: str, file_id: str, **kwargs) -> Response:
+    file: FixedFile = kwargs[test_data_id].delete_fixed_file(file_id)
+    if not file:
+        return error_response(400, 'Error in deleting Fixed File')
+    return jsonify(file.cascade_to_dict())
 
 
 @tpf1_app.route('/test_data/<string:test_data_id>/output/debug', methods=['PATCH'])

@@ -1,5 +1,6 @@
 import unittest
 from base64 import b64encode
+from copy import deepcopy
 
 from assembly.mac2_data_macro import macros
 from config import config
@@ -29,7 +30,6 @@ class EtajTest(unittest.TestCase):
         self.test_data = TestDataUTS()
         # Test data setup
         self.test_data.add_pnr_element(['BTS-B4T0/108/11-FINANCIAL SERVICES'], 'group_plan')
-        self.test_data.add_fields(['WA0POR', 'WA0FNS'], 'WA0AA')
         self.test_data.set_field('WA0POR', DataType('X', input='006F2F').to_bytes())
         self.test_data.set_field('WA0FNS', bytes([macros['WA0AA'].evaluate('#WA0TVL')]))
         self.test_data.add_all_regs()
@@ -37,8 +37,9 @@ class EtajTest(unittest.TestCase):
         self.iy_item = [{'field': 'IY9AON', 'data': b64encode(bytearray([config.ZERO] * 4)).decode()},
                         {'field': 'IY9AGY', 'data': b64encode(bytearray([config.ZERO])).decode()}]
 
-    def _tjr_setup(self, iy_chain_count: int = 0):
+    def _tjr_setup(self, iy_chain_count: int = 0, variation: int = 0):
         fixed_file = FixedFile()
+        fixed_file.variation = variation
         fixed_file.rec_id = DataType('C', input='TJ').value
         fixed_file.macro_name = 'TJ1TJ'
         fixed_file.fixed_type = macros['SYSEQC'].evaluate('#TJRRI')
@@ -55,7 +56,7 @@ class EtajTest(unittest.TestCase):
         pool_file.file_items.append(item)
         item.macro_name = 'IY1IY'
         item.field = 'IY1ATH'
-        item.field_data = self.iy_item
+        item.field_data = deepcopy(self.iy_item)
         item.count_field = 'IY1CTR'
         file_dict = fixed_file.cascade_to_dict()
         del file_dict['id']
@@ -86,6 +87,17 @@ class EtajTest(unittest.TestCase):
         test_data = self.tpf_server.run('TS21', self.test_data)
         self.assertEqual('ETAJ500.1', test_data.output.last_line)
         self.assertIn('0140F1', test_data.output.dumps)
+
+    def test_variation(self):
+        self.iy_item[0]['data'] = b64encode(DataType('X', input='00006F2F').to_bytes()).decode()
+        self._tjr_setup()
+        self.iy_item[1]['data'] = b64encode(bytearray([macros['IY1IY'].evaluate('#IY1LOK')])).decode()
+        self._tjr_setup(variation=1)
+        test_data = self.tpf_server.run('TS21', self.test_data)
+        self.assertEqual('$$ETK4$$.1', test_data.outputs[0].last_line)
+        self.assertEqual(8, test_data.outputs[0].regs['R6'])
+        self.assertEqual('TS21EXIT.1', test_data.outputs[1].last_line)
+        self.assertEqual(0, test_data.outputs[1].regs['R6'])
 
 
 if __name__ == '__main__':

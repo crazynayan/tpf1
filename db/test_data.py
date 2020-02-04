@@ -57,14 +57,18 @@ class TestData(FirestoreDocument):
         core_variation = max(core.variation for core in self.cores) if self.cores else 0
         pnr_variation = max(pnr.variation for pnr in self.pnr) if self.pnr else 0
         df_variation = max(df.variation for df in self.tpfdf) if self.tpfdf else 0
-        for variation in product(range(0, core_variation + 1), range(0, pnr_variation + 1), range(0, df_variation + 1)):
+        file_variation = max(file.variation for file in self.fixed_files) if self.fixed_files else 0
+        for variation in product(range(core_variation + 1), range(pnr_variation + 1), range(df_variation + 1),
+                                 range(file_variation + 1)):
             test_data = deepcopy(self)
             test_data.cores = [core for core in test_data.cores if core.variation == variation[0]]
             test_data.pnr = [pnr for pnr in test_data.pnr if pnr.variation == variation[1]]
             test_data.tpfdf = [df for df in test_data.tpfdf if df.variation == variation[2]]
+            test_data.fixed_files = [file for file in test_data.fixed_files if file.variation == variation[3]]
             test_data.output.variation['core'] = variation[0]
             test_data.output.variation['pnr'] = variation[1]
             test_data.output.variation['tpfdf'] = variation[2]
+            test_data.output.variation['file'] = variation[3]
             yield test_data
         return
 
@@ -317,6 +321,16 @@ class TestData(FirestoreDocument):
         if persistence:
             self.save()
         return fixed_file
+
+    def delete_fixed_file(self, file_id: str) -> Optional[FixedFile]:
+        file: FixedFile = next((file for file in self.fixed_files if file.id == file_id), None)
+        if not file:
+            return None
+        copy_file = deepcopy(file)
+        self.fixed_files.remove(file)
+        self.save()
+        copy_file.delete(cascade=True)
+        return copy_file
 
 
 TestData.init('test_data')
