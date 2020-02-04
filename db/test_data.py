@@ -329,7 +329,7 @@ class TestData(FirestoreDocument):
         copy_file = deepcopy(file)
         self.fixed_files.remove(file)
         self.save()
-        copy_file.delete(cascade=True)
+        file.delete(cascade=True)
         return copy_file
 
 

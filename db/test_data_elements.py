@@ -268,8 +268,6 @@ class PoolFile(FlatFile):
         super().__init__()
         self.index_field: str = str()
         self.index_macro_name: str = str()
-        # self.index_forward_chain_count: int = 0
-        # self.index_item_count: int = 0
 
     def __repr__(self):
         return f"{self.rec_id:04X}:{self.macro_name}:{self.index_field}"

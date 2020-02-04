@@ -129,6 +129,131 @@ components:
           example: 0
           required: true
           minimum: 0
+    FixedFile:
+      type:
+        object
+      properties:
+        id:
+          type: string
+          example: 5xrCCwXKUHGW0RDU7pUi
+          required: true
+        variation:
+          type: integer
+          example: 0
+          required: true
+          minimum: 0
+        macro_name:
+          type: string
+          example: TJ1TJ
+          required: true
+        rec_id:
+          type: integer
+          example: 58321
+          required: true
+          minimum: 0
+        fixed_type:
+          type: integer
+          example: 94
+          required: type
+          minimum: 0
+        fixed_ordinal:
+          type: integer
+          example: 94
+          required: type
+          minimum: 0
+        forward_chain_count:
+          type: integer
+          example: 0
+        forward_chain_label:
+          type: string
+          example: ""
+        field_data:
+          type: array
+          items:
+            type: object
+          example: []
+        file_items:
+          type: array
+          items:
+            type: object
+          example: []
+        pool_files:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                example: axrCCwXKUabc0RDU7pUi
+                required: true
+              rec_id:
+                type: integer
+                minimum: 0
+                required: true
+                example: 51688
+              macro_name:
+                type: string
+                example: IY1IY
+                required: true
+              index_field:
+                type: string
+                example: TJ1IY1
+                required: true
+              index_macro_name:
+                type: string
+                example: TJ1TJ
+                required: true
+              forward_chain_count:
+                type: integer
+                example: 0
+              forward_chain_label:
+                type: string
+                example: IY1FCH
+              field_data:
+                type: array
+                items:
+                  type: object
+                example: []
+              pool_files:
+                type: array
+                items:
+                  type: object
+                example: []
+              file_items:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: q1rCCwXKUpqr0RDU7pUi
+                      required: true
+                    macro_name:
+                      type: string
+                      example: IY1IY
+                      required: true
+                    field:
+                      type: string
+                      example: IY1ATH
+                      required: true
+                    field_data:
+                      type: array
+                      required: true
+                      items:
+                        type: object
+                        properties:
+                          field:
+                            type: string
+                            example: IY9AON
+                            required: true
+                          data:
+                            type: string
+                            format: byte
+                            required: true
+                            example: AYbAA==
+                    count_field:
+                      type: string
+                      example: IY1CTR
     Error404:
       type:
         object
@@ -1176,6 +1301,205 @@ paths:
                   message:
                     type: string
                     example: "Error in deleting Tpfdf lrec"
+        '404':
+          description: Test Data ID is not present in the DB
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error404'
+
+  /test_data/{test_data_id}/input/fixed_files:
+    patch:
+      summary: Add a Fixed file and multiple pool files linked to it
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: test_data_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: F1hI8xpARRIKbLgSWIUL
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                variation:
+                  type: integer
+                  example: 0
+                  required: true
+                  minimum: 0
+                macro_name:
+                  type: string
+                  example: TJ1TJ
+                  required: true
+                rec_id:
+                  type: integer
+                  example: 58321
+                  required: true
+                  minimum: 0
+                fixed_type:
+                  type: integer
+                  example: 94
+                  required: type
+                  minimum: 0
+                fixed_ordinal:
+                  type: integer
+                  example: 94
+                  required: type
+                  minimum: 0
+                forward_chain_count:
+                  type: integer
+                  example: 0
+                forward_chain_label:
+                  type: string
+                  example: ""
+                field_data:
+                  type: array
+                  items:
+                    type: object
+                  example: []
+                file_items:
+                  type: array
+                  items:
+                    type: object
+                  example: []
+                pool_files:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      rec_id:
+                        type: integer
+                        minimum: 0
+                        required: true
+                        example: 51688
+                      macro_name:
+                        type: string
+                        example: IY1IY
+                        required: true
+                      index_field:
+                        type: string
+                        example: TJ1IY1
+                        required: true
+                      index_macro_name:
+                        type: string
+                        example: TJ1TJ
+                        required: true
+                      forward_chain_count:
+                        type: integer
+                        example: 0
+                      forward_chain_label:
+                        type: string
+                        example: IY1FCH
+                      field_data:
+                        type: array
+                        items:
+                          type: object
+                        example: []
+                      pool_files:
+                        type: array
+                        items:
+                          type: object
+                        example: []
+                      file_items:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            macro_name:
+                              type: string
+                              example: IY1IY
+                              required: true
+                            field:
+                              type: string
+                              example: IY1ATH
+                              required: true
+                            field_data:
+                              type: array
+                              required: true
+                              items:
+                                type: object
+                                properties:
+                                  field:
+                                    type: string
+                                    example: IY9AON
+                                    required: true
+                                  data:
+                                    type: string
+                                    format: byte
+                                    required: true
+                                    example: AYbAA==
+                            count_field:
+                              type: string
+                              example: IY1CTR
+      responses:
+        '200':
+          description: Fixed File added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FixedFile'
+        '400':
+          description: Error in adding fixed file
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Bad Request
+                  message:
+                    type: string
+                    example: "Error in adding Fixed File"
+        '404':
+          description: Test Data ID is not present in the DB
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error404'
+
+  /test_data/{test_data_id}/input/fixed_files/{file_id}:
+    delete:
+      summary: Delete a Fixed File
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: test_data_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: F1hI8xpARRIKbLgSWIUL
+        - name: file_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 5xrCCwXKUHGW0RDU7pUi
+      responses:
+        '200':
+          description: Fixed File deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FixedFile'
+        '400':
+          description: Error in deleting Fixed File
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Bad Request
+                  message:
+                    type: string
+                    example: "Error in deleting Fixed File"
         '404':
           description: Test Data ID is not present in the DB
           content:

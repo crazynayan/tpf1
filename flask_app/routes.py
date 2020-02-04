@@ -233,7 +233,7 @@ def delete_tpfdf_lrec(test_data_id: str, df_id: str, **kwargs) -> Response:
     return jsonify(df.cascade_to_dict())
 
 
-@tpf1_app.route('/test_data/<string:test_data_id>/input/fixed_file', methods=['PATCH'])
+@tpf1_app.route('/test_data/<string:test_data_id>/input/fixed_files', methods=['PATCH'])
 @token_auth.login_required
 @test_data_required
 def add_fixed_file(test_data_id: str, **kwargs) -> Response:
@@ -243,7 +243,7 @@ def add_fixed_file(test_data_id: str, **kwargs) -> Response:
     return jsonify(file.cascade_to_dict())
 
 
-@tpf1_app.route('/test_data/<string:test_data_id>/input/fixed_file/<string:file_id>', methods=['DELETE'])
+@tpf1_app.route('/test_data/<string:test_data_id>/input/fixed_files/<string:file_id>', methods=['DELETE'])
 @token_auth.login_required
 @test_data_required
 def delete_fixed_file(test_data_id: str, file_id: str, **kwargs) -> Response:
