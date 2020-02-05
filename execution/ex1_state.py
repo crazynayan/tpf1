@@ -196,6 +196,7 @@ class State:
                 item_list = list()
                 count_field = None
                 item_field = None
+                macros[pool_file.macro_name].load()
                 for item in pool_file.file_items:
                     if not macros[pool_file.macro_name].check(item.field):
                         raise FileItemSpecificationError

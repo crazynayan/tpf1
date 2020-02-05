@@ -10,7 +10,7 @@ class ExecutionError(TpfAnalyzerError):
     pass
 
 
-class TestDataError(TpfAnalyzerError):
+class TestDataError(ExecutionError):
     pass
 
 
