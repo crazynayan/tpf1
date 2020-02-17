@@ -1,5 +1,5 @@
 import os
-from typing import Dict, List, Tuple, Set, Optional
+from typing import Dict, List, Tuple, Optional
 
 from assembly.mac0_generic import LabelReference
 from assembly.mac1_implementation import DataMacroImplementation
@@ -72,21 +72,25 @@ class _DataMacroCollection:
     def __init__(self):
         self.macros: Dict[str, DataMacro] = dict()
         # Load default macros
-        default_macros: Dict[str, LabelReference] = dict()
-        non_default_macros: Set[Tuple[str, str]] = set()
+        default_macros_dict: Dict[str, str] = dict()
+        non_default_macros_dict: Dict[str, str] = dict()
         for file_name in os.listdir(self.MAC_FOLDER_NAME):
             if len(file_name) < 6 or file_name[-4:].lower() not in self.MAC_EXT:
                 continue
             macro_name = file_name[:-4].upper()
             file_name = os.path.join(self.MAC_FOLDER_NAME, file_name)
-            if macro_name not in self.DEFAULT_MACROS:
-                non_default_macros.add((macro_name, file_name))
-                continue
-            self.macros[macro_name] = DataMacro(macro_name, file_name, default_macros)
+            if macro_name in self.DEFAULT_MACROS:
+                default_macros_dict[macro_name] = file_name
+            else:
+                non_default_macros_dict[macro_name] = file_name
+        # Initialize default macros in hierarchical order
+        default_macros: Dict[str, LabelReference] = dict()
+        for macro_name in self.DEFAULT_MACROS:
+            self.macros[macro_name] = DataMacro(macro_name, default_macros_dict[macro_name], default_macros)
             self.macros[macro_name].load()
             default_macros = {**default_macros, **self.macros[macro_name].all_labels}
         # Initialize non default macros
-        for macro_name, file_name in non_default_macros:
+        for macro_name, file_name in non_default_macros_dict.items():
             self.macros[macro_name] = DataMacro(macro_name, file_name, default_macros)
         self.macros['GLOBAL'].load()
         self.macros['WA0AA'].load()

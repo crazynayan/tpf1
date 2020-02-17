@@ -41,15 +41,15 @@ class EtajTest(unittest.TestCase):
         fixed_file = FixedFile()
         fixed_file.variation = variation
         fixed_file.rec_id = DataType('C', input='TJ').value
-        fixed_file.macro_name = 'TJ1TJ'
+        fixed_file.macro_name = 'TJ0TJ'
         fixed_file.fixed_type = macros['SYSEQC'].evaluate('#TJRRI')
         fixed_file.fixed_ordinal = 0x17F
         pool_file = PoolFile()
         fixed_file.pool_files.append(pool_file)
         pool_file.macro_name = 'IY1IY'
         pool_file.rec_id = DataType('C', input='IY').value
-        pool_file.index_macro_name = 'TJ1TJ'
-        pool_file.index_field = 'TJ1IY1'
+        pool_file.index_macro_name = 'TJ0TJ'
+        pool_file.index_field = 'TJ0ATH'
         pool_file.forward_chain_label = 'IY1FCH'
         pool_file.forward_chain_count = iy_chain_count
         item = FileItem()
