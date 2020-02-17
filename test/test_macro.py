@@ -4,7 +4,7 @@ from assembly.mac2_data_macro import DataMacro, macros
 
 
 class MacroTest(unittest.TestCase):
-    NUMBER_OF_FILES = 29
+    NUMBER_OF_FILES = 36
 
     def test_files(self):
         self.assertIn('EB0EB', macros)
@@ -241,6 +241,27 @@ class MacroTest(unittest.TestCase):
 
     def test_S40S4(self):
         self._common_checks('S40S4')
+
+    def test_TJ0TJ(self):
+        self._common_checks('TJ0TJ')
+
+    def test_ADVWK(self):
+        self._common_checks('ADVWK')
+
+    def test_PRBWRK(self):
+        self._common_checks('PRBWRK')
+
+    def test_TI011W(self):
+        self._common_checks('TI011W')
+
+    def test_WY0WY(self):
+        self._common_checks('WY0WY')
+
+    def test_PDHWK(self):
+        self._common_checks('PDHWK')
+
+    def test_TR1GWK(self):
+        self._common_checks('TR1GWK')
 
 
 if __name__ == '__main__':

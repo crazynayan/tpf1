@@ -1,7 +1,7 @@
 import re
 from typing import Optional, Dict, Tuple, List
 
-from utils.data_type import DataType
+from utils.data_type import DataType, Register
 from utils.errors import NotFoundInSymbolTableError
 
 
@@ -79,6 +79,7 @@ class MacroGeneric:
     def get_value(self, operand: str) -> int:
         if operand.isdigit():
             return int(operand)
+        operand = operand.upper()
         data_list = re.findall(r"[CXHFDBZPAY]D?'[^']+'", operand)
         value_list = list()
         if data_list:
@@ -104,6 +105,10 @@ class MacroGeneric:
                     value = value_list.pop()
                 elif expression == '*':
                     value = self._location_counter
+                elif expression.isdigit():
+                    value = expression
+                elif Register(expression).is_valid():
+                    value = Register(expression).value
                 else:
                     value = self.evaluate(expression)
                 eval_list.append((position, str(value)))

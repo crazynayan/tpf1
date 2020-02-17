@@ -288,3 +288,7 @@ class Register:
 
     def is_valid(self) -> bool:
         return self.reg != config.REG_INVALID
+
+    @property
+    def value(self) -> int:
+        return config.REGISTERS.index(self.reg)

@@ -67,7 +67,7 @@ class DataMacro(DataMacroImplementation):
 class _DataMacroCollection:
     MAC_EXT = {'.mac', '.txt'}
     MAC_FOLDER_NAME = os.path.join(config.ROOT_DIR, 'macro')
-    DEFAULT_MACROS = {'AASEQ', 'SYSEQ', 'SYSEQC'}
+    DEFAULT_MACROS = ('AASEQ', 'SYSEQ', 'SYSEQC', 'EB0EB')
 
     def __init__(self):
         self.macros: Dict[str, DataMacro] = dict()
@@ -82,13 +82,12 @@ class _DataMacroCollection:
             if macro_name not in self.DEFAULT_MACROS:
                 non_default_macros.add((macro_name, file_name))
                 continue
-            self.macros[macro_name] = DataMacro(macro_name, file_name, dict())
+            self.macros[macro_name] = DataMacro(macro_name, file_name, default_macros)
             self.macros[macro_name].load()
             default_macros = {**default_macros, **self.macros[macro_name].all_labels}
         # Initialize non default macros
         for macro_name, file_name in non_default_macros:
             self.macros[macro_name] = DataMacro(macro_name, file_name, default_macros)
-        self.macros['EB0EB'].load()
         self.macros['GLOBAL'].load()
         self.macros['WA0AA'].load()
         self.macros['MI0MI'].load()
