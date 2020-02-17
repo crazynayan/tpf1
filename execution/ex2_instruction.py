@@ -2,10 +2,10 @@ from copy import deepcopy
 
 from assembly.seg3_ins_type import RegisterRegister, RegisterFieldIndex, RegisterData, RegisterDataField, \
     RegisterRegisterField, FieldLenField, FieldData, BranchCondition, RegisterBranch, BranchConditionRegister, \
-    FieldBits, FieldLenFieldLen
+    FieldBits, FieldLenFieldLen, FieldSingle
 from config import config
 from execution.ex1_state import State
-from utils.data_type import DataType, Register
+from utils.data_type import DataType, Register, PDataType
 from utils.errors import PackExecutionError, BctExecutionError, ExExecutionError
 
 
@@ -459,7 +459,27 @@ class LogicalUsefulConversion(State):
 
 
 class DecimalArithmeticComplex(State):
-    pass
+
+    def zap(self, node: FieldLenFieldLen) -> str:
+        source_address = self.regs.get_address(node.field_len2.base, node.field_len2.dsp)
+        target_address = self.regs.get_address(node.field_len1.base, node.field_len1.dsp)
+        packed_bytes = self.vm.get_bytes(source_address, node.field_len2.length + 1)
+        value = DataType('P', bytes=packed_bytes).value
+        self.vm.set_bytes(DataType('P', input=str(value)).to_bytes(node.field_len1.length + 1), target_address)
+        return node.fall_down
+
+    def tp(self, node: FieldSingle) -> str:
+        packed_type = PDataType()
+        address = self.regs.get_address(node.field.base, node.field.dsp)
+        packed_type.bytes = self.vm.get_bytes(address, node.field.length + 1)
+        self.cc = 0
+        if not packed_type.is_packed_digit():
+            self.cc += 2
+        try:
+            _ = packed_type.value
+        except PackExecutionError:
+            self.cc += 1
+        return node.fall_down
 
 
 class Instruction(LoadStore, ArithmeticShiftAlgebraic, MoveLogicControl, CompareLogical, LogicalUsefulConversion,

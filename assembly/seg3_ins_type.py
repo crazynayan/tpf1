@@ -84,9 +84,9 @@ class FieldData(InstructionGeneric):
 class FieldSingle(InstructionGeneric):
     MAX_LEN = 16
 
-    def __init__(self, line: Line, field: FieldBaseDsp):
+    def __init__(self, line: Line, field: FieldLen):
         super().__init__(line)
-        self.field: FieldBaseDsp = field
+        self.field: FieldLen = field
 
     def __repr__(self) -> str:
         return f"{super().__repr__()}:{self.field}"

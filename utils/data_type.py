@@ -1,6 +1,7 @@
 from typing import Optional, Dict, Callable
 
 from config import config
+from utils.errors import PackExecutionError
 
 
 class DataTypeGeneric:
@@ -127,9 +128,24 @@ class PDataType(DataTypeGeneric):
             return bytearray(int(packed_data, 16).to_bytes(self.length, 'big', signed=False)[(self.length - length):])
 
     def from_bytes(self) -> int:
-        sign = '-' if self.bytes[-1] & 0x0F == 0x0D else '+'
+        last_digit = self.bytes[-1] & 0x0F
+        if last_digit <= 0x9:
+            raise PackExecutionError
+        if not self.is_packed_digit():
+            raise PackExecutionError
+        sign = '-' if last_digit in (0xB, 0xD) else '+'
         number = int.from_bytes(self.bytes, 'big', signed=False)
         return int(f"{sign}{number >> 4:0x}")
+
+    def is_packed_digit(self) -> bool:
+        if not self.bytes:
+            return False
+        if self.bytes[-1] & 0xF0 >> 8 > 0x9:
+            return False
+        for byte in self.bytes[:-1]:
+            if byte & 0xF0 >> 8 > 0x9 or byte & 0x0F > 0x9:
+                return False
+        return True
 
 
 class ZDataType(DataTypeGeneric):

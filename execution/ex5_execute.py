@@ -145,12 +145,12 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex['UNPK'] = self.unpack
 
         # S08 - Decimal Arithmetic & Complex - Not in ETA5
-        # ZAP
+        self._ex['ZAP'] = self.zap
         # AP
         # SP
         # MP, DP, SRP
         # CP
-        # TP
+        self._ex['TP'] = self.tp
         # TR
         # TRT
         # ED, EDMK
