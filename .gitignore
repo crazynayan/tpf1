@@ -12,5 +12,6 @@ asm/sub1.asm
 asm/wgu4.asm
 asm/saaf.asm
 asm/wgul.asm
+asm/wpgb.asm
 google-cloud.json
 google-cloud-tokyo.json
