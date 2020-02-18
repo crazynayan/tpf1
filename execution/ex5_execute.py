@@ -144,11 +144,13 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex['CVD'] = self.convert_decimal
         self._ex['UNPK'] = self.unpack
 
-        # S08 - Decimal Arithmetic & Complex - Not in ETA5
+        # S08 - Decimal Arithmetic & Complex
         self._ex['ZAP'] = self.zap
-        # AP
-        # SP
-        # MP, DP, SRP
+        self._ex['AP'] = self.ap
+        self._ex['SP'] = self.sp
+        self._ex['MP'] = self.mp
+        self._ex['DP'] = self.dp
+        # SRP
         # CP
         self._ex['TP'] = self.tp
         # TR

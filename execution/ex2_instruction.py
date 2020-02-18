@@ -463,8 +463,7 @@ class DecimalArithmeticComplex(State):
     def zap(self, node: FieldLenFieldLen) -> str:
         source_address = self.regs.get_address(node.field_len2.base, node.field_len2.dsp)
         target_address = self.regs.get_address(node.field_len1.base, node.field_len1.dsp)
-        packed_bytes = self.vm.get_bytes(source_address, node.field_len2.length + 1)
-        value = DataType('P', bytes=packed_bytes).value
+        value = DataType('P', bytes=self.vm.get_bytes(source_address, node.field_len2.length + 1)).value
         self.vm.set_bytes(DataType('P', input=str(value)).to_bytes(node.field_len1.length + 1), target_address,
                           node.field_len1.length + 1)
         self.set_number_cc(value)
@@ -479,6 +478,53 @@ class DecimalArithmeticComplex(State):
             self.cc += 2
         if not packed_type.is_sign_valid():
             self.cc += 1
+        return node.fall_down
+
+    def ap(self, node: FieldLenFieldLen) -> str:
+        source_address = self.regs.get_address(node.field_len2.base, node.field_len2.dsp)
+        target_address = self.regs.get_address(node.field_len1.base, node.field_len1.dsp)
+        value = DataType('P', bytes=self.vm.get_bytes(target_address, node.field_len1.length + 1)).value
+        value += DataType('P', bytes=self.vm.get_bytes(source_address, node.field_len2.length + 1)).value
+        self.vm.set_bytes(DataType('P', input=str(value)).to_bytes(node.field_len1.length + 1), target_address,
+                          node.field_len1.length + 1)
+        self.set_number_cc(value)
+        return node.fall_down
+
+    def sp(self, node: FieldLenFieldLen) -> str:
+        source_address = self.regs.get_address(node.field_len2.base, node.field_len2.dsp)
+        target_address = self.regs.get_address(node.field_len1.base, node.field_len1.dsp)
+        value = DataType('P', bytes=self.vm.get_bytes(target_address, node.field_len1.length + 1)).value
+        value -= DataType('P', bytes=self.vm.get_bytes(source_address, node.field_len2.length + 1)).value
+        packed_bytes = DataType('P', input=str(value)).to_bytes(node.field_len1.length + 1)
+        self.vm.set_bytes(packed_bytes, target_address, node.field_len1.length + 1)
+        self.set_number_cc(value)
+        return node.fall_down
+
+    def mp(self, node: FieldLenFieldLen) -> str:
+        if node.field_len2.length + 1 > 8:
+            raise PackExecutionError
+        source_address = self.regs.get_address(node.field_len2.base, node.field_len2.dsp)
+        target_address = self.regs.get_address(node.field_len1.base, node.field_len1.dsp)
+        value = DataType('P', bytes=self.vm.get_bytes(target_address, node.field_len1.length + 1)).value
+        value *= DataType('P', bytes=self.vm.get_bytes(source_address, node.field_len2.length + 1)).value
+        packed_bytes = DataType('P', input=str(value)).to_bytes(node.field_len1.length + 1)
+        self.vm.set_bytes(packed_bytes, target_address, node.field_len1.length + 1)
+        return node.fall_down
+
+    def dp(self, node: FieldLenFieldLen) -> str:
+        if node.field_len2.length + 1 > 8:
+            raise PackExecutionError
+        source_address = self.regs.get_address(node.field_len2.base, node.field_len2.dsp)
+        target_address = self.regs.get_address(node.field_len1.base, node.field_len1.dsp)
+        dividend = DataType('P', bytes=self.vm.get_bytes(target_address, node.field_len1.length + 1)).value
+        divisor = DataType('P', bytes=self.vm.get_bytes(source_address, node.field_len2.length + 1)).value
+        quotient = int(dividend // divisor)
+        remainder = dividend % divisor
+        remainder_len = node.field_len2.length + 1
+        quotient_len = node.field_len1.length + 1 - remainder_len
+        self.vm.set_bytes(DataType('P', input=str(quotient)).to_bytes(quotient_len), target_address, quotient_len)
+        self.vm.set_bytes(DataType('P', input=str(remainder)).to_bytes(remainder_len), target_address + quotient_len,
+                          remainder_len)
         return node.fall_down
 
 
