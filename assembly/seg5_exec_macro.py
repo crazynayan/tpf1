@@ -1,6 +1,7 @@
 import re
 from typing import List, Tuple, Union, Optional
 
+from assembly.mac2_data_macro import macros
 from assembly.seg2_ins_operand import FieldBaseDsp
 from assembly.seg3_ins_type import InstructionGeneric, RegisterData
 from assembly.seg4_ins_implementation import InstructionImplementation
@@ -149,6 +150,8 @@ class RealtimeMacroImplementation(InstructionImplementation):
 
     def dbred(self, line: Line) -> KeyValue:
         dbred_key = self.key_value(line)
+        if dbred_key.get_value('REF') in macros and dbred_key.get_value('REG'):
+            self.load_macro(dbred_key.get_value('REF'), base=dbred_key.get_value('REG'))
         for key_number in range(2, 7):
             key_n = f"KEY{key_number}"
             if dbred_key.get_value(key_n) is None:
