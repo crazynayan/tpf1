@@ -128,24 +128,18 @@ class PDataType(DataTypeGeneric):
             return bytearray(int(packed_data, 16).to_bytes(self.length, 'big', signed=False)[(self.length - length):])
 
     def from_bytes(self) -> int:
-        last_digit = self.bytes[-1] & 0x0F
-        if last_digit <= 0x9:
+        if not self.is_sign_valid() or not self.is_packed_digit():
             raise PackExecutionError
-        if not self.is_packed_digit():
-            raise PackExecutionError
-        sign = '-' if last_digit in (0xB, 0xD) else '+'
-        number = int.from_bytes(self.bytes, 'big', signed=False)
-        return int(f"{sign}{number >> 4:0x}")
+        sign = '-' if self.bytes[-1] & 0x0F in (0xB, 0xD) else '+'
+        return int(f"{sign}{self.bytes.hex()[:-1]}")
 
     def is_packed_digit(self) -> bool:
-        if not self.bytes:
-            return False
         if self.bytes[-1] & 0xF0 >> 8 > 0x9:
             return False
-        for byte in self.bytes[:-1]:
-            if byte & 0xF0 >> 8 > 0x9 or byte & 0x0F > 0x9:
-                return False
-        return True
+        return all(byte & 0xF0 >> 8 <= 0x9 and byte & 0x0F <= 0x9 for byte in self.bytes[:-1])
+
+    def is_sign_valid(self) -> bool:
+        return self.bytes[-1] & 0x0F > 0x9
 
 
 class ZDataType(DataTypeGeneric):

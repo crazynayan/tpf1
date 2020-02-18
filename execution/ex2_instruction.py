@@ -465,7 +465,9 @@ class DecimalArithmeticComplex(State):
         target_address = self.regs.get_address(node.field_len1.base, node.field_len1.dsp)
         packed_bytes = self.vm.get_bytes(source_address, node.field_len2.length + 1)
         value = DataType('P', bytes=packed_bytes).value
-        self.vm.set_bytes(DataType('P', input=str(value)).to_bytes(node.field_len1.length + 1), target_address)
+        self.vm.set_bytes(DataType('P', input=str(value)).to_bytes(node.field_len1.length + 1), target_address,
+                          node.field_len1.length + 1)
+        self.set_number_cc(value)
         return node.fall_down
 
     def tp(self, node: FieldSingle) -> str:
@@ -475,9 +477,7 @@ class DecimalArithmeticComplex(State):
         self.cc = 0
         if not packed_type.is_packed_digit():
             self.cc += 2
-        try:
-            _ = packed_type.value
-        except PackExecutionError:
+        if not packed_type.is_sign_valid():
             self.cc += 1
         return node.fall_down
 
