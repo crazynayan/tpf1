@@ -13,5 +13,7 @@ asm/wgu4.asm
 asm/saaf.asm
 asm/wgul.asm
 asm/wpgb.asm
+asm/savq.asm
+asm/saa0.asm
 google-cloud.json
 google-cloud-tokyo.json

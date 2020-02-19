@@ -527,6 +527,15 @@ class DecimalArithmeticComplex(State):
                           remainder_len)
         return node.fall_down
 
+    def tr(self, node: FieldLenField) -> str:
+        table_address = self.regs.get_address(node.field.base, node.field.dsp)
+        address = self.regs.get_address(node.field_len.base, node.field_len.dsp)
+        for index in range(node.field_len.length + 1):
+            dsp = self.vm.get_byte(address + index)
+            byte = self.vm.get_byte(table_address + dsp)
+            self.vm.set_byte(byte, address + index)
+        return node.fall_down
+
 
 class Instruction(LoadStore, ArithmeticShiftAlgebraic, MoveLogicControl, CompareLogical, LogicalUsefulConversion,
                   DecimalArithmeticComplex):
