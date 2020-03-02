@@ -2,7 +2,7 @@ cachetools==4.0.0
 certifi==2019.11.28
 chardet==3.0.4
 Click==7.0
-firestore-ci==2019.12.22
+firestore-ci==2020.3.2
 Flask==1.1.1
 Flask-Cors==3.0.8
 Flask-HTTPAuth==3.3.0
