@@ -16,6 +16,7 @@ class Core(FirestoreDocument):
         self.base_reg: str = str()
         self.variation: int = 0
         self.field_data: List[dict] = list()
+        self.variation_name: str = str()
 
     def __repr__(self):
         return self.macro_name
@@ -31,10 +32,6 @@ class Core(FirestoreDocument):
         macros[macro_name].load()
         if not macros[macro_name].check(field_dict['field']):
             return False
-        # if 'length' in field_dict and not isinstance(field_dict['length'], int):
-        #     return False
-        # if 'data' in field_dict and not (isinstance(field_dict['data'], str) and field_dict['data']):
-        #     return False
         return True
 
     def create_field_byte(self, field_dict: dict, persistence: bool) -> dict:
@@ -73,6 +70,7 @@ class Pnr(FirestoreDocument):
         self.data: str = str()
         self.field_data: List[dict] = list()
         self.variation: int = 0
+        self.variation_name: str = str()
 
     def __repr__(self):
         return f"{self.locator}:{self.variation}:{self.key}:{self.data}:{len(self.field_data)}"
@@ -89,6 +87,7 @@ class Tpfdf(FirestoreDocument):
         self.key: str = str()
         self.field_data: list = list()
         self.variation: int = 0
+        self.variation_name: str = str()
 
 
 Tpfdf.init('tpfdf')
@@ -105,7 +104,8 @@ class Output(FirestoreDocument):
         self.messages: List[str] = list()
         self.last_line: str = str()
         self.debug: List[str] = list()
-        self.variation: Dict[str, int] = {'core': 0, 'pnr': 0, 'tpfdf': 0}
+        self.variation: Dict[str, int] = {'core': 0, 'pnr': 0, 'tpfdf': 0, 'file': 0}
+        self.variation_name: Dict[str, str] = {'core': str(), 'pnr': str(), 'tpfdf': str(), 'file': str()}
 
     def create_field_byte(self, macro_name: str, field_dict: dict, persistence=True) -> dict:
         if not Core.validate_field_dict(macro_name, field_dict):
@@ -244,6 +244,7 @@ class FixedFile(FlatFile):
         self.fixed_type: int = 0
         self.fixed_ordinal: int = 0
         self.variation: int = 0
+        self.variation_name: str = str()
 
     def __repr__(self):
         return f"{self.rec_id:04X}:{self.macro_name}:{self.fixed_type}:{self.fixed_ordinal}"

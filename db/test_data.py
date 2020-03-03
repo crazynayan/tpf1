@@ -69,6 +69,14 @@ class TestData(FirestoreDocument):
             test_data.output.variation['pnr'] = variation[1]
             test_data.output.variation['tpfdf'] = variation[2]
             test_data.output.variation['file'] = variation[3]
+            if test_data.cores:
+                test_data.output.variation_name['core'] = test_data.cores[0].variation_name
+            if test_data.pnr:
+                test_data.output.variation_name['pnr'] = test_data.pnr[0].variation_name
+            if test_data.tpfdf:
+                test_data.output.variation_name['tpfdf'] = test_data.tpfdf[0].variation_name
+            if test_data.fixed_files:
+                test_data.output.variation_name['file'] = test_data.fixed_files[0].variation_name
             yield test_data
         return
 
