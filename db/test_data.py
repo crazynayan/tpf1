@@ -5,7 +5,6 @@ from typing import Dict, List, Optional, Union
 
 from firestore_ci import FirestoreDocument
 
-import db.pnr as db_pnr
 from assembly.mac2_data_macro import macros, DataMacro
 from assembly.seg6_segment import segments
 from config import config
@@ -50,7 +49,8 @@ class TestData(FirestoreDocument):
 
     def set_field(self, field_name: str, data: Union[bytearray, bytes], variation: int = 0) -> None:
         macro_name = DataMacro.get_label_reference(field_name).name
-        field_dict = {'field': field_name, 'data': b64encode(data).decode(), 'variation': variation}
+        field_dict = {'field': field_name, 'data': b64encode(data).decode(), 'variation': variation,
+                      'variation_name': str()}
         self.create_field_byte(macro_name, field_dict, persistence=False)
 
     def yield_variation(self):
@@ -90,6 +90,20 @@ class TestData(FirestoreDocument):
         if header['seg_name'] not in segments or not header['name']:
             return False
         if len(header) != 2:
+            return False
+        return True
+
+    def _validate_and_update_variation(self, item_dict: dict, input_type: str) -> bool:
+        variation_types = {'core': self.cores, 'pnr': self.pnr, 'tpfdf': self.tpfdf, 'file': self.fixed_files}
+        if input_type not in variation_types:
+            return False
+        max_variation = max(item.variation for item in variation_types[input_type]) \
+            if variation_types[input_type] else -1
+        if item_dict['variation'] in range(max_variation + 1):
+            item_dict['variation_name'] = next(item.variation_name for item in variation_types[input_type]
+                                               if item.variation == item_dict['variation'])
+            return True
+        if item_dict['variation'] != max_variation + 1:
             return False
         return True
 
@@ -142,16 +156,17 @@ class TestData(FirestoreDocument):
     def create_field_byte(self, macro_name, field_dict, persistence=True) -> dict:
         if not Core.validate_field_dict(macro_name, field_dict):
             return dict()
-        if set(field_dict) != {'field', 'data', 'variation'}:
+        if set(field_dict) != {'field', 'data', 'variation', 'variation_name'}:
             return dict()
         if not isinstance(field_dict['data'], str) or not field_dict['data']:
             return dict()
-        max_variation = max(core.variation for core in self.cores) + 1 if self.cores else 0
-        if field_dict['variation'] not in range(max_variation + 1):
+        if not self._validate_and_update_variation(field_dict, 'core'):
             return dict()
-        core_dict = {'macro_name': macro_name, 'variation': field_dict['variation']}
+        core_dict = {'macro_name': macro_name, 'variation': field_dict['variation'],
+                     'variation_name': field_dict['variation_name']}
         field_dict = field_dict.copy()
         del field_dict['variation']
+        del field_dict['variation_name']
         core = next((core for core in self.cores if core.macro_name == core_dict['macro_name'] and
                      core.variation == core_dict['variation']), None)
         if not core:
@@ -198,17 +213,9 @@ class TestData(FirestoreDocument):
         return True
 
     def create_pnr_element(self, pnr_dict: dict, persistence: bool = True) -> Optional[Pnr]:
-        if not isinstance(pnr_dict, dict) or set(pnr_dict) != {'key', 'locator', 'data', 'variation'}:
+        if not Pnr.validate(pnr_dict):
             return None
-        if not (isinstance(pnr_dict['key'], str) and isinstance(pnr_dict['locator'], str) and
-                isinstance(pnr_dict['data'], str) and isinstance(pnr_dict['variation'], int)):
-            return None
-        if db_pnr.Pnr.get_attribute_by_name(pnr_dict['key']) is None:
-            return None
-        if pnr_dict['locator'] and len(pnr_dict['locator']) != 6:
-            return None
-        max_variation = max(pnr.variation for pnr in self.pnr) + 1 if self.pnr else 0
-        if pnr_dict['variation'] not in range(max_variation + 1):
+        if not self._validate_and_update_variation(pnr_dict, 'pnr'):
             return None
         pnr_dict['field_data'] = list()
         pnr_data = pnr_dict['data'].split(',')
@@ -263,7 +270,7 @@ class TestData(FirestoreDocument):
         return pnr
 
     def create_tpfdf_lrec(self, df_dict: dict, persistence=True) -> Optional[Tpfdf]:
-        if set(df_dict) != {'key', 'field_data', 'macro_name', 'variation'}:
+        if set(df_dict) != {'key', 'field_data', 'macro_name', 'variation', 'variation_name'}:
             return None
         if not isinstance(df_dict['key'], str) or len(df_dict['key']) != 2 or not df_dict['key'].isalnum():
             return None
@@ -273,8 +280,7 @@ class TestData(FirestoreDocument):
         df_macro.load()
         if not isinstance(df_dict['field_data'], dict) or not df_dict['field_data']:
             return None
-        max_variation = max(df.variation for df in self.tpfdf) + 1 if self.tpfdf else 0
-        if df_dict['variation'] not in range(max_variation + 1):
+        if not self._validate_and_update_variation(df_dict, 'tpfdf'):
             return None
         for field, value in df_dict['field_data'].items():
             if not df_macro.check(field):
@@ -308,8 +314,7 @@ class TestData(FirestoreDocument):
     def create_fixed_file(self, file_dict: dict, persistence: bool = True) -> Optional[FixedFile]:
         if not FixedFile.validate(file_dict):
             return None
-        max_variation = max(file.variation for file in self.fixed_files) + 1 if self.fixed_files else 0
-        if file_dict['variation'] not in range(max_variation + 1):
+        if not self._validate_and_update_variation(file_dict, 'file'):
             return None
         if 'pool_files' in file_dict:
             if not all(file_dict['macro_name'] == pool_file['index_macro_name']

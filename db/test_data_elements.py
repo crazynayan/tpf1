@@ -2,6 +2,7 @@ from typing import List, Dict, Union
 
 from firestore_ci import FirestoreDocument
 
+import db.pnr as db_pnr
 from assembly.mac2_data_macro import macros
 from assembly.seg6_segment import segments
 from config import config
@@ -74,6 +75,23 @@ class Pnr(FirestoreDocument):
 
     def __repr__(self):
         return f"{self.locator}:{self.variation}:{self.key}:{self.data}:{len(self.field_data)}"
+
+    @classmethod
+    def validate(cls, pnr_dict: dict) -> bool:
+        if not isinstance(pnr_dict, dict) or not pnr_dict:
+            return False
+        template = cls().__dict__
+        if not set(pnr_dict).issubset(template):
+            return False
+        if not all(isinstance(value, type(template[field])) for field, value in pnr_dict.items()):
+            return False
+        if not {'locator', 'key', 'variation', 'variation_name'}.issubset(pnr_dict):
+            return False
+        if pnr_dict['locator'] and len(pnr_dict['locator']) != 6:
+            return False
+        if db_pnr.Pnr.get_attribute_by_name(pnr_dict['key']) is None:
+            return False
+        return True
 
 
 Pnr.init('pnr')

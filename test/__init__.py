@@ -32,7 +32,8 @@ class TestDataUTS(TestData):
         return
 
     def add_pnr_element(self, data_list: List[str], key: str, locator: str = None, variation: int = 0) -> Pnr:
-        pnr_dict = {'key': key, 'data': ','.join(data_list), 'variation': variation, 'locator': str()}
+        pnr_dict = {'key': key, 'data': ','.join(data_list), 'variation': variation, 'variation_name': str(),
+                    'locator': str()}
         if locator:
             pnr_dict['locator'] = locator
         pnr = self.create_pnr_element(pnr_dict, persistence=False)
@@ -49,7 +50,7 @@ class TestDataUTS(TestData):
         return
 
     def add_tpfdf(self, field_data_list: List[Dict[str, str]], key: str, macro_name: str, variation: int = 0):
-        df_dict = {'key': key, 'macro_name': macro_name, 'variation': variation}
+        df_dict = {'key': key, 'macro_name': macro_name, 'variation': variation, 'variation_name': str()}
         for field_data in field_data_list:
             df_dict['field_data'] = field_data
             self.create_tpfdf_lrec(df_dict, persistence=False)

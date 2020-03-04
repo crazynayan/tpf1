@@ -271,6 +271,22 @@ def delete_debug(test_data_id: str, seg_name: str, **kwargs) -> Response:
     return jsonify(kwargs[test_data_id].cascade_to_dict())
 
 
+@tpf1_app.route('/test_data/<string:test_data_id>/variations')
+@token_auth.login_required
+@test_data_required
+def get_variations(test_data_id: str, **kwargs) -> Response:
+    variation_types = {'core': kwargs[test_data_id].cores, 'pnr': kwargs[test_data_id].pnr,
+                       'tpfdf': kwargs[test_data_id].tpfdf, 'file': kwargs[test_data_id].fixed_files}
+    variation = request.args.get('type')
+    if variation not in variation_types:
+        return error_response(400, 'Invalid variation type')
+    variation_list = [{'variation': item.variation, 'variation_name': item.variation_name}
+                      for item in variation_types[variation]]
+    variation_list = list({frozenset(item.items()): item for item in variation_list}.values())
+    variation_list.sort(key=lambda item: item['variation'])
+    return jsonify({'type': variation, 'variations': variation_list})
+
+
 @tpf1_app.route('/fields/<string:field_name>')
 @token_auth.login_required
 def find_field(field_name: str) -> Response:
