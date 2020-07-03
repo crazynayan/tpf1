@@ -1,5 +1,6 @@
 @startuml
-title Code Execution
+title Sequential Execution Flow
+skinparam backgroundColor white
 
 actor User
 participant "User Interface\n(Frontend)" as Frontend
