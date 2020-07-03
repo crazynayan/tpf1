@@ -2,9 +2,9 @@
 title Code Execution
 
 actor User
-participant "UX\nService" as Frontend
-participant "Code\nExecution\nService" as Backend
-database Firestore
+participant "User Interface\n(Frontend)" as Frontend
+participant "TPF Analyzer\n(Backend)" as Backend
+database "Firestore\n(Database)" as Firestore
 
 autonumber
 

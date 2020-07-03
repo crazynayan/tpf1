@@ -1,0 +1,65 @@
+@startuml
+allow_mixing
+
+
+object TestData {
+    R1=0000FFFF
+    EBW000=C1C2C2
+    execution_start_seg=TS01
+    expected_output_labels=EBW000,3
+    variation=3
+}
+
+object AssemblerSegments {
+    TS01, TS02, TS03, TS04 ...
+}
+object DataMacros {
+    EB0EB, WA0AA, TR1GAA
+}
+
+object OutputTestData {
+    1.EBW000=000000
+    2.EBW000=C1C2C2
+    3.EBW000=C1C2C3
+}
+
+actor User
+
+
+User --> TestData : 1.creates
+OutputTestData --> User: 10.understands
+
+package "TPF Analyzer" {
+    component TestDataParser
+    component ExecutionEngine
+    component AssemblyEngine
+    object TPFServer {
+        registers={R0=..R15=}
+        ECB={EBW000=..}
+        AAA={WA0ET4=..}
+        TPFDB={key=A0}
+        PNR={loc=AAAAA}
+        execution_start_seg=TS01
+    }
+    object AssembledObjects {
+        TS01=Machine Code
+        TS02=Machine Code
+        Symbol Table
+    }
+    object OutputTestResult {
+        1.EBW000=000000
+        2.EBW000=C1C2C2
+        3.EBW000=C1C2C3
+    }
+    TestData --> TestDataParser : 2.reads
+    TestDataParser --> TPFServer : 3.creates for each variation
+    AssemblerSegments --> AssemblyEngine : 4.reads
+    DataMacros --> AssemblyEngine : 4.reads
+    AssemblyEngine --> AssembledObjects : 5.creates
+    AssembledObjects --> ExecutionEngine : 6.reads
+    TPFServer --> ExecutionEngine : 6.reads
+    ExecutionEngine --> OutputTestResult : 7.creates
+    OutputTestResult --> TestDataParser : 8.parses
+    TestDataParser --> OutputTestData : 9.creates
+}
+@enduml

@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" contentScriptType="application/ecmascript" contentStyleType="text/css"
+     height="712px" preserveAspectRatio="none" style="width:685px;height:712px;" version="1.1" viewBox="0 0 685 712"
+     width="685px" zoomAndPan="magnify">
+    <defs>
+        <filter height="300%" id="f25m46jyoron" width="300%" x="-1" y="-1">
+            <feGaussianBlur result="blurOut" stdDeviation="2.0"/>
+            <feColorMatrix in="blurOut" result="blurOut2" type="matrix"
+                           values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .4 0"/>
+            <feOffset dx="4.0" dy="4.0" in="blurOut2" result="blurOut3"/>
+            <feBlend in="SourceGraphic" in2="blurOut3" mode="normal"/>
+        </filter>
+    </defs>
+    <g><!--MD5=[ca696739c2921a0c21212bbc818d48e9]
+cluster TPF Analyzer-->
+        <polygon fill="#FFFFFF" filter="url(#f25m46jyoron)"
+                 points="89,112.5,184,112.5,191,136.1094,451,136.1094,451,700,89,700,89,112.5"
+                 style="stroke: #000000; stroke-width: 1.5;"/>
+        <line style="stroke: #000000; stroke-width: 1.5;" x1="89" x2="191" y1="136.1094" y2="136.1094"/>
+        <text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs"
+              textLength="89" x="93" y="129.0332">TPF Analyzer
+        </text><!--MD5=[7d085fb1502be492822b3f41fb86a30e]
+entity TestDataParser-->
+        <rect fill="#FEFECE" filter="url(#f25m46jyoron)" height="37.6094" style="stroke: #A80036; stroke-width: 1.5;"
+              width="120" x="315" y="148.5"/>
+        <rect fill="#FEFECE" height="5" style="stroke: #A80036; stroke-width: 1.5;" width="10" x="310" y="153.5"/>
+        <rect fill="#FEFECE" height="5" style="stroke: #A80036; stroke-width: 1.5;" width="10" x="310" y="176.1094"/>
+        <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="100"
+              x="325" y="173.0332">TestDataParser
+        </text><!--MD5=[3b849d91f0d117833182b41d5ec209cc]
+entity ExecutionEngine-->
+        <rect fill="#FEFECE" filter="url(#f25m46jyoron)" height="37.6094" style="stroke: #A80036; stroke-width: 1.5;"
+              width="125" x="221.5" y="468"/>
+        <rect fill="#FEFECE" height="5" style="stroke: #A80036; stroke-width: 1.5;" width="10" x="216.5" y="473"/>
+        <rect fill="#FEFECE" height="5" style="stroke: #A80036; stroke-width: 1.5;" width="10" x="216.5" y="495.6094"/>
+        <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="105"
+              x="231.5" y="492.5332">ExecutionEngine
+        </text><!--MD5=[15d692b170dbcbe50e100ae1352c3cf5]
+entity AssemblyEngine-->
+        <rect fill="#FEFECE" filter="url(#f25m46jyoron)" height="37.6094" style="stroke: #A80036; stroke-width: 1.5;"
+              width="124" x="105" y="148.5"/>
+        <rect fill="#FEFECE" height="5" style="stroke: #A80036; stroke-width: 1.5;" width="10" x="100" y="153.5"/>
+        <rect fill="#FEFECE" height="5" style="stroke: #A80036; stroke-width: 1.5;" width="10" x="100" y="176.1094"/>
+        <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="104"
+              x="115" y="173.0332">AssemblyEngine
+        </text>
+        <rect fill="#FEFECE" filter="url(#f25m46jyoron)" height="102.5625" style="stroke: #A80036; stroke-width: 1.5;"
+              width="138" x="260" y="264.5"/>
+        <text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="57"
+              x="300.5" y="278.957">TPFServer
+        </text>
+        <line style="stroke: #A80036; stroke-width: 1.5;" x1="261" x2="397" y1="283.5938" y2="283.5938"/>
+        <text fill="#000000" font-family="sans-serif" font-size="10" lengthAdjust="spacingAndGlyphs" textLength="100"
+              x="266" y="297.9746">registers={R0=..R15=}
+        </text>
+        <text fill="#000000" font-family="sans-serif" font-size="10" lengthAdjust="spacingAndGlyphs" textLength="86"
+              x="266" y="310.5527">ECB={EBW000=..}
+        </text>
+        <text fill="#000000" font-family="sans-serif" font-size="10" lengthAdjust="spacingAndGlyphs" textLength="87"
+              x="266" y="323.1309">AAA={WA0ET4=..}
+        </text>
+        <text fill="#000000" font-family="sans-serif" font-size="10" lengthAdjust="spacingAndGlyphs" textLength="80"
+              x="266" y="335.709">TPFDB={key=A0}
+        </text>
+        <text fill="#000000" font-family="sans-serif" font-size="10" lengthAdjust="spacingAndGlyphs" textLength="89"
+              x="266" y="348.2871">PNR={loc=AAAAA}
+        </text>
+        <text fill="#000000" font-family="sans-serif" font-size="10" lengthAdjust="spacingAndGlyphs" textLength="126"
+              x="266" y="360.8652">execution_start_seg=TS01
+        </text>
+        <rect fill="#FEFECE" filter="url(#f25m46jyoron)" height="64.8281" style="stroke: #A80036; stroke-width: 1.5;"
+              width="119" x="105.5" y="283.5"/>
+        <text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="105"
+              x="112.5" y="297.957">AssembledObjects
+        </text>
+        <line style="stroke: #A80036; stroke-width: 1.5;" x1="106.5" x2="223.5" y1="302.5938" y2="302.5938"/>
+        <text fill="#000000" font-family="sans-serif" font-size="10" lengthAdjust="spacingAndGlyphs" textLength="102"
+              x="111.5" y="316.9746">TS01=Machine Code
+        </text>
+        <text fill="#000000" font-family="sans-serif" font-size="10" lengthAdjust="spacingAndGlyphs" textLength="102"
+              x="111.5" y="329.5527">TS02=Machine Code
+        </text>
+        <text fill="#000000" font-family="sans-serif" font-size="10" lengthAdjust="spacingAndGlyphs" textLength="67"
+              x="111.5" y="342.1309">Symbol Table
+        </text>
+        <rect fill="#FEFECE" filter="url(#f25m46jyoron)" height="64.8281" style="stroke: #A80036; stroke-width: 1.5;"
+              width="110" x="294" y="619"/>
+        <text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="96"
+              x="301" y="633.457">OutputTestResult
+        </text>
+        <line style="stroke: #A80036; stroke-width: 1.5;" x1="295" x2="403" y1="638.0938" y2="638.0938"/>
+        <text fill="#000000" font-family="sans-serif" font-size="10" lengthAdjust="spacingAndGlyphs" textLength="92"
+              x="300" y="652.4746">1.EBW000=000000
+        </text>
+        <text fill="#000000" font-family="sans-serif" font-size="10" lengthAdjust="spacingAndGlyphs" textLength="95"
+              x="300" y="665.0527">2.EBW000=C1C2C2
+        </text>
+        <text fill="#000000" font-family="sans-serif" font-size="10" lengthAdjust="spacingAndGlyphs" textLength="95"
+              x="300" y="677.6309">3.EBW000=C1C2C3
+        </text>
+        <rect fill="#FEFECE" filter="url(#f25m46jyoron)" height="89.9844" style="stroke: #A80036; stroke-width: 1.5;"
+              width="182" x="469" y="606.5"/>
+        <text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="50"
+              x="535" y="620.957">TestData
+        </text>
+        <line style="stroke: #A80036; stroke-width: 1.5;" x1="470" x2="650" y1="625.5938" y2="625.5938"/>
+        <text fill="#000000" font-family="sans-serif" font-size="10" lengthAdjust="spacingAndGlyphs" textLength="67"
+              x="475" y="639.9746">R1=0000FFFF
+        </text>
+        <text fill="#000000" font-family="sans-serif" font-size="10" lengthAdjust="spacingAndGlyphs" textLength="86"
+              x="475" y="652.5527">EBW000=C1C2C2
+        </text>
+        <text fill="#000000" font-family="sans-serif" font-size="10" lengthAdjust="spacingAndGlyphs" textLength="126"
+              x="475" y="665.1309">execution_start_seg=TS01
+        </text>
+        <text fill="#000000" font-family="sans-serif" font-size="10" lengthAdjust="spacingAndGlyphs" textLength="170"
+              x="475" y="677.709">expected_output_labels=EBW000,3
+        </text>
+        <text fill="#000000" font-family="sans-serif" font-size="10" lengthAdjust="spacingAndGlyphs" textLength="53"
+              x="475" y="690.2871">variation=3
+        </text>
+        <rect fill="#FEFECE" filter="url(#f25m46jyoron)" height="39.6719" style="stroke: #A80036; stroke-width: 1.5;"
+              width="146" x="6" y="8.5"/>
+        <text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="117"
+              x="20.5" y="22.957">AssemblerSegments
+        </text>
+        <line style="stroke: #A80036; stroke-width: 1.5;" x1="7" x2="151" y1="27.5938" y2="27.5938"/>
+        <text fill="#000000" font-family="sans-serif" font-size="10" lengthAdjust="spacingAndGlyphs" textLength="134"
+              x="12" y="41.9746">TS01, TS02, TS03, TS04 ...
+        </text>
+        <rect fill="#FEFECE" filter="url(#f25m46jyoron)" height="39.6719" style="stroke: #A80036; stroke-width: 1.5;"
+              width="136" x="187" y="8.5"/>
+        <text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="66"
+              x="222" y="22.957">DataMacros
+        </text>
+        <line style="stroke: #A80036; stroke-width: 1.5;" x1="188" x2="322" y1="27.5938" y2="27.5938"/>
+        <text fill="#000000" font-family="sans-serif" font-size="10" lengthAdjust="spacingAndGlyphs" textLength="124"
+              x="193" y="41.9746">EB0EB, WA0AA, TR1GAA
+        </text>
+        <rect fill="#FEFECE" filter="url(#f25m46jyoron)" height="64.8281" style="stroke: #A80036; stroke-width: 1.5;"
+              width="107" x="541.5" y="283.5"/>
+        <text fill="#000000" font-family="sans-serif" font-size="12" lengthAdjust="spacingAndGlyphs" textLength="86"
+              x="552" y="297.957">OutputTestData
+        </text>
+        <line style="stroke: #A80036; stroke-width: 1.5;" x1="542.5" x2="647.5" y1="302.5938" y2="302.5938"/>
+        <text fill="#000000" font-family="sans-serif" font-size="10" lengthAdjust="spacingAndGlyphs" textLength="92"
+              x="547.5" y="316.9746">1.EBW000=000000
+        </text>
+        <text fill="#000000" font-family="sans-serif" font-size="10" lengthAdjust="spacingAndGlyphs" textLength="95"
+              x="547.5" y="329.5527">2.EBW000=C1C2C2
+        </text>
+        <text fill="#000000" font-family="sans-serif" font-size="10" lengthAdjust="spacingAndGlyphs" textLength="95"
+              x="547.5" y="342.1309">3.EBW000=C1C2C3
+        </text><!--MD5=[fee662a292a0353a69bd162820bae93b]
+entity User-->
+        <ellipse cx="571" cy="455" fill="#FEFECE" filter="url(#f25m46jyoron)" rx="8" ry="8"
+                 style="stroke: #A80036; stroke-width: 1.5;"/>
+        <path d="M571,463 L571,490 M558,471 L584,471 M571,490 L558,505 M571,490 L584,505 " fill="none"
+              filter="url(#f25m46jyoron)" style="stroke: #A80036; stroke-width: 1.5;"/>
+        <text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacingAndGlyphs" textLength="29"
+              x="556.5" y="525.0332">User
+        </text><!--MD5=[b429407c0f1d5079d7de5b3331532651]
+link User to TestData-->
+        <path d="M568.253,528.586 C566.762,550.61 564.907,578.005 563.334,601.244 " fill="none" id="User-&gt;TestData"
+              style="stroke: #A80036; stroke-width: 1.0;"/>
+        <polygon fill="#A80036"
+                 points="562.982,606.441,567.5798,597.7312,563.3191,601.4524,559.598,597.1918,562.982,606.441"
+                 style="stroke: #A80036; stroke-width: 1.0;"/>
+        <text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="54"
+              x="567" y="572.9951">1.creates
+        </text><!--MD5=[8516f31f4efb5f773f35db6f284e67ab]
+link OutputTestData to User-->
+        <path d="M590.486,348.788 C586.83,374.531 581.631,411.143 577.522,440.074 " fill="none"
+              id="OutputTestData-&gt;User" style="stroke: #A80036; stroke-width: 1.0;"/>
+        <polygon fill="#A80036"
+                 points="576.768,445.383,581.9935,437.0347,577.4709,440.4327,574.073,435.9101,576.768,445.383"
+                 style="stroke: #A80036; stroke-width: 1.0;"/>
+        <text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="89"
+              x="584" y="411.9951">10.understands
+        </text><!--MD5=[66d340c047f1871fe58ae0924181b4db]
+link TestData to TestDataParser-->
+        <path d="M551.427,606.189 C532.042,509.074 483.086,280.996 439,216.5 C431.868,206.066 421.719,196.984 411.6,189.613 "
+              fill="none" id="TestData-&gt;TestDataParser" style="stroke: #A80036; stroke-width: 1.0;"/>
+        <polygon fill="#A80036"
+                 points="407.274,186.559,412.3182,195.0181,411.3582,189.4433,416.933,188.4833,407.274,186.559"
+                 style="stroke: #A80036; stroke-width: 1.0;"/>
+        <text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="43"
+              x="509" y="411.9951">2.reads
+        </text><!--MD5=[4a64e41608394d9b162471684533602d]
+link TestDataParser to TPFServer-->
+        <path d="M314.865,181.863 C296.694,189.016 278.733,199.922 268,216.5 C258.936,230.501 262.143,245.767 270.624,260.008 "
+              fill="none" id="TestDataParser-&gt;TPFServer" style="stroke: #A80036; stroke-width: 1.0;"/>
+        <polygon fill="#A80036"
+                 points="273.418,264.393,271.955,254.6534,270.7311,260.1763,265.2083,258.9524,273.418,264.393"
+                 style="stroke: #A80036; stroke-width: 1.0;"/>
+        <text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="155"
+              x="269" y="230.9951">3.creates for each variation
+        </text><!--MD5=[f7c01422e0f046cf9b4802f5dec4b543]
+link AssemblerSegments to AssemblyEngine-->
+        <path d="M91.236,48.549 C107.308,73.57 135.486,117.439 152.577,144.047 " fill="none"
+              id="AssemblerSegments-&gt;AssemblyEngine" style="stroke: #A80036; stroke-width: 1.0;"/>
+        <polygon fill="#A80036"
+                 points="155.428,148.484,153.9287,138.7499,152.7254,144.2773,147.198,143.074,155.428,148.484"
+                 style="stroke: #A80036; stroke-width: 1.0;"/>
+        <text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="43"
+              x="122" y="92.9951">4.reads
+        </text><!--MD5=[261dcf2dad86f385c75791f27dafbcfd]
+link DataMacros to AssemblyEngine-->
+        <path d="M242.764,48.549 C226.692,73.57 198.514,117.439 181.423,144.047 " fill="none"
+              id="DataMacros-&gt;AssemblyEngine" style="stroke: #A80036; stroke-width: 1.0;"/>
+        <polygon fill="#A80036"
+                 points="178.572,148.484,186.802,143.074,181.2746,144.2773,180.0713,138.7499,178.572,148.484"
+                 style="stroke: #A80036; stroke-width: 1.0;"/>
+        <text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="43"
+              x="223" y="92.9951">4.reads
+        </text><!--MD5=[e90238e27681cf88ddbbe0979dfd1d43]
+link AssemblyEngine to AssembledObjects-->
+        <path d="M166.751,186.758 C166.44,209.504 165.902,248.921 165.504,278.068 " fill="none"
+              id="AssemblyEngine-&gt;AssembledObjects" style="stroke: #A80036; stroke-width: 1.0;"/>
+        <polygon fill="#A80036"
+                 points="165.432,283.384,169.555,274.4397,165.5006,278.3845,161.5558,274.33,165.432,283.384"
+                 style="stroke: #A80036; stroke-width: 1.0;"/>
+        <text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="54"
+              x="168" y="230.9951">5.creates
+        </text><!--MD5=[382d7f854b72ff23303f04412ec879d6]
+link AssembledObjects to ExecutionEngine-->
+        <path d="M187.383,348.788 C210.998,382.325 247.6,434.307 268.314,463.723 " fill="none"
+              id="AssembledObjects-&gt;ExecutionEngine" style="stroke: #A80036; stroke-width: 1.0;"/>
+        <polygon fill="#A80036"
+                 points="271.251,467.894,269.3405,458.2322,268.3726,463.8056,262.7992,462.8377,271.251,467.894"
+                 style="stroke: #A80036; stroke-width: 1.0;"/>
+        <text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="43"
+              x="233" y="411.9951">6.reads
+        </text><!--MD5=[1af6bba70bcb938ed1ffcf1c9a70f7c4]
+link TPFServer to ExecutionEngine-->
+        <path d="M305.067,367.789 C301.211,377.488 297.629,387.681 295,397.5 C289.229,419.05 286.47,444.379 285.16,462.405 "
+              fill="none" id="TPFServer-&gt;ExecutionEngine" style="stroke: #A80036; stroke-width: 1.0;"/>
+        <polygon fill="#A80036"
+                 points="284.798,467.753,289.3982,459.0445,285.1366,462.7645,281.4166,458.5028,284.798,467.753"
+                 style="stroke: #A80036; stroke-width: 1.0;"/>
+        <text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="43"
+              x="296" y="411.9951">6.reads
+        </text><!--MD5=[923299fb7aacfe5cff88fd7d49e1dcfe]
+link ExecutionEngine to OutputTestResult-->
+        <path d="M290.746,506.029 C297.496,523.956 308.25,552.213 318,576.5 C322.948,588.824 328.51,602.233 333.543,614.209 "
+              fill="none" id="ExecutionEngine-&gt;OutputTestResult" style="stroke: #A80036; stroke-width: 1.0;"/>
+        <polygon fill="#A80036"
+                 points="335.516,618.8966,335.7108,609.0497,333.5761,614.2883,328.3375,612.1535,335.516,618.8966"
+                 style="stroke: #A80036; stroke-width: 1.0;"/>
+        <text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="54"
+              x="319" y="572.9951">7.creates
+        </text><!--MD5=[45a71b7c354cbbc918a21b0769b6da69]
+link OutputTestResult to TestDataParser-->
+        <path d="M363.788,618.7279 C369.145,605.882 374.686,590.746 378,576.5 C396.088,498.742 365.013,472.268 393,397.5 C398.796,382.015 409.039,382.922 415,367.5 C436.428,312.059 425.885,293.856 429,234.5 C429.419,226.511 432.277,223.798 429,216.5 C424.408,206.273 416.44,197.337 408.014,190.036 "
+              fill="none" id="OutputTestResult-&gt;TestDataParser" style="stroke: #A80036; stroke-width: 1.0;"/>
+        <polygon fill="#A80036"
+                 points="403.853,186.585,408.2256,195.41,407.7011,189.7775,413.3336,189.253,403.853,186.585"
+                 style="stroke: #A80036; stroke-width: 1.0;"/>
+        <text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="50"
+              x="394" y="411.9951">8.parses
+        </text><!--MD5=[c2784e567f94c2995db3a073ec960cb8]
+link TestDataParser to OutputTestData-->
+        <path d="M435.178,181.483 C460.983,188.949 490.523,200.177 514,216.5 C537.59,232.901 558.077,257.985 572.546,278.734 "
+              fill="none" id="TestDataParser-&gt;OutputTestData" style="stroke: #A80036; stroke-width: 1.0;"/>
+        <polygon fill="#A80036"
+                 points="575.541,283.092,573.7378,273.4096,572.7081,278.972,567.1458,277.9422,575.541,283.092"
+                 style="stroke: #A80036; stroke-width: 1.0;"/>
+        <text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacingAndGlyphs" textLength="54"
+              x="536" y="230.9951">9.creates
+        </text><!--MD5=[1343c8b37c795577a5448b4e86651788]
+@startuml
+allow_mixing
+
+
+object TestData {
+    R1=0000FFFF
+    EBW000=C1C2C2
+    execution_start_seg=TS01
+    expected_output_labels=EBW000,3
+    variation=3
+}
+
+object AssemblerSegments {
+    TS01, TS02, TS03, TS04 ...
+}
+object DataMacros {
+    EB0EB, WA0AA, TR1GAA
+}
+
+object OutputTestData {
+    1.EBW000=000000
+    2.EBW000=C1C2C2
+    3.EBW000=C1C2C3
+}
+
+actor User
+
+
+User - -> TestData : 1.creates
+OutputTestData - -> User: 10.understands
+
+package "TPF Analyzer" {
+    component TestDataParser
+    component ExecutionEngine
+    component AssemblyEngine
+    object TPFServer {
+        registers={R0=..R15=}
+        ECB={EBW000=..}
+        AAA={WA0ET4=..}
+        TPFDB={key=A0}
+        PNR={loc=AAAAA}
+        execution_start_seg=TS01
+    }
+    object AssembledObjects {
+        TS01=Machine Code
+        TS02=Machine Code
+        Symbol Table
+    }
+    object OutputTestResult {
+        1.EBW000=000000
+        2.EBW000=C1C2C2
+        3.EBW000=C1C2C3
+    }
+    TestData - -> TestDataParser : 2.reads
+    TestDataParser - -> TPFServer : 3.creates for each variation
+    AssemblerSegments - -> AssemblyEngine : 4.reads
+    DataMacros - -> AssemblyEngine : 4.reads
+    AssemblyEngine - -> AssembledObjects : 5.creates
+    AssembledObjects - -> ExecutionEngine : 6.reads
+    TPFServer - -> ExecutionEngine : 6.reads
+    ExecutionEngine - -> OutputTestResult : 7.creates
+    OutputTestResult - -> TestDataParser : 8.parses
+    TestDataParser - -> OutputTestData : 9.creates
+}
+@enduml
+
+PlantUML version 1.2020.09(Sun May 10 16:21:06 IST 2020)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Java Version: 11.0.7+10-b765.53
+Operating System: Windows 10
+Default Encoding: Cp1252
+Language: en
+Country: IN
+-->
+    </g>
+</svg>
