@@ -9,3 +9,7 @@ cors = CORS(tpf1_app)
 
 # noinspection PyPep8
 from flask_app import routes, auth
+
+from flask_app.api import bp as api_bp
+
+tpf1_app.register_blueprint(api_bp, url_prefix="/api")
