@@ -2,6 +2,9 @@ from typing import List, Dict, Union
 
 from firestore_ci import FirestoreDocument
 
+from assembly.seg6_segment import segments
+from flask_app.api.constants import ErrorMsg, Types, NAME, SEG_NAME, TYPE
+
 
 class TestData(FirestoreDocument):
     # Types of Test Data elements
@@ -20,8 +23,21 @@ class TestData(FirestoreDocument):
         self.name: str = str()
         self.output: bool = bool()
         self.type: str = str()
-        self.variation: int = int()
-        self.variation_name: str = str()
+        # Variation
+        self.variation: int = int()  # Input Core Block, PNR, TPFDF, Fixed File, Pool File
+        self.variation_name: str = str()  # Input Core Block, PNR, TPFDF, Fixed File, Pool File
+        self.variation_link: Dict[str, int] = {  # Output Data
+            self.CORE_BLOCK: 0,
+            self.PNR: 0,
+            self.TPFDF: 0,
+            self.FIXED_FILE: 0
+        }
+        self.variation_name_link: Dict[str, str] = {  # Output Data
+            self.CORE_BLOCK: str(),
+            self.PNR: str(),
+            self.TPFDF: str(),
+            self.FIXED_FILE: str()
+        }
         # Input Header, Output Header
         self.seg_name: str = str()  # Input Header
         self.error_simulations: List[str] = list()  # Input Header
@@ -52,6 +68,36 @@ class TestData(FirestoreDocument):
         self.item_field: str = str()  # Fixed File, Pool File
         self.item_count_field: str = str()  # Fixed File, Pool File
         self.item_field_data: list = list()  # Fixed File, Pool File
+
+    def to_truncated_dict(self) -> dict:
+        default_data = TestData()
+        doc_dict = self.__dict__
+        doc_dict = {field: value for field, value in doc_dict.items() if value != getattr(default_data, field)}
+        doc_dict["id"] = self.id
+        doc_dict.pop("_doc_id", None)
+        return doc_dict
+
+    @classmethod
+    def create_test_data(cls, data_dict: dict) -> (int, dict):
+        errors = dict()
+        if SEG_NAME not in data_dict or data_dict[SEG_NAME].strip() == str():
+            errors[SEG_NAME] = ErrorMsg.NOT_EMPTY
+        elif data_dict[SEG_NAME].upper() not in segments:
+            errors[SEG_NAME] = ErrorMsg.SEG_LIBRARY
+        if NAME not in data_dict or data_dict[NAME].strip() == str():
+            errors[NAME] = ErrorMsg.NOT_EMPTY
+        elif len(data_dict[NAME]) > 100:
+            errors[NAME] = ErrorMsg.LESS_100
+        elif cls.objects.filter_by(name=data_dict[NAME], type=cls.INPUT_HEADER).first():
+            errors[NAME] = ErrorMsg.UNIQUE
+        if errors:
+            return 400, errors
+        input_dict = dict()
+        input_dict[NAME] = data_dict[NAME].strip()
+        input_dict[TYPE] = Types.INPUT_HEADER
+        input_dict[SEG_NAME] = data_dict[SEG_NAME].upper()
+        header: TestData = TestData.objects.truncate.create_from_dict(input_dict)
+        return 200, header.to_truncated_dict()
 
 
 TestData.init("test_elements")
