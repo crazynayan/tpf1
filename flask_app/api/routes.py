@@ -1,9 +1,10 @@
+from typing import List
 from urllib.parse import unquote
 
 from flask import Response, request, jsonify
 
 from flask_app.api import bp
-from flask_app.api.constants import TEST_DATA, SuccessMsg, ErrorMsg
+from flask_app.api.constants import TEST_DATA, SuccessMsg, ErrorMsg, Types
 from flask_app.api.test_data import TestData
 from flask_app.auth import token_auth
 
@@ -33,3 +34,14 @@ def delete_test_data() -> Response:
     response: Response = jsonify({TEST_DATA: SuccessMsg.DELETE})
     response.status_code = 200
     return response
+
+
+@bp.route("/test_data")
+@token_auth.login_required
+def get_test_data() -> Response:
+    name = request.args.get("name")
+    if name is None:
+        test_data: List[dict] = TestData.objects.no_orm.filter_by(type=Types.INPUT_HEADER).get()
+        return jsonify(test_data)
+    test_data: List[dict] = TestData.objects.no_orm.filter_by(name=unquote(name)).get()
+    return jsonify(test_data)
