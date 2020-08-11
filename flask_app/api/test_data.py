@@ -69,14 +69,6 @@ class TestData(FirestoreDocument):
         self.item_count_field: str = str()  # Fixed File, Pool File
         self.item_field_data: list = list()  # Fixed File, Pool File
 
-    def to_truncated_dict(self) -> dict:
-        default_data = TestData()
-        doc_dict = self.__dict__
-        doc_dict = {field: value for field, value in doc_dict.items() if value != getattr(default_data, field)}
-        doc_dict["id"] = self.id
-        doc_dict.pop("_doc_id", None)
-        return doc_dict
-
     @classmethod
     def create_test_data(cls, data_dict: dict) -> (int, dict):
         errors = dict()
@@ -96,8 +88,8 @@ class TestData(FirestoreDocument):
         input_dict[NAME] = data_dict[NAME].strip()
         input_dict[TYPE] = Types.INPUT_HEADER
         input_dict[SEG_NAME] = data_dict[SEG_NAME].upper()
-        header: TestData = TestData.objects.truncate.create_from_dict(input_dict)
-        return 200, header.to_truncated_dict()
+        header: dict = TestData.objects.truncate.no_orm.create_from_dict(input_dict)
+        return 200, header
 
 
 TestData.init("test_elements")
