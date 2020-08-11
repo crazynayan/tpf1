@@ -17,14 +17,19 @@ def create_test_data() -> Response:
     return response
 
 
-@bp.route("/test_data/<name>", methods=["DELETE"])
+@bp.route("/test_data", methods=["DELETE"])
 @token_auth.login_required
-def delete_test_data(name: str) -> Response:
-    success: str = TestData.objects.filter_by(name=unquote(name)).delete()
-    if success:
-        response: Response = jsonify({TEST_DATA: SuccessMsg.DELETE})
-        response.status_code = 200
-    else:
+def delete_test_data() -> Response:
+    name = request.args.get("name")
+    if not name:
         response: Response = jsonify({TEST_DATA: ErrorMsg.NOT_FOUND})
         response.status_code = 404
+        return response
+    success: str = TestData.objects.filter_by(name=unquote(name)).delete()
+    if not success:
+        response: Response = jsonify({TEST_DATA: ErrorMsg.NOT_FOUND})
+        response.status_code = 404
+        return response
+    response: Response = jsonify({TEST_DATA: SuccessMsg.DELETE})
+    response.status_code = 200
     return response
