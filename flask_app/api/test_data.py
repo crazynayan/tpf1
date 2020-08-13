@@ -3,7 +3,7 @@ from typing import List, Dict, Union
 from firestore_ci import FirestoreDocument
 
 from assembly.seg6_segment import segments
-from flask_app.api.constants import ErrorMsg, Types, NAME, SEG_NAME, TYPE
+from flask_app.api.constants import ErrorMsg, Types, NAME, SEG_NAME, TYPE, ACTION, Action
 
 
 class TestData(FirestoreDocument):
@@ -69,14 +69,28 @@ class TestData(FirestoreDocument):
         self.item_count_field: str = str()  # Fixed File, Pool File
         self.item_field_data: list = list()  # Fixed File, Pool File
 
+    @staticmethod
+    def _check_empty(data: dict, key: str) -> bool:
+        # return True if empty else False
+        return not (isinstance(data, dict) and isinstance(key, str) and data and data.get(key, None)
+                    and isinstance(data[key], str) and data[key].strip() != str())
+
+    @classmethod
+    def process_test_data(cls, data_dict: dict) -> (int, dict):
+        if cls._check_empty(data_dict, ACTION):
+            return 400, {ACTION: ErrorMsg.NOT_EMPTY}
+        if data_dict[ACTION] == Action.CREATE:
+            return cls.create_test_data(data_dict)
+        return 400, {ACTION: ErrorMsg.INVALID_ACTION}
+
     @classmethod
     def create_test_data(cls, data_dict: dict) -> (int, dict):
         errors = dict()
-        if SEG_NAME not in data_dict or data_dict[SEG_NAME].strip() == str():
+        if cls._check_empty(data_dict, SEG_NAME):
             errors[SEG_NAME] = ErrorMsg.NOT_EMPTY
         elif data_dict[SEG_NAME].upper() not in segments:
             errors[SEG_NAME] = ErrorMsg.SEG_LIBRARY
-        if NAME not in data_dict or data_dict[NAME].strip() == str():
+        if cls._check_empty(data_dict, NAME):
             errors[NAME] = ErrorMsg.NOT_EMPTY
         elif len(data_dict[NAME]) > 100:
             errors[NAME] = ErrorMsg.LESS_100

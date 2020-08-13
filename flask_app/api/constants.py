@@ -1,9 +1,22 @@
+ACTION = "action"
+
+
+class Action:
+    CREATE = "create"
+    COPY = "copy"
+    RENAME = "rename"
+
+
+ALL_ACTIONS = [value for key, value in Action.__dict__.items() if not key.startswith("__")]
+
+
 class ErrorMsg:
     NOT_EMPTY = "must not be empty"
     UNIQUE = "must be unique"
     SEG_LIBRARY = "must be present in segment library"
     NOT_FOUND = "not found"
     LESS_100 = "must be less than 100 characters"
+    INVALID_ACTION = f"must be either {', '.join(ALL_ACTIONS)}"
 
 
 class SuccessMsg:

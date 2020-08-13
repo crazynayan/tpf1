@@ -11,8 +11,8 @@ from flask_app.auth import token_auth
 
 @bp.route("/test_data", methods=["POST"])
 @token_auth.login_required
-def create_test_data() -> Response:
-    status, payload = TestData.create_test_data(request.get_json())
+def process_test_data() -> Response:
+    status, payload = TestData.process_test_data(request.get_json())
     response: Response = jsonify(payload)
     response.status_code = status
     return response
