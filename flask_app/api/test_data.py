@@ -3,7 +3,7 @@ from typing import List, Dict, Union
 from firestore_ci import FirestoreDocument
 
 from assembly.seg6_segment import segments
-from flask_app.api.constants import ErrorMsg, Types, NAME, SEG_NAME, TYPE, ACTION, Action
+from flask_app.api.constants import ErrorMsg, Types, NAME, SEG_NAME, TYPE, ACTION, Action, NEW_NAME
 
 
 class TestData(FirestoreDocument):
@@ -76,11 +76,24 @@ class TestData(FirestoreDocument):
                     and isinstance(data[key], str) and data[key].strip() != str())
 
     @classmethod
+    def _validate_name(cls, data: dict, key: str) -> (bool, str):
+        # return True, msg  if invalid else False, empty msg
+        if cls._check_empty(data, key):
+            return True, ErrorMsg.NOT_EMPTY
+        elif len(data[key]) > 100:
+            return True, ErrorMsg.LESS_100
+        elif cls.objects.filter_by(name=data[key], type=cls.INPUT_HEADER).first():
+            return True, ErrorMsg.UNIQUE
+        return False, str()
+
+    @classmethod
     def process_test_data(cls, data_dict: dict) -> (int, dict):
         if cls._check_empty(data_dict, ACTION):
             return 400, {ACTION: ErrorMsg.NOT_EMPTY}
         if data_dict[ACTION] == Action.CREATE:
             return cls.create_test_data(data_dict)
+        if data_dict[ACTION] == Action.RENAME:
+            return cls.rename_test_data(data_dict)
         return 400, {ACTION: ErrorMsg.INVALID_ACTION}
 
     @classmethod
@@ -90,20 +103,40 @@ class TestData(FirestoreDocument):
             errors[SEG_NAME] = ErrorMsg.NOT_EMPTY
         elif data_dict[SEG_NAME].upper() not in segments:
             errors[SEG_NAME] = ErrorMsg.SEG_LIBRARY
-        if cls._check_empty(data_dict, NAME):
-            errors[NAME] = ErrorMsg.NOT_EMPTY
-        elif len(data_dict[NAME]) > 100:
-            errors[NAME] = ErrorMsg.LESS_100
-        elif cls.objects.filter_by(name=data_dict[NAME], type=cls.INPUT_HEADER).first():
-            errors[NAME] = ErrorMsg.UNIQUE
+        error, message = cls._validate_name(data_dict, NAME)
+        if error:
+            errors[NAME] = message
         if errors:
             return 400, errors
         input_dict = dict()
         input_dict[NAME] = data_dict[NAME].strip()
         input_dict[TYPE] = Types.INPUT_HEADER
         input_dict[SEG_NAME] = data_dict[SEG_NAME].upper()
-        header: dict = TestData.objects.truncate.no_orm.create_from_dict(input_dict)
+        header: dict = TestData.objects.truncate.no_orm.create(input_dict)
         return 200, header
+
+    @classmethod
+    def rename_test_data(cls, data_dict: dict) -> (int, dict):
+        test_data = list()
+        errors = dict()
+        error, message = cls._validate_name(data_dict, NEW_NAME)
+        if error:
+            errors[NEW_NAME] = message
+        if cls._check_empty(data_dict, NAME):
+            errors[NAME] = ErrorMsg.NOT_EMPTY
+        else:
+            test_data = cls.objects.filter_by(name=data_dict[NAME]).get()
+            if not test_data:
+                errors[NAME] = ErrorMsg.NOT_FOUND
+            elif test_data[0].name == data_dict[NEW_NAME]:
+                errors[NEW_NAME] = ErrorMsg.RENAME_SAME
+        if errors:
+            return 400, errors
+        for element in test_data:
+            element.name = data_dict[NEW_NAME].strip()
+        saved_test_data = cls.objects.no_orm.truncate.save_all(test_data)
+        response = next(element for element in saved_test_data if element[TYPE] == Types.INPUT_HEADER)
+        return 200, response
 
 
 TestData.init("test_elements")

@@ -17,6 +17,7 @@ class ErrorMsg:
     NOT_FOUND = "not found"
     LESS_100 = "must be less than 100 characters"
     INVALID_ACTION = f"must be either {', '.join(ALL_ACTIONS)}"
+    RENAME_SAME = "must be different than original name"
 
 
 class SuccessMsg:
@@ -35,6 +36,7 @@ class Types:
 
 
 TEST_DATA = "test_data"
+NEW_NAME = "new_name"
 
 # Test Data Attributes
 NAME = "name"
