@@ -2,7 +2,7 @@ cachetools==4.1.1
 certifi==2020.6.20
 chardet==3.0.4
 Click==7.1.2
-firestore-ci==2020.8.14
+firestore-ci==2020.8.15
 Flask==1.1.2
 Flask-Cors==3.0.8
 Flask-HTTPAuth==4.1.0
@@ -16,7 +16,7 @@ idna==2.10
 itsdangerous==1.1.0
 Jinja2==2.11.2
 MarkupSafe==1.1.1
-protobuf==3.12.4
+protobuf==3.13.0
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pytz==2020.1

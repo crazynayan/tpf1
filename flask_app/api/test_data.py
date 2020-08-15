@@ -128,8 +128,6 @@ class TestData(FirestoreDocument):
             test_data = cls.objects.filter_by(name=data_dict[NAME]).get()
             if not test_data:
                 errors[NAME] = ErrorMsg.NOT_FOUND
-            elif test_data[0].name == data_dict[NEW_NAME]:
-                errors[NEW_NAME] = ErrorMsg.RENAME_SAME
         if errors:
             return 400, errors
         for element in test_data:
