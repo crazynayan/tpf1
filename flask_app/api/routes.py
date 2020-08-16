@@ -42,6 +42,7 @@ def get_test_data() -> Response:
     name = request.args.get("name")
     if name is None:
         test_data: List[dict] = TestData.objects.no_orm.filter_by(type=Types.INPUT_HEADER).get()
+        test_data.sort(key=lambda element: element["name"])
         return jsonify(test_data)
     test_data: List[dict] = TestData.objects.no_orm.filter_by(name=unquote(name)).get()
     return jsonify(test_data)

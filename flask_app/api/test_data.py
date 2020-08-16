@@ -1,4 +1,4 @@
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Tuple
 
 from firestore_ci import FirestoreDocument
 
@@ -87,6 +87,22 @@ class TestData(FirestoreDocument):
         return False, str()
 
     @classmethod
+    def _validate_for_copy_rename(cls, data_dict) -> Tuple[dict, List["TestData"]]:
+        # return errors dict, empty list if invalid else empty dict, list of TestData elements
+        test_data = list()
+        errors = dict()
+        error, message = cls._validate_name(data_dict, NEW_NAME)
+        if error:
+            errors[NEW_NAME] = message
+        if cls._check_empty(data_dict, NAME):
+            errors[NAME] = ErrorMsg.NOT_EMPTY
+        else:
+            test_data = cls.objects.filter_by(name=data_dict[NAME]).get()
+            if not test_data:
+                errors[NAME] = ErrorMsg.NOT_FOUND
+        return errors, test_data
+
+    @classmethod
     def process_test_data(cls, data_dict: dict) -> (int, dict):
         if cls._check_empty(data_dict, ACTION):
             return 400, {ACTION: ErrorMsg.NOT_EMPTY}
@@ -94,6 +110,8 @@ class TestData(FirestoreDocument):
             return cls.create_test_data(data_dict)
         if data_dict[ACTION] == Action.RENAME:
             return cls.rename_test_data(data_dict)
+        if data_dict[ACTION] == Action.COPY:
+            return cls.copy_test_data(data_dict)
         return 400, {ACTION: ErrorMsg.INVALID_ACTION}
 
     @classmethod
@@ -117,24 +135,25 @@ class TestData(FirestoreDocument):
 
     @classmethod
     def rename_test_data(cls, data_dict: dict) -> (int, dict):
-        test_data = list()
-        errors = dict()
-        error, message = cls._validate_name(data_dict, NEW_NAME)
-        if error:
-            errors[NEW_NAME] = message
-        if cls._check_empty(data_dict, NAME):
-            errors[NAME] = ErrorMsg.NOT_EMPTY
-        else:
-            test_data = cls.objects.filter_by(name=data_dict[NAME]).get()
-            if not test_data:
-                errors[NAME] = ErrorMsg.NOT_FOUND
+        errors, test_data = cls._validate_for_copy_rename(data_dict)
         if errors:
             return 400, errors
         for element in test_data:
             element.name = data_dict[NEW_NAME].strip()
-        saved_test_data = cls.objects.no_orm.truncate.save_all(test_data)
+        saved_test_data: List[dict] = cls.objects.no_orm.truncate.save_all(test_data)
         response = next(element for element in saved_test_data if element[TYPE] == Types.INPUT_HEADER)
         return 200, response
+
+    @classmethod
+    def copy_test_data(cls, data_dict: dict) -> (int, dict):
+        errors, test_data = cls._validate_for_copy_rename(data_dict)
+        if errors:
+            return 400, errors
+        for element in test_data:
+            element.name = data_dict[NEW_NAME].strip()
+        copy_test_data: List[dict] = cls.objects.truncate.to_dicts(test_data)
+        created_test_data: List[dict] = cls.objects.no_orm.truncate.create_all(copy_test_data)
+        return 200, created_test_data
 
 
 TestData.init("test_elements")
