@@ -71,6 +71,7 @@ class _DataMacroCollection:
 
     def __init__(self):
         self.macros: Dict[str, DataMacro] = dict()
+        self.indexed_labels: Dict[str, str] = dict()
         # Load default macros
         default_macros_dict: Dict[str, str] = dict()
         non_default_macros_dict: Dict[str, str] = dict()
@@ -92,9 +93,12 @@ class _DataMacroCollection:
         # Initialize non default macros
         for macro_name, file_name in non_default_macros_dict.items():
             self.macros[macro_name] = DataMacro(macro_name, file_name, default_macros)
-        self.macros['GLOBAL'].load()
-        self.macros['WA0AA'].load()
-        self.macros['MI0MI'].load()
+        for macro_name, data_macro in self.macros.items():
+            data_macro.load()
+            self.indexed_labels = {**self.indexed_labels,
+                                   **{label: label_ref.name for label, label_ref in data_macro.all_labels.items()}}
 
 
-macros = _DataMacroCollection().macros
+_collection = _DataMacroCollection()
+macros = _collection.macros
+indexed_macros = _collection.indexed_labels

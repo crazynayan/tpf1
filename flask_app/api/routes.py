@@ -4,15 +4,16 @@ from urllib.parse import unquote
 from flask import Response, request, jsonify
 
 from flask_app.api import bp
+from flask_app.api.api_functions import process_test_data
 from flask_app.api.constants import TEST_DATA, SuccessMsg, ErrorMsg, Types
-from flask_app.api.test_data import TestData
+from flask_app.api.models import TestData
 from flask_app.auth import token_auth
 
 
 @bp.route("/test_data", methods=["POST"])
 @token_auth.login_required
-def process_test_data() -> Response:
-    status, payload = TestData.process_test_data(request.get_json())
+def post_test_data() -> Response:
+    status, payload = process_test_data(request.get_json())
     response: Response = jsonify(payload)
     response.status_code = status
     return response
