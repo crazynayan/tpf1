@@ -45,8 +45,9 @@ class ErrorMsg:
     INVALID_ACTION = f"must be either {', '.join(ALL_ACTIONS)}"
     RENAME_SAME = "must be different than the original name"
     MACRO_SAME = "must be from the same macro"
+    MACRO_NOT_FOUND = "macro name not found"
     INVALID_TYPE = f"must be either {', '.join(ALL_TYPES)}"
-    DATA_SAME = "must bef different than the original data "
+    DATA_SAME = "must be different than the original data"
 
 
 class SuccessMsg:
