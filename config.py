@@ -5,6 +5,9 @@ from typing import Dict, List, Set
 
 
 class Config:
+    # Used by test_api
+    TEST_TOKEN = str()
+
     # Used by flask_app.auth
     DEFAULT_PASSWORD = b64encode(os.urandom(24)).decode()
     DEFAULT_TOKEN = b64encode(os.urandom(24)).decode()
