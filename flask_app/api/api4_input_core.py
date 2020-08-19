@@ -1,81 +1,11 @@
 from typing import List
 
-from assembly.seg6_segment import segments
-from flask_app.api.api0_constants import ErrorMsg, Types, NEW_NAME, NAME, ACTION, Actions, SEG_NAME, TYPE, FIELD_DATA, \
-    FIELD, DATA, MACRO_NAME, SuccessMsg, VARIATION, VARIATION_NAME
+from assembly.mac2_data_macro import indexed_macros
+from flask_app.api.api0_constants import Types, MACRO_NAME, VARIATION, FIELD_DATA, NAME, TYPE, FIELD, DATA, \
+    VARIATION_NAME, SuccessMsg, ErrorMsg
 from flask_app.api.api1_models import TestData
-from flask_app.api.api2_validators import validate_empty_str, validate_empty_list, validate_new_name, \
-    get_test_data, validate_macro_name, validate_field_data_for_delete, validate_field_data_for_update, \
-    get_macro_name, validate_variation, get_variation
-
-
-def process_test_data(data_dict: dict) -> (int, dict):
-    error = validate_empty_str(data_dict, ACTION)
-    if error:
-        return 400, error
-    if data_dict[ACTION] == Actions.CREATE:
-        return create_test_data(data_dict)
-    if data_dict[ACTION] == Actions.RENAME:
-        return rename_test_data(data_dict)
-    if data_dict[ACTION] == Actions.COPY:
-        return copy_test_data(data_dict)
-    if data_dict[ACTION] == Actions.UPDATE:
-        return update_test_data(data_dict)
-    if data_dict[ACTION] == Actions.DELETE:
-        return update_test_data(data_dict)
-    return 400, {ACTION: ErrorMsg.INVALID_ACTION}
-
-
-def update_test_data(data_dict: dict) -> (int, dict):
-    error = validate_empty_str(data_dict, TYPE)
-    if error:
-        return 400, error
-    if data_dict[TYPE] == Types.INPUT_CORE_BLOCK:
-        if data_dict[ACTION] == Actions.UPDATE:
-            return update_input_core_block(data_dict)
-        if data_dict[ACTION] == Actions.DELETE:
-            return delete_input_core_block(data_dict)
-    return 400, {TYPE: ErrorMsg.INVALID_TYPE}
-
-
-def create_test_data(data_dict: dict) -> (int, dict):
-    errors = dict()
-    if validate_empty_str(data_dict, SEG_NAME):
-        errors[SEG_NAME] = ErrorMsg.NOT_EMPTY
-    elif data_dict[SEG_NAME].upper() not in segments:
-        errors[SEG_NAME] = ErrorMsg.SEG_LIBRARY
-    errors = {**errors, **validate_new_name(data_dict, NAME)}
-    if errors:
-        return 400, errors
-    input_dict = dict()
-    input_dict[NAME] = data_dict[NAME].strip()
-    input_dict[TYPE] = Types.INPUT_HEADER
-    input_dict[SEG_NAME] = data_dict[SEG_NAME].upper()
-    header: dict = TestData.objects.truncate.no_orm.create(input_dict)
-    return 200, header
-
-
-def rename_test_data(data_dict: dict) -> (int, dict):
-    test_data, errors = get_test_data(data_dict)
-    errors = {**errors, **validate_new_name(data_dict, NEW_NAME)}
-    if errors:
-        return 400, errors
-    for element in test_data:
-        element[NAME] = data_dict[NEW_NAME].strip()
-    saved_data: List[dict] = TestData.objects.no_orm.truncate.save_all(test_data)
-    response = next(element for element in saved_data if element[TYPE] == Types.INPUT_HEADER)
-    return 200, response
-
-
-def copy_test_data(data_dict: dict) -> (int, dict):
-    test_data, errors = get_test_data(data_dict)
-    errors = {**errors, **validate_new_name(data_dict, NEW_NAME)}
-    if errors:
-        return 400, errors
-    for element in test_data:
-        element[NAME] = data_dict[NEW_NAME].strip()
-    created_data: List[dict] = TestData.objects.no_orm.truncate.create_all(test_data)
-    return 200, created_data
+from flask_app.api.api2_validators import get_test_data, validate_variation, get_macro_name, get_variation, \
+    validate_macro_name, validate_empty_list, validate_empty_str
 
 
 def update_input_core_block(data_dict: dict) -> (int, dict):
@@ -137,3 +67,58 @@ def delete_input_core_block(data_dict: dict) -> (int, dict):
     # Return the core block state after deleting the field
     response = TestData.objects.no_orm.truncate.save(core_dict)
     return 200, response
+
+
+def validate_field_data_for_update(data_dict: dict, macro_name: str, db_fields: list) -> dict:
+    errors = validate_empty_list(data_dict, FIELD_DATA)
+    if errors:
+        return errors
+    error_list: List[dict] = list()
+    field_set = set()
+    for field in data_dict[FIELD_DATA]:
+        field_errors = validate_empty_str(field, FIELD)
+        field_errors = {**field_errors, **validate_empty_str(field, DATA)}
+        error_list.append(field_errors)
+        if FIELD in field_errors:
+            continue
+        label = field[FIELD].strip().upper()
+        field_macro_name = indexed_macros.get(label, None)
+        if label in field_set:
+            field_errors[FIELD] = ErrorMsg.UNIQUE
+        elif not macro_name:
+            field_errors[FIELD] = ErrorMsg.MACRO_NOT_FOUND
+        elif not field_macro_name:
+            field_errors[FIELD] = ErrorMsg.MACRO_LIBRARY
+        elif macro_name != field_macro_name:
+            field_errors[FIELD] = f"{ErrorMsg.MACRO_SAME} {macro_name}"
+        else:
+            db_field = next((db_field for db_field in db_fields if db_field[FIELD] == label), None)
+            if DATA not in field_errors and db_field and db_field[DATA] == field[DATA]:
+                field_errors[DATA] = ErrorMsg.DATA_SAME
+        field_set.add(label)
+    return {FIELD_DATA: error_list} if not all(error == dict() for error in error_list) else dict()
+
+
+def validate_field_data_for_delete(data_dict: dict, macro_name: str, db_fields: list) -> dict:
+    field_data: List[dict] = data_dict.get(FIELD_DATA, list())
+    error_list: List[dict] = list()
+    field_set = set()
+    for field in field_data:
+        field_errors = validate_empty_str(field, FIELD)
+        error_list.append(field_errors)
+        if FIELD in field_errors:
+            continue
+        label = field[FIELD].strip().upper()
+        field_macro_name = indexed_macros.get(label, None)
+        if label in field_set:
+            field_errors[FIELD] = ErrorMsg.UNIQUE
+        elif not macro_name:
+            field_errors[FIELD] = ErrorMsg.MACRO_NOT_FOUND
+        elif not field_macro_name:
+            field_errors[FIELD] = ErrorMsg.MACRO_LIBRARY
+        elif macro_name != field_macro_name:
+            field_errors[FIELD] = f"{ErrorMsg.MACRO_SAME} {macro_name}"
+        elif not any(db_field[FIELD] == label for db_field in db_fields):
+            field_errors[FIELD] = ErrorMsg.NOT_FOUND
+        field_set.add(label)
+    return {FIELD_DATA: error_list} if not all(error == dict() for error in error_list) else dict()
