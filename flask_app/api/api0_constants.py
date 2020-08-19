@@ -53,7 +53,7 @@ class ErrorMsg:
     MACRO_NOT_FOUND = "macro name not found"
     INVALID_TYPE = f"must be either {', '.join(ALL_TYPES)}"
     DATA_SAME = "must be different than the original data"
-    VARIATION_NAME = f"must specify either {VARIATION_NAME} or {NEW_VARIATION_NAME}"
+    VARIATION_NAME = f"must specify either {VARIATION} or {NEW_VARIATION_NAME} - not both"
 
 
 class SuccessMsg:

@@ -8,7 +8,7 @@ from flask_app.api.api1_models import TestData
 
 
 def validate_empty_str(data: dict, key: str) -> dict:
-    # return error dict if key is empty else empty dict
+    # return error dict if string is empty else empty dict
     if not (isinstance(data, dict) and isinstance(key, str) and data and data.get(key, None) and
             isinstance(data[key], str) and data[key].strip() != str()):
         return {key: ErrorMsg.NOT_EMPTY}
@@ -16,8 +16,17 @@ def validate_empty_str(data: dict, key: str) -> dict:
 
 
 def validate_empty_list(data: dict, key: str) -> dict:
+    # return error dict if list is empty else empty dict
     if not (isinstance(data, dict) and isinstance(key, str) and data and data.get(key, None) and
             isinstance(data[key], list) and data[key] != list()):
+        return {key: ErrorMsg.NOT_EMPTY}
+    return dict()
+
+
+def validate_empty_int(data: dict, key: str) -> dict:
+    # return error dict if list is empty else empty dict
+    if not (isinstance(data, dict) and isinstance(key, str) and data and data.get(key, None) and
+            isinstance(data[key], int) and data[key] != 0):
         return {key: ErrorMsg.NOT_EMPTY}
     return dict()
 
@@ -61,29 +70,39 @@ def get_variation(data_dict: dict, test_data: List[dict]) -> Tuple[str, int]:
     if NEW_VARIATION_NAME in data_dict:
         variation_name = data_dict[NEW_VARIATION_NAME]
         variation = max(element[VARIATION] for element in test_data) + 1 if test_data else 1
+    elif VARIATION in data_dict:
+        variation = data_dict[VARIATION]
+        variation_name = next((element[VARIATION_NAME] for element in test_data if element[VARIATION] == variation), "")
     else:
-        variation_name = data_dict.get(VARIATION_NAME, None) or config.DEFAULT_VARIATION_NAME
-        variation = next((element[VARIATION] for element in test_data if element[VARIATION_NAME] == variation_name), 1)
+        variation_name = config.DEFAULT_VARIATION_NAME
+        variation = 1
     return variation_name, variation
 
 
-def validate_variation(data_dict: dict, test_data: List[dict]) -> dict:
+def validate_variation_name(data_dict: dict, test_data: List[dict]) -> dict:
     errors = dict()
     if NEW_VARIATION_NAME in data_dict:
         if len(data_dict[NEW_VARIATION_NAME]) > 100:
             errors[NEW_VARIATION_NAME] = ErrorMsg.LESS_100
         if any(element[VARIATION_NAME] == data_dict[NEW_VARIATION_NAME] for element in test_data):
             errors[NEW_VARIATION_NAME] = ErrorMsg.UNIQUE
-        if VARIATION_NAME in data_dict:
+        if VARIATION in data_dict:
             errors[NEW_VARIATION_NAME] = ErrorMsg.VARIATION_NAME
-            errors[VARIATION_NAME] = ErrorMsg.VARIATION_NAME
+            errors[VARIATION] = ErrorMsg.VARIATION_NAME
         return errors
-    if VARIATION_NAME in data_dict:
-        if len(data_dict[VARIATION_NAME]) > 100:
-            errors[VARIATION_NAME] = ErrorMsg.LESS_100
-        if not any(element[VARIATION_NAME] == data_dict[NEW_VARIATION_NAME] for element in test_data):
-            errors[VARIATION_NAME] = ErrorMsg.NOT_FOUND
+    if VARIATION in data_dict:
+        if not any(element[VARIATION] == data_dict[VARIATION] for element in test_data):
+            errors[VARIATION] = ErrorMsg.NOT_FOUND
         return errors
     if test_data and not any(element[VARIATION_NAME] == config.DEFAULT_VARIATION_NAME for element in test_data):
-        errors[VARIATION_NAME] = ErrorMsg.NOT_EMPTY
+        errors[VARIATION] = ErrorMsg.NOT_EMPTY
     return errors
+
+
+def validate_variation_number(data_dict: dict, test_data: List[dict]) -> dict:
+    error = validate_empty_int(data_dict, VARIATION)
+    if error:
+        return error
+    if not any(element[VARIATION] == data_dict[VARIATION] for element in test_data):
+        return {VARIATION: ErrorMsg.NOT_FOUND}
+    return dict()

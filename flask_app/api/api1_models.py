@@ -39,7 +39,7 @@ class TestData(FirestoreDocument):
         self.seg_name: str = str()  # Input Header
         self.error_simulations: List[str] = list()  # Input Header
         self.partition: str = str()  # Input Header
-        self.registers: Dict[str, int] = dict()  # Input Header, Output Header
+        self.registers: Dict[str, int] = dict()  # Input Registers, Output Header
         self.reg_pointers: Dict[str, Union[str, int]] = dict()  # Output Header
         self.dumps: List[str] = list()  # Output Header
         self.messages: List[str] = list()  # Output Header

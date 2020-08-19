@@ -4,13 +4,13 @@ from assembly.mac2_data_macro import indexed_macros
 from flask_app.api.api0_constants import Types, MACRO_NAME, VARIATION, FIELD_DATA, NAME, TYPE, FIELD, DATA, \
     VARIATION_NAME, SuccessMsg, ErrorMsg
 from flask_app.api.api1_models import TestData
-from flask_app.api.api2_validators import get_test_data, validate_variation, get_macro_name, get_variation, \
-    validate_macro_name, validate_empty_list, validate_empty_str
+from flask_app.api.api2_validators import get_test_data, validate_variation_name, get_macro_name, get_variation, \
+    validate_macro_name, validate_empty_list, validate_empty_str, validate_variation_number
 
 
 def update_input_core_block(data_dict: dict) -> (int, dict):
     test_data, errors = get_test_data(data_dict, Types.INPUT_CORE_BLOCK)
-    errors = {**errors, **validate_variation(data_dict, test_data)}
+    errors = {**errors, **validate_variation_name(data_dict, test_data)}
     macro_name = get_macro_name(data_dict)
     variation_name, variation = get_variation(data_dict, test_data)
     core_dict = next((element for element in test_data if element[MACRO_NAME] == macro_name
@@ -46,7 +46,10 @@ def delete_input_core_block(data_dict: dict) -> (int, dict):
     test_data, errors = get_test_data(data_dict, Types.INPUT_CORE_BLOCK)
     errors = {**errors, **validate_macro_name(data_dict, test_data)}
     macro_name = data_dict.get(MACRO_NAME, str()).strip().upper()
-    core_dict = next((element for element in test_data if element[MACRO_NAME] == macro_name), dict())
+    errors = {**errors, **validate_variation_number(data_dict, test_data)}
+    variation = data_dict.get(VARIATION, 0)
+    core_dict = next((element for element in test_data if element[MACRO_NAME] == macro_name
+                      and element[VARIATION] == variation), dict())
     db_fields = core_dict[FIELD_DATA] if FIELD_DATA in core_dict else list()
     errors = {**errors, **validate_field_data_for_delete(data_dict, macro_name, db_fields)}
     if errors:

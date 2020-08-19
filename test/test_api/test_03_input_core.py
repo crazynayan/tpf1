@@ -1,6 +1,6 @@
 from config import config
 from flask_app.api.api0_constants import TYPE, Types, FIELD_DATA, FIELD, DATA, MACRO_NAME, Actions, ACTION, NAME, \
-    SEG_NAME, SuccessMsg, ErrorMsg, VARIATION, VARIATION_NAME
+    SEG_NAME, SuccessMsg, ErrorMsg, VARIATION, VARIATION_NAME, NEW_VARIATION_NAME
 from test.test_api import TestAPI
 
 
@@ -31,6 +31,7 @@ class InputCoreBlock(TestAPI):
             NAME: TestAPI.NAME,
             ACTION: Actions.DELETE,
             TYPE: Types.INPUT_CORE_BLOCK,
+            VARIATION: 1,
             MACRO_NAME: "WA0AA",
             FIELD_DATA: [  # IF field data is not specified then the entire core block is deleted
                 {FIELD: "WA0BBR"}
@@ -110,28 +111,6 @@ class InputCoreBlock(TestAPI):
         self.assertEqual(400, response.status_code)
         self.assertDictEqual({NAME: ErrorMsg.NOT_FOUND, FIELD_DATA: ErrorMsg.NOT_EMPTY}, response.get_json())
 
-    # noinspection DuplicatedCode
-    def test_basic_errors_for_delete(self):
-        # Invalid type
-        response = self.post(f"/api/test_data", json={ACTION: Actions.DELETE, TYPE: "Invalid Type"})
-        self.assertEqual(400, response.status_code)
-        self.assertDictEqual({TYPE: ErrorMsg.INVALID_TYPE}, response.get_json())
-        delete_body = {ACTION: Actions.DELETE, TYPE: Types.INPUT_CORE_BLOCK}
-        response = self.post(f"/api/test_data", json=delete_body)
-        self.assertEqual(400, response.status_code)
-        self.assertDictEqual({NAME: ErrorMsg.NOT_EMPTY, MACRO_NAME: ErrorMsg.NOT_EMPTY}, response.get_json())
-        # Empty Test data name
-        delete_body[NAME] = "  "
-        delete_body[MACRO_NAME] = "      "
-        response = self.post(f"/api/test_data", json=delete_body)
-        self.assertEqual(400, response.status_code)
-        self.assertDictEqual({NAME: ErrorMsg.NOT_EMPTY, MACRO_NAME: ErrorMsg.NOT_EMPTY}, response.get_json())
-        # Invalid Test data name
-        delete_body[NAME] = "Invalid name"
-        response = self.post(f"/api/test_data", json=delete_body)
-        self.assertEqual(400, response.status_code)
-        self.assertDictEqual({NAME: ErrorMsg.NOT_FOUND, MACRO_NAME: ErrorMsg.NOT_EMPTY}, response.get_json())
-
     def test_field_data_errors_for_update(self):
         self.cleanup.append(TestAPI.NAME)
         self.post(f"/api/test_data", json={ACTION: Actions.CREATE, NAME: TestAPI.NAME, SEG_NAME: TestAPI.SEG_NAME})
@@ -162,6 +141,8 @@ class InputCoreBlock(TestAPI):
         self.assertDictEqual(error_response, response.get_json())
         # Test name errors along with field data and with no valid field
         self.update_body[NAME] = "invalid name"
+        self.update_body[VARIATION] = 1
+        self.update_body[NEW_VARIATION_NAME] = "any other name"
         self.update_body[FIELD_DATA] = [
             {DATA: "12"},
             {FIELD: "invalid field"},
@@ -170,6 +151,8 @@ class InputCoreBlock(TestAPI):
         ]
         error_response = {
             NAME: ErrorMsg.NOT_FOUND,
+            VARIATION: ErrorMsg.VARIATION_NAME,
+            NEW_VARIATION_NAME: ErrorMsg.VARIATION_NAME,
             FIELD_DATA: [
                 {FIELD: ErrorMsg.NOT_EMPTY},
                 {FIELD: ErrorMsg.MACRO_NOT_FOUND, DATA: ErrorMsg.NOT_EMPTY},
@@ -179,6 +162,57 @@ class InputCoreBlock(TestAPI):
         }
         response = self.post(f"/api/test_data", json=self.update_body)
         self.assertEqual(400, response.status_code, response.get_json())
+        self.assertDictEqual(error_response, response.get_json())
+
+    def test_variation_errors_for_update(self):
+        self.cleanup.append(TestAPI.NAME)
+        self.post(f"/api/test_data", json={ACTION: Actions.CREATE, NAME: TestAPI.NAME, SEG_NAME: TestAPI.SEG_NAME})
+        self.post(f"/api/test_data", json=self.update_body)
+        # Test duplicate new variation name
+        self.update_body[NEW_VARIATION_NAME] = config.DEFAULT_VARIATION_NAME
+        error_response = {NEW_VARIATION_NAME: ErrorMsg.UNIQUE}
+        response = self.post(f"/api/test_data", json=self.update_body)
+        self.assertEqual(400, response.status_code, response.get_json())
+        self.assertDictEqual(error_response, response.get_json())
+        # Test new variation name too long
+        self.update_body[NEW_VARIATION_NAME] = self.NAME_101
+        error_response = {NEW_VARIATION_NAME: ErrorMsg.LESS_100}
+        response = self.post(f"/api/test_data", json=self.update_body)
+        self.assertEqual(400, response.status_code, response.get_json())
+        self.assertDictEqual(error_response, response.get_json())
+
+    # noinspection DuplicatedCode
+    def test_basic_errors_for_delete(self):
+        # Invalid type
+        response = self.post(f"/api/test_data", json={ACTION: Actions.DELETE, TYPE: "Invalid Type"})
+        self.assertEqual(400, response.status_code)
+        self.assertDictEqual({TYPE: ErrorMsg.INVALID_TYPE}, response.get_json())
+        # No test data name
+        error_response = {
+            NAME: ErrorMsg.NOT_EMPTY,
+            MACRO_NAME: ErrorMsg.NOT_EMPTY,
+            VARIATION: ErrorMsg.NOT_EMPTY
+        }
+        delete_body = {ACTION: Actions.DELETE, TYPE: Types.INPUT_CORE_BLOCK}
+        response = self.post(f"/api/test_data", json=delete_body)
+        self.assertEqual(400, response.status_code)
+        self.assertDictEqual(error_response, response.get_json())
+        # Empty Test data name
+        delete_body[NAME] = "  "
+        delete_body[MACRO_NAME] = "      "
+        response = self.post(f"/api/test_data", json=delete_body)
+        self.assertEqual(400, response.status_code)
+        self.assertDictEqual(error_response, response.get_json())
+        # Invalid Test data name and variation is 0
+        error_response = {
+            NAME: ErrorMsg.NOT_FOUND,
+            MACRO_NAME: ErrorMsg.NOT_EMPTY,
+            VARIATION: ErrorMsg.NOT_EMPTY
+        }
+        delete_body[NAME] = "Invalid name"
+        delete_body[VARIATION] = 0
+        response = self.post(f"/api/test_data", json=delete_body)
+        self.assertEqual(400, response.status_code)
         self.assertDictEqual(error_response, response.get_json())
 
     def test_errors_for_delete(self):
@@ -221,6 +255,7 @@ class InputCoreBlock(TestAPI):
         error_response = {
             NAME: ErrorMsg.NOT_EMPTY,
             MACRO_NAME: ErrorMsg.NOT_EMPTY,
+            VARIATION: ErrorMsg.NOT_FOUND,
             FIELD_DATA: [
                 {FIELD: ErrorMsg.MACRO_NOT_FOUND},
                 {FIELD: ErrorMsg.UNIQUE},
@@ -237,6 +272,7 @@ class InputCoreBlock(TestAPI):
         error_response = {
             NAME: ErrorMsg.NOT_FOUND,
             MACRO_NAME: ErrorMsg.MACRO_LIBRARY,
+            VARIATION: ErrorMsg.NOT_FOUND,
             FIELD_DATA: [
                 {FIELD: f"{ErrorMsg.MACRO_SAME} INVALID NAME"},
                 {FIELD: ErrorMsg.UNIQUE},
@@ -250,8 +286,10 @@ class InputCoreBlock(TestAPI):
         # Test different macro name
         self.delete_body[NAME] = f"  {TestAPI.NAME}  "
         self.delete_body[MACRO_NAME] = "EB0EB"
+        self.delete_body[VARIATION] = 2
         error_response = {
             MACRO_NAME: ErrorMsg.NOT_FOUND,
+            VARIATION: ErrorMsg.NOT_FOUND,
             FIELD_DATA: [
                 {FIELD: f"{ErrorMsg.MACRO_SAME} EB0EB"},
                 {FIELD: ErrorMsg.UNIQUE},
