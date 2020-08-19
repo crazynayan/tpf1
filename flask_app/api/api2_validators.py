@@ -1,7 +1,9 @@
 from typing import Tuple, List
 
 from assembly.mac2_data_macro import indexed_macros, macros
-from flask_app.api.api0_constants import ErrorMsg, Types, FIELD_DATA, FIELD, DATA, NAME, MACRO_NAME, TYPE
+from config import config
+from flask_app.api.api0_constants import ErrorMsg, Types, FIELD_DATA, FIELD, DATA, NAME, MACRO_NAME, TYPE, \
+    VARIATION_NAME, NEW_VARIATION_NAME, VARIATION
 from flask_app.api.api1_models import TestData
 
 
@@ -120,3 +122,35 @@ def get_macro_name(data_dict: dict) -> str:
         if not validate_empty_str(field, FIELD) and field[FIELD].strip().upper() in indexed_macros:
             return indexed_macros[field[FIELD].strip().upper()]
     return str()
+
+
+def get_variation(data_dict: dict, test_data: List[dict]) -> Tuple[str, int]:
+    if NEW_VARIATION_NAME in data_dict:
+        variation_name = data_dict[NEW_VARIATION_NAME]
+        variation = max(element[VARIATION] for element in test_data) + 1 if test_data else 1
+    else:
+        variation_name = data_dict.get(VARIATION_NAME, None) or config.DEFAULT_VARIATION_NAME
+        variation = next((element[VARIATION] for element in test_data if element[VARIATION_NAME] == variation_name), 1)
+    return variation_name, variation
+
+
+def validate_variation(data_dict: dict, test_data: List[dict]) -> dict:
+    errors = dict()
+    if NEW_VARIATION_NAME in data_dict:
+        if len(data_dict[NEW_VARIATION_NAME]) > 100:
+            errors[NEW_VARIATION_NAME] = ErrorMsg.LESS_100
+        if any(element[VARIATION_NAME] == data_dict[NEW_VARIATION_NAME] for element in test_data):
+            errors[NEW_VARIATION_NAME] = ErrorMsg.UNIQUE
+        if VARIATION_NAME in data_dict:
+            errors[NEW_VARIATION_NAME] = ErrorMsg.VARIATION_NAME
+            errors[VARIATION_NAME] = ErrorMsg.VARIATION_NAME
+        return errors
+    if VARIATION_NAME in data_dict:
+        if len(data_dict[VARIATION_NAME]) > 100:
+            errors[VARIATION_NAME] = ErrorMsg.LESS_100
+        if not any(element[VARIATION_NAME] == data_dict[NEW_VARIATION_NAME] for element in test_data):
+            errors[VARIATION_NAME] = ErrorMsg.NOT_FOUND
+        return errors
+    if test_data and not any(element[VARIATION_NAME] == config.DEFAULT_VARIATION_NAME for element in test_data):
+        errors[VARIATION_NAME] = ErrorMsg.NOT_EMPTY
+    return errors

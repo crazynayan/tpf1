@@ -1,4 +1,24 @@
+# Special Request Attributes
 ACTION = "action"
+NEW_NAME = "new_name"
+NEW_VARIATION_NAME = "new_variation_name"
+
+# Special Response Attributes
+TEST_DATA = "test_data"
+
+# Test Data Attributes
+NAME = "name"
+SEG_NAME = "seg_name"
+TYPE = "type"
+FIELD_DATA = "field_data"
+MACRO_NAME = "macro_name"
+VARIATION = "variation"
+VARIATION_NAME = "variation_name"
+
+# Field Data Attributes
+FIELD = "field"
+DATA = "data"
+LENGTH = "length"
 
 
 class Actions:
@@ -19,21 +39,6 @@ class Types:
 
 ALL_TYPES = [value for key, value in Types.__dict__.items() if not key.startswith("__")]
 
-TEST_DATA = "test_data"
-NEW_NAME = "new_name"
-
-# Test Data Attributes
-NAME = "name"
-SEG_NAME = "seg_name"
-TYPE = "type"
-FIELD_DATA = "field_data"
-MACRO_NAME = "macro_name"
-
-# Field Data Attributes
-FIELD = "field"
-DATA = "data"
-LENGTH = "length"
-
 
 class ErrorMsg:
     NOT_EMPTY = "must not be empty"
@@ -48,6 +53,7 @@ class ErrorMsg:
     MACRO_NOT_FOUND = "macro name not found"
     INVALID_TYPE = f"must be either {', '.join(ALL_TYPES)}"
     DATA_SAME = "must be different than the original data"
+    VARIATION_NAME = f"must specify either {VARIATION_NAME} or {NEW_VARIATION_NAME}"
 
 
 class SuccessMsg:

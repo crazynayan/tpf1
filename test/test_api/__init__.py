@@ -4,6 +4,7 @@ from unittest import TestCase
 
 from config import config
 from flask_app import tpf1_app
+from flask_app.api.api0_constants import NAME
 from flask_app.auth import User
 
 
@@ -31,6 +32,11 @@ class TestAPI(TestCase):
 
     def setUp(self):
         self.client = tpf1_app.test_client()
+        self.cleanup = list()
+
+    def tearDown(self):
+        for name in self.cleanup:
+            self.delete(f"/api/test_data", query_string={NAME: name})
 
     @authenticated_request
     def get(self, url: str, **kwargs):

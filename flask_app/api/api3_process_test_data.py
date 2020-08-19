@@ -2,10 +2,11 @@ from typing import List
 
 from assembly.seg6_segment import segments
 from flask_app.api.api0_constants import ErrorMsg, Types, NEW_NAME, NAME, ACTION, Actions, SEG_NAME, TYPE, FIELD_DATA, \
-    FIELD, DATA, MACRO_NAME, SuccessMsg
+    FIELD, DATA, MACRO_NAME, SuccessMsg, VARIATION, VARIATION_NAME
 from flask_app.api.api1_models import TestData
 from flask_app.api.api2_validators import validate_empty_str, validate_empty_list, validate_new_name, \
-    get_test_data, validate_macro_name, validate_field_data_for_delete, validate_field_data_for_update, get_macro_name
+    get_test_data, validate_macro_name, validate_field_data_for_delete, validate_field_data_for_update, \
+    get_macro_name, validate_variation, get_variation
 
 
 def process_test_data(data_dict: dict) -> (int, dict):
@@ -79,8 +80,11 @@ def copy_test_data(data_dict: dict) -> (int, dict):
 
 def update_input_core_block(data_dict: dict) -> (int, dict):
     test_data, errors = get_test_data(data_dict, Types.INPUT_CORE_BLOCK)
+    errors = {**errors, **validate_variation(data_dict, test_data)}
     macro_name = get_macro_name(data_dict)
-    core_dict = next((element for element in test_data if element[MACRO_NAME] == macro_name), dict())
+    variation_name, variation = get_variation(data_dict, test_data)
+    core_dict = next((element for element in test_data if element[MACRO_NAME] == macro_name
+                      and element[VARIATION] == variation), dict())
     db_fields = core_dict[FIELD_DATA] if FIELD_DATA in core_dict else list()
     errors = {**errors, **validate_field_data_for_update(data_dict, macro_name, db_fields)}
     if errors:
@@ -92,6 +96,8 @@ def update_input_core_block(data_dict: dict) -> (int, dict):
         core_dict[FIELD_DATA] = [{FIELD: field[FIELD].strip().upper(), DATA: field[DATA]}
                                  for field in data_dict[FIELD_DATA]]
         core_dict[MACRO_NAME] = macro_name
+        core_dict[VARIATION_NAME] = variation_name
+        core_dict[VARIATION] = variation
         response = TestData.objects.no_orm.truncate.create(core_dict)
         return 200, response
     # Update an existing core block
@@ -117,7 +123,7 @@ def delete_input_core_block(data_dict: dict) -> (int, dict):
         return 400, errors
     query = TestData.objects.filter_by(name=data_dict[NAME], type=Types.INPUT_CORE_BLOCK, macro_name=macro_name)
     if validate_empty_list(data_dict, FIELD_DATA):
-        # Delete the entire core block if FIELD_DATA not present
+        # Delete the entire core block if field_data is not specified on input
         query.delete()
         return 200, {Types.INPUT_CORE_BLOCK: SuccessMsg.DELETE}
     for field in data_dict[FIELD_DATA]:
@@ -125,9 +131,9 @@ def delete_input_core_block(data_dict: dict) -> (int, dict):
                           if core_field[FIELD] == field[FIELD].strip().upper())
         core_dict[FIELD_DATA].remove(core_field)
     if not core_dict[FIELD_DATA]:
-        # If no remaining field_data after delete then delete the core block
+        # If no remaining field then delete the core block
         query.delete()
         return 200, {Types.INPUT_CORE_BLOCK: SuccessMsg.DELETE}
-    # Delete the field and return the core block state
+    # Return the core block state after deleting the field
     response = TestData.objects.no_orm.truncate.save(core_dict)
     return 200, response
