@@ -58,13 +58,13 @@ class InputCoreBlock(TestAPI):
         response = self.post(f"/api/test_data", json=self.update_body)
         self.assertEqual(200, response.status_code, response.get_json())
         self.assertDictEqual(self.response, response.get_json())
-        # Remove one field
+        # Delete one field
         self.delete_body[FIELD_DATA][0][FIELD] = "Wa0bbr "
         self.response[FIELD_DATA] = [{FIELD: "#WA0TTY", DATA: "01"}]
         response = self.post(f"/api/test_data", json=self.delete_body)
         self.assertEqual(200, response.status_code, response.get_json())
         self.assertDictEqual(self.response, response.get_json())
-        # Remove the last remaining field
+        # Delete the last remaining field
         self.delete_body[FIELD_DATA][0][FIELD] = " #Wa0tty"
         response = self.post(f"/api/test_data", json=self.delete_body)
         self.assertEqual(200, response.status_code, response.get_json())
@@ -88,6 +88,46 @@ class InputCoreBlock(TestAPI):
         response = self.post(f"/api/test_data", json=self.delete_body)
         self.assertEqual(200, response.status_code, response.get_json())
         self.assertDictEqual({Types.INPUT_CORE_BLOCK: SuccessMsg.DELETE}, response.get_json())
+
+    def test_multiple_variations(self):
+        self.cleanup.append(TestAPI.NAME)
+        response = self.post(f"/api/test_data", json={ACTION: Actions.CREATE, NAME: TestAPI.NAME,
+                                                      SEG_NAME: TestAPI.SEG_NAME})
+        responses = [response.get_json()]
+        # Add first variation
+        self.update_body[NEW_VARIATION_NAME] = self.response[VARIATION_NAME] = "First variation"
+        self.response[VARIATION] = 1
+        response = self.post(f"/api/test_data", json=self.update_body)
+        self.assertEqual(200, response.status_code, response.get_json())
+        self.response["id"] = response.get_json()["id"]
+        self.assertEqual(self.response, response.get_json())
+        responses.append(self.response.copy())
+        # Add second variation
+        self.update_body[NEW_VARIATION_NAME] = self.response[VARIATION_NAME] = "Second variation"
+        self.response[VARIATION] = 2
+        response = self.post(f"/api/test_data", json=self.update_body)
+        self.assertEqual(200, response.status_code, response.get_json())
+        self.response["id"] = response.get_json()["id"]
+        self.assertEqual(self.response, response.get_json())
+        responses.append(self.response.copy())
+        # Check test data
+        response = self.get(f"/api/test_data", query_string={NAME: TestAPI.NAME})
+        self.assertEqual(200, response.status_code, response.get_json())
+        self.assertCountEqual(responses, response.get_json())
+        # Delete second variation
+        self.delete_body[VARIATION] = 2
+        response = self.post(f"/api/test_data", json=self.delete_body)
+        self.assertEqual(200, response.status_code, response.get_json())
+        self.assertEqual({Types.INPUT_CORE_BLOCK: SuccessMsg.DELETE}, response.get_json())
+        # Delete first variation
+        self.delete_body[VARIATION] = 1
+        del self.delete_body[FIELD_DATA]
+        response = self.post(f"/api/test_data", json=self.delete_body)
+        self.assertEqual(200, response.status_code, response.get_json())
+        self.assertEqual({Types.INPUT_CORE_BLOCK: SuccessMsg.DELETE}, response.get_json())
+        # Check test data
+        response = self.get(f"/api/test_data", query_string={NAME: TestAPI.NAME})
+        self.assertListEqual([responses[0]], response.get_json())
 
     # noinspection DuplicatedCode
     def test_basic_errors_for_update(self):
@@ -167,9 +207,10 @@ class InputCoreBlock(TestAPI):
     def test_variation_errors_for_update(self):
         self.cleanup.append(TestAPI.NAME)
         self.post(f"/api/test_data", json={ACTION: Actions.CREATE, NAME: TestAPI.NAME, SEG_NAME: TestAPI.SEG_NAME})
+        self.update_body[NEW_VARIATION_NAME] = "First variation"
         self.post(f"/api/test_data", json=self.update_body)
         # Test duplicate new variation name
-        self.update_body[NEW_VARIATION_NAME] = config.DEFAULT_VARIATION_NAME
+        self.update_body[NEW_VARIATION_NAME] = "First variation"
         error_response = {NEW_VARIATION_NAME: ErrorMsg.UNIQUE}
         response = self.post(f"/api/test_data", json=self.update_body)
         self.assertEqual(400, response.status_code, response.get_json())
@@ -177,6 +218,22 @@ class InputCoreBlock(TestAPI):
         # Test new variation name too long
         self.update_body[NEW_VARIATION_NAME] = self.NAME_101
         error_response = {NEW_VARIATION_NAME: ErrorMsg.LESS_100}
+        response = self.post(f"/api/test_data", json=self.update_body)
+        self.assertEqual(400, response.status_code, response.get_json())
+        self.assertDictEqual(error_response, response.get_json())
+        # Test variation not found
+        del self.update_body[NEW_VARIATION_NAME]
+        self.update_body[VARIATION] = 100
+        error_response = {VARIATION: ErrorMsg.NOT_FOUND}
+        response = self.post(f"/api/test_data", json=self.update_body)
+        self.assertEqual(400, response.status_code, response.get_json())
+        self.assertDictEqual(error_response, response.get_json())
+        # Test variation not empty and data not same
+        del self.update_body[VARIATION]
+        error_response = {
+            VARIATION: ErrorMsg.NOT_EMPTY,
+            FIELD_DATA: [{DATA: ErrorMsg.DATA_SAME}]
+        }
         response = self.post(f"/api/test_data", json=self.update_body)
         self.assertEqual(400, response.status_code, response.get_json())
         self.assertDictEqual(error_response, response.get_json())

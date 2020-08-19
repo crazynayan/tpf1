@@ -54,7 +54,8 @@ def delete_input_core_block(data_dict: dict) -> (int, dict):
     errors = {**errors, **validate_field_data_for_delete(data_dict, macro_name, db_fields)}
     if errors:
         return 400, errors
-    query = TestData.objects.filter_by(name=data_dict[NAME], type=Types.INPUT_CORE_BLOCK, macro_name=macro_name)
+    query = TestData.objects.filter_by(name=data_dict[NAME], type=Types.INPUT_CORE_BLOCK)
+    query = query.filter_by(macro_name=macro_name, variation=variation)
     if validate_empty_list(data_dict, FIELD_DATA):
         # Delete the entire core block if field_data is not specified on input
         query.delete()
