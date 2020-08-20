@@ -23,7 +23,7 @@ def create_test_data(data_dict: dict) -> (int, dict):
     return 200, header
 
 
-def rename_test_data(data_dict: dict) -> (int, dict):
+def rename_test_data_name(data_dict: dict) -> (int, dict):
     test_data, errors = get_test_data(data_dict)
     errors = {**errors, **validate_new_name(data_dict, NEW_NAME)}
     if errors:

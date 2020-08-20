@@ -131,6 +131,10 @@ class InputCoreBlock(TestAPI):
 
     # noinspection DuplicatedCode
     def test_basic_errors_for_update(self):
+        # No type
+        response = self.post(f"/api/test_data", json={ACTION: Actions.UPDATE})
+        self.assertEqual(400, response.status_code)
+        self.assertDictEqual({TYPE: ErrorMsg.NOT_EMPTY}, response.get_json())
         # Invalid type
         response = self.post(f"/api/test_data", json={ACTION: Actions.UPDATE, TYPE: "Invalid Type"})
         self.assertEqual(400, response.status_code)
@@ -240,6 +244,10 @@ class InputCoreBlock(TestAPI):
 
     # noinspection DuplicatedCode
     def test_basic_errors_for_delete(self):
+        # No type
+        response = self.post(f"/api/test_data", json={ACTION: Actions.UPDATE})
+        self.assertEqual(400, response.status_code)
+        self.assertDictEqual({TYPE: ErrorMsg.NOT_EMPTY}, response.get_json())
         # Invalid type
         response = self.post(f"/api/test_data", json={ACTION: Actions.DELETE, TYPE: "Invalid Type"})
         self.assertEqual(400, response.status_code)

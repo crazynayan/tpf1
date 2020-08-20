@@ -80,23 +80,18 @@ def get_variation(data_dict: dict, test_data: List[dict]) -> Tuple[str, int]:
 
 
 def validate_variation_name(data_dict: dict, test_data: List[dict]) -> dict:
-    errors = dict()
+    if VARIATION in data_dict and NEW_VARIATION_NAME in data_dict:
+        return {
+            NEW_VARIATION_NAME: ErrorMsg.VARIATION_NAME,
+            VARIATION: ErrorMsg.VARIATION_NAME
+        }
     if NEW_VARIATION_NAME in data_dict:
-        if len(data_dict[NEW_VARIATION_NAME]) > 100:
-            errors[NEW_VARIATION_NAME] = ErrorMsg.LESS_100
-        if any(element[VARIATION_NAME] == data_dict[NEW_VARIATION_NAME] for element in test_data):
-            errors[NEW_VARIATION_NAME] = ErrorMsg.UNIQUE
-        if VARIATION in data_dict:
-            errors[NEW_VARIATION_NAME] = ErrorMsg.VARIATION_NAME
-            errors[VARIATION] = ErrorMsg.VARIATION_NAME
-        return errors
+        return validate_variation_new_name(data_dict, test_data)
     if VARIATION in data_dict:
-        if not any(element[VARIATION] == data_dict[VARIATION] for element in test_data):
-            errors[VARIATION] = ErrorMsg.NOT_FOUND
-        return errors
+        return validate_variation_number(data_dict, test_data)
     if test_data and not any(element[VARIATION_NAME] == config.DEFAULT_VARIATION_NAME for element in test_data):
-        errors[VARIATION] = ErrorMsg.NOT_EMPTY
-    return errors
+        return {VARIATION: ErrorMsg.NOT_EMPTY}
+    return dict()
 
 
 def validate_variation_number(data_dict: dict, test_data: List[dict]) -> dict:
@@ -105,4 +100,15 @@ def validate_variation_number(data_dict: dict, test_data: List[dict]) -> dict:
         return error
     if not any(element[VARIATION] == data_dict[VARIATION] for element in test_data):
         return {VARIATION: ErrorMsg.NOT_FOUND}
+    return dict()
+
+
+def validate_variation_new_name(data_dict: dict, test_data: List[dict]) -> dict:
+    error = validate_empty_str(data_dict, NEW_VARIATION_NAME)
+    if error:
+        return error
+    if len(data_dict[NEW_VARIATION_NAME]) > 100:
+        return {NEW_VARIATION_NAME: ErrorMsg.LESS_100}
+    if any(element[VARIATION_NAME] == data_dict[NEW_VARIATION_NAME] for element in test_data):
+        return {NEW_VARIATION_NAME: ErrorMsg.UNIQUE}
     return dict()
