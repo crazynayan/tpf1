@@ -47,9 +47,5 @@ class TestAPI(TestCase):
         return self.client.post(url, **kwargs)
 
     @authenticated_request
-    def patch(self, url: str, **kwargs):
-        return self.client.patch(url, **kwargs)
-
-    @authenticated_request
     def delete(self, url: str, **kwargs):
         return self.client.delete(url, **kwargs)

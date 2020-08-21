@@ -35,6 +35,7 @@ ALL_ACTIONS = [value for key, value in Actions.__dict__.items() if not key.start
 class Types:
     INPUT_HEADER = "Input Header"
     INPUT_CORE_BLOCK = "Input Core Block"
+    OUTPUT_CORE_BLOCK = "Output Core Block"
 
 
 ALL_TYPES = [value for key, value in Types.__dict__.items() if not key.startswith("__")]
@@ -52,7 +53,8 @@ class ErrorMsg:
     MACRO_SAME = "must be from the same macro"
     MACRO_NOT_FOUND = "macro name not found"
     INVALID_TYPE = f"must be either {', '.join(ALL_TYPES)}"
-    DATA_SAME = "must be different than the original data"
+    DATA_SAME = "must be different than the original"
+    GREATER_0 = "must be greater than 0"
     VARIATION_NAME = f"must specify either {VARIATION} or {NEW_VARIATION_NAME} - not both"
 
 

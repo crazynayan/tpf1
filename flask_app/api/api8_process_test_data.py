@@ -4,7 +4,7 @@ from flask_app.api.api1_models import TestData
 from flask_app.api.api2_validators import validate_empty_str, get_test_data, validate_variation_number, \
     validate_variation_new_name
 from flask_app.api.api3_headers import create_test_data, rename_test_data_name, copy_test_data
-from flask_app.api.api4_input_core import update_input_core_block, delete_input_core_block
+from flask_app.api.api4_core_block import update_core_block, delete_core_block
 
 
 def process_test_data(data_dict: dict) -> (int, dict):
@@ -28,11 +28,11 @@ def update_test_data(data_dict: dict) -> (int, dict):
     error = validate_empty_str(data_dict, TYPE)
     if error:
         return 400, error
-    if data_dict[TYPE] == Types.INPUT_CORE_BLOCK:
+    if data_dict[TYPE] in (Types.INPUT_CORE_BLOCK, Types.OUTPUT_CORE_BLOCK):
         if data_dict[ACTION] == Actions.UPDATE:
-            return update_input_core_block(data_dict)
+            return update_core_block(data_dict)
         if data_dict[ACTION] == Actions.DELETE:
-            return delete_input_core_block(data_dict)
+            return delete_core_block(data_dict)
     return 400, {TYPE: ErrorMsg.INVALID_TYPE}
 
 
