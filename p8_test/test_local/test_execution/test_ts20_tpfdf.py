@@ -1,8 +1,8 @@
 import unittest
 
 from execution.ex5_execute import TpfServer
-from test import TestDataUTS
-from test.test_eta5_execution import tr1gaa
+from p8_test.test_local import TestDataUTS
+from p8_test.test_local.test_eta5_execution import tr1gaa
 
 
 class DbTest(unittest.TestCase):

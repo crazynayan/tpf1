@@ -3,7 +3,7 @@ import unittest
 from assembly.mac2_data_macro import macros
 from config import config
 from execution.ex5_execute import TpfServer
-from test import TestDataUTS
+from p8_test.test_local import TestDataUTS
 
 
 class NonConditional1(unittest.TestCase):

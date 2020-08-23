@@ -1,6 +1,6 @@
 import random
 import string
-from typing import Dict, List, Union
+from typing import List, Union, Dict
 
 from assembly.mac2_data_macro import DataMacro
 from config import config

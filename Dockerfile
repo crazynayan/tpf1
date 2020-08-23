@@ -13,11 +13,11 @@ COPY assembly assembly
 COPY execution execution
 COPY db db
 COPY flask_app flask_app
-COPY test test
+COPY p8_test p8_test
 COPY config.py google-cloud-tokyo.json ./
 
 ENV GOOGLE_APPLICATION_CREDENTIALS google-cloud-tokyo.json
 
-RUN exec python -m unittest discover -s test -v -f
+RUN exec python -m unittest discover -s p8_test -v -f
 
 CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --access-logfile - --error-logfile - flask_app:tpf1_app

@@ -1,4 +1,4 @@
-from test.test_eta5_execution import NameGeneral
+from p8_test.test_local.test_eta5_execution import NameGeneral
 
 
 class NameFailETA2(NameGeneral):

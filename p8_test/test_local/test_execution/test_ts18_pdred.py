@@ -1,7 +1,7 @@
 import unittest
 
 from execution.ex5_execute import TpfServer
-from test import TestDataUTS
+from p8_test.test_local import TestDataUTS
 
 
 class PdredNames(unittest.TestCase):

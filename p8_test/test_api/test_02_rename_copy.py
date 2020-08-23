@@ -1,7 +1,7 @@
 from config import config
 from flask_app.api.api0_constants import Types, NAME, SEG_NAME, TYPE, ACTION, Actions, ErrorMsg, NEW_NAME, VARIATION, \
     NEW_VARIATION_NAME, VARIATION_NAME, MACRO_NAME, FIELD_DATA, FIELD, DATA
-from test.test_api import TestAPI
+from p8_test.test_api import TestAPI
 
 
 class Rename(TestAPI):

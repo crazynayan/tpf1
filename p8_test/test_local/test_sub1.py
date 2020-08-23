@@ -2,7 +2,7 @@ import unittest
 
 from assembly.seg6_segment import segments
 from execution.ex5_execute import TpfServer
-from test import TestDataUTS
+from p8_test.test_local import TestDataUTS
 from utils.data_type import DataType
 
 

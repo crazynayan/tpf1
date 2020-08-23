@@ -1,5 +1,5 @@
 from config import config
-from test.test_eta5_execution import NameGeneral, fqtv_gld
+from p8_test.test_local.test_eta5_execution import NameGeneral, fqtv_gld
 
 
 class BeforeNameETAW(NameGeneral):

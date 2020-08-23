@@ -1,5 +1,5 @@
 from flask_app.api.api0_constants import Types, NAME, SEG_NAME, TYPE, ACTION, Actions, ErrorMsg, TEST_DATA, SuccessMsg
-from test.test_api import TestAPI
+from p8_test.test_api import TestAPI
 
 
 class InputHeader(TestAPI):

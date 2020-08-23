@@ -3,7 +3,7 @@ from base64 import b64encode
 
 from assembly.mac2_data_macro import macros
 from execution.ex5_execute import TpfServer
-from test import TestDataUTS
+from p8_test.test_local import TestDataUTS
 from utils.data_type import DataType
 
 

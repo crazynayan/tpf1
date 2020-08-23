@@ -1,7 +1,7 @@
 from base64 import b64encode
 from itertools import product
 
-from test.test_eta5_execution import NameGeneral
+from p8_test.test_local.test_eta5_execution import NameGeneral
 from utils.data_type import DataType
 
 
