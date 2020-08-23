@@ -1,8 +1,8 @@
 import unittest
 
-from execution.ex5_execute import TpfServer
+from p1_utils.data_type import DataType
+from p4_execution.ex5_execute import TpfServer
 from p8_test.test_local import TestDataUTS
-from utils.data_type import DataType
 
 
 class Wgu4Test(unittest.TestCase):

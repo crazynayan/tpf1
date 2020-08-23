@@ -1,5 +1,5 @@
 from config import config
-from flask_app.api.api0_constants import TYPE, Types, FIELD_DATA, FIELD, DATA, MACRO_NAME, Actions, ACTION, NAME, \
+from p7_flask_app.api.api0_constants import TYPE, Types, FIELD_DATA, FIELD, DATA, MACRO_NAME, Actions, ACTION, NAME, \
     SEG_NAME, SuccessMsg, ErrorMsg, VARIATION, VARIATION_NAME, NEW_VARIATION_NAME
 from p8_test.test_api import TestAPI
 

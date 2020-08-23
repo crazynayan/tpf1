@@ -1,8 +1,8 @@
 import unittest
 
-from assembly.mac2_data_macro import macros
 from config import config
-from execution.ex5_execute import TpfServer
+from p2_assembly.mac2_data_macro import macros
+from p4_execution.ex5_execute import TpfServer
 from p8_test.test_local import TestDataUTS
 
 

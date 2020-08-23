@@ -1,6 +1,6 @@
 import unittest
 
-from assembly.seg6_segment import segments, Segment
+from p2_assembly.seg6_segment import segments, Segment
 
 
 class Execute(unittest.TestCase):

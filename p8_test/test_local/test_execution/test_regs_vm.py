@@ -1,8 +1,8 @@
 import unittest
 
-from execution.ex0_regs_store import Registers, Storage
-from utils.data_type import Register
-from utils.errors import RegisterInvalidError, MaskError
+from p1_utils.data_type import Register
+from p1_utils.errors import RegisterInvalidError, MaskError
+from p4_execution.ex0_regs_store import Registers, Storage
 
 
 class RegistersTest(unittest.TestCase):

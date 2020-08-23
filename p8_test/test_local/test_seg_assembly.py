@@ -1,9 +1,9 @@
 import unittest
 
-from assembly.mac2_data_macro import macros
-from assembly.seg6_segment import segments, Segment
-from execution.ex5_execute import TpfServer
-from utils.file_line import Line, File
+from p1_utils.file_line import Line, File
+from p2_assembly.mac2_data_macro import macros
+from p2_assembly.seg6_segment import segments, Segment
+from p4_execution.ex5_execute import TpfServer
 
 
 class SegmentTest(unittest.TestCase):

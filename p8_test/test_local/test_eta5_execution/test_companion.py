@@ -1,7 +1,7 @@
 from base64 import b64encode
 
+from p1_utils.data_type import DataType
 from p8_test.test_local.test_eta5_execution import NameGeneral, hfax_2812_gld, fqtv_gld, itin_2811_2812, tr1gaa
-from utils.data_type import DataType
 
 
 class Companion(NameGeneral):

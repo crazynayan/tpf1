@@ -1,9 +1,9 @@
 import unittest
 
-from execution.ex5_execute import TpfServer
+from p1_utils.data_type import DataType
+from p4_execution.ex5_execute import TpfServer
 from p8_test.test_local import TestDataUTS
 from p8_test.test_local.test_eta5_execution import hfax_2812_gld, fqtv_gld, itin_2811_2812
-from utils.data_type import DataType
 
 
 class PdredHfax(unittest.TestCase):

@@ -1,8 +1,8 @@
 import unittest
 
-from assembly.seg6_segment import segments, Segment
-from utils.errors import RegisterInvalidError, DataInvalidError, NotFoundInSymbolTableError, FieldDspInvalidError
-from utils.file_line import Line
+from p1_utils.errors import RegisterInvalidError, DataInvalidError, NotFoundInSymbolTableError, FieldDspInvalidError
+from p1_utils.file_line import Line
+from p2_assembly.seg6_segment import segments, Segment
 
 
 class RegisterVariants(unittest.TestCase):

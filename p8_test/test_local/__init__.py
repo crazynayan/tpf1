@@ -2,10 +2,10 @@ import random
 import string
 from typing import List, Union, Dict
 
-from assembly.mac2_data_macro import DataMacro
 from config import config
-from db.test_data import TestData
-from db.test_data_elements import Pnr
+from p2_assembly.mac2_data_macro import DataMacro
+from p3_db.test_data import TestData
+from p3_db.test_data_elements import Pnr
 
 
 class TestDataUTS(TestData):

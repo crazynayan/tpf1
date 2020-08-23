@@ -1,8 +1,8 @@
 from base64 import b64encode
 from itertools import product
 
+from p1_utils.data_type import DataType
 from p8_test.test_local.test_eta5_execution import NameGeneral
-from utils.data_type import DataType
 
 
 class Variation(NameGeneral):

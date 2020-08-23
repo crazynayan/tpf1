@@ -3,9 +3,9 @@ from random import choice
 from unittest import TestCase
 
 from config import config
-from flask_app import tpf1_app
-from flask_app.api.api0_constants import NAME
-from flask_app.auth import User
+from p7_flask_app import tpf1_app
+from p7_flask_app.api.api0_constants import NAME
+from p7_flask_app.auth import User
 
 
 def authenticated_request(func):

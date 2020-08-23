@@ -2,12 +2,12 @@ import unittest
 from base64 import b64encode
 from copy import deepcopy
 
-from assembly.mac2_data_macro import macros
 from config import config
-from db.test_data_elements import FixedFile, PoolFile, FileItem
-from execution.ex5_execute import TpfServer
+from p1_utils.data_type import DataType
+from p2_assembly.mac2_data_macro import macros
+from p3_db.test_data_elements import FixedFile, PoolFile, FileItem
+from p4_execution.ex5_execute import TpfServer
 from p8_test.test_local import TestDataUTS
-from utils.data_type import DataType
 
 
 class EtajTest(unittest.TestCase):

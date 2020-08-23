@@ -1,10 +1,10 @@
 import unittest
 from base64 import b64encode
 
-from assembly.mac2_data_macro import macros
-from execution.ex5_execute import TpfServer
+from p1_utils.data_type import DataType
+from p2_assembly.mac2_data_macro import macros
+from p4_execution.ex5_execute import TpfServer
 from p8_test.test_local import TestDataUTS
-from utils.data_type import DataType
 
 
 # Change 4CC1 to 4E2F to ____ i.e. 20Oct19 to 20Oct20 to 20Oct21 (every year after 20NOV)
