@@ -46,9 +46,9 @@ class DataMacro(DataMacroImplementation):
             except NotFoundInSymbolTableError:
                 second_list.append((line, self._location_counter))
         # Add the saved equates which were not added in the first pass
-        self._second_pass('EQU', second_list)
+        self._second_pass("EQU", second_list)
         # Add the saved DS which were not added in the first pass
-        self._second_pass('DS', second_list)
+        self._second_pass("DS", second_list)
         return
 
     @property
@@ -65,9 +65,9 @@ class DataMacro(DataMacroImplementation):
 
 
 class _DataMacroCollection:
-    MAC_EXT = {'.mac', '.txt'}
-    MAC_FOLDER_NAME = os.path.join(config.ROOT_DIR, 'macro')
-    DEFAULT_MACROS = ('AASEQ', 'SYSEQ', 'SYSEQC', 'EB0EB')
+    MAC_EXT = {".mac", ".txt"}
+    MAC_FOLDER_NAME = os.path.join(config.ROOT_DIR, "p0_source", "macro")
+    DEFAULT_MACROS = ("AASEQ", "SYSEQ", "SYSEQC", "EB0EB")
 
     def __init__(self):
         self.macros: Dict[str, DataMacro] = dict()

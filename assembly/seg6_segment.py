@@ -33,8 +33,8 @@ class Segment(UserDefinedMacroImplementation):
         if self.nodes:
             return
         # Default processing
-        self.set_using(self.name, Register('R8'))
-        self.load_macro('EB0EB', base='R9')
+        self.set_using(self.name, Register("R8"))
+        self.load_macro("EB0EB", base="R9")
         # Get the data from line after removing CVS and empty lines.
         file_lines = File.open(self.file_name)
         # Create a list of Line objects
@@ -97,7 +97,7 @@ class Segment(UserDefinedMacroImplementation):
         # return True -> skip creating node.
         # return False -> continue creating the node.
         if line.is_sw00sr:
-            self.load_macro('SW00SR', 'R3')
+            self.load_macro("SW00SR", "R3")
             return False
         if line.command in macros:
             self.load_macro_from_line(line)
@@ -130,8 +130,8 @@ class Segment(UserDefinedMacroImplementation):
 
 
 class _SegmentCollection:
-    ASM_EXT = {'.asm', '.txt'}
-    ASM_FOLDER_NAME = os.path.join(config.ROOT_DIR, 'asm')
+    ASM_EXT = {".asm", ".txt"}
+    ASM_FOLDER_NAME = os.path.join(config.ROOT_DIR, "p0_source", "asm")
 
     def __init__(self):
         self.segments: Dict = dict()  # Dictionary of Segment. Segment name is the key.
