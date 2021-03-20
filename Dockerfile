@@ -16,9 +16,9 @@ COPY p8_test p8_test
 COPY config.py google-cloud-tokyo.json google-cloud.json ./
 
 # Dev database
-ENV GOOGLE_APPLICATION_CREDENTIALS google-cloud.json
+# ENV GOOGLE_APPLICATION_CREDENTIALS google-cloud.json
 # Prod database
-#ENV GOOGLE_APPLICATION_CREDENTIALS google-cloud-tokyo.json
+ENV GOOGLE_APPLICATION_CREDENTIALS google-cloud-tokyo.json
 
 RUN exec python -m unittest discover -s p8_test -v -f
 

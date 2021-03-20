@@ -15,5 +15,6 @@ p0_source/asm/wgul.asm
 p0_source/asm/wpgb.asm
 p0_source/asm/savq.asm
 p0_source/asm/saa0.asm
+p0_source/asm/wpa1.asm
 google-cloud.json
 google-cloud-tokyo.json

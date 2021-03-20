@@ -108,6 +108,7 @@ class RealtimeMacroImplementation(InstructionImplementation):
         self._command['DBRED'] = self.dbred
         self._command['DBCLS'] = self.key_value
         self._command['DBIFB'] = self.key_value
+        self._command['FLIPC'] = self.key_value
 
     def key_value(self, line: Line) -> KeyValue:
         operands_list: List[str] = line.split_operands()
@@ -196,6 +197,7 @@ class UserDefinedMacroImplementation(RealtimeMacroImplementation):
         self._command['MCPCK'] = self.key_value
         self._command['NMSEA'] = self.key_value
         self._command['PRIMA'] = self.key_value
+        self._command['AGSQR'] = self.key_value
         # Tool specific commands
         self._command['ERROR_CHECK'] = self.key_value
         self._command['PARS_DATE'] = self.key_value
