@@ -6,6 +6,7 @@ __pycache__
 static/
 tpf1-key.json
 p0_source/macro/
+p0_source/asm/
 p0_source/asm/eta5.asm
 p0_source/asm/etaj.asm
 p0_source/asm/sub1.asm
