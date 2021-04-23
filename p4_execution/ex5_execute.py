@@ -178,6 +178,11 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["ALASC"] = self.alasc
         self._ex["PNAMC"] = self.pnamc
         self._ex["FLIPC"] = self.not_implemented
+        self._ex["LODIC"] = self.not_implemented
+        self._ex["EOWNRC"] = self.not_implemented
+        self._ex["DLAYC"] = self.not_implemented
+        self._ex["DEFRC"] = self.not_implemented
+        self._ex["CREMC"] = self.not_implemented
 
         # SPM Macros
         self._ex["#IF"] = self.not_implemented
@@ -225,6 +230,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["PDRED"] = self.pdred
         self._ex["PDCLS"] = self.pdcls
         self._ex["PDMOD"] = self.not_implemented
+        self._ex["LOCAA"] = self.not_implemented
         # PDADD, PDDEL - Not in ETA5
 
         # TPFDF Macros
@@ -232,6 +238,8 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["DBRED"] = self.dbred
         self._ex["DBCLS"] = self.dbcls
         self._ex["DBIFB"] = self.dbifb
+        self._ex["DBREP"] = self.not_implemented
+        self._ex["DBMOD"] = self.not_implemented
         # DBADD, DBDEL - Not in ETA5
 
         # No operation

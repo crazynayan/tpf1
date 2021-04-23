@@ -108,7 +108,14 @@ class RealtimeMacroImplementation(InstructionImplementation):
         self._command["DBRED"] = self.dbred
         self._command["DBCLS"] = self.key_value
         self._command["DBIFB"] = self.key_value
+        self._command["DBREP"] = self.key_value
+        self._command["DBMOD"] = self.key_value
         self._command["FLIPC"] = self.key_value
+        self._command["LODIC"] = self.key_value
+        self._command["EOWNRC"] = self.key_value
+        self._command["DLAYC"] = self.key_value
+        self._command["DEFRC"] = self.key_value
+        self._command["CREMC"] = self.key_value
 
     def key_value(self, line: Line) -> KeyValue:
         operands_list: List[str] = line.split_operands()
@@ -210,6 +217,7 @@ class UserDefinedMacroImplementation(StructuredProgrammingMacroImplementation):
         self._command["PDRED"] = self.key_value
         self._command["PDCLS"] = self.key_value
         self._command["PDMOD"] = self.key_value
+        self._command["LOCAA"] = self.key_value
         # Heap & AAA related
         self._command["AAGET"] = self.key_value
         self._command["CFCMA"] = self.key_value
