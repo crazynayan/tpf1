@@ -187,7 +187,20 @@ class StructuredProgrammingMacroImplementation(RealtimeMacroImplementation):
     def __init__(self, name: str):
         super().__init__(name)
         self._command["#IF"] = self.key_value
+        self._command["#ELIF"] = self.key_value
+        self._command["#"] = self.key_value
+        self._command["#EIF"] = self.key_value
+        self._command["#DO"] = self.key_value
         self._command["#DOEX"] = self.key_value
+        self._command["#EXIF"] = self.key_value
+        self._command["#OREL"] = self.key_value
+        self._command["#ELOP"] = self.key_value
+        self._command["#EDO"] = self.key_value
+        self._command["#GOTO"] = self.key_value
+        self._command["#LOCA"] = self.key_value
+        self._command["#PERF"] = self.key_value
+        self._command["#SUBR"] = self.key_value
+        self._command["#ESUB"] = self.key_value
 
 
 class UserDefinedMacroImplementation(StructuredProgrammingMacroImplementation):

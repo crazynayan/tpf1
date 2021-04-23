@@ -181,7 +181,20 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
 
         # SPM Macros
         self._ex["#IF"] = self.not_implemented
+        self._ex["#ELIF"] = self.not_implemented
+        self._ex["#"] = self.not_implemented
+        self._ex["#EIF"] = self.not_implemented
+        self._ex["#DO"] = self.not_implemented
         self._ex["#DOEX"] = self.not_implemented
+        self._ex["#EXIF"] = self.not_implemented
+        self._ex["#OREL"] = self.not_implemented
+        self._ex["#ELOP"] = self.not_implemented
+        self._ex["#EDO"] = self.not_implemented
+        self._ex["#GOTO"] = self.not_implemented
+        self._ex["#LOCA"] = self.not_implemented
+        self._ex["#PERF"] = self.not_implemented
+        self._ex["#SUBR"] = self.not_implemented
+        self._ex["#ESUB"] = self.not_implemented
 
         # User Defined Executable Macros
         self._ex["AAGET"] = self.aaget
