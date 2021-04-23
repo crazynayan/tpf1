@@ -206,13 +206,17 @@ class StructuredProgrammingMacroImplementation(RealtimeMacroImplementation):
 class UserDefinedMacroImplementation(StructuredProgrammingMacroImplementation):
     def __init__(self, name: str):
         super().__init__(name)
-        self._command["AAGET"] = self.key_value
-        self._command["PNRCC"] = self.key_value
+        # PD MACRO
         self._command["PDRED"] = self.key_value
         self._command["PDCLS"] = self.key_value
+        self._command["PDMOD"] = self.key_value
+        # Heap & AAA related
+        self._command["AAGET"] = self.key_value
         self._command["CFCMA"] = self.key_value
         self._command["HEAPA"] = self.key_value
         self._command["EHEAPA"] = self.key_value
+        # Sabre related
+        self._command["PNRCC"] = self.key_value
         self._command["MHINF"] = self.key_value
         self._command["MCPCK"] = self.key_value
         self._command["NMSEA"] = self.key_value

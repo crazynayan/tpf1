@@ -177,7 +177,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["BACKC"] = self.backc
         self._ex["ALASC"] = self.alasc
         self._ex["PNAMC"] = self.pnamc
-        # FLIPC not implemented
+        self._ex["FLIPC"] = self.not_implemented
 
         # SPM Macros
         self._ex["#IF"] = self.not_implemented
@@ -206,6 +206,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["NMSEA"] = self.nmsea
         self._ex["PRIMA"] = self.prima
         self._ex["PNRCC"] = self.pnrcc
+        self._ex["AGSQR"] = self.not_implemented
 
         # User Defined Executable Macros created for this tool
         self._ex["PARS_DATE"] = self.pars_date
@@ -223,6 +224,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         # User defined Db Macros
         self._ex["PDRED"] = self.pdred
         self._ex["PDCLS"] = self.pdcls
+        self._ex["PDMOD"] = self.not_implemented
         # PDADD, PDDEL - Not in ETA5
 
         # TPFDF Macros
