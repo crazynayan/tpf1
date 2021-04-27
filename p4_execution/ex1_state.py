@@ -88,7 +88,7 @@ class State:
             self._core_block(config.IMG, 'D0')
             self._set_from_test_data(test_data_variant)
             label = self.seg.root_label()
-            node = self.seg.nodes[label]
+            node: InstructionType = self.seg.nodes[label]
             try:
                 for _ in range(10000000):
                     label = self._ex_command(node)
@@ -101,7 +101,7 @@ class State:
             except ExecutionError:
                 self.dumps.append('000003')
                 self.messages.append('EXECUTION ERROR')
-            self._capture_output(test_data_variant.output, node.label)
+            self._capture_output(test_data_variant.output, node)
             outputs.append(test_data_variant.output)
         test_data = deepcopy(test_data)
         test_data.outputs = outputs
@@ -247,10 +247,11 @@ class State:
             self.vm.set_bytes(byte_array, address, len(byte_array))
         return
 
-    def _capture_output(self, output: Output, last_line: str) -> None:
+    def _capture_output(self, output: Output, last_node: InstructionType) -> None:
         output.messages = self.messages.copy()
         output.dumps.extend(self.dumps)
-        output.last_line = last_line
+        output.last_line = last_node.label
+        output.last_node = str(last_node)
         if output.debug:
             output.debug = self.debug.get_trace()
         for core in output.cores:

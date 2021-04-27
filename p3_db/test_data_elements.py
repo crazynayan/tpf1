@@ -121,6 +121,7 @@ class Output(FirestoreDocument):
         self.dumps: List[str] = list()
         self.messages: List[str] = list()
         self.last_line: str = str()
+        self.last_node: str = str()
         self.debug: List[str] = list()
         self.variation: Dict[str, int] = {'core': 0, 'pnr': 0, 'tpfdf': 0, 'file': 0}
         self.variation_name: Dict[str, str] = {'core': str(), 'pnr': str(), 'tpfdf': str(), 'file': str()}
