@@ -4,6 +4,7 @@ from typing import Dict, Optional, List
 
 from config import config
 from p1_utils.data_type import Register, DataType
+from p1_utils.errors import NotFoundInSymbolTableError
 from p1_utils.file_line import Line, File
 from p2_assembly.mac2_data_macro import macros
 from p2_assembly.seg2_ins_operand import Label
@@ -54,6 +55,7 @@ class Segment(UserDefinedMacroImplementation):
         self.equ(self.root_line)
         for line in lines:
             if line.command in macros:
+                self.load_macro_from_line(line)
                 continue
             if line.is_first_pass:
                 self._command[line.command](line)
@@ -76,7 +78,10 @@ class Segment(UserDefinedMacroImplementation):
             if dc.expression:
                 dc.data = bytearray()
                 for operand in dc.expression:
-                    dc.data.extend(DataType(dc.data_type, input=str(self.get_value(operand))).to_bytes(dc.length))
+                    try:
+                        dc.data.extend(DataType(dc.data_type, input=str(self.get_value(operand))).to_bytes(dc.length))
+                    except KeyError:
+                        raise NotFoundInSymbolTableError(operand)
             self.data.set_constant(dc.data * dc.duplication_factor, dc.start)
         return
 

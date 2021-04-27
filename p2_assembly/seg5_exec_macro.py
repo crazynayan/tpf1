@@ -147,11 +147,10 @@ class RealtimeMacroImplementation(InstructionImplementation):
 
     def globz(self, line: Line) -> RegisterData:
         globc = self.key_value(line)
-        reg = globc.get_value("REGR")
-        reg = reg or globc.get_value("REGS")
+        reg = globc.get_value("REGR") or globc.get_value("REGS") or globc.get_value("REGC")
         base = Register(reg)
         if not base.is_valid():
-            raise RegisterInvalidError
+            raise RegisterInvalidError(line)
         self.load_macro("GLOBAL", base=reg)
         line.command = "LHI"
         return RegisterData(line, base, config.GLOBAL)
