@@ -213,7 +213,7 @@ class UserDefinedMacro(State):
         return error if error else node.fall_down
 
     def prima(self, node: KeyValue) -> str:
-        if node.keys[0] not in ("AAA", "PNR"):
+        if "PNR" not in node.keys and "AAA" not in node.keys:
             raise PrimaExecutionError
         if node.get_value("MODE") != "CHECK":
             raise PrimaExecutionError
