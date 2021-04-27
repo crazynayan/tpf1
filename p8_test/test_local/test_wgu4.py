@@ -28,4 +28,4 @@ class Wgu4Test(unittest.TestCase):
         test_data = self.tpf_server.run('TS24', self.test_data)
         self.assertEqual('TS24EXIT.1', test_data.output.last_line)
         self.assertEqual(list(), test_data.output.messages)
-        self.assertEqual(1, test_data.output.regs['R0'])
+        self.assertEqual(-2, test_data.output.regs['R0'])

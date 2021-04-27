@@ -34,7 +34,8 @@ class RealTimeMacro(State):
             raise LevtaExecutionError
         in_use = node.get_value("INUSE") if node.get_value("INUSE") else node.fall_down
         not_used = node.get_value("NOTUSED") if node.get_value("NOTUSED") else node.fall_down
-        if self.vm.get_value(self.get_ecb_address(f"D{level}", "CE1CT"), 2) == 0x01:
+        control_value = self.vm.get_value(self.get_ecb_address(f"D{level}", "CE1CT"), 2)
+        if control_value == 0x01 or control_value == 0x00:
             return not_used
         return in_use
 
@@ -200,9 +201,9 @@ class UserDefinedMacro(State):
         match_label = node.get_value("YES") if node.get_value("YES") else node.fall_down
         not_match_label = node.get_value("NO") if node.get_value("NO") else node.fall_down
         if node.get_value("GROUP") == "LAN":
-            return match_label if self.get_partition() in ("LA", "4M", "XL") else not_match_label
+            return match_label if self.get_partition() in {"LA", "4M", "XL"} else not_match_label
         if node.get_value("PP"):
-            return match_label if self.get_partition() in ("LA") else not_match_label
+            return match_label if self.get_partition() in {"LA"} else not_match_label
         raise McpckExecutionError
 
     def nmsea(self, node: KeyValue) -> str:
