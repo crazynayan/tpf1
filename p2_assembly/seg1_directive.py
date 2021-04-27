@@ -67,10 +67,12 @@ class DirectiveImplementation(SegmentGeneric):
 
     def drop(self, line: Line) -> None:
         operands = line.split_operands()
-        if len(operands) != 1 or not Register(operands[0]).is_valid():
-            raise DropInvalidError
-        self._using = {macro_name: register for macro_name, register in self._using.items()
-                       if register.reg != Register(operands[0]).reg}
+        registers = [Register(operand) for operand in operands]
+        if any(not register.is_valid() for register in registers):
+            raise DropInvalidError(line)
+        for drop_register in registers:
+            self._using = {macro_name: register for macro_name, register in self._using.items()
+                           if register.reg != drop_register.reg}
 
     def using(self, line: Line) -> None:
         operands = line.split_operands()
