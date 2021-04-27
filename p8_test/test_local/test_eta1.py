@@ -13,5 +13,6 @@ class Eta1Test(unittest.TestCase):
     def test_eta1(self):
         self.test_data.output.debug = ["ETA1"]
         test_data = self.tpf_server.run("ETA1", self.test_data)
-        self.assertEqual("END", test_data.output.last_line, test_data.output.last_node)
+        self.assertEqual("ETAX0000", test_data.output.last_line, test_data.output.last_node)
         self.assertNotIn("EXECUTION ERROR", test_data.output.messages)
+        self.assertEqual(list(), test_data.output.dumps)
