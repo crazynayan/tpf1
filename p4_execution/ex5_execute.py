@@ -182,7 +182,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["PNAMC"] = self.pnamc
         self._ex["FLIPC"] = self.not_implemented
         self._ex["LODIC"] = self.not_implemented
-        self._ex["EOWNRC"] = self.not_implemented
+        self._ex["EOWNRC"] = self.no_operation
         self._ex["DLAYC"] = self.not_implemented
         self._ex["DEFRC"] = self.not_implemented
         self._ex["CREMC"] = self.not_implemented
@@ -200,7 +200,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["#EDO"] = self.not_implemented
         self._ex["#GOTO"] = self.not_implemented
         self._ex["#LOCA"] = self.not_implemented
-        self._ex["#PERF"] = self.not_implemented
+        self._ex["#PERF"] = self.no_operation
         self._ex["#SUBR"] = self.not_implemented
         self._ex["#ESUB"] = self.not_implemented
 
