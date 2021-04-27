@@ -2,7 +2,7 @@ from typing import Dict
 
 from config import config
 from p1_utils.data_type import Register
-from p1_utils.errors import DataInvalidError, RegisterInvalidError, ConditionMaskError
+from p1_utils.errors import DataInvalidError, RegisterInvalidError, ConditionMaskError, AssemblyError
 from p1_utils.file_line import Line
 from p2_assembly.seg2_ins_operand import InstructionOperand
 from p2_assembly.seg3_ins_type import InstructionGeneric, FieldBits, FieldLenField, FieldLenFieldLen, FieldData, \
@@ -43,6 +43,7 @@ class InstructionImplementation(InstructionOperand):
         self._command['SRP'] = self.field_len_field_data
         self._command['TP'] = self.field_single
         self._command['CLI'] = self.field_data
+        self._command['CLHHSI'] = self.field_data
         self._command['MVI'] = self.field_data
         self._command['LTR'] = self.reg_reg
         self._command['LR'] = self.reg_reg
@@ -180,13 +181,19 @@ class InstructionImplementation(InstructionOperand):
         return InstructionGeneric(line)
 
     def field_bits(self, line: Line) -> FieldBits:
-        operand1, operand2 = line.split_operands()
+        try:
+            operand1, operand2 = line.split_operands()
+        except ValueError:
+            raise AssemblyError(line)
         field = self.field_base_dsp(operand1)
         bits = self.get_bits(operand2)
         return FieldBits(line, field, bits)
 
     def field_len_field(self, line: Line) -> FieldLenField:
-        operand1, operand2 = line.split_operands()
+        try:
+            operand1, operand2 = line.split_operands()
+        except ValueError:
+            raise AssemblyError(line)
         field_len = self.field_len(operand1, FieldLenField.MAX_LEN)
         field = self.field_base_dsp(operand2)
         return FieldLenField(line, field_len, field)

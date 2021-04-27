@@ -122,8 +122,31 @@ class Line:
         return True if self.command not in config.NO_FALL_DOWN else False
 
     def split_operands(self) -> List[str]:
-        # Split operands separated by commas. Ignore commas enclosed in parenthesis.
-        return re.split(r",(?![^()]*\))", self.operand) if self.operand else list()
+        # Split operands separated by commas. Ignore commas enclosed in parenthesis or quotes.
+        # Take care L' does NOT start a quote
+        if not self.operand:
+            return list()
+        ignore_commas, in_parenthesis, in_quotes = False, False, False
+        new_operand: List = list()
+        prev_char: str = str()
+        for char in self.operand:
+            if ignore_commas is False:
+                if char == "(":
+                    ignore_commas = True
+                    in_parenthesis = True
+                elif char == "'" and prev_char != "L":
+                    ignore_commas = True
+                    in_quotes = True
+            elif char == ")" and in_parenthesis:
+                ignore_commas = False
+                in_parenthesis = False
+            elif char == "'" and in_quotes:
+                ignore_commas = False
+                in_quotes = False
+            updated_char = "|" if char == "," and ignore_commas is False else char
+            prev_char = char
+            new_operand.append(updated_char)
+        return "".join(new_operand).split("|")
 
     def __repr__(self) -> str:
         return f'{self.label}:{self.command}:{self.operand}'

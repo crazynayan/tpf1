@@ -157,6 +157,9 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         # TRT
         # ED, EDMK
 
+        # S09 - All new z/TPF instruction
+        self._ex["CLHHSI"] = self.not_implemented
+
         # Realtime Macros
         self._ex["GETCC"] = self.getcc
         self._ex["LEVTA"] = self.levta

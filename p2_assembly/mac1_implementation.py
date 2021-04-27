@@ -1,7 +1,8 @@
 from typing import List, Optional
 
 from p1_utils.data_type import DataType
-from p1_utils.errors import EquLabelRequiredError, EquDataTypeHasAmpersandError, DcInvalidError
+from p1_utils.errors import EquLabelRequiredError, EquDataTypeHasAmpersandError, DcInvalidError, \
+    NotFoundInSymbolTableError
 from p1_utils.file_line import Line
 from p2_assembly.mac0_generic import MacroGeneric
 
@@ -131,12 +132,15 @@ class DataMacroImplementation(MacroGeneric):
         self._location_counter = start + duplication_factor * length * number_of_data_operands
         if self._location_counter > self._max_counter:
             self._max_counter = self._location_counter
-        dsdc = Dc(duplication_factor, data_type, length, start, data, expression)
-        return dsdc
+        dc = Dc(duplication_factor, data_type, length, start, data, expression)
+        return dc
 
     def ds(self, line: Line) -> List[Dc]:
         operands = line.split_operands()
-        ds: Dc = self._get_dc(operands[0])
+        try:
+            ds: Dc = self._get_dc(operands[0])
+        except DcInvalidError:
+            raise DcInvalidError(line)
         dc_list: List[Dc] = [ds]
         if line.label:
             self.add_label(line.label, ds.start, ds.length, self.name)
@@ -147,16 +151,19 @@ class DataMacroImplementation(MacroGeneric):
 
     def equ(self, line: Line) -> None:
         if line.label is None:
-            raise EquLabelRequiredError
+            raise EquLabelRequiredError(line)
         operands = line.split_operands()
         dsp_operand = operands[0]
         length = 1
         if dsp_operand[0] == '&' or (len(dsp_operand) > 1 and dsp_operand[1] == "'" and dsp_operand[0] != 'L'
                                      and '&' in dsp_operand):
-            raise EquDataTypeHasAmpersandError
+            raise EquDataTypeHasAmpersandError(line)
         if len(operands) > 1:
             length = self.get_value(operands[1])
-        self.add_label(line.label, self.get_value(dsp_operand), length, self.name, self.is_based(dsp_operand))
+        try:
+            self.add_label(line.label, self.get_value(dsp_operand), length, self.name, self.is_based(dsp_operand))
+        except NotFoundInSymbolTableError:
+            raise NotFoundInSymbolTableError(line)
         return
 
     def org(self, line: Line) -> None:

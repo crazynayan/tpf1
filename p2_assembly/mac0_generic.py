@@ -65,7 +65,7 @@ class MacroGeneric:
         try:
             return self._symbol_table[field]
         except KeyError:
-            raise NotFoundInSymbolTableError
+            raise NotFoundInSymbolTableError(label)
 
     def evaluate(self, expression: str) -> int:
         if expression.isdigit():
@@ -79,15 +79,15 @@ class MacroGeneric:
     def get_value(self, operand: str) -> int:
         if operand.isdigit():
             return int(operand)
-        operand = operand.upper()
-        data_list = re.findall(r"[CXHFDBZPAY]D?'[^']+'", operand)
+        updated_operand = operand.upper()
+        data_list = re.findall(r"[CXHFDBZPAY]D?'[^']+'", updated_operand)
         value_list = list()
         if data_list:
-            operand = re.sub(r"[CXHFDBZPAY]D?'[^']+'", '~', operand)
+            updated_operand = re.sub(r"[CXHFDBZPAY]D?'[^']+'", '~', updated_operand)
             for data in data_list:
                 value = DataType(data[0], input=data[2:-1]).value
                 value_list.insert(0, value)
-        exp_list = re.split(r"([+*()/-])", operand)
+        exp_list = re.split(r"([+*()/-])", updated_operand)
         if len(exp_list) == 1:
             if exp_list[0] == '~':
                 return value_list.pop()
