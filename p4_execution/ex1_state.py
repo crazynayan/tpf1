@@ -103,9 +103,9 @@ class State:
                 self.messages.append('EXECUTION ERROR')
             self._capture_output(test_data_variant.output, node)
             outputs.append(test_data_variant.output)
-        test_data = deepcopy(test_data)
-        test_data.outputs = outputs
-        return test_data
+        output_test_data = deepcopy(test_data)
+        output_test_data.outputs = outputs
+        return output_test_data
 
     def _ex_command(self, node: InstructionType) -> str:
         label = self._ex[node.command](node)

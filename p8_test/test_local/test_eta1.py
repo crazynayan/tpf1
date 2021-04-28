@@ -27,3 +27,14 @@ class Eta1Test(unittest.TestCase):
         test_data = self.tpf_server.run("ETA1", self.test_data)
         self.assertEqual("$$UIO1$$.1", test_data.output.last_line, test_data.output.last_node)
         self.assertEqual("D9C5E2E3D9C9C3E3C5C4", test_data.get_field("EBW000"))  # RESTRICTED
+
+    def test_eta1_e(self):
+        self.test_data.output.debug = ["ETA1"]
+        self.test_data.add_fields([("EBW000", 10)], "EB0EB")
+        self.test_data.set_field("MI0ACC", DataType("C", input="E").to_bytes())
+        self.test_data.set_field("WA0FNS", DataType("X", input="10").to_bytes())
+        self.test_data.set_field("WA0UB4", DataType("X", input="08").to_bytes())
+        test_data = self.tpf_server.run("ETA1", self.test_data)
+        self.assertEqual("ETAX0000", test_data.output.last_line, test_data.output.last_node)
+        self.assertNotIn("EXECUTION ERROR", test_data.output.messages)
+        self.assertEqual("00000000000000000000", test_data.get_field("EBW000"))  # NO ERROR
