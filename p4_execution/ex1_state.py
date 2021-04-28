@@ -4,8 +4,8 @@ from typing import Callable, Optional, Tuple, Dict, List, Set
 
 from config import config
 from p1_utils.data_type import DataType, Register
-from p1_utils.errors import SegmentNotFoundError, EcbLevelFormatError, InvalidBaseRegError, TpfdfError, PartitionError, \
-    FileItemSpecificationError, PoolFileSpecificationError, BaseAddressError, ExecutionError
+from p1_utils.errors import SegmentNotFoundError, EcbLevelFormatError, InvalidBaseRegError, TpfdfError, \
+    PartitionError, FileItemSpecificationError, PoolFileSpecificationError, BaseAddressError, ExecutionError
 from p2_assembly.mac0_generic import LabelReference
 from p2_assembly.mac2_data_macro import macros
 from p2_assembly.seg2_ins_operand import FieldIndex

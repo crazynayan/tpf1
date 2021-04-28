@@ -2,7 +2,7 @@ from typing import Optional
 
 from p1_utils.data_type import Register
 from p1_utils.errors import RegisterInvalidError, Pd0BaseError, PdredFieldError, PdredVerifyError, PdredSearchError, \
-    PdredNotFoundError, PdredPd0Error, DbredError
+    PdredNotFoundError, PdredPd0Error, DbredError, TpfdfExecutionError
 from p2_assembly.mac0_generic import LabelReference
 from p2_assembly.seg2_ins_operand import FieldBaseDsp
 from p2_assembly.seg3_ins_type import InstructionGeneric
@@ -88,7 +88,7 @@ class UserDefinedDbMacro(State):
             if search is None:
                 break
             if search[0] == "START":
-                if len(search) != 2 or not search[1].startswith(""") or not search[1].endswith("""):
+                if len(search) != 2 or not search[1].startswith("'") or not search[1].endswith("'"):
                     raise PdredSearchError
                 starts_with = search[1][1:-1]
 
@@ -166,13 +166,20 @@ class TpfdfMacro(State):
         return node.fall_down
 
     def dbcls(self, node: KeyValue) -> str:
-        if node.get_value("FILE") == "PR001W":
+        if any(key not in ["FILE", "REF"] for key in node.keys):
+            raise TpfdfExecutionError(node)
+        file_value = node.get_value("FILE")
+        ref_value = node.get_value("REF")
+        if file_value and file_value != "PR001W":
+            raise TpfdfExecutionError(node)
+        if file_value == "PR001W":
             return node.fall_down
-        db_ref = node.get_value("REF")
-        if db_ref == "ALL":
+        if ref_value not in self.tpfdf_ref and ref_value != "ALL":
+            raise TpfdfExecutionError(node)
+        if ref_value == "ALL":
             self.tpfdf_ref.clear()
         else:
-            del self.tpfdf_ref[db_ref]
+            del self.tpfdf_ref[ref_value]
         return node.fall_down
 
     def dbifb(self, node: KeyValue) -> str:

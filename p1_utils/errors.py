@@ -130,6 +130,10 @@ class Pd0BaseError(ExecutionError):
     pass
 
 
+class TpfdfExecutionError(ExecutionError):
+    pass
+
+
 class PdredFieldError(ExecutionError):
     pass
 
