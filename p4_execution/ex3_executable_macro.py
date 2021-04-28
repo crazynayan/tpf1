@@ -203,6 +203,9 @@ class UserDefinedMacro(State):
         if node.get_value("GROUP") == "LAN":
             return match_label if self.get_partition() in {"LA", "4M", "XL"} else not_match_label
         if node.get_value("PP"):
+            not_mcp_label = node.get_value("NOTMCP")
+            if not_mcp_label and self.get_partition() not in {"LA", "4M", "XL"}:
+                return not_mcp_label
             return match_label if self.get_partition() in {"LA"} else not_match_label
         raise McpckExecutionError
 
