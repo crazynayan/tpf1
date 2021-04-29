@@ -55,6 +55,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["BCTR"] = self.branch_on_count_register
         # BXH, BXLE - Not in ETA5
         self._ex["BAS"] = self.branch_and_save
+        self._ex["BAL"] = self.branch_and_save
         self._ex["JAS"] = self.branch_and_save
         # BASR - Not in ETA5
         self._ex["B"] = self.branch

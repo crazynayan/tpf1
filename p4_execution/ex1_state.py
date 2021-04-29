@@ -101,6 +101,8 @@ class State:
             except ExecutionError:
                 self.dumps.append('000003')
                 self.messages.append('EXECUTION ERROR')
+            except KeyError:
+                raise ExecutionError(node)
             self._capture_output(test_data_variant.output, node)
             outputs.append(test_data_variant.output)
         output_test_data = deepcopy(test_data)
