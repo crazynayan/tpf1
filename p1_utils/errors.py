@@ -170,6 +170,10 @@ class UcdrError(ExecutionError):
     pass
 
 
+class UserDefinedMacroExecutionError(ExecutionError):
+    pass
+
+
 class NotImplementedExecutionError(ExecutionError):
     pass
 

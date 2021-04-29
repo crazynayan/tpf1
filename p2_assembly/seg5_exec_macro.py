@@ -232,3 +232,4 @@ class UserDefinedMacroImplementation(StructuredProgrammingMacroImplementation):
         # Tool specific commands
         self._command["ERROR_CHECK"] = self.key_value
         self._command["PARS_DATE"] = self.key_value
+        self._command["UIO1_USER_EXIT"] = self.key_value

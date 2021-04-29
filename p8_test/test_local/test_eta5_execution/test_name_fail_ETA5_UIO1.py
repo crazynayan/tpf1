@@ -36,7 +36,7 @@ class NameFailUIO1(NameGeneral):
     def test_group_overbooking_UIO1(self):
         self.test_data.add_pnr_element(['C/5TOURS', '11ZAVERI'], 'name')
         test_data = self.tpf_server.run('ETA5', self.test_data)
-        self.assertEqual('$$UIO1$$.1', test_data.output.last_line)
+        self.assertEqual('$$UIO1$$.2', test_data.output.last_line)
         self.assertEqual('20', test_data.get_field('WA0ET4'))
         self.assertEqual(bytes([self.ui2xui + self.ui2can, self.ui2nxt, self.ui2nxt]).hex().upper(),
                          test_data.get_field('UI2INC'))
@@ -48,7 +48,7 @@ class NameFailUIO1(NameGeneral):
     def test_multiple_groups_CC_UIO1(self):
         self.test_data.add_pnr_element(['C/25SABRE', 'C/21TOURS', '1SHAH'], 'name')
         test_data = self.tpf_server.run('ETA5', self.test_data)
-        self.assertEqual('$$UIO1$$.1', test_data.output.last_line)
+        self.assertEqual('$$UIO1$$.2', test_data.output.last_line)
         self.assertEqual(f'{self.wa0any:02X}', test_data.get_field('WA0ET5'))
         self.assertEqual(f'{self.ui2097:02X}', test_data.get_field('UI2CNN'))
         self.assertEqual('C3', test_data.get_field('EBW014'))
@@ -56,7 +56,7 @@ class NameFailUIO1(NameGeneral):
     def test_multiple_groups_ZC_UIO1(self):
         self.test_data.add_pnr_element(['Z/25SABRE', 'C/21TOURS', '1SHAH'], 'name')
         test_data = self.tpf_server.run('ETA5', self.test_data)
-        self.assertEqual('$$UIO1$$.1', test_data.output.last_line)
+        self.assertEqual('$$UIO1$$.2', test_data.output.last_line)
         self.assertEqual(f'{self.wa0any:02X}', test_data.get_field('WA0ET5'))
         self.assertEqual(f'{self.ui2097:02X}', test_data.get_field('UI2CNN'))
         self.assertEqual('E9', test_data.get_field('EBW014'))

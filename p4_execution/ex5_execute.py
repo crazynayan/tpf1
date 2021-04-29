@@ -220,6 +220,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["PARS_DATE"] = self.pars_date
         self._ex["ERROR_CHECK"] = self.error_check
         self._ex["FACE"] = self.face
+        self._ex["UIO1_USER_EXIT"] = self.uio1_user_exit
 
         # Realtime Db Macros - Not in ETA5
         self._ex["FINWC"] = self.finwc

@@ -3,7 +3,8 @@ from typing import Optional
 from config import config
 from p1_utils.data_type import DataType, Register
 from p1_utils.errors import HeapaExecutionError, RegisterInvalidError, DumpExecutionError, LevtaExecutionError, \
-    MhinfExecutionError, PrimaExecutionError, McpckExecutionError, SegmentNotFoundError, NotImplementedExecutionError
+    MhinfExecutionError, PrimaExecutionError, McpckExecutionError, SegmentNotFoundError, NotImplementedExecutionError, \
+    UserDefinedMacroExecutionError
 from p1_utils.ucdr import pars_to_date, date_to_pars
 from p2_assembly.mac2_data_macro import macros
 from p2_assembly.seg2_ins_operand import FieldBaseDsp
@@ -277,6 +278,24 @@ class UserDefinedMacro(State):
                 self.regs.R6 = 0
         else:
             self.regs.R6 = 0
+        return node.fall_down
+
+    def uio1_user_exit(self, node: KeyValue) -> str:
+        r2 = self.regs.get_value("R2")
+        if r2 != 0:
+            return node.fall_down
+        ebw000_address: int = self.regs.get_value("R9") + macros["EB0EB"].evaluate("EBW000")
+        ebw000: bytearray = self.vm.get_bytes(ebw000_address, 72)
+        eom = DataType("C", input="+").to_bytes()[0]
+        if not any(eom == byte for byte in ebw000):
+            raise UserDefinedMacroExecutionError(node)
+        message: bytearray = bytearray()
+        for byte in ebw000:
+            if byte == eom:
+                break
+            message.append(byte)
+        message_string = DataType("X", bytes=message).decode
+        self.messages.append(message_string)
         return node.fall_down
 
     def error_check(self, node: KeyValue) -> str:
