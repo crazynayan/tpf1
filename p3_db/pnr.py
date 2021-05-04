@@ -6,6 +6,9 @@ from p1_utils.errors import PnrElementError, PnrLocatorNotFoundError
 from p2_assembly.mac2_data_macro import macros
 from p3_db.stream import Stream
 
+NAME, HFAX, FQTV, ITIN = "name", "hfax", "fqtv", "itin"
+SUBS_CARD_SEG, GROUP_PLAN = "subs_card_seg", "group_plan"
+
 
 class PnrAttribute:
 
@@ -15,7 +18,7 @@ class PnrAttribute:
         self.key: str = key
         self.byte_array: bool = byte_array
         self.packed: bool = packed
-        self.macro_name: str = macro_name if macro_name else 'PR001W'
+        self.macro_name: str = macro_name if macro_name else "PR001W"
         self.std_fix = std_fix if std_fix else bytearray()
         self.std_var = std_var if std_var else bytearray()
 
@@ -31,31 +34,31 @@ class PnrLrec:
 
 
 class Pnr:
-    DB: List[Dict[str, Union[str, List[Dict[str, bytearray]]]]] = [{'id': config.AAAPNR, 'doc': list()}]
+    DB: List[Dict[str, Union[str, List[Dict[str, bytearray]]]]] = [{"id": config.AAAPNR, "doc": list()}]
     HEADER = bytearray([0x00] * 0x14)
     ATTRIBUTES = [
-        PnrAttribute('name', '50', std_var=bytearray([0x00, 0x00, 0x02, 0x00])),
-        PnrAttribute('hfax', '84', std_fix=bytearray([0x00] * 0x08), std_var=bytearray([0x02, 0x01])),
-        PnrAttribute('fqtv', '60', byte_array=True, packed=True, std_fix=bytearray([0x00] * 0x16)),
-        PnrAttribute('itin', '30', byte_array=True, macro_name='WI0BS'),
-        PnrAttribute('subs_card_seg', '66'),
-        PnrAttribute('group_plan', 'A0', std_var=bytearray([0x02, 0x01])),
+        PnrAttribute(NAME, "50", std_var=bytearray([0x00, 0x00, 0x02, 0x00])),
+        PnrAttribute(HFAX, "84", std_fix=bytearray([0x00] * 0x08), std_var=bytearray([0x02, 0x01])),
+        PnrAttribute(FQTV, "60", byte_array=True, packed=True, std_fix=bytearray([0x00] * 0x16)),
+        PnrAttribute(ITIN, "30", byte_array=True, macro_name="WI0BS"),
+        PnrAttribute(SUBS_CARD_SEG, "66"),
+        PnrAttribute(GROUP_PLAN, "A0", std_var=bytearray([0x02, 0x01])),
     ]
 
     @classmethod
     def init_db(cls) -> None:
-        cls.DB = [{'id': config.AAAPNR, 'doc': list()}]
+        cls.DB = [{"id": config.AAAPNR, "doc": list()}]
 
     @staticmethod
     def get_pnr_data(pnr_locator: str, key: str, item_number: int, packed: bool = False,
                      starts_with: Optional[str] = None) -> Tuple[Optional[bytearray], int]:
         # item_number starts from 1 for the 1st item (index 0)
         try:
-            pnr_doc = next(pnr['doc'] for pnr in Pnr.DB if pnr['id'] == pnr_locator)
-            data_list = [element['data'] for element in pnr_doc if element['key'] == key]
+            pnr_doc = next(pnr["doc"] for pnr in Pnr.DB if pnr["id"] == pnr_locator)
+            data_list = [element["data"] for element in pnr_doc if element["key"] == key]
         except StopIteration:
             raise PnrLocatorNotFoundError
-        starts_with = DataType('C', input=starts_with).to_bytes() if starts_with is not None else None
+        starts_with = DataType("C", input=starts_with).to_bytes() if starts_with is not None else None
         attribute = Pnr.get_attribute_by_key(key)
         start = (len(Pnr.HEADER) + len(attribute.std_fix) + len(attribute.std_var)) \
             if packed else len(attribute.std_var)
@@ -71,18 +74,18 @@ class Pnr:
     @staticmethod
     def get_len(pnr_locator: str, key: str) -> int:
         try:
-            pnr_doc = next(pnr['doc'] for pnr in Pnr.DB if pnr['id'] == pnr_locator)
+            pnr_doc = next(pnr["doc"] for pnr in Pnr.DB if pnr["id"] == pnr_locator)
         except StopIteration:
             raise PnrLocatorNotFoundError
-        return len([element for element in pnr_doc if element['key'] == key])
+        return len([element for element in pnr_doc if element["key"] == key])
 
     @classmethod
     def get_pnr_doc(cls, pnr_locator: str) -> List[Dict[str, bytearray]]:
         try:
-            pnr_doc = next(pnr['doc'] for pnr in cls.DB if pnr['id'] == pnr_locator)
+            pnr_doc = next(pnr["doc"] for pnr in cls.DB if pnr["id"] == pnr_locator)
         except StopIteration:
             pnr_doc: List[Dict[str, bytearray]] = list()
-            Pnr.DB.append({'id': pnr_locator, 'doc': pnr_doc})
+            Pnr.DB.append({"id": pnr_locator, "doc": pnr_doc})
         return pnr_doc
 
     @classmethod
@@ -103,7 +106,7 @@ class Pnr:
         lrec.data.extend(Pnr.HEADER[:])
         lrec.data.extend(attribute.std_fix)
         lrec.data.extend(attribute.std_var)
-        lrec.data.extend(DataType('C', input=data).to_bytes())
+        lrec.data.extend(DataType("C", input=data).to_bytes())
         pnr_doc.append(lrec.to_dict())
 
     @staticmethod
@@ -122,9 +125,9 @@ class Pnr:
 
 
 class PnrLocator:
-    VALID = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    VALID = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     LEN_OF_VALID = len(VALID)
-    
+
     @staticmethod
     def to_ordinal(locator: str) -> int:
         ordinal = 0
