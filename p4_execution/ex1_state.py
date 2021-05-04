@@ -5,7 +5,8 @@ from typing import Callable, Optional, Tuple, Dict, List, Set
 from config import config
 from p1_utils.data_type import DataType, Register
 from p1_utils.errors import SegmentNotFoundError, EcbLevelFormatError, InvalidBaseRegError, TpfdfError, \
-    PartitionError, FileItemSpecificationError, PoolFileSpecificationError, BaseAddressError, ExecutionError
+    PartitionError, FileItemSpecificationError, PoolFileSpecificationError, BaseAddressError, ExecutionError, \
+    TPFServerMemoryError
 from p2_assembly.mac0_generic import LabelReference
 from p2_assembly.mac2_data_macro import macros
 from p2_assembly.seg2_ins_operand import FieldIndex
@@ -32,13 +33,13 @@ class State:
         self.detac_stack: Dict[str, List] = {level: list() for level in config.ECB_LEVELS}
         self.messages: List[str] = list()
         self.dumps: List[str] = list()
-        self.heap: Dict[str, Dict[str, int]] = {'old': dict(), 'new': dict()}
+        self.heap: Dict[str, Dict[str, int]] = {"old": dict(), "new": dict()}
         self.call_stack: List[Tuple[str, str]] = list()
         self.loaded_seg: Dict[str, Tuple[Segment, int]] = dict()
         self.tpfdf_ref: Dict[str, int] = dict()
         self.errors: Set[str] = set()
         self.debug: Debug = Debug()
-        self.fields: dict = {'CE3ENTPGM': bytearray()}
+        self.fields: dict = {"CE3ENTPGM": bytearray()}
 
     def __repr__(self) -> str:
         return f"State:{self.seg}:{self.regs}:{self.vm}"
@@ -66,11 +67,11 @@ class State:
     @staticmethod
     def get_ecb_address(level: str, ecb_label: str) -> int:
         # level is from D0 to DF, ecb_label is the partial label to which the level number (0-F) to be appended
-        if not level.startswith('D') or len(level) != 2 or level[1] not in config.ECB_LEVELS:
+        if not level.startswith("D") or len(level) != 2 or level[1] not in config.ECB_LEVELS:
             # For DECB=(R1) DECB=L1ADR
             raise EcbLevelFormatError
         level = f"{ecb_label}{level[1]}"
-        dsp = macros['EB0EB'].evaluate(level)
+        dsp = macros["EB0EB"].evaluate(level)
         return config.ECB + dsp
 
     def init_run(self) -> None:
@@ -84,8 +85,8 @@ class State:
             self.init_run()
             self._init_seg(seg_name)
             self.regs.R9 = config.ECB
-            self._core_block(config.AAA, 'D1')
-            self._core_block(config.IMG, 'D0')
+            self._core_block(config.AAA, "D1")
+            self._core_block(config.IMG, "D0")
             self._set_from_test_data(test_data_variant)
             label = self.seg.root_label()
             node: InstructionType = self.seg.nodes[label]
@@ -96,13 +97,16 @@ class State:
                         break
                     node = self.seg.nodes[label]
                 if label is not None:
-                    self.dumps.append('000010')
-                    self.messages.append('INFINITE LOOP ERROR')
+                    self.dumps.append("000010")
+                    self.messages.append("INFINITE LOOP ERROR")
             except ExecutionError:
-                self.dumps.append('000003')
-                self.messages.append('EXECUTION ERROR')
+                self.dumps.append("000003")
+                self.messages.append("EXECUTION ERROR")
             except KeyError:
                 raise ExecutionError(node)
+            except TPFServerMemoryError:
+                self.dumps.append("000004")
+                self.messages.append("MEMORY ERROR")
             self._capture_output(test_data_variant.output, node)
             outputs.append(test_data_variant.output)
         output_test_data = deepcopy(test_data)
@@ -128,39 +132,39 @@ class State:
     def set_partition(self, partition: str) -> None:
         if partition not in config.PARTITION:
             raise PartitionError
-        haalc = config.GLOBAL + macros['GLOBAL'].evaluate('@HAALC')
-        ce1uid = config.ECB + macros['EB0EB'].evaluate('CE1$UID')
-        self.vm.set_bytes(DataType('C', input=partition).to_bytes(), haalc, 2)
+        haalc = config.GLOBAL + macros["GLOBAL"].evaluate("@HAALC")
+        ce1uid = config.ECB + macros["EB0EB"].evaluate("CE1$UID")
+        self.vm.set_bytes(DataType("C", input=partition).to_bytes(), haalc, 2)
         self.vm.set_value(config.PARTITION[partition], ce1uid, 1)
         # TODO Switch MH Base
 
     def get_partition(self) -> str:
-        airline_code = self.vm.get_bytes(config.GLOBAL + macros['GLOBAL'].evaluate('@HAALC'), 2)
-        return DataType('X', bytes=airline_code).decode
+        airline_code = self.vm.get_bytes(config.GLOBAL + macros["GLOBAL"].evaluate("@HAALC"), 2)
+        return DataType("X", bytes=airline_code).decode
 
     def is_error(self, label: str) -> bool:
         return label in self.errors
 
     def index_to_label(self, field: FieldIndex) -> str:
-        if field.index.reg == 'R0':
+        if field.index.reg == "R0":
             return field.name
         dsp = self.regs.get_address(field.index, field.dsp)
-        label = self.seg.get_field_name(Register('R8'), dsp, config.INSTRUCTION_LEN_DEFAULT)
+        label = self.seg.get_field_name(Register("R8"), dsp, config.INSTRUCTION_LEN_DEFAULT)
         return label
 
     def _core_block(self, address: int, level: str, block_type: Optional[str] = None) -> None:
-        level_address = self.get_ecb_address(level, 'CE1CR')
-        control_address = self.get_ecb_address(level, 'CE1CT')
-        size_address = self.get_ecb_address(level, 'CE1CC')
-        control_value = config.BLOCK_TYPE[block_type] if block_type in config.BLOCK_TYPE else config.BLOCK_TYPE['L4']
-        size_value = config.BLOCK_SIZE[block_type] if block_type in config.BLOCK_SIZE else config.BLOCK_SIZE['L4']
+        level_address = self.get_ecb_address(level, "CE1CR")
+        control_address = self.get_ecb_address(level, "CE1CT")
+        size_address = self.get_ecb_address(level, "CE1CC")
+        control_value = config.BLOCK_TYPE[block_type] if block_type in config.BLOCK_TYPE else config.BLOCK_TYPE["L4"]
+        size_value = config.BLOCK_SIZE[block_type] if block_type in config.BLOCK_SIZE else config.BLOCK_SIZE["L4"]
         self.vm.set_value(address, level_address)
         self.vm.set_value(control_value, control_address, 2)
         self.vm.set_value(size_value, size_address, 2)
 
     @staticmethod
     def _field_data_to_bytearray(field_data: List[dict]):
-        return {field_dict['field']: bytearray(b64decode(field_dict['data'])) for field_dict in field_data}
+        return {field_dict["field"]: bytearray(b64decode(field_dict["data"])) for field_dict in field_data}
 
     def _set_from_test_data(self, test_data: TestData) -> None:
         self.errors = set(test_data.errors)
@@ -224,13 +228,13 @@ class State:
                                 for field, byte_array in item_dict.items()}
                                for item_dict in item_list]
                 for _ in range(pool_file.forward_chain_count):
-                    fch_dict = {pool_file.forward_chain_label: DataType('F', input=str(pool_address)).to_bytes()}
+                    fch_dict = {pool_file.forward_chain_label: DataType("F", input=str(pool_address)).to_bytes()}
                     if pool_file_bytes_dict:
                         fch_dict = {**fch_dict, **pool_file_bytes_dict}
                     data_bytes = Stream(macros[pool_file.macro_name]).item_to_bytes(empty_items, item_field,
                                                                                     count_field, fch_dict)
                     pool_address = FlatFile.add_pool(data_bytes, pool_file.rec_id)
-                index_dict = {pool_file.index_field: DataType('F', input=str(pool_address)).to_bytes()}
+                index_dict = {pool_file.index_field: DataType("F", input=str(pool_address)).to_bytes()}
                 fixed_dict = {**fixed_dict, **index_dict}
             # Fixed File
             if fixed_file.field_data:
@@ -276,8 +280,8 @@ class State:
 
     def _capture_core(self, field_data: List[dict], macro_name: str, base_address: int) -> None:
         for field_byte in field_data:
-            field: LabelReference = macros[macro_name].lookup(field_byte['field'].upper())
+            field: LabelReference = macros[macro_name].lookup(field_byte["field"].upper())
             address = field.dsp + base_address
-            length = field_byte['length'] if field_byte['length'] > 0 else field.length
-            field_byte['data'] = b64encode(self.vm.get_bytes(address, length)).decode()
+            length = field_byte["length"] if field_byte["length"] > 0 else field.length
+            field_byte["data"] = b64encode(self.vm.get_bytes(address, length)).decode()
         return

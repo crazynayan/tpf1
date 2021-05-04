@@ -15,6 +15,8 @@ class EtafTest(unittest.TestCase):
         self.output = None
 
     def tearDown(self) -> None:
+        if not self.output or not self.output.debug:
+            return
         for debug_line in self.output.debug:
             if debug_line in self.DEBUG_DATA:
                 continue
@@ -36,5 +38,6 @@ class EtafTest(unittest.TestCase):
         self.test_data.set_field("WA0ET5", DataType("X", input="01").to_bytes())
         self.test_data.set_field("WA0ASC", DataType("X", input="01").to_bytes())
         test_data = self.tpf_server.run("ETA1", self.test_data)
-        self.assertEqual("ETAZ0000", test_data.output.last_line, test_data.output.last_node)
+        self.assertIn("000004", test_data.output.dumps)
+        self.assertEqual("ETAZ2500.1", test_data.output.last_line, test_data.output.last_node)
         self.output = test_data.output

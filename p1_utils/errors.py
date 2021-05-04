@@ -10,6 +10,10 @@ class ExecutionError(TpfAnalyzerError):
     pass
 
 
+class TPFServerMemoryError(TpfAnalyzerError):
+    pass
+
+
 class TestDataError(ExecutionError):
     pass
 

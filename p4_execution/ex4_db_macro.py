@@ -2,7 +2,7 @@ from typing import Optional
 
 from p1_utils.data_type import Register
 from p1_utils.errors import RegisterInvalidError, Pd0BaseError, PdredFieldError, PdredVerifyError, PdredSearchError, \
-    PdredNotFoundError, PdredPd0Error, DbredError, TpfdfExecutionError
+    PdredNotFoundError, PdredPd0Error, DbredError, TpfdfExecutionError, TPFServerMemoryError
 from p2_assembly.mac0_generic import LabelReference
 from p2_assembly.seg2_ins_operand import FieldBaseDsp
 from p2_assembly.seg3_ins_type import InstructionGeneric
@@ -72,6 +72,8 @@ class UserDefinedDbMacro(State):
 
         # Get the base of PD0WRK
         pd0_base = self._pd0_base(node)
+        if pd0_base == 0:
+            raise TPFServerMemoryError
 
         # Get the item number to read (Item numbers start from 1)
         pd0_ctl_key: LabelReference = self.seg.lookup("PD0_CTL_KEY")
