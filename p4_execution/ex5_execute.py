@@ -163,6 +163,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
 
         # Realtime Macros
         self._ex["GETCC"] = self.getcc
+        self._ex["DECBC"] = self.not_implemented
         self._ex["LEVTA"] = self.levta
         self._ex["MODEC"] = self.no_operation
         self._ex["DETAC"] = self.detac
@@ -236,6 +237,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["PDCLS"] = self.pdcls
         self._ex["PDMOD"] = self.not_implemented
         self._ex["LOCAA"] = self.not_implemented
+        self._ex["DELAA"] = self.not_implemented
         # PDADD, PDDEL - Not in ETA5
 
         # TPFDF Macros
