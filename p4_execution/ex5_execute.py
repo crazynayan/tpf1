@@ -208,6 +208,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
 
         # User Defined Executable Macros
         self._ex["AAGET"] = self.aaget
+        self._ex["AACPY"] = self.not_implemented
         self._ex["CFCMA"] = self.heapa
         self._ex["HEAPA"] = self.heapa
         self._ex["EHEAPA"] = self.heapa

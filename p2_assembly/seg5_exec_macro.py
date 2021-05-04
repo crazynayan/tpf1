@@ -221,6 +221,7 @@ class UserDefinedMacroImplementation(StructuredProgrammingMacroImplementation):
         self._command["DELAA"] = self.key_value
         # Heap & AAA related
         self._command["AAGET"] = self.key_value
+        self._command["AACPY"] = self.key_value
         self._command["CFCMA"] = self.key_value
         self._command["HEAPA"] = self.key_value
         self._command["EHEAPA"] = self.key_value
