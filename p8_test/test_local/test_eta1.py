@@ -28,7 +28,6 @@ class Eta1Test(unittest.TestCase):
         self.assertIn("RESTRICTED" + 40 * " ", test_data.output.messages)
 
     def test_eta1_e_no_error(self):
-        self.test_data.add_fields([("EBW000", 10)], "EB0EB")
         self.test_data.set_field("MI0ACC", DataType("C", input="E").to_bytes())
         self.test_data.set_field("WA0FNS", DataType("X", input="10").to_bytes())
         self.test_data.set_field("WA0UB4", DataType("X", input="08").to_bytes())
@@ -37,7 +36,6 @@ class Eta1Test(unittest.TestCase):
         self.assertIn("UNABLE TO END TRANSACTION - NO PNR PRESENT IN WORK AREA", test_data.output.messages)
 
     def test_eta1_el_plus_off_queue(self):
-        self.test_data.add_fields([("EBW000", 10)], "EB0EB")
         self.test_data.set_field("MI0ACC", DataType("C", input="EL+").to_bytes())
         test_data = self.tpf_server.run("ETA1", self.test_data)
         self.assertEqual("$$UIO1$$.2", test_data.output.last_line, test_data.output.last_node)
@@ -45,7 +43,6 @@ class Eta1Test(unittest.TestCase):
         self.assertIn(off_queue + (50 - len(off_queue)) * " ", test_data.output.messages)
 
     def test_eta1_el_off_queue(self):
-        self.test_data.add_fields([("EBW000", 10)], "EB0EB")
         self.test_data.set_field("MI0ACC", DataType("C", input="EL").to_bytes())
         test_data = self.tpf_server.run("ETA1", self.test_data)
         self.assertEqual("ETAX265.6", test_data.output.last_line, test_data.output.last_node)
