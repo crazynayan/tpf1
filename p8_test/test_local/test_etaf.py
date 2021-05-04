@@ -12,9 +12,15 @@ class EtafTest(unittest.TestCase):
         self.test_data.add_all_regs()
 
     def test_etaf_vanilla(self) -> None:
-        self.test_data.output.debug = ["ETAF"]
         self.test_data.set_field("WA0ET5", DataType("X", input="01").to_bytes())
         test_data = self.tpf_server.run("ETA1", self.test_data)
         self.assertEqual("ETAF1300.1", test_data.output.last_line, test_data.output.last_node)
         self.assertIn("ITINERARY REQUIRED TO COMPLETE TRANSACTION", test_data.output.messages)
         self.assertEqual(list(), test_data.output.dumps)
+
+    def test_etaf_itinerary(self) -> None:
+        self.test_data.output.debug = ["ETAF"]
+        self.test_data.set_field("WA0ET5", DataType("X", input="01").to_bytes())
+        self.test_data.set_field("WA0ASC", DataType("X", input="01").to_bytes())
+        test_data = self.tpf_server.run("ETA1", self.test_data)
+        self.assertEqual("ETAZ0000", test_data.output.last_line, test_data.output.last_node)
