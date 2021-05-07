@@ -36,14 +36,11 @@ class EtazTest(unittest.TestCase):
         self.assertEqual(list(), test_data.output.dumps)
         self.output = test_data.output
 
-    def test_etaz_rcvd_from_itin(self) -> None:
+    def test_etaz_rcvd_from(self) -> None:
         self.test_data.set_field("WA0ET5", DataType("X", input="01").to_bytes())
         self.test_data.set_field("WA0ASC", DataType("X", input="01").to_bytes())
-        # self.test_data.add_pnr_field_data([{"WI0TYP":b64encode(DataType("X",input="04").to_bytes()).decode()}], ITIN)
         self.test_data.add_pnr_element(["NAYAN"], RCVD_FROM)
-        # self.test_data.add_pnr_element(["RECORD"], RECORD_LOC)
         test_data = self.tpf_server.run("ETA1", self.test_data)
-        self.assertEqual("ETAZ1950.2", test_data.output.last_line, test_data.output.last_node)
-        self.assertIn("NEED RECEIVED FROM FIELD - USE 6", test_data.output.messages)
+        self.assertEqual("$$ETK1$$.1", test_data.output.last_line, test_data.output.debug)
         self.assertEqual(list(), test_data.output.dumps)
         self.output = test_data.output

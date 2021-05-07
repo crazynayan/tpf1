@@ -6,7 +6,7 @@ from p1_utils.errors import PnrElementError, PnrLocatorNotFoundError
 from p2_assembly.mac2_data_macro import macros
 from p3_db.stream import Stream
 
-NAME, HFAX, FQTV, ITIN, RCVD_FROM = "name", "hfax", "fqtv", "itin", "rcvd_from"
+NAME, HFAX, FQTV, ITIN, RCVD_FROM, PHONE = "name", "hfax", "fqtv", "itin", "rcvd_from", "phone"
 SUBS_CARD_SEG, GROUP_PLAN, RECORD_LOC = "subs_card_seg", "group_plan", "record_loc"
 
 
@@ -45,6 +45,7 @@ class Pnr:
         PnrAttribute(GROUP_PLAN, "A0", std_var=bytearray([0x02, 0x01])),
         PnrAttribute(RCVD_FROM, "58", std_var=bytearray([0x80])),  # Indicate NEW item
         PnrAttribute(RECORD_LOC, "54", std_var=bytearray([0x00])),
+        PnrAttribute(PHONE, "5C", std_var=bytearray([0x80])),  # Indicate NEW item
     ]
 
     @classmethod
