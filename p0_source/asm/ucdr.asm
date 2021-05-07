@@ -1,2 +1,0 @@
-         PARS_DATE
-         BACKC

@@ -7,15 +7,5 @@ static/
 tpf1-key.json
 p0_source/macro/
 p0_source/asm/
-p0_source/asm/eta5.asm
-p0_source/asm/etaj.asm
-p0_source/asm/sub1.asm
-p0_source/asm/wgu4.asm
-p0_source/asm/saaf.asm
-p0_source/asm/wgul.asm
-p0_source/asm/wpgb.asm
-p0_source/asm/savq.asm
-p0_source/asm/saa0.asm
-p0_source/asm/wpa1.asm
 google-cloud.json
 google-cloud-tokyo.json
