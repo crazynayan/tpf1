@@ -218,6 +218,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["PRIMA"] = self.prima
         self._ex["PNRCC"] = self.pnrcc
         self._ex["AGSQR"] = self.not_implemented
+        self._ex["PNRREF"] = self.not_implemented
 
         # User Defined Executable Macros created for this tool
         self._ex["PARS_DATE"] = self.pars_date

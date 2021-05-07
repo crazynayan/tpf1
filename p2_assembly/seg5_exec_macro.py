@@ -232,6 +232,7 @@ class UserDefinedMacroImplementation(StructuredProgrammingMacroImplementation):
         self._command["NMSEA"] = self.key_value
         self._command["PRIMA"] = self.key_value
         self._command["AGSQR"] = self.key_value
+        self._command["PNRREF"] = self.key_value
         # Tool specific commands
         self._command["ERROR_CHECK"] = self.key_value
         self._command["PARS_DATE"] = self.key_value
