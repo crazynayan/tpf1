@@ -43,17 +43,29 @@ class Line:
         self.command: Optional[str] = None
         self.operand: Optional[str] = None
         self.continuation: bool = False
+        self.quote_continuation: bool = False
         self.index: Optional[int] = None
 
     @classmethod
-    def from_line(cls, file_line: str, continuing: bool = False) -> 'Line':
+    def from_line(cls, file_line: str, continuing: bool = False, quote_continuing: bool = False) -> 'Line':
         # Create a line object from a single file line.
         line = cls()
+        if file_line.startswith("ETK10AM"):
+            debug = True
         if len(file_line) > 71 and file_line[71] != ' ':
             line.continuation = True
             file_line = file_line[:71]
-        if line.continuation and "='" in file_line and file_line.count("'") % 2 != 0:
+        if quote_continuing:
+            all_words = file_line.split()
+            words = list()
+            for word in all_words:
+                words.append(word)
+                if word[-1] == "'":
+                    break
+            words = [" ".join(words)]
+        elif line.continuation and "'" in file_line and file_line.count("'") % 2 != 0:
             # This is the case where 2 quotes are in separate lines for e.g. MSG='.... X and in next line ...'
+            line.quote_continuation = True
             file_line = file_line + "'"
             words = re.findall(r"(?:'.*?'|\S)+", file_line)
             words[-1] = words[-1][:-1]
@@ -78,7 +90,7 @@ class Line:
         prior_line = Line()
         main_line = None
         for file_line in file_lines:
-            line = cls.from_line(file_line, prior_line.continuation)
+            line = cls.from_line(file_line, prior_line.continuation, prior_line.quote_continuation)
             if not prior_line.continuation:
                 lines.append(line)
                 main_line = line
