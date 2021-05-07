@@ -2,8 +2,8 @@ from typing import Optional
 
 from config import config
 from p1_utils.data_type import DataType, Register
-from p1_utils.errors import HeapaExecutionError, RegisterInvalidError, DumpExecutionError, LevtaExecutionError, \
-    MhinfExecutionError, PrimaExecutionError, McpckExecutionError, SegmentNotFoundError, NotImplementedExecutionError, \
+from p1_utils.errors import HeapaExecutionError, RegisterInvalidError, DumpExecutionError, MhinfExecutionError, \
+    PrimaExecutionError, McpckExecutionError, SegmentNotFoundError, NotImplementedExecutionError, \
     UserDefinedMacroExecutionError
 from p1_utils.ucdr import pars_to_date, date_to_pars
 from p2_assembly.mac2_data_macro import macros
@@ -31,14 +31,9 @@ class RealTimeMacro(State):
 
     def levta(self, node: KeyValue) -> str:
         level = node.get_value("LEVEL")
-        if not level or len(level) != 1:
-            raise LevtaExecutionError
         in_use = node.get_value("INUSE") if node.get_value("INUSE") else node.fall_down
         not_used = node.get_value("NOTUSED") if node.get_value("NOTUSED") else node.fall_down
-        control_value = self.vm.get_value(self.get_ecb_address(f"D{level}", "CE1CT"), 2)
-        if control_value == 0x01 or control_value == 0x00:
-            return not_used
-        return in_use
+        return in_use if self._is_level_present(level) else not_used
 
     def relcc(self, node: KeyValue) -> str:
         control_address = self.get_ecb_address(node.keys[0], "CE1CT")

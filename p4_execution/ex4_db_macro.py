@@ -19,7 +19,11 @@ class UserDefinedDbMacro(State):
         if workarea is None:
             raise Pd0BaseError
         if workarea[0] == "LEV":
-            level = f"D{workarea[1]}" if len(workarea[1]) == 1 else workarea[1]
+            lev_parameter = workarea[1]
+            level = lev_parameter[1] if len(lev_parameter) == 2 and lev_parameter[0] == "D" else lev_parameter
+            if not self._is_level_present(level):
+                self._core_block(self.vm.allocate(), level)
+            level = f"D{level}"
             level_address = self.get_ecb_address(level, "CE1CR")
             pd0_base = self.vm.get_value(level_address)
         elif workarea[0] == "REG":

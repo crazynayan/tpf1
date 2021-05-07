@@ -60,6 +60,8 @@ class Pnr:
             raise PnrLocatorNotFoundError
         starts_with = DataType("C", input=starts_with).to_bytes() if starts_with is not None else None
         attribute = Pnr.get_attribute_by_key(key)
+        if not attribute:
+            raise PnrElementError
         start = (len(Pnr.HEADER) + len(attribute.std_fix) + len(attribute.std_var)) \
             if packed else len(attribute.std_var)
         for item_number in range(item_number, len(data_list) + 1):

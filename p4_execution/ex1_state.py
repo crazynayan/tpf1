@@ -6,7 +6,7 @@ from config import config
 from p1_utils.data_type import DataType, Register
 from p1_utils.errors import SegmentNotFoundError, EcbLevelFormatError, InvalidBaseRegError, TpfdfError, \
     PartitionError, FileItemSpecificationError, PoolFileSpecificationError, BaseAddressError, ExecutionError, \
-    TPFServerMemoryError
+    TPFServerMemoryError, LevtaExecutionError
 from p2_assembly.mac0_generic import LabelReference
 from p2_assembly.mac2_data_macro import macros
 from p2_assembly.seg2_ins_operand import FieldIndex
@@ -65,13 +65,16 @@ class State:
         self.debug.init_trace(nodes, seg_list)
 
     @staticmethod
-    def get_ecb_address(level: str, ecb_label: str) -> int:
-        # level is from D0 to DF, ecb_label is the partial label to which the level number (0-F) to be appended
-        if not level.startswith("D") or len(level) != 2 or level[1] not in config.ECB_LEVELS:
-            # For DECB=(R1) DECB=L1ADR
-            raise EcbLevelFormatError
-        level = f"{ecb_label}{level[1]}"
-        dsp = macros["EB0EB"].evaluate(level)
+    def get_ecb_address(d_level: str, ecb_label: str) -> int:
+        level = d_level if d_level in config.ECB_LEVELS else str()
+        if not level:
+            if not d_level.startswith("D") or len(d_level) != 2 or d_level[1] not in config.ECB_LEVELS:
+                # For DECB=(R1) DECB=L1ADR
+                raise EcbLevelFormatError
+            # level is from D0 to DF, ecb_label is the partial label to which the level number (0-F) to be appended
+            level = d_level[1]
+        ecb_label_level = f"{ecb_label}{level}"
+        dsp = macros["EB0EB"].evaluate(ecb_label_level)
         return config.ECB + dsp
 
     def init_run(self) -> None:
@@ -161,6 +164,12 @@ class State:
         self.vm.set_value(address, level_address)
         self.vm.set_value(control_value, control_address, 2)
         self.vm.set_value(size_value, size_address, 2)
+
+    def _is_level_present(self, level: str) -> bool:
+        if level not in config.ECB_LEVELS:
+            raise LevtaExecutionError
+        control_value = self.vm.get_value(self.get_ecb_address(f"D{level}", "CE1CT"), 2)
+        return False if control_value == 0x01 or control_value == 0x00 else True
 
     @staticmethod
     def _field_data_to_bytearray(field_data: List[dict]):
