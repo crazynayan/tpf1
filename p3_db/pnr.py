@@ -7,7 +7,7 @@ from p2_assembly.mac2_data_macro import macros
 from p3_db.stream import Stream
 
 NAME, HFAX, FQTV, ITIN, RCVD_FROM = "name", "hfax", "fqtv", "itin", "rcvd_from"
-SUBS_CARD_SEG, GROUP_PLAN = "subs_card_seg", "group_plan"
+SUBS_CARD_SEG, GROUP_PLAN, RECORD_LOC = "subs_card_seg", "group_plan", "record_loc"
 
 
 class PnrAttribute:
@@ -43,7 +43,8 @@ class Pnr:
         PnrAttribute(ITIN, "30", byte_array=True, macro_name="WI0BS"),
         PnrAttribute(SUBS_CARD_SEG, "66"),
         PnrAttribute(GROUP_PLAN, "A0", std_var=bytearray([0x02, 0x01])),
-        PnrAttribute(RCVD_FROM, "58", std_var=bytearray([0x00]))
+        PnrAttribute(RCVD_FROM, "58", std_var=bytearray([0x80])),  # Indicate NEW item
+        PnrAttribute(RECORD_LOC, "54", std_var=bytearray([0x00])),
     ]
 
     @classmethod
