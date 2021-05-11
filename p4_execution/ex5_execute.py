@@ -155,6 +155,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         # CP
         self._ex["TP"] = self.tp
         self._ex["TR"] = self.tr
+        self._ex["EDMK"] = self.not_implemented
         # TRT
         # ED, EDMK
 
