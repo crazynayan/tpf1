@@ -205,11 +205,18 @@ class UserDefinedMacro(State):
             return match_label if self.get_partition() in {"LA"} else not_match_label
         raise McpckExecutionError
 
-    def nmsea(self, node: KeyValue) -> str:
+    @staticmethod
+    def nmsea(node: KeyValue) -> str:
         # TODO Finish NMSEA when data on NM0ID or WGL1 is available
         error = node.get_value("ERROR")
-        self.regs.get_value("R14")
         return error if error else node.fall_down
+
+    @staticmethod
+    def tkdna(node: KeyValue) -> str:
+        error = node.get_value("ERROR")
+        if not error:
+            raise NotImplementedExecutionError
+        return error
 
     def prima(self, node: KeyValue) -> str:
         if "PNR" not in node.keys and "AAA" not in node.keys:
