@@ -177,6 +177,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["SENDA"] = self.senda
         self._ex["SYSRA"] = self.sysra
         self._ex["SERRC"] = self.serrc
+        self._ex["SNAPC"] = self.not_implemented
         self._ex["ENTRC"] = self.entrc
         self._ex["ENTNC"] = self.entnc
         self._ex["ENTDC"] = self.entdc
@@ -220,6 +221,8 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["PNRCC"] = self.pnrcc
         self._ex["AGSQR"] = self.not_implemented
         self._ex["PNRREF"] = self.not_implemented
+        self._ex["TKDNA"] = self.not_implemented
+        self._ex["CKCOR"] = self.not_implemented
 
         # User Defined Executable Macros created for this tool
         self._ex["PARS_DATE"] = self.pars_date

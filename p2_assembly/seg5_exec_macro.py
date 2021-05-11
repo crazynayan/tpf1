@@ -104,6 +104,7 @@ class RealtimeMacroImplementation(InstructionImplementation):
         self._command["PNAMC"] = self.pnamc
         self._command["SYSRA"] = self.key_value
         self._command["SERRC"] = self.key_value
+        self._command["SNAPC"] = self.key_value
         self._command["SENDA"] = self.key_value
         self._command["DBOPN"] = self.key_value
         self._command["DBRED"] = self.dbred
@@ -233,6 +234,8 @@ class UserDefinedMacroImplementation(StructuredProgrammingMacroImplementation):
         self._command["PRIMA"] = self.key_value
         self._command["AGSQR"] = self.key_value
         self._command["PNRREF"] = self.key_value
+        self._command["TKDNA"] = self.key_value
+        self._command["CKCOR"] = self.key_value
         # Tool specific commands
         self._command["ERROR_CHECK"] = self.key_value
         self._command["PARS_DATE"] = self.key_value
