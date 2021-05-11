@@ -2,7 +2,7 @@ from p8_test.test_local.test_eta5_execution import NameGeneral
 
 
 class NameFailETK1(NameGeneral):
-    ETK1_END = "ETK1030.1"
+    ETK1_END = "ETK1200.12"
 
     def setUp(self) -> None:
         super().setUp()

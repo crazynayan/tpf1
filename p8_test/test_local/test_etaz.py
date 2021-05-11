@@ -41,6 +41,6 @@ class EtazTest(unittest.TestCase):
         self.test_data.set_field("WA0ASC", DataType("X", input="01").to_bytes())
         self.test_data.add_pnr_element(["NAYAN"], RCVD_FROM)
         test_data = self.tpf_server.run("ETA1", self.test_data)
-        self.assertEqual("ETK1030.1", test_data.output.last_line, test_data.output.last_node)
+        self.assertEqual("ETK1200.12", test_data.output.last_line, test_data.output.last_node)
         self.assertIn("000003", test_data.output.dumps)
         self.output = test_data.output
