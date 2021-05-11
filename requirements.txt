@@ -12,7 +12,8 @@ google-cloud-core==1.6.0
 google-cloud-firestore==2.1.1
 googleapis-common-protos==1.53.0
 grpcio==1.37.1
-idna==3.1
+# Keep idna at 2.5
+idna==2.5
 itsdangerous==1.1.0
 Jinja2==2.11.3
 MarkupSafe==1.1.1
