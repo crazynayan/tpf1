@@ -17,8 +17,8 @@ class NameGeneral(unittest.TestCase):
         aaa_fields = ["WA0EXT", "WA0PTY", "WA0ETG", "WA0PTI", "WA0ET4", "WA0ET5"]
         self.test_data.add_fields(aaa_fields, "WA0AA")
         # ECB
-        ecb_fields = [("EBX000", 4), ("EBX004", 4), ("EBX008", 4), ("EBX012", 4), "EBW015", "EBW014", "EBW038",
-                      "EBSW01", "EBW010", "EBW016", "EBRS01"]
+        ecb_fields = [("EBX000", 4), ("EBX004", 4), ("EBX008", 4), ("EBX012", 4), "EBW015", "EBW014", "EBW028",
+                      "EBW038", "EBSW01", "EBW010", "EBW016", "EBRS01"]
         self.test_data.add_fields(ecb_fields, "EB0EB")
         # UI2PF
         ui2_fields = ["UI2CNN", ("UI2INC", 3)]

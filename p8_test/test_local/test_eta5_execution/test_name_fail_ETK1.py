@@ -2,7 +2,8 @@ from p8_test.test_local.test_eta5_execution import NameGeneral
 
 
 class NameFailETK1(NameGeneral):
-    ETK1_END = "ETK1200.12"
+    ETK1_END = "FMSG0100"
+    TTY_END = "TIX10000"
 
     def setUp(self) -> None:
         super().setUp()
@@ -10,38 +11,34 @@ class NameFailETK1(NameGeneral):
     def test_no_name_tty_ETK1_33(self) -> None:
         self.test_data.set_field("WA0ET4", bytes([self.wa0tty]))
         test_data = self.tpf_server.run("ETA5", self.test_data)
-        self.assertEqual(self.ETK1_END, test_data.output.last_line)
+        self.assertEqual(self.TTY_END, test_data.output.last_line, test_data.output.last_node)
         self.assertEqual("00", test_data.get_field("UI2CNN"))
         self.assertEqual("60", test_data.get_field("EBRS01"))
-        self.assertEqual(33, test_data.output.regs["R6"])
+        self.assertEqual("18", test_data.get_field("EBW028"))
 
     def test_too_many_names_tty_ETK1_33(self) -> None:
         self.test_data.add_pnr_element(["45ZAVERI", "55SHAH"], "name")
         self.test_data.set_field("WA0ET4", bytes([self.wa0tty]))
         test_data = self.tpf_server.run("ETA5", self.test_data)
-        self.assertEqual(self.ETK1_END, test_data.output.last_line)
-        self.assertEqual(100, test_data.output.regs["R15"])
-        self.assertEqual(f"{self.ui2098:02X}", test_data.get_field("UI2CNN"))
-        self.assertEqual(33, test_data.output.regs["R6"])
+        self.assertEqual(self.TTY_END, test_data.output.last_line, test_data.output.last_node)
+        self.assertEqual("18", test_data.get_field("EBW028"))
         self.assertEqual("60", test_data.get_field("EBRS01"))
 
     def test_group_overbooking_tty_ETK1_33(self):
         self.test_data.add_pnr_element(["Z/15SABRE", "11ZAVERI", "5SHAH"], "name")
         self.test_data.set_field("WA0ET4", bytes([self.wa0tty]))
         test_data = self.tpf_server.run("ETA5", self.test_data)
-        self.assertEqual(self.ETK1_END, test_data.output.last_line)
-        self.assertEqual(33, test_data.output.regs["R6"])
+        self.assertEqual(self.TTY_END, test_data.output.last_line)
+        self.assertEqual("18", test_data.get_field("EBW028"))
         self.assertEqual("60", test_data.get_field("EBRS01"))
 
     def test_multiple_groups_CC_tty_ETK1_33(self):
         self.test_data.add_pnr_element(["C/25TOURS", "C/21TOURS", "1SHAH"], "name")
         self.test_data.set_field("WA0ET4", bytes([self.wa0tty]))
         test_data = self.tpf_server.run("ETA5", self.test_data)
-        self.assertEqual(self.ETK1_END, test_data.output.last_line)
-        # TODO uncomment after fixing ETK1
-        # self.assertListEqual(list(), test_data.output.dumps)
-        self.assertEqual(f"{self.ui2097:02X}", test_data.get_field("UI2CNN"))
-        self.assertEqual(33, test_data.output.regs["R6"])
+        self.assertEqual(self.TTY_END, test_data.output.last_line)
+        self.assertListEqual(list(), test_data.output.dumps)
+        self.assertEqual("18", test_data.get_field("EBW028"))
         self.assertEqual("60", test_data.get_field("EBRS01"))
         self.assertEqual("C3", test_data.get_field("EBW014"))
 
@@ -49,10 +46,9 @@ class NameFailETK1(NameGeneral):
         self.test_data.add_pnr_element(["Z/25SABRE", "C/21TOURS", "1SHAH"], "name")
         self.test_data.set_field("WA0ET4", bytes([self.wa0tty]))
         test_data = self.tpf_server.run("ETA5", self.test_data)
-        self.assertEqual(self.ETK1_END, test_data.output.last_line)
-        # self.assertListEqual(list(), test_data.output.dumps)
-        self.assertEqual(f"{self.ui2097:02X}", test_data.get_field("UI2CNN"))
-        self.assertEqual(33, test_data.output.regs["R6"])
+        self.assertEqual(self.TTY_END, test_data.output.last_line)
+        self.assertListEqual(list(), test_data.output.dumps)
+        self.assertEqual("18", test_data.get_field("EBW028"))
         self.assertEqual("60", test_data.get_field("EBRS01"))
         self.assertEqual("E9", test_data.get_field("EBW014"))
 
@@ -60,10 +56,9 @@ class NameFailETK1(NameGeneral):
         self.test_data.add_pnr_element(["C/25TOURS", "Z/21SABRE", "1SHAH"], "name")
         self.test_data.set_field("WA0ET4", bytes([self.wa0tty]))
         test_data = self.tpf_server.run("ETA5", self.test_data)
-        self.assertEqual(self.ETK1_END, test_data.output.last_line)
-        # self.assertListEqual(list(), test_data.output.dumps)
-        self.assertEqual(f"{self.ui2098:02X}", test_data.get_field("UI2CNN"))
-        self.assertEqual(16, test_data.output.regs["R6"])
+        self.assertEqual(self.TTY_END, test_data.output.last_line)
+        self.assertListEqual(list(), test_data.output.dumps)
+        self.assertEqual("18", test_data.get_field("EBW028"))
         self.assertEqual("E0", test_data.get_field("EBRS01"))
         self.assertEqual("C3", test_data.get_field("EBW014"))
 
@@ -71,10 +66,9 @@ class NameFailETK1(NameGeneral):
         self.test_data.add_pnr_element(["Z/25SABRE", "Z/21SABRE", "1SHAH"], "name")
         self.test_data.set_field("WA0ET4", bytes([self.wa0tty]))
         test_data = self.tpf_server.run("ETA5", self.test_data)
-        self.assertEqual(self.ETK1_END, test_data.output.last_line)
-        # self.assertListEqual(list(), test_data.output.dumps)
-        self.assertEqual(f"{self.ui2098:02X}", test_data.get_field("UI2CNN"))
-        self.assertEqual(16, test_data.output.regs["R6"])
+        self.assertEqual(self.TTY_END, test_data.output.last_line)
+        self.assertListEqual(list(), test_data.output.dumps)
+        self.assertEqual("18", test_data.get_field("EBW028"))
         self.assertEqual("E0", test_data.get_field("EBRS01"))
         self.assertEqual("E9", test_data.get_field("EBW014"))
 
@@ -82,24 +76,24 @@ class NameFailETK1(NameGeneral):
         self.test_data.add_pnr_element(["K/13TOURS", "1ZAVERI"], "name")
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.assertEqual(self.ETK1_END, test_data.output.last_line)
-        self.assertEqual(16, test_data.output.regs["R6"])
         self.assertEqual("E0", test_data.get_field("EBRS01"))
         self.assertEqual("D2", test_data.get_field("EBW014"))
+        self.assertIn("INVLD $CPN/SEG ASSOC FAILED ON AIRLINE CODE$", test_data.output.messages)
 
     def test_group_Z_not_at_start_ETK1_16(self):
         # It will give the same error if number of party is mentioned in Z/
         self.test_data.add_pnr_element(["3ZAVERI", "Z/SABRE", "1SHAH"], "name")
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.assertEqual(self.ETK1_END, test_data.output.last_line)
-        self.assertEqual(16, test_data.output.regs["R6"])
+        self.assertIn("INVLD $CPN/SEG ASSOC FAILED ON AIRLINE CODE$", test_data.output.messages)
         self.assertEqual("E0", test_data.get_field("EBRS01"))
         self.assertEqual("00", test_data.get_field("EBW014"))
 
     def test_multiple_groups_ZZ_ETK1_16(self):
-        self.test_data.add_pnr_element(["Z/25SABRE", "Z/21TOURS", "1SHAH"], "name")
+        self.test_data.add_pnr_element(["Z/25SABRE", "Z/21TOURS", "1FSHAH"], "name")
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.assertEqual(self.ETK1_END, test_data.output.last_line)
-        self.assertEqual(16, test_data.output.regs["R6"])
+        self.assertIn("INVLD $CPN/SEG ASSOC FAILED ON AIRLINE CODE$", test_data.output.messages)
         self.assertEqual("E0", test_data.get_field("EBRS01"))
         self.assertEqual("E9", test_data.get_field("EBW014"))
 
@@ -107,6 +101,6 @@ class NameFailETK1(NameGeneral):
         self.test_data.add_pnr_element(["C/25SABRE", "Z/21TOURS", "1SHAH"], "name")
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.assertEqual(self.ETK1_END, test_data.output.last_line)
-        self.assertEqual(16, test_data.output.regs["R6"])
+        self.assertIn("INVLD $CPN/SEG ASSOC FAILED ON AIRLINE CODE$", test_data.output.messages)
         self.assertEqual("E0", test_data.get_field("EBRS01"))
         self.assertEqual("C3", test_data.get_field("EBW014"))
