@@ -8,11 +8,12 @@ from p8_test.test_local import TestDataUTS
 
 class EtazTest(unittest.TestCase):
     DEBUG_DATA = list()
+    SEGMENT = "ETKF"
 
     def setUp(self) -> None:
         self.tpf_server = TpfServer()
         self.test_data = TestDataUTS()
-        self.test_data.output.debug = ["ETAZ"]
+        self.test_data.output.debug = [self.SEGMENT]
         self.output = None
 
     def tearDown(self) -> None:
@@ -25,7 +26,7 @@ class EtazTest(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls) -> None:
-        print(f"ETAZ LOC = {len(cls.DEBUG_DATA)}")
+        print(f"{cls.SEGMENT} LOC = {len(cls.DEBUG_DATA)}")
 
     def test_etaz_vanilla(self) -> None:
         self.test_data.set_field("WA0ET5", DataType("X", input="01").to_bytes())
