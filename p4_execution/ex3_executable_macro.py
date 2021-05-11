@@ -4,7 +4,7 @@ from config import config
 from p1_utils.data_type import DataType, Register
 from p1_utils.errors import HeapaExecutionError, RegisterInvalidError, DumpExecutionError, MhinfExecutionError, \
     PrimaExecutionError, McpckExecutionError, SegmentNotFoundError, NotImplementedExecutionError, \
-    UserDefinedMacroExecutionError
+    UserDefinedMacroExecutionError, TPFServerMemoryError
 from p1_utils.ucdr import pars_to_date, date_to_pars
 from p2_assembly.mac2_data_macro import macros
 from p2_assembly.seg2_ins_operand import FieldBaseDsp
@@ -291,6 +291,21 @@ class UserDefinedMacro(State):
             message.append(byte)
         message_string = DataType("X", bytes=message).decode
         self.messages.append(message_string)
+        return node.fall_down
+
+    def fmsg_user_exit(self, node: KeyValue) -> str:
+        r1 = self.regs.get_value("R1")
+        r2 = self.regs.get_value("R2")
+        if not r1 or not r2:
+            raise TPFServerMemoryError
+        macros["UI2PF"].load()
+        ui2bct = macros["UI2PF"].lookup("UI2BCT").dsp
+        length = self.vm.get_value(r2 + ui2bct, 2)
+        if not length:
+            raise UserDefinedMacroExecutionError
+        message_bytes = self.vm.get_bytes(r1, length)
+        message = DataType("X", bytes=message_bytes).decode
+        self.messages.append(message)
         return node.fall_down
 
     def error_check(self, node: KeyValue) -> str:
