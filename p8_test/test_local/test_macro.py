@@ -4,7 +4,7 @@ from p2_assembly.mac2_data_macro import DataMacro, macros
 
 
 class MacroTest(unittest.TestCase):
-    NUMBER_OF_FILES = 53
+    NUMBER_OF_FILES = 56
 
     def test_files(self):
         self.assertIn('EB0EB', macros)
@@ -281,6 +281,10 @@ class MacroTest(unittest.TestCase):
         for macro_name in macro_list:
             self._common_checks(macro_name)
 
+    def test_ETA4_additions(self):
+        macro_list = ["TKFWK", "TKTEQ", "PX0WK"]
+        for macro_name in macro_list:
+            self._common_checks(macro_name)
 
 if __name__ == '__main__':
     unittest.main()

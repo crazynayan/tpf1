@@ -8,7 +8,7 @@ from p8_test.test_local import TestDataUTS
 
 class EtazTest(unittest.TestCase):
     DEBUG_DATA = list()
-    SEGMENT = "ETKF"
+    SEGMENT = "ETAZ"
 
     def setUp(self) -> None:
         self.tpf_server = TpfServer()
