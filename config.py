@@ -100,6 +100,7 @@ class Config:
     # Used by test
     TEST_DEBUG = False
     # Used by ETA5 test
+    ETA5_TEST_DEBUG = False
     ETA5_DEBUG_DATA = list()
     ETA5_CLASS_COUNTER = 0
     # Change 4CC1 to 4E2F to 4F9C to 5109 i.e. 20Oct19 to 20Oct20 to 20Oct21 to 20Oct22 (every year after 20NOV)

@@ -14,7 +14,7 @@ class NameGeneral(unittest.TestCase):
     def setUp(self) -> None:
         self.tpf_server = TpfServer()
         self.test_data = TestDataUTS()
-        self.test_data.output.debug = [self.SEGMENT] if config.TEST_DEBUG else list()
+        self.test_data.output.debug = [self.SEGMENT] if config.ETA5_TEST_DEBUG else list()
         self.output = None
         # AAA
         aaa_fields = ["WA0EXT", "WA0PTY", "WA0ETG", "WA0PTI", "WA0ET4", "WA0ET5"]
@@ -62,7 +62,10 @@ class NameGeneral(unittest.TestCase):
         config.ETA5_CLASS_COUNTER += 1
         if config.ETA5_CLASS_COUNTER < 11:
             return
-        print(f"{cls.SEGMENT} LOC = {len(config.ETA5_DEBUG_DATA)}")
+        loc = len(config.ETA5_DEBUG_DATA)
+        if loc == 0:
+            return
+        print(f"{cls.SEGMENT} LOC = {loc}")
 
 
 hfax_2812_gld = [
