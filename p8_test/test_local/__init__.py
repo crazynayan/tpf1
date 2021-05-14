@@ -1,11 +1,13 @@
 import random
 import string
+import unittest
 from typing import List, Union, Dict
 
 from config import config
 from p2_assembly.mac2_data_macro import DataMacro
 from p3_db.test_data import TestData
 from p3_db.test_data_elements import Pnr
+from p4_execution.ex5_execute import TpfServer
 
 
 class TestDataUTS(TestData):
@@ -55,3 +57,27 @@ class TestDataUTS(TestData):
             df_dict['field_data'] = field_data
             self.create_tpfdf_lrec(df_dict, persistence=False)
         return
+
+
+class TestDebug(unittest.TestCase):
+    DEBUG_DATA = list()
+    SEGMENT = str()
+
+    def setUp(self) -> None:
+        self.tpf_server = TpfServer()
+        self.test_data = TestDataUTS()
+        self.test_data.output.debug = [self.SEGMENT] if config.TEST_DEBUG else list()
+        self.output = None
+
+    def tearDown(self) -> None:
+        for debug_line in self.output.debug:
+            if debug_line in self.DEBUG_DATA:
+                continue
+            self.DEBUG_DATA.append(debug_line)
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        loc = len(cls.DEBUG_DATA)
+        if not loc:
+            return
+        print(f"{cls.SEGMENT} LOC = {loc}")

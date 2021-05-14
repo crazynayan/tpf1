@@ -9,10 +9,13 @@ from p8_test.test_local import TestDataUTS
 
 
 class NameGeneral(unittest.TestCase):
+    SEGMENT = "ETA5"
 
     def setUp(self) -> None:
         self.tpf_server = TpfServer()
         self.test_data = TestDataUTS()
+        self.test_data.output.debug = [self.SEGMENT] if config.TEST_DEBUG else list()
+        self.output = None
         # AAA
         aaa_fields = ["WA0EXT", "WA0PTY", "WA0ETG", "WA0PTI", "WA0ET4", "WA0ET5"]
         self.test_data.add_fields(aaa_fields, "WA0AA")
@@ -45,6 +48,21 @@ class NameGeneral(unittest.TestCase):
         self.ui2xui = macros["UI2PF"].evaluate("#UI2XUI")
         self.ui2can = macros["UI2PF"].evaluate("#UI2CAN")
         self.ui2nxt = macros["AASEQ"].evaluate("#UI2NXT")
+
+    def tearDown(self) -> None:
+        if not self.output or not self.output.debug:
+            return
+        for debug_line in self.output.debug:
+            if debug_line in config.ETA5_DEBUG_DATA:
+                continue
+            config.ETA5_DEBUG_DATA.append(debug_line)
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        config.ETA5_CLASS_COUNTER += 1
+        if config.ETA5_CLASS_COUNTER < 11:
+            return
+        print(f"{cls.SEGMENT} LOC = {len(config.ETA5_DEBUG_DATA)}")
 
 
 hfax_2812_gld = [

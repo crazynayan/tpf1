@@ -1,44 +1,24 @@
-import unittest
-
 from p1_utils.data_type import DataType
-from p4_execution.ex5_execute import TpfServer
-from p8_test.test_local import TestDataUTS
+from p8_test.test_local import TestDebug
 
 
-class EtafTest(unittest.TestCase):
+class EtafTest(TestDebug):
     DEBUG_DATA = list()
-
-    def setUp(self) -> None:
-        self.tpf_server = TpfServer()
-        self.test_data = TestDataUTS()
-        self.test_data.output.debug = ["ETAF"]
-        self.output = None
-
-    def tearDown(self) -> None:
-        if not self.output or not self.output.debug:
-            return
-        for debug_line in self.output.debug:
-            if debug_line in self.DEBUG_DATA:
-                continue
-            self.DEBUG_DATA.append(debug_line)
-
-    @classmethod
-    def tearDownClass(cls) -> None:
-        print(f"ETAF LOC = {len(cls.DEBUG_DATA)}")
+    SEGMENT = "ETAF"
 
     def test_etaf_vanilla(self) -> None:
         self.test_data.set_field("WA0ET5", DataType("X", input="01").to_bytes())
         test_data = self.tpf_server.run("ETA1", self.test_data)
-        self.assertEqual("ETAF1300.1", test_data.output.last_line, test_data.output.last_node)
-        self.assertIn("ITINERARY REQUIRED TO COMPLETE TRANSACTION", test_data.output.messages)
-        self.assertEqual(list(), test_data.output.dumps)
         self.output = test_data.output
+        self.assertEqual("ETAF1300.1", self.output.last_line, self.output.last_node)
+        self.assertIn("ITINERARY REQUIRED TO COMPLETE TRANSACTION", self.output.messages)
+        self.assertEqual(list(), self.output.dumps)
 
     def test_etaf_itinerary(self) -> None:
         self.test_data.set_field("WA0ET5", DataType("X", input="01").to_bytes())
         self.test_data.set_field("WA0ASC", DataType("X", input="01").to_bytes())
         test_data = self.tpf_server.run("ETA1", self.test_data)
-        self.assertEqual("ETAZ1950.1", test_data.output.last_line, test_data.output.last_node)
-        self.assertIn("NEED RECEIVED FROM FIELD - USE 6", test_data.output.messages)
-        self.assertEqual(list(), test_data.output.dumps)
         self.output = test_data.output
+        self.assertEqual("ETAZ1950.1", self.output.last_line, self.output.last_node)
+        self.assertIn("NEED RECEIVED FROM FIELD - USE 6", self.output.messages)
+        self.assertEqual(list(), self.output.dumps)
