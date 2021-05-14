@@ -116,9 +116,10 @@ class State:
         output_test_data.outputs = outputs
         return output_test_data
 
-    def _ex_command(self, node: InstructionType) -> str:
+    def _ex_command(self, node: InstructionType, execute_label: Optional[str] = None) -> str:
         label = self._ex[node.command](node)
-        self.debug.hit(node, label)
+        next_label = str() if execute_label else label
+        self.debug.hit(node, next_label)
         return label
 
     def set_number_cc(self, number: int) -> None:
