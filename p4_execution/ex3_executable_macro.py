@@ -1,6 +1,7 @@
 from typing import Optional
 
 from config import config
+from p1_utils.canned import UI2CNN
 from p1_utils.data_type import DataType, Register
 from p1_utils.errors import HeapaExecutionError, RegisterInvalidError, DumpExecutionError, MhinfExecutionError, \
     PrimaExecutionError, McpckExecutionError, SegmentNotFoundError, NotImplementedExecutionError, \
@@ -285,6 +286,16 @@ class UserDefinedMacro(State):
     def uio1_user_exit(self, node: KeyValue) -> str:
         r2 = self.regs.get_value("R2")
         if r2 != 0:
+            ui2cnn = r2 + macros["UI2PF"].lookup("UI2CNN").dsp
+            ui2uio = r2 + macros["UI2PF"].lookup("UI2UIO").dsp
+            canned_number = self.vm.get_unsigned_value(ui2cnn, 1)
+            if self.vm.all_bits_on(ui2uio, 0x01):  # UI2SEC = 0x01
+                canned_number += 256
+            message_string = next((canned["message"] for canned in UI2CNN
+                                   if int(canned["number"]) == canned_number), None)
+            if not message_string:
+                raise UserDefinedMacroExecutionError(node)
+            self.messages.append(message_string)
             return node.fall_down
         ebw000_address: int = self.regs.get_value("R9") + macros["EB0EB"].evaluate("EBW000")
         ebw000: bytearray = self.vm.get_bytes(ebw000_address, 72)
@@ -305,9 +316,8 @@ class UserDefinedMacro(State):
         r2 = self.regs.get_value("R2")
         if not r1 or not r2:
             raise TPFServerMemoryError
-        macros["UI2PF"].load()
-        ui2bct = macros["UI2PF"].lookup("UI2BCT").dsp
-        length = self.vm.get_value(r2 + ui2bct, 2)
+        ui2bct = r2 + macros["UI2PF"].lookup("UI2BCT").dsp
+        length = self.vm.get_value(ui2bct, 2)
         if not length:
             raise UserDefinedMacroExecutionError
         message_bytes = self.vm.get_bytes(r1, length)
