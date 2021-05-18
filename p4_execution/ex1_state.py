@@ -58,11 +58,10 @@ class State:
             self.loaded_seg[seg_name] = (self.seg, self.regs.R8)
 
     def init_debug(self, seg_list: List[str]) -> None:
-        nodes = dict()
         for seg_name in seg_list:
             segments[seg_name].assemble()
-            nodes = {**nodes, **segments[seg_name].nodes}
-        self.debug.init_trace(nodes, seg_list)
+            self.debug.add_trace(segments[seg_name].nodes, seg_name)
+        return
 
     @staticmethod
     def get_ecb_address(d_level: str, ecb_label: str) -> int:

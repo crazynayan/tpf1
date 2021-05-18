@@ -7,6 +7,7 @@ from config import config
 from p2_assembly.mac2_data_macro import DataMacro
 from p3_db.test_data import TestData
 from p3_db.test_data_elements import Pnr
+from p4_execution.debug import get_debug_loc
 from p4_execution.ex5_execute import TpfServer
 
 
@@ -77,7 +78,7 @@ class TestDebug(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls) -> None:
-        loc = len(cls.DEBUG_DATA)
+        loc = get_debug_loc(cls.DEBUG_DATA, cls.SEGMENT)
         if not loc:
             return
         print(f"{cls.SEGMENT} LOC = {loc}")

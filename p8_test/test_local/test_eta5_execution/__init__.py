@@ -4,6 +4,7 @@ from base64 import b64encode
 from config import config
 from p1_utils.data_type import DataType
 from p2_assembly.mac2_data_macro import macros
+from p4_execution.debug import get_debug_loc
 from p4_execution.ex5_execute import TpfServer
 from p8_test.test_local import TestDataUTS
 
@@ -16,7 +17,7 @@ class NameGeneral(unittest.TestCase):
     def setUp(self) -> None:
         self.tpf_server = TpfServer()
         self.test_data = TestDataUTS()
-        self.test_data.output.debug = [self.SEGMENT] if config.ETA5_TEST_DEBUG else list()
+        self.test_data.output.debug = [self.SEGMENT] if config.TEST_DEBUG else list()
         self.output = None
         # AAA
         aaa_fields = ["WA0EXT", "WA0PTY", "WA0ETG", "WA0PTI", "WA0ET4", "WA0ET5"]
@@ -55,16 +56,16 @@ class NameGeneral(unittest.TestCase):
         if not self.output or not self.output.debug:
             return
         for debug_line in self.output.debug:
-            if debug_line in config.ETA5_DEBUG_DATA:
+            if debug_line in config.ET_DEBUG_DATA:
                 continue
-            config.ETA5_DEBUG_DATA.append(debug_line)
+            config.ET_DEBUG_DATA.append(debug_line)
 
     @classmethod
     def tearDownClass(cls) -> None:
-        config.ETA5_CLASS_COUNTER += 1
-        if config.ETA5_CLASS_COUNTER < 11:
+        config.ET_CLASS_COUNTER += 1
+        if config.ET_CLASS_COUNTER < 11:
             return
-        loc = len(config.ETA5_DEBUG_DATA)
+        loc = get_debug_loc(config.ET_DEBUG_DATA, cls.SEGMENT)
         if loc == 0:
             return
         print(f"{cls.SEGMENT} LOC = {loc}")

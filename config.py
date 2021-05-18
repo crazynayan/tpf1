@@ -98,11 +98,10 @@ class Config:
     DEFAULT_MACROS: dict = {"EB0EB": ECB, "GLOBAL": GLOBAL, "WA0AA": AAA, "MI0MI": IMG, "MH0HM": MULTI_HOST}
 
     # Used by test
-    TEST_DEBUG = False
+    TEST_DEBUG = True
     # Used by ETA5 test
-    ETA5_TEST_DEBUG = False
-    ETA5_DEBUG_DATA = list()
-    ETA5_CLASS_COUNTER = 0
+    ET_DEBUG_DATA = list()
+    ET_CLASS_COUNTER = 0
     # Change 4CC1 to 4E2F to 4F9C to 5109 i.e. 20Oct19 to 20Oct20 to 20Oct21 to 20Oct22 (every year after 20NOV)
     PARS_DATE = "4F9C"
 
