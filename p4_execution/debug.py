@@ -54,14 +54,38 @@ class Debug:
     def get_no_hit(self) -> List[Trace]:
         return [trace for _, trace in self.traces.items() if trace.is_not_hit()]
 
-    def get_trace(self) -> List[dict]:
-        traces = [{INDEX: trace.index, LINE: trace.line, HITS: trace.hits, NEXT_HITS: trace.next_hits,
-                   LABEL: trace.label, COMMAND: trace.command, OPERANDS: trace.operands, SEGMENT: trace.segment}
-                  for _, trace in self.traces.items() if trace.is_hit()]
-        traces.sort(key=lambda trace_item: (trace_item[SEGMENT], trace_item[INDEX]))
-        return traces
+    def get_hit(self) -> List[Trace]:
+        return [trace for _, trace in self.traces.items() if trace.is_hit()]
+
+    def get_traces(self, hit: Optional[bool] = None) -> List[dict]:
+        if hit is True:
+            traces: List[Trace] = self.get_hit()
+        elif hit is False:
+            traces: List[Trace] = self.get_no_hit()
+        else:
+            traces: List[Trace] = [trace for _, trace in self.traces.items()]
+        trace_list: List[dict] = [{INDEX: trace.index, LINE: trace.line, HITS: trace.hits, NEXT_HITS: trace.next_hits,
+                                   LABEL: trace.label, COMMAND: trace.command, OPERANDS: trace.operands,
+                                   SEGMENT: trace.segment} for trace in traces]
+        trace_list.sort(key=lambda trace_item: (trace_item[SEGMENT], trace_item[INDEX]))
+        return trace_list
 
 
-def get_debug_loc(traces: List[dict], segment: str) -> int:
-    seg_traces = [trace for trace in traces if trace[SEGMENT] == segment]
-    return len(seg_traces)
+def get_debug_loc(traces: dict, segment: str) -> int:
+    return len(traces[segment]) if segment in traces else 0
+
+
+def add_debug_loc(traces: Dict[str, set], traces_to_add: list):
+    for trace in traces_to_add:
+        if trace[SEGMENT] not in traces:
+            traces[trace[SEGMENT]] = set()
+        traces[trace[SEGMENT]].add(trace[LABEL])
+    return
+
+
+def get_missed_loc(traces_missed: Dict[str, set], traces_hit: Dict[str, set], segment: str):
+    if segment not in traces_missed:
+        return
+    hit_set: set = traces_hit[segment] if segment in traces_hit else set()
+    missed_set = traces_missed[segment] - hit_set
+    return len(missed_set)

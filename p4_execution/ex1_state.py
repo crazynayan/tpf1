@@ -268,7 +268,8 @@ class State:
         output.last_line = last_node.label
         output.last_node = str(last_node)
         if output.debug:
-            output.debug = self.debug.get_trace()
+            output.debug = self.debug.get_traces(hit=True)
+            output.debug_missed = self.debug.get_traces(hit=False)
         for core in output.cores:
             macro_name = core.macro_name.upper()
             if macro_name in config.DEFAULT_MACROS:

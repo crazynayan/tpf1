@@ -7,7 +7,7 @@ from config import config
 from p2_assembly.mac2_data_macro import DataMacro
 from p3_db.test_data import TestData
 from p3_db.test_data_elements import Pnr
-from p4_execution.debug import get_debug_loc
+from p4_execution.debug import get_debug_loc, add_debug_loc, get_missed_loc
 from p4_execution.ex5_execute import TpfServer
 
 
@@ -61,24 +61,30 @@ class TestDataUTS(TestData):
 
 
 class TestDebug(unittest.TestCase):
-    DEBUG_DATA = list()
-    SEGMENT = str()
+    SEGMENTS = ["ETA1", "ETAX", "ETAF", "ETAZ", "ETK1", "ETKF", "ETA4", "ETA5", "ETAW"]
 
     def setUp(self) -> None:
         self.tpf_server = TpfServer()
         self.test_data = TestDataUTS()
-        self.test_data.output.debug = [self.SEGMENT] if config.TEST_DEBUG else list()
+        self.test_data.output.debug = self.SEGMENTS if config.TEST_DEBUG else list()
         self.output = None
 
     def tearDown(self) -> None:
-        for debug_line in self.output.debug:
-            if debug_line in self.DEBUG_DATA:
-                continue
-            self.DEBUG_DATA.append(debug_line)
+        if not config.TEST_DEBUG:
+            return
+        if not self.output or not self.output.debug:
+            return
+        add_debug_loc(config.ET_DEBUG_DATA, self.output.debug)
+        add_debug_loc(config.ET_DEBUG_DATA_MISSED, self.output.debug_missed)
 
     @classmethod
     def tearDownClass(cls) -> None:
-        loc = get_debug_loc(cls.DEBUG_DATA, cls.SEGMENT)
-        if not loc:
+        if not config.TEST_DEBUG:
             return
-        print(f"{cls.SEGMENT} LOC = {loc}")
+        config.ET_CLASS_COUNTER += 1
+        if config.ET_CLASS_COUNTER < 16:
+            return
+        for segment in cls.SEGMENTS:
+            loc = get_debug_loc(config.ET_DEBUG_DATA, segment)
+            loc_missed = get_missed_loc(config.ET_DEBUG_DATA_MISSED, config.ET_DEBUG_DATA, segment)
+            print(f"{segment} LOC Done = {loc}, LOC Missed = {loc_missed}")

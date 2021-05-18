@@ -12,7 +12,6 @@ class Wgu4Test(unittest.TestCase):
         self.test_data.add_all_regs()
 
     def test_wgu4_new_wgul_path(self):
-        self.test_data.output.debug = ['WGU4']
         self.test_data.add_pnr_element(['1ZAVERI/NAYAN'], 'name')
         self.test_data.set_field('MH1BT11', bytes([0x01]))
         self.test_data.set_field('MI0ACC', DataType('C', input='FFAAC416M24').to_bytes())
@@ -22,7 +21,6 @@ class Wgu4Test(unittest.TestCase):
         self.assertEqual(0, test_data.output.regs['R0'])
 
     def test_wgu4_old_path(self):
-        self.test_data.output.debug = ['WGU4']
         self.test_data.add_pnr_element(['1ZAVERI/NAYAN'], 'name')
         self.test_data.set_field('MI0ACC', DataType('C', input='FFAAC416M24').to_bytes())
         test_data = self.tpf_server.run('TS24', self.test_data)

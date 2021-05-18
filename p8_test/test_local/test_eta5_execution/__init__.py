@@ -1,24 +1,17 @@
-import unittest
 from base64 import b64encode
 
 from config import config
 from p1_utils.data_type import DataType
 from p2_assembly.mac2_data_macro import macros
-from p4_execution.debug import get_debug_loc
-from p4_execution.ex5_execute import TpfServer
-from p8_test.test_local import TestDataUTS
+from p8_test.test_local import TestDebug
 
 
-class NameGeneral(unittest.TestCase):
-    SEGMENT = "ETA5"
+class NameGeneral(TestDebug):
     SUCCESS_END = "ETA60000"
     FMSG_END = "FMSG0100"
 
     def setUp(self) -> None:
-        self.tpf_server = TpfServer()
-        self.test_data = TestDataUTS()
-        self.test_data.output.debug = [self.SEGMENT] if config.TEST_DEBUG else list()
-        self.output = None
+        super().setUp()
         # AAA
         aaa_fields = ["WA0EXT", "WA0PTY", "WA0ETG", "WA0PTI", "WA0ET4", "WA0ET5"]
         self.test_data.add_fields(aaa_fields, "WA0AA")
@@ -51,24 +44,6 @@ class NameGeneral(unittest.TestCase):
         self.ui2xui = macros["UI2PF"].evaluate("#UI2XUI")
         self.ui2can = macros["UI2PF"].evaluate("#UI2CAN")
         self.ui2nxt = macros["AASEQ"].evaluate("#UI2NXT")
-
-    def tearDown(self) -> None:
-        if not self.output or not self.output.debug:
-            return
-        for debug_line in self.output.debug:
-            if debug_line in config.ET_DEBUG_DATA:
-                continue
-            config.ET_DEBUG_DATA.append(debug_line)
-
-    @classmethod
-    def tearDownClass(cls) -> None:
-        config.ET_CLASS_COUNTER += 1
-        if config.ET_CLASS_COUNTER < 11:
-            return
-        loc = get_debug_loc(config.ET_DEBUG_DATA, cls.SEGMENT)
-        if loc == 0:
-            return
-        print(f"{cls.SEGMENT} LOC = {loc}")
 
 
 hfax_2812_gld = [
