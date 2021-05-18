@@ -2,7 +2,8 @@ from typing import Dict
 
 from config import config
 from p1_utils.data_type import Register
-from p1_utils.errors import DataInvalidError, RegisterInvalidError, ConditionMaskError, AssemblyError
+from p1_utils.errors import DataInvalidError, RegisterInvalidError, ConditionMaskError, AssemblyError, \
+    BranchInvalidError
 from p1_utils.file_line import Line
 from p2_assembly.seg2_ins_operand import InstructionOperand
 from p2_assembly.seg3_ins_type import InstructionGeneric, FieldBits, FieldLenField, FieldLenFieldLen, FieldData, \
@@ -288,7 +289,10 @@ class InstructionImplementation(InstructionOperand):
 
     def branch_mnemonic(self, line: Line) -> BranchCondition:
         mask = config.MASK[line.command]
-        branch = self.get_branch(line.operand)
+        try:
+            branch = self.get_branch(line.operand)
+        except BranchInvalidError:
+            raise BranchInvalidError(line)
         return BranchCondition(line, branch, mask)
 
     @staticmethod

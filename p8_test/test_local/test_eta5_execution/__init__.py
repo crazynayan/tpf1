@@ -10,6 +10,8 @@ from p8_test.test_local import TestDataUTS
 
 class NameGeneral(unittest.TestCase):
     SEGMENT = "ETA5"
+    SUCCESS_END = "ETA60000"
+    FMSG_END = "FMSG0100"
 
     def setUp(self) -> None:
         self.tpf_server = TpfServer()
