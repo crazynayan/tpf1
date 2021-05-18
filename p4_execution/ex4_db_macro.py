@@ -1,7 +1,7 @@
 from typing import Optional
 
 from p1_utils.data_type import Register
-from p1_utils.errors import RegisterInvalidError, Pd0BaseError, PdredFieldError, PdredVerifyError, PdredSearchError, \
+from p1_utils.errors import RegisterInvalidError, Pd0BaseError, PdredFieldError, PdredSearchError, \
     PdredNotFoundError, PdredPd0Error, DbredError, TpfdfExecutionError, TPFServerMemoryError
 from p2_assembly.mac0_generic import LabelReference
 from p2_assembly.seg2_ins_operand import FieldBaseDsp
@@ -65,14 +65,10 @@ class UserDefinedDbMacro(State):
 
         # ACTION=VERIFY
         if node.get_value("ACTION") == "VERIFY":
+            not_found_label = node.get_value("NOTFOUND") if node.get_value("NOTFOUND") else node.fall_down
+            found_label = node.get_value("FOUND") if node.get_value("FOUND") else node.fall_down
             data, _ = Pnr.get_pnr_data(self._get_pnr_locator(), key, item_number=1)
-            if data is None:
-                not_found = node.get_value("NOTFOUND")
-                if not_found is None:
-                    raise PdredVerifyError
-                return not_found
-            else:
-                return node.fall_down
+            return not_found_label if data is None else found_label
 
         # Get the base of PD0WRK
         pd0_base = self._pd0_base(node)
