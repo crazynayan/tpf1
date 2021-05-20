@@ -51,7 +51,12 @@ class CDataType(DataTypeGeneric):
         if self.length > length:
             return char_data[:length]  # Truncation
         char_data.extend(bytearray([config.CHAR_PADDING] * (length - self.length)))
-        return char_data               # Padding
+        return char_data  # Padding
+
+    @property
+    def encode(self, length: int = None) -> str:
+        char_bytes = self.to_bytes(length)
+        return char_bytes.hex().upper()
 
 
 class XDataType(DataTypeGeneric):
@@ -284,6 +289,10 @@ class DataType:
     @property
     def decode(self) -> str:
         return self.data_type_object.decode
+
+    @property
+    def encode(self) -> str:
+        return self.data_type_object.encode
 
 
 class Register:
