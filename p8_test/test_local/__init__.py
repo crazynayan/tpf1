@@ -82,7 +82,7 @@ class TestDebug(unittest.TestCase):
         if not config.TEST_DEBUG:
             return
         config.ET_CLASS_COUNTER += 1
-        if config.ET_CLASS_COUNTER < 16:
+        if config.ET_CLASS_COUNTER < config.ET_TEST_CLASS_COUNT:
             return
         for segment in cls.SEGMENTS:
             loc = get_debug_loc(config.ET_DEBUG_DATA, segment)
