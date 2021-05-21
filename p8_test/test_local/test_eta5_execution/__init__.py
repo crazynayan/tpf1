@@ -7,7 +7,6 @@ from p8_test.test_local import TestDebug
 
 
 class NameGeneral(TestDebug):
-    SUCCESS_END = "ETA60000"
     FMSG_END = "FMSG0100"
 
     def setUp(self) -> None:
