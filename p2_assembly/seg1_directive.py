@@ -93,7 +93,7 @@ class DirectiveImplementation(SegmentGeneric):
         suffix: Optional[str] = operands[1] if operands[1] else None
         for operand in operands[2:]:
             if operand not in macros:
-                raise UsingInvalidError
+                raise UsingInvalidError(line)
             self.load_macro(operand, base=operands[0], suffix=suffix, override=False)
         return
 
