@@ -243,6 +243,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["PDRED"] = self.pdred
         self._ex["PDCLS"] = self.pdcls
         self._ex["PDMOD"] = self.not_implemented
+        self._ex["PDADD"] = self.not_implemented
         self._ex["LOCAA"] = self.not_implemented
         self._ex["DELAA"] = self.not_implemented
         # PDADD, PDDEL - Not in ETA5

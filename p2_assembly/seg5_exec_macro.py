@@ -216,6 +216,7 @@ class UserDefinedMacroImplementation(StructuredProgrammingMacroImplementation):
         super().__init__(name)
         # PD MACRO
         self._command["PDRED"] = self.key_value
+        self._command["PDADD"] = self.key_value
         self._command["PDCLS"] = self.key_value
         self._command["PDMOD"] = self.key_value
         self._command["LOCAA"] = self.key_value
