@@ -76,6 +76,12 @@ class State:
         dsp = macros["EB0EB"].evaluate(ecb_label_level)
         return config.ECB + dsp
 
+    def init_ecb(self) -> None:
+        self.regs.R9 = config.ECB
+        for level in config.ECB_LEVELS:
+            ce1ct = self.get_ecb_address(f"D{level}", "CE1CT")
+            self.vm.set_value(1, ce1ct + 1, 1)
+
     def init_run(self) -> None:
         self.__init__()
 
@@ -86,7 +92,7 @@ class State:
         for test_data_variant in test_data.yield_variation():
             self.init_run()
             self._init_seg(seg_name)
-            self.regs.R9 = config.ECB
+            self.init_ecb()
             self._core_block(config.AAA, "D1")
             self._core_block(config.IMG, "D0")
             self._set_from_test_data(test_data_variant)
