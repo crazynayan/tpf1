@@ -74,7 +74,7 @@ class ConditionMaskError(AssemblyError):
     pass
 
 
-class BaseAddressError(ExecutionError):
+class BaseAddressError(TPFServerMemoryError):
     pass
 
 
