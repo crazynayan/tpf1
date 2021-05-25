@@ -209,6 +209,7 @@ class StructuredProgrammingMacroImplementation(RealtimeMacroImplementation):
         self._command["#PERF"] = self.key_value
         self._command["#SUBR"] = self.key_value
         self._command["#ESUB"] = self.key_value
+        self._command["#SPM"] = self.key_value
 
 
 class UserDefinedMacroImplementation(StructuredProgrammingMacroImplementation):

@@ -207,6 +207,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["#PERF"] = self.no_operation
         self._ex["#SUBR"] = self.not_implemented
         self._ex["#ESUB"] = self.not_implemented
+        self._ex["#SPM"] = self.no_operation
 
         # User Defined Executable Macros
         self._ex["AAGET"] = self.aaget
