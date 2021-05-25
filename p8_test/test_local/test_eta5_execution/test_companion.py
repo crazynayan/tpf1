@@ -25,7 +25,7 @@ class Companion(NameGeneral):
         self.test_data.add_pnr_field_data(itin_2811_2812, "itin", "DGHWCL")
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
-        self.assertEqual("ETK20100.1", self.output.last_line)
+        self.assertEqual(self.ETK2_END, self.output.last_line, self.output.last_node)
         self.assertEqual("E6D7F8F9", test_data.get_field("EBX000"))
         self.assertEqual("60", test_data.get_field("EBRS01"))
         self.assertEqual(116, self.output.regs["R6"])
@@ -36,7 +36,7 @@ class Companion(NameGeneral):
         self.test_data.add_pnr_field_data(itin_2811_2812, "itin", "DGHWCL")
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
-        self.assertEqual("ETK20100.1", self.output.last_line)
+        self.assertEqual(self.ETK2_END, self.output.last_line)
         self.assertNotEqual("E6D7F8F9", test_data.get_field("EBX000"))
         self.assertEqual("60", test_data.get_field("EBRS01"))
         self.assertEqual(116, self.output.regs["R6"])
@@ -46,7 +46,7 @@ class Companion(NameGeneral):
         self.test_data.add_pnr_field_data(fqtv_gld, "fqtv", "DGHWCL")
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
-        self.assertEqual("ETK20100.1", self.output.last_line)
+        self.assertEqual(self.ETK2_END, self.output.last_line)
         self.assertNotEqual("E6D7F8F9", test_data.get_field("EBX000"))
         self.assertEqual("60", test_data.get_field("EBRS01"))
         self.assertEqual(116, self.output.regs["R6"])
@@ -57,7 +57,7 @@ class Companion(NameGeneral):
         self.test_data.add_pnr_field_data(fqtv_gld, "fqtv", "DGHWCL")
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
-        self.assertEqual("ETK20100.1", self.output.last_line)
+        self.assertEqual(self.ETK2_END, self.output.last_line)
         self.assertNotEqual("E6D7F8F9", test_data.get_field("EBX000"))
         self.assertEqual("60", test_data.get_field("EBRS01"))
         self.assertEqual(116, self.output.regs["R6"])

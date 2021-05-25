@@ -87,9 +87,9 @@ class Variation(NameGeneral):
             "TR1G_40_PTI": b64encode(DataType("X", input="40").to_bytes()).decode(),
         }], "40", "TR1GAA", variation=1)
         test_data = self.tpf_server.run("ETA5", self.test_data)
-        self.assertEqual("ETK20100.1", test_data.outputs[0].last_line)
+        self.assertEqual(self.ETK2_END, test_data.outputs[0].last_line)
         self.assertEqual(self.SUCCESS_END, test_data.outputs[1].last_line)
-        self.assertEqual("ETK20100.1", test_data.outputs[2].last_line)
+        self.assertEqual(self.ETK2_END, test_data.outputs[2].last_line)
         self.assertEqual(self.SUCCESS_END, test_data.outputs[3].last_line)
         self.assertEqual("60", test_data.get_field("EBRS01", pnr_variation=0, tpfdf_variation=0))
         self.assertEqual("00", test_data.get_field("EBRS01", pnr_variation=0, tpfdf_variation=1))
