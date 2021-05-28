@@ -1,6 +1,6 @@
 from typing import Optional
 
-from p1_utils.data_type import Register
+from p1_utils.data_type import Register, DataType
 from p1_utils.errors import RegisterInvalidError, Pd0BaseError, PdredFieldError, PdredSearchError, \
     PdredNotFoundError, PdredPd0Error, DbredError, TpfdfExecutionError, TPFServerMemoryError
 from p2_assembly.mac0_generic import LabelReference
@@ -90,9 +90,16 @@ class UserDefinedDbMacro(State):
             if search is None:
                 break
             if search[0] == "START":
-                if len(search) != 2 or not search[1].startswith("'") or not search[1].endswith("'"):
+                if len(search) != 2:
                     raise PdredSearchError
-                starts_with = search[1][1:-1]
+                if search[1].startswith("'") and search[1].endswith("'"):
+                    starts_with = search[1][1:-1]
+                elif search[1].startswith("(") and search[1].endswith(")"):
+                    reg = search[1][1:-1]
+                    base_address = self.regs.get_unsigned_value(reg)
+                    length = self.vm.get_unsigned_value(base_address, 1)
+                    char_bytes = self.vm.get_bytes(base_address + 1, length)
+                    starts_with = DataType("X", bytes=char_bytes).decode
 
         # Get the data
         pnr_locator = self._get_pnr_locator()
