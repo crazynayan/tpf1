@@ -238,6 +238,7 @@ class UserDefinedMacroImplementation(StructuredProgrammingMacroImplementation):
         self._command["PNRREF"] = self.key_value
         self._command["TKDNA"] = self.key_value
         self._command["CKCOR"] = self.key_value
+        self._command["SCANA"] = self.key_value
         # Tool specific commands
         self._command["ERROR_CHECK"] = self.key_value
         self._command["PARS_DATE"] = self.key_value
