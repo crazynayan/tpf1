@@ -4,7 +4,6 @@ from p8_test.test_local import TestDebug
 
 
 class Eta6Test(TestDebug):
-    SEGMENTS = ["ETA6"]
 
     def test_eta6_vanilla(self) -> None:
         self.test_data.set_field("WA0ET5", DataType("X", input="01").to_bytes())
@@ -17,7 +16,7 @@ class Eta6Test(TestDebug):
         self.test_data.add_pnr_element(["123456"], PHONE)
         test_data = self.tpf_server.run("ETA1", self.test_data)
         self.output = test_data.output
-        self.assertEqual("ETAA0000", self.output.last_line, f"{self.output.last_node}--{self.output.dumps}")
+        self.assertEqual(self.SUCCESS_END, self.output.last_line, f"{self.output.last_node}--{self.output.dumps}")
         self.assertEqual(list(), self.output.messages, self.output.get_traces("ETAW"))
 
     def test_eta6_abacus(self) -> None:
@@ -32,5 +31,5 @@ class Eta6Test(TestDebug):
         self.test_data.add_pnr_element(["123456"], PHONE)
         test_data = self.tpf_server.run("ETA1", self.test_data)
         self.output = test_data.output
-        self.assertEqual("ETAA0000", self.output.last_line, self.output.messages)
+        self.assertEqual(self.SUCCESS_END, self.output.last_line, self.output.messages)
         self.assertIn("INVALID REQUEST FOR RECORD IN TTK4", self.output.messages, self.output.get_traces("ETAW"))

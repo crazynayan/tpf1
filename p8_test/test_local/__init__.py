@@ -61,7 +61,7 @@ class TestDataUTS(TestData):
 
 
 class TestDebug(unittest.TestCase):
-    SEGMENTS = ["ETA1", "ETAX", "ETAF", "ETAZ", "ETK1", "ETKF", "ETA4", "ETA5", "ETAW", "ETA6", "ETK2", "ETK6"]
+    SEGMENTS = ["ETA1", "ETAX", "ETAF", "ETAZ", "ETK1", "ETKF", "ETA4", "ETA5", "ETAW", "ETA6", "ETK2", "ETK6", "ETAA"]
     SUCCESS_END = "ETA90000"
 
     def setUp(self) -> None:

@@ -26,5 +26,5 @@ class EtawTest(TestDebug):
         self.test_data.add_pnr_element(["123456"], PHONE)
         test_data = self.tpf_server.run("ETA1", self.test_data)
         self.output = test_data.output
-        self.assertEqual("ETAA0000", self.output.last_line, self.output.last_node)
+        self.assertEqual(self.SUCCESS_END, self.output.last_line, self.output.last_node)
         self.assertEqual(list(), self.output.messages, self.output.get_traces("ETAW"))
