@@ -98,7 +98,7 @@ class Config:
     DEFAULT_MACROS: dict = {"EB0EB": ECB, "GLOBAL": GLOBAL, "WA0AA": AAA, "MI0MI": IMG, "MH0HM": MULTI_HOST}
 
     # Used by test
-    TEST_DEBUG: bool = True
+    TEST_DEBUG: bool = False
     # Used by ETA5 test
     ET_DEBUG_DATA: Dict[str, set] = dict()
     ET_DEBUG_DATA_MISSED: Dict[str, set] = dict()
