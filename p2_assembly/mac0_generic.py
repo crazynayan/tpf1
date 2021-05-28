@@ -16,7 +16,11 @@ class LabelReference:
         self.based: bool = based
 
     def __repr__(self):
-        return f'{self.label}:{self.dsp}:{self.length}:{self.name}'
+        return f"{self.label}:{self.dsp}:{self.length}:{self.name}"
+
+    @property
+    def dsp_hex(self) -> str:
+        return f"{self.dsp:02X}"
 
     @property
     def is_branch(self) -> bool:
@@ -31,7 +35,8 @@ class LabelReference:
 
     def to_dict(self) -> dict:
         self_dict = self.__dict__.copy()
-        del self_dict['_branch']
+        self_dict["dsp_hex"] = self.dsp_hex
+        del self_dict["_branch"]
         return self_dict
 
 
@@ -57,11 +62,11 @@ class MacroGeneric:
         return label in self._symbol_table
 
     def checked_lookup(self, label: str) -> Optional[LabelReference]:
-        field = next(iter(label.split('&')))
+        field = next(iter(label.split("&")))
         return self._symbol_table[field] if field in self._symbol_table else None
 
     def lookup(self, label: str) -> LabelReference:
-        field = next(iter(label.split('&')))
+        field = next(iter(label.split("&")))
         try:
             return self._symbol_table[field]
         except KeyError:
@@ -83,27 +88,27 @@ class MacroGeneric:
         data_list = re.findall(r"[CXHFDBZPAY]D?'[^']+'", updated_operand)
         value_list = list()
         if data_list:
-            updated_operand = re.sub(r"[CXHFDBZPAY]D?'[^']+'", '~', updated_operand)
+            updated_operand = re.sub(r"[CXHFDBZPAY]D?'[^']+'", "~", updated_operand)
             for data in data_list:
                 value = DataType(data[0], input=data[2:-1]).value
                 value_list.insert(0, value)
         exp_list = re.split(r"([+*()/-])", updated_operand)
         if len(exp_list) == 1:
-            if exp_list[0] == '~':
+            if exp_list[0] == "~":
                 return value_list.pop()
-            return self._location_counter if exp_list[0] == '*' else self.evaluate(exp_list[0])
+            return self._location_counter if exp_list[0] == "*" else self.evaluate(exp_list[0])
         exp_list = [expression for expression in exp_list if expression]
         exp_list = [(index, expression) for index, expression in enumerate(exp_list)]
-        parenthesis = [indexed_expression for indexed_expression in exp_list if indexed_expression[1] in '()']
-        exp_list = [indexed_expression for indexed_expression in exp_list if indexed_expression[1] not in '()']
+        parenthesis = [indexed_expression for indexed_expression in exp_list if indexed_expression[1] in "()"]
+        exp_list = [indexed_expression for indexed_expression in exp_list if indexed_expression[1] not in "()"]
         eval_list = list()
         for index, (position, expression) in enumerate(exp_list):
-            if expression in ('-', '+', '/') or (expression == '*' and index % 2 == 1):
+            if expression in ("-", "+", "/") or (expression == "*" and index % 2 == 1):
                 eval_list.append((position, expression))
             else:
-                if expression == '~':
+                if expression == "~":
                     value = value_list.pop()
-                elif expression == '*':
+                elif expression == "*":
                     value = self._location_counter
                 elif expression.isdigit():
                     value = expression
@@ -115,7 +120,7 @@ class MacroGeneric:
         eval_list.extend(parenthesis)
         eval_list.sort(key=lambda item: item[0])
         eval_list = [expression for _, expression in eval_list]
-        return int(eval(''.join(eval_list)))
+        return int(eval("".join(eval_list)))
 
     def is_based(self, operand: str) -> bool:
         if operand == "*":
@@ -123,16 +128,16 @@ class MacroGeneric:
         if not set("+*()/-").intersection(operand):
             return self.checked_lookup(operand).based if self.checked_lookup(operand) else False
         exp_list = re.split(r"([+*()/-])", operand)
-        exp_list = [expression for expression in exp_list if expression and expression not in '()']
-        based = any(expression == '*' or
+        exp_list = [expression for expression in exp_list if expression and expression not in "()"]
+        based = any(expression == "*" or
                     (self.checked_lookup(expression) is not None and self.checked_lookup(expression).based)
                     for index, expression in enumerate(exp_list) if index % 2 == 0)
-        if based and '-' in operand:
+        if based and "-" in operand:
             exp_list = [expression for index, expression in enumerate(exp_list)
-                        if (index > 0 and exp_list[index - 1] == '-') or
-                        (index < len(exp_list) - 1 and exp_list[index + 1]) == '-']
-            if (exp_list[0] == '*' or self.checked_lookup(exp_list[0])) and \
-                    (exp_list[1] == '*' or self.checked_lookup(exp_list[1])):
+                        if (index > 0 and exp_list[index - 1] == "-") or
+                        (index < len(exp_list) - 1 and exp_list[index + 1]) == "-"]
+            if (exp_list[0] == "*" or self.checked_lookup(exp_list[0])) and \
+                    (exp_list[1] == "*" or self.checked_lookup(exp_list[1])):
                 based = False
         return based
 
