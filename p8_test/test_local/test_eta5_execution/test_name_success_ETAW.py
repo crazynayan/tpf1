@@ -15,7 +15,7 @@ class NameSuccessETAW(NameGeneral):
         self.assertEqual("F0F0", test_data.get_field("WA0EXT"))
         self.assertEqual("01", test_data.get_field("WA0PTY"))
         self.assertEqual("01", test_data.get_field("EBW015"))
-        self.assertEqual(f"{self.ui2214:02X}", test_data.get_field("UI2CNN"))
+        self.assertEqual(list(), self.output.messages)
 
     def test_multiple_names_wa0pty_match_ETAW(self) -> None:
         self.test_data.add_pnr_element(["45ZAVERI", "54SHAH"], "name")
@@ -27,7 +27,7 @@ class NameSuccessETAW(NameGeneral):
         self.assertEqual("F0F0", test_data.get_field("WA0EXT"))
         self.assertEqual(f"{99:02X}", test_data.get_field("WA0PTY"))
         self.assertEqual(f"{99:02X}", test_data.get_field("EBW015"))
-        self.assertEqual(f"{self.ui2214:02X}", test_data.get_field("UI2CNN"))
+        self.assertEqual(list(), self.output.messages)
 
     def test_WA0NAD_ETAW(self) -> None:
         self.test_data.add_pnr_element(["1ZAVERI", "3SHAH"], "name")
@@ -39,10 +39,9 @@ class NameSuccessETAW(NameGeneral):
         self.assertEqual("F0F0", test_data.get_field("WA0EXT"))
         self.assertEqual("04", test_data.get_field("WA0PTY"))
         self.assertEqual("04", test_data.get_field("EBW015"))
-        self.assertEqual(f"{self.ui2214:02X}", test_data.get_field("UI2CNN"))
+        self.assertEqual(7, self.output.regs["R6"])  # Call to ETK2 with R6=7 will ensure Name association is deleted
+        self.assertIn("VERIFY NAME ASSOCIATED DATA", self.output.messages)
         self.assertEqual("00", test_data.get_field("WA0ETG"))  # WA0ETG, #WA0NAD
-        self.assertEqual(7,
-                         test_data.output.regs["R6"])  # Call to ETK2 with R6=7 will ensure Name association is deleted
 
     def test_WA0CDI_ETAW(self) -> None:
         self.test_data.add_pnr_element(["33ZAVERI"], "name")
@@ -193,7 +192,7 @@ class NameSuccessETAW(NameGeneral):
         self.test_data.add_pnr_element(["I/5ZAVERI", "3ZAVERI", "C/25TOURS", "6SHAH", "I/2SHAH"], "name")
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
-        self.assertEqual(self.SUCCESS_END, self.output.last_line)
+        self.assertEqual(self.SUCCESS_END, self.output.last_line, self.output.last_node)
         self.assertIn("021014", self.output.dumps)
         self.assertEqual("F1F6", test_data.get_field("WA0EXT"))
         self.assertEqual(f"{32:02X}", test_data.get_field("EBW015"))
