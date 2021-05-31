@@ -225,6 +225,9 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["TKDNA"] = self.tkdna
         self._ex["CKCOR"] = self.not_implemented
         self._ex["SCANA"] = self.not_implemented
+        self._ex["TKFRA"] = self.not_implemented
+        self._ex["NAMEA"] = self.not_implemented
+        self._ex["TKMAC"] = self.not_implemented
 
         # User Defined Executable Macros created for this tool
         self._ex["PARS_DATE"] = self.pars_date
