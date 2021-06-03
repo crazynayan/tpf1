@@ -21,8 +21,8 @@ class File:
                 break
             index += 1
         lines = lines[index:] if index < len(lines) else list()
-        # Remove empty lines and trailing new line character
-        lines = [line.strip('\n') for line in lines if line.strip()]
+        # Remove empty lines and trailing new line character & make everything upper case
+        lines = [line.strip('\n').upper() for line in lines if line.strip()]
         if not lines:
             return list()
         # Find the character that is added by CVS on each line
