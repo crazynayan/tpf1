@@ -41,9 +41,12 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["SH"] = self.subtract_halfword
         self._ex["M"] = self.multiply_fullword
         self._ex["MH"] = self.multiply_halfword
+        self._ex["MHI"] = self.not_implemented
         self._ex["D"] = self.divide_fullword
-        # MH, MHI, M, MR, DR - Not in ETA5
-        # SLA, SRA, SLDA, SRDA - Not in ETA5
+        self._ex["DR"] = self.not_implemented
+        self._ex["SRDA"] = self.not_implemented
+        # MH, M, MR - Not in ETA5
+        # SLA, SRA, SLDA - Not in ETA5
 
         # S05 - Move Store & Logic Control
         self._ex["MVC"] = self.move_character
@@ -190,6 +193,11 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["DLAYC"] = self.not_implemented
         self._ex["DEFRC"] = self.not_implemented
         self._ex["CREMC"] = self.not_implemented
+        self._ex["KEYCC"] = self.not_implemented
+        self._ex["KEYRC"] = self.not_implemented
+        self._ex["EVNTC"] = self.not_implemented
+        self._ex["EVNWC"] = self.not_implemented
+        self._ex["REALTIME"] = self.not_implemented
 
         # SPM Macros
         self._ex["#IF"] = self.not_implemented
@@ -228,6 +236,8 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["TKFRA"] = self.not_implemented
         self._ex["NAMEA"] = self.not_implemented
         self._ex["TKMAC"] = self.not_implemented
+        self._ex["PNRCU"] = self.not_implemented
+        self._ex["FLBKA"] = self.not_implemented
 
         # User Defined Executable Macros created for this tool
         self._ex["PARS_DATE"] = self.pars_date
