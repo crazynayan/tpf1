@@ -76,16 +76,21 @@ class State:
         dsp = macros["EB0EB"].evaluate(ecb_label_level)
         return config.ECB + dsp
 
-    def init_ecb(self) -> None:
+    def _init_ecb(self) -> None:
         self.regs.R9 = config.ECB
         for level in config.ECB_LEVELS:
             ce1ct = self.get_ecb_address(f"D{level}", "CE1CT")
             self.vm.set_value(1, ce1ct + 1, 1)
 
+    def _init_globals(self) -> None:
+        mh00c = config.GLOBAL + macros["GLOBAL"].evaluate("@MH00C")
+        self.vm.set_value(self.vm.allocate(), mh00c)
+
     def init_run(self, seg_name) -> None:
         self.__init__()
         self._init_seg(seg_name)
-        self.init_ecb()
+        self._init_ecb()
+        self._init_globals()
         self._core_block(config.AAA, "D1")
         self._core_block(config.IMG, "D0")
 
