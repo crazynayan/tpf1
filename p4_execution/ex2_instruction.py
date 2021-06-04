@@ -166,6 +166,11 @@ class ArithmeticShiftAlgebraic(State):
         self.regs.set_value(value, node.reg)
         return node.fall_down
 
+    def multiply_halfword_immediate(self, node: RegisterData) -> str:
+        value = self.regs.get_value(node.reg) * node.data
+        self.regs.set_value(value, node.reg)
+        return node.fall_down
+
     def divide_fullword(self, node: RegisterFieldIndex) -> str:
         address = self.regs.get_address(node.field.base, node.field.dsp, node.field.index)
         dividend = self.regs.get_double_value(node.reg)

@@ -41,7 +41,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["SH"] = self.subtract_halfword
         self._ex["M"] = self.multiply_fullword
         self._ex["MH"] = self.multiply_halfword
-        self._ex["MHI"] = self.not_implemented
+        self._ex["MHI"] = self.multiply_halfword_immediate
         self._ex["D"] = self.divide_fullword
         self._ex["DR"] = self.not_implemented
         self._ex["SRDA"] = self.not_implemented
