@@ -17,7 +17,8 @@ class EtaaTest(TestDebug):
         self.test_data.add_pnr_element(["SOME REMARKS"], REMARKS)
         test_data = self.tpf_server.run("ETA1", self.test_data)
         self.output = test_data.output
-        self.assertEqual(self.SUCCESS_END, self.output.last_line, f"{self.output.last_node}--{self.output.dumps}")
+        self.assertEqual(self.ETG1_TJR_END, self.output.last_line, f"{self.output.last_node}--{self.output.dumps}")
+        self.assertIn("019005", self.output.dumps)  # TJR Face Error
 
     def test_etaa_remarks_insurance(self) -> None:
         self.test_data.set_field("WA0ET5", DataType("X", input="01").to_bytes())

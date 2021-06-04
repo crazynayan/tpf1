@@ -7,7 +7,6 @@ from p8_test.test_local import TestDebug
 
 
 class NameGeneral(TestDebug):
-    FMSG_END = "FMSG0100"
     ETK2_END = "$$CN_PGM_START.5"  # Do ETK7 later
 
     def setUp(self) -> None:

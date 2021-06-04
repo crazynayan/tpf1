@@ -16,7 +16,8 @@ class Eta6Test(TestDebug):
         self.test_data.add_pnr_element(["123456"], PHONE)
         test_data = self.tpf_server.run("ETA1", self.test_data)
         self.output = test_data.output
-        self.assertEqual(self.SUCCESS_END, self.output.last_line, f"{self.output.last_node}--{self.output.dumps}")
+        self.assertEqual(self.ETG1_TJR_END, self.output.last_line, f"{self.output.last_node}--{self.output.dumps}")
+        self.assertIn("019005", self.output.dumps)  # TJR Face Error
         self.assertEqual(list(), self.output.messages, self.output.get_traces("ETAW"))
 
     def test_eta6_abacus(self) -> None:
@@ -31,5 +32,5 @@ class Eta6Test(TestDebug):
         self.test_data.add_pnr_element(["123456"], PHONE)
         test_data = self.tpf_server.run("ETA1", self.test_data)
         self.output = test_data.output
-        self.assertEqual(self.SUCCESS_END, self.output.last_line, self.output.messages)
+        self.assertEqual(self.FMSG_END, self.output.last_line, self.output.messages)
         self.assertIn("INVALID REQUEST FOR RECORD IN TTK4", self.output.messages, self.output.get_traces("ETAW"))
