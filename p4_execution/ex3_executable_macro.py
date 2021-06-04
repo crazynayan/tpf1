@@ -333,7 +333,7 @@ class UserDefinedMacro(State):
         ui2bct = r2 + macros["UI2PF"].lookup("UI2BCT").dsp
         length = self.vm.get_value(ui2bct, 2)
         if not length:
-            raise UserDefinedMacroExecutionError
+            return node.fall_down
         message_bytes = self.vm.get_bytes(r1, length)
         message = DataType("X", bytes=message_bytes).decode
         self.messages.append(message)
