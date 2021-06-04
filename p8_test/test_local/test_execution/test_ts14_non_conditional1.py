@@ -13,7 +13,8 @@ class NonConditional1(unittest.TestCase):
         self.test_data.add_all_regs()
         aaa_fields = [("WA0BBR", 2), ("WA0QHR", 6), "WA0TKK", "WA0TY1"]
         self.test_data.add_fields(aaa_fields, "WA0AA")
-        ecb_fields = [("EBW001", 6), ("EBW008", 6), "EBW000", "EBW016", "EBW017", "EBW018"]
+        ecb_fields = [("EBW001", 6), ("EBW008", 6), "EBW000", "EBW016", "EBW017", "EBW018",
+                      ("EBX000", 4), ("EBX004", 4), ("EBX008", 4), ("EBX012", 4), ("EBX016", 4)]
         self.test_data.add_fields(ecb_fields, "EB0EB")
 
     def test_ts14(self):
@@ -47,6 +48,11 @@ class NonConditional1(unittest.TestCase):
         self.assertEqual(f"{0xFF - macros['WA0AA'].evaluate('#WA0GEN'):02X}",
                          test_data.get_field("EBW018"))
         self.assertEqual(272, test_data.output.regs["R0"])
+        self.assertEqual(5, int(test_data.get_field("EBX000"), 16))
+        self.assertEqual(3, int(test_data.get_field("EBX004"), 16))
+        self.assertEqual(0, int(test_data.get_field("EBX008"), 16))
+        self.assertEqual(6144, int(test_data.get_field("EBX012"), 16))
+        self.assertEqual(100, int(test_data.get_field("EBX016"), 16))
 
 
 if __name__ == "__main__":

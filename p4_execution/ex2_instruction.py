@@ -182,6 +182,25 @@ class ArithmeticShiftAlgebraic(State):
         self.regs.set_value(quotient, odd_reg)
         return node.fall_down
 
+    def divide_register(self, node: RegisterRegister) -> str:
+        dividend = self.regs.get_double_value(node.reg1)
+        divisor = self.regs.get_value(node.reg2)
+        remainder = dividend % divisor
+        quotient = dividend // divisor
+        odd_reg = self.regs.next_reg(node.reg1)
+        self.regs.set_value(remainder, node.reg1)
+        self.regs.set_value(quotient, odd_reg)
+        return node.fall_down
+
+    def shift_right_double_algebraic(self, node: RegisterFieldIndex) -> str:
+        address = self.regs.get_address(node.field.base, node.field.dsp)
+        shift_count = address % 64  # 2 ^ 6
+        value = self.regs.get_double_value(node.reg)
+        for _ in range(0, shift_count):
+            value //= 2
+        self.regs.set_double_value(value, node.reg)
+        return node.fall_down
+
 
 class MoveLogicControl(State):
     def move_character(self, node: FieldLenField) -> str:
