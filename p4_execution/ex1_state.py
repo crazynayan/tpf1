@@ -82,19 +82,19 @@ class State:
             ce1ct = self.get_ecb_address(f"D{level}", "CE1CT")
             self.vm.set_value(1, ce1ct + 1, 1)
 
-    def init_run(self) -> None:
+    def init_run(self, seg_name) -> None:
         self.__init__()
+        self._init_seg(seg_name)
+        self.init_ecb()
+        self._core_block(config.AAA, "D1")
+        self._core_block(config.IMG, "D0")
 
     def run(self, seg_name: str, test_data: TestData) -> TestData:
         if seg_name not in segments:
             raise SegmentNotFoundError
         outputs = list()
         for test_data_variant in test_data.yield_variation():
-            self.init_run()
-            self._init_seg(seg_name)
-            self.init_ecb()
-            self._core_block(config.AAA, "D1")
-            self._core_block(config.IMG, "D0")
+            self.init_run(seg_name)
             self._set_from_test_data(test_data_variant)
             label = self.seg.root_label()
             node: InstructionType = self.seg.nodes[label]
