@@ -118,6 +118,11 @@ class RealtimeMacroImplementation(InstructionImplementation):
         self._command["DLAYC"] = self.key_value
         self._command["DEFRC"] = self.key_value
         self._command["CREMC"] = self.key_value
+        self._command["KEYRC"] = self.key_value
+        self._command["KEYCC"] = self.key_value
+        self._command["REALTIME"] = self.key_value
+        self._command["EVNTC"] = self.key_value
+        self._command["EVNWC"] = self.key_value
 
     def key_value(self, line: Line) -> KeyValue:
         operands_list: List[str] = line.split_operands()
@@ -242,6 +247,8 @@ class UserDefinedMacroImplementation(StructuredProgrammingMacroImplementation):
         self._command["TKFRA"] = self.key_value
         self._command["NAMEA"] = self.key_value
         self._command["TKMAC"] = self.key_value
+        self._command["PNRCU"] = self.key_value
+        self._command["FLBKA"] = self.key_value
         # Tool specific commands
         self._command["ERROR_CHECK"] = self.key_value
         self._command["PARS_DATE"] = self.key_value
