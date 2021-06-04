@@ -7,7 +7,7 @@ from p4_execution.ex5_execute import TpfServer
 
 
 class SegmentTest(unittest.TestCase):
-    NUMBER_OF_FILES: int = 83
+    NUMBER_OF_FILES: int = 85
     SEG_NAME: str = "ETG1"
 
     def test_files(self):
