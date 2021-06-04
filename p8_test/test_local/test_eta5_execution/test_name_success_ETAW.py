@@ -11,11 +11,10 @@ class NameSuccessETAW(NameGeneral):
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
         self.assertEqual(self.SUCCESS_END, self.output.last_line)
+        self.assertIn("$RA8S$", self.output.messages)
         self.assertListEqual(list(), self.output.dumps)
         self.assertEqual("F0F0", test_data.get_field("WA0EXT"))
         self.assertEqual("01", test_data.get_field("WA0PTY"))
-        self.assertEqual("01", test_data.get_field("EBW015"))
-        self.assertEqual(list(), self.output.messages)
 
     def test_multiple_names_wa0pty_match_ETAW(self) -> None:
         self.test_data.add_pnr_element(["45ZAVERI", "54SHAH"], "name")
@@ -23,24 +22,22 @@ class NameSuccessETAW(NameGeneral):
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
         self.assertEqual(self.SUCCESS_END, self.output.last_line)
+        self.assertIn("$RA8S$", self.output.messages)
         self.assertListEqual(list(), self.output.dumps)
         self.assertEqual("F0F0", test_data.get_field("WA0EXT"))
         self.assertEqual(f"{99:02X}", test_data.get_field("WA0PTY"))
-        self.assertEqual(f"{99:02X}", test_data.get_field("EBW015"))
-        self.assertEqual(list(), self.output.messages)
 
     def test_WA0NAD_ETAW(self) -> None:
         self.test_data.add_pnr_element(["1ZAVERI", "3SHAH"], "name")
         self.test_data.set_field("WA0ETG", bytearray([self.wa0nad]))
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
-        self.assertEqual(self.SUCCESS_END, self.output.last_line, self.output.last_node)
+        self.assertEqual(self.FMSG_END, self.output.last_line, self.output.last_node)
+        self.assertIn("VERIFY NAME ASSOCIATED DATA", self.output.messages)
         self.assertListEqual(list(), self.output.dumps)
         self.assertEqual("F0F0", test_data.get_field("WA0EXT"))
         self.assertEqual("04", test_data.get_field("WA0PTY"))
-        self.assertEqual("04", test_data.get_field("EBW015"))
         self.assertEqual(7, self.output.regs["R6"])  # Call to ETK2 with R6=7 will ensure Name association is deleted
-        self.assertIn("VERIFY NAME ASSOCIATED DATA", self.output.messages)
         self.assertEqual("00", test_data.get_field("WA0ETG"))  # WA0ETG, #WA0NAD
 
     def test_WA0CDI_ETAW(self) -> None:
@@ -48,11 +45,11 @@ class NameSuccessETAW(NameGeneral):
         self.test_data.set_field("WA0US4", bytearray([self.wa0cdi]))
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
-        self.assertEqual(self.SUCCESS_END, self.output.last_line)
+        self.assertEqual(self.FMSG_END, self.output.last_line)
+        self.assertIn("NAME CHANGED - VERIFY VCR EXCHANGED", self.output.messages)
         self.assertListEqual(list(), self.output.dumps)
         self.assertEqual("F0F0", test_data.get_field("WA0EXT"))
         self.assertEqual(f"{33:02X}", test_data.get_field("WA0PTY"))
-        self.assertEqual(f"{33:02X}", test_data.get_field("EBW015"))
         self.assertEqual(60, self.output.regs["R6"])
 
     def test_group_C_ETAW(self) -> None:
@@ -60,11 +57,10 @@ class NameSuccessETAW(NameGeneral):
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
         self.assertEqual(self.SUCCESS_END, self.output.last_line)
+        self.assertIn("$RA8S$", self.output.messages)
         self.assertListEqual(list(), self.output.dumps)
         self.assertEqual("F1F9", test_data.get_field("WA0EXT"))
         self.assertEqual(f"{21:02X}", test_data.get_field("WA0PTY"))
-        self.assertEqual(f"{21:02X}", test_data.get_field("EBW015"))
-        self.assertEqual("C3", test_data.get_field("EBW014"))
         self.assertEqual("80", test_data.get_field("EBW038"))
         self.assertEqual("10", test_data.get_field("EBSW01"))
 
@@ -74,12 +70,11 @@ class NameSuccessETAW(NameGeneral):
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
         self.assertEqual(self.SUCCESS_END, self.output.last_line)
+        self.assertEqual("80", test_data.get_field("EBW038"))
         self.assertListEqual(list(), self.output.dumps)
         self.assertEqual("F2F2", test_data.get_field("WA0EXT"))
         self.assertEqual(f"{25:02X}", test_data.get_field("WA0PTY"))
-        self.assertEqual(f"{25:02X}", test_data.get_field("EBW015"))
-        self.assertEqual("E9", test_data.get_field("EBW014"))
-        self.assertEqual("80", test_data.get_field("EBW038"))
+        self.assertIn("$RA8S$", self.output.messages)
         self.assertEqual("10", test_data.get_field("EBSW01"))
 
     def test_group_C_not_at_start_wa0pty_history_no_match_ETAW(self):
@@ -88,11 +83,11 @@ class NameSuccessETAW(NameGeneral):
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
         self.assertEqual(self.SUCCESS_END, self.output.last_line)
+        self.assertIn("$RA8S$", self.output.messages)
         self.assertListEqual(list(), self.output.dumps)
         self.assertEqual("F1F0", test_data.get_field("WA0EXT"))
-        self.assertEqual("C3", test_data.get_field("EBW014"))
         self.assertEqual("95", test_data.get_field("WA0PTY"))  # 0x15 with bit0 on
-        self.assertEqual("15", test_data.get_field("EBW015"))  # 21 = 0x15
+
 
     def test_pn2_on_group_9_C_ETAW(self):
         self.test_data.add_pnr_element(["C/99W/TOURS", "3SHAH"], "name")
@@ -100,9 +95,9 @@ class NameSuccessETAW(NameGeneral):
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
         self.assertEqual(self.SUCCESS_END, self.output.last_line)
+        self.assertIn("$RA8S$", self.output.messages)
         self.assertEqual("F0F6", test_data.get_field("WA0EXT"))
         self.assertEqual("09", test_data.get_field("WA0PTY"))
-        self.assertEqual("09", test_data.get_field("EBW015"))
 
     def test_pn2_on_group_99_C_ETAW(self):
         self.test_data.add_pnr_element(["C/999W/TOURS", "3SHAH"], "name")
@@ -110,9 +105,9 @@ class NameSuccessETAW(NameGeneral):
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
         self.assertEqual(self.SUCCESS_END, self.output.last_line)
+        self.assertIn("$RA8S$", self.output.messages)
         self.assertEqual("F9F6", test_data.get_field("WA0EXT"))
         self.assertEqual(f"{99:02X}", test_data.get_field("WA0PTY"))
-        self.assertEqual(f"{99:02X}", test_data.get_field("EBW015"))
 
     def test_pn2_on_group_Z_wa0pty_history_match_ETAW(self):
         # wa0PN2 OFF behaves the same way
@@ -122,9 +117,9 @@ class NameSuccessETAW(NameGeneral):
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
         self.assertEqual(self.SUCCESS_END, self.output.last_line)
+        self.assertIn("$RA8S$", self.output.messages)
         self.assertEqual("F9F6", test_data.get_field("WA0EXT"))
         self.assertEqual("E3", test_data.get_field("WA0PTY"))
-        self.assertEqual(f"{99:02X}", test_data.get_field("EBW015"))
 
     def test_pn2_off_group_wa0pti_ETAW(self):
         self.test_data.add_pnr_element(["C/99W/TOURS", "3SHAH"], "name")
@@ -133,9 +128,9 @@ class NameSuccessETAW(NameGeneral):
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
         self.assertEqual(self.SUCCESS_END, self.output.last_line)
+        self.assertIn("$RA8S$", self.output.messages)
         self.assertIn("021014", self.output.dumps)
         self.assertEqual("F9F6", test_data.get_field("WA0EXT"))
-        self.assertEqual(f"{99:02X}", test_data.get_field("EBW015"))
         self.assertEqual(f"{99:02X}", test_data.get_field("WA0PTY"))
         self.assertEqual("00", test_data.get_field("WA0PTI"))
 
@@ -146,7 +141,6 @@ class NameSuccessETAW(NameGeneral):
         self.assertEqual(self.SUCCESS_END, self.output.last_line)
         self.assertIn("021014", self.output.dumps)
         self.assertEqual("F0F0", test_data.get_field("WA0EXT"))
-        self.assertEqual("03", test_data.get_field("EBW015"))
         self.assertEqual("03", test_data.get_field("WA0PTY"))
         self.assertEqual("01", test_data.get_field("EBW010"))
         self.assertEqual("01", test_data.get_field("WA0PTI"))
@@ -158,7 +152,6 @@ class NameSuccessETAW(NameGeneral):
         self.assertEqual(self.SUCCESS_END, self.output.last_line)
         self.assertIn("021014", self.output.dumps)
         self.assertEqual("F0F3", test_data.get_field("WA0EXT"))
-        self.assertEqual("03", test_data.get_field("EBW015"))
         self.assertEqual("03", test_data.get_field("WA0PTY"))
         self.assertEqual("03", test_data.get_field("EBW010"))
         self.assertEqual("03", test_data.get_field("WA0PTI"))
@@ -170,7 +163,6 @@ class NameSuccessETAW(NameGeneral):
         self.assertEqual(self.SUCCESS_END, self.output.last_line)
         self.assertIn("021014", self.output.dumps)
         self.assertEqual("F0F0", test_data.get_field("WA0EXT"))
-        self.assertEqual(f"{99:02X}", test_data.get_field("EBW015"))
         self.assertEqual(f"{99:02X}", test_data.get_field("WA0PTY"))
         self.assertEqual(f"{55:02X}", test_data.get_field("EBW010"))
         self.assertEqual(f"{55:02X}", test_data.get_field("WA0PTI"))
@@ -183,7 +175,6 @@ class NameSuccessETAW(NameGeneral):
         self.assertEqual(self.SUCCESS_END, self.output.last_line)
         self.assertListEqual(list(), self.output.dumps)
         self.assertEqual("F1F4", test_data.get_field("WA0EXT"))
-        self.assertEqual(f"{24:02X}", test_data.get_field("EBW015"))
         self.assertEqual(f"{24:02X}", test_data.get_field("WA0PTY"))
         self.assertEqual("03", test_data.get_field("EBW010"))
         self.assertEqual("03", test_data.get_field("WA0PTI"))
@@ -195,7 +186,6 @@ class NameSuccessETAW(NameGeneral):
         self.assertEqual(self.SUCCESS_END, self.output.last_line, self.output.last_node)
         self.assertIn("021014", self.output.dumps)
         self.assertEqual("F1F6", test_data.get_field("WA0EXT"))
-        self.assertEqual(f"{32:02X}", test_data.get_field("EBW015"))
         self.assertEqual(f"{32:02X}", test_data.get_field("WA0PTY"))
         self.assertEqual("07", test_data.get_field("EBW010"))
         self.assertEqual("07", test_data.get_field("WA0PTI"))

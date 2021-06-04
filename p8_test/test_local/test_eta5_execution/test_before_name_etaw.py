@@ -1,8 +1,11 @@
+import json
+
 from config import config
 from p8_test.test_local.test_eta5_execution import NameGeneral, fqtv_gld
 
 
 class BeforeNameETAW(NameGeneral):
+    SEGMENTS = ["ETG1"]
 
     def setUp(self) -> None:
         super().setUp()
@@ -50,7 +53,7 @@ class BeforeNameETAW(NameGeneral):
         self.test_data.add_pnr_field_data(fqtv_gld, "fqtv", config.AAAPNR)
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
-        self.assertEqual(self.FMSG_END, self.output.last_line)
+        self.assertEqual(self.FMSG_END, self.output.last_line, f"{self.output.last_node}---{self.output.dumps}")
         self.assertIn("INVLD ITIN", self.output.messages)
         self.assertNotEqual("C5E3C1E2", test_data.get_field("EBX008"))  # ETAS
 
@@ -58,8 +61,9 @@ class BeforeNameETAW(NameGeneral):
         self.test_data.set_field("WA0XX3", bytes([self.wa0ftd]))
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
-        self.assertEqual(self.SUCCESS_END, self.output.last_line)
+        self.assertEqual(self.FMSG_END, self.output.last_line, json.dumps(self.output.debug))
         self.assertEqual(13, self.output.regs["R6"])
+        self.assertIn("VERIFY FREQUENT TRAVELER INFORMATION FOR CHANGED NAMES", self.output.messages)
 
     def test_AFU_subs_ETGN(self):
         self.test_data.set_field("WA0USE", bytes([self.wa0afu]))
