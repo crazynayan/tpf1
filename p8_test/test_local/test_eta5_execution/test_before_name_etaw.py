@@ -5,7 +5,6 @@ from p8_test.test_local.test_eta5_execution import NameGeneral, fqtv_gld
 
 
 class BeforeNameETAW(NameGeneral):
-    SEGMENTS = ["ETG1"]
 
     def setUp(self) -> None:
         super().setUp()
