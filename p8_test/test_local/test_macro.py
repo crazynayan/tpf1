@@ -157,7 +157,7 @@ class MacroTest(unittest.TestCase):
         self.assertEqual(0x130, self.macro.lookup('#PD0_HOTEL').dsp)
         self.assertEqual(0x706, self.macro.lookup('PD0_IN_KEY').dsp)
         self.assertEqual(0x030, self.macro.lookup('PD9_PAR_VD').dsp)
-        self.assertEqual(0xf9a, self.macro.lookup('PD0_U_W00').dsp)
+        self.assertEqual(0xf9a, self.macro.lookup('PD0_U_W000').dsp)
         self.assertEqual(0xe9c, self.macro.lookup('PD0_ADR_PHDR').dsp)
         self.assertEqual(0x0b0, self.macro.lookup('PD0_C_ITM').dsp)
 
