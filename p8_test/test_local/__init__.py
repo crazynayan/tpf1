@@ -63,7 +63,7 @@ class TestDataUTS(TestData):
 class TestDebug(unittest.TestCase):
     SEGMENTS = ["ETA1", "ETAX", "ETAF", "ETAZ", "ETK1", "ETKF", "ETA4", "ETA5", "ETAW", "ETA6", "ETK2", "ETK6", "ETAA",
                 "ETA9"]
-    SUCCESS_END = "ETG10000"
+    SUCCESS_END = "ETG10730.5"
 
     def setUp(self) -> None:
         self.tpf_server = TpfServer()
