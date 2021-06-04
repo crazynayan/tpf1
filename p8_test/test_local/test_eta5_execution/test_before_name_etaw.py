@@ -75,3 +75,4 @@ class BeforeNameETAW(NameGeneral):
         self.output = test_data.output
         self.assertEqual(self.SUCCESS_END, self.output.last_line, self.output.last_node)
         self.assertNotEqual("C5E3C7D5", test_data.get_field("EBX012"))  # ETGN
+        self.assertIn("$RA8S$", test_data.output.messages)

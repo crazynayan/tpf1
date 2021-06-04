@@ -73,7 +73,21 @@ class RealTimeMacro(State):
         return node.fall_down
 
     def senda(self, node: KeyValue) -> str:
-        self.messages.append(node.get_value("MSG").replace("'", ""))
+        message: str = node.get_value("MSG")
+        if message:
+            self.messages.append(message.replace("'", ""))
+            return node.fall_down
+        can: str = node.get_value("CAN")
+        if not can:
+            raise UserDefinedMacroExecutionError(node)
+        canned_number = macros["UI2PF"].evaluate(can)
+        if node.get_value("SEC") == "YES":
+            canned_number += 256
+        message_string = next((canned["message"] for canned in UI2CNN
+                               if int(canned["number"]) == canned_number), None)
+        if not message_string:
+            raise UserDefinedMacroExecutionError(node)
+        self.messages.append(message_string)
         return node.fall_down
 
     def sysra(self, node: KeyValue) -> Optional[str]:
