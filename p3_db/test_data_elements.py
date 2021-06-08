@@ -321,6 +321,7 @@ class FileItem(FirestoreDocument):
         super().__init__()
         self.macro_name: str = str()
         self.field: str = str()
+        self.adjust: bool = False
         self.count_field: str = str()
         self.field_data: list = list()
 

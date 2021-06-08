@@ -257,13 +257,26 @@ class State:
                 index_dict = {pool_file.index_field: DataType("F", input=str(pool_address)).to_bytes()}
                 fixed_dict = {**fixed_dict, **index_dict}
             # Fixed File
-            if fixed_file.field_data:
-                fixed_dict = {**fixed_dict, **self._field_data_to_bytearray(fixed_file.field_data)}
-            if not fixed_dict:
+            fixed_dict = {**fixed_dict, **self._field_data_to_bytearray(fixed_file.field_data)} \
+                if fixed_file.field_data else fixed_dict
+            if fixed_file.file_items:
+                item_list = list()
+                for item in fixed_file.file_items:
+                    if not macros[fixed_file.macro_name].check(item.field):
+                        raise FileItemSpecificationError
+                    if item.count_field:
+                        if not macros[fixed_file.macro_name].check(item.count_field):
+                            raise FileItemSpecificationError
+                    item_list.append(self._field_data_to_bytearray(item.field_data))
+                data_bytes = Stream(macros[fixed_file.macro_name]) \
+                    .item_to_bytes(item_list, fixed_file.file_items[0].field, fixed_file.file_items[0].count_field,
+                                   fixed_dict, fixed_file.file_items[0].adjust)
+            elif fixed_dict:
+                data_bytes = Stream(macros[fixed_file.macro_name]).to_bytes(fixed_dict)
+            else:
                 raise PoolFileSpecificationError
-            data_bytes = Stream(macros[fixed_file.macro_name]).to_bytes(fixed_dict)
             FlatFile.add_fixed(data_bytes, fixed_file.rec_id, fixed_file.fixed_type, fixed_file.fixed_ordinal)
-            # TODO Fixed File items and multiple level indexes to be coded later when scenario is with us
+            # TODO multiple level indexes to be coded later when scenario is with us
         return
 
     def _set_core(self, field_data: List[dict], macro_name: str, base_address: int) -> None:
