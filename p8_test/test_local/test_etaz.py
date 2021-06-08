@@ -18,8 +18,6 @@ itin = [
 
 
 class EtazTest(TestDebug):
-    DEBUG_DATA = list()
-    SEGMENT = "ETAZ"
 
     def _tjr_setup(self) -> None:
         fixed_file = FixedFile()
