@@ -33,7 +33,7 @@ class File:
         if char in config.TRIM:
             lines = [line[config.TRIM[char]:] for line in lines]
         # Remove comments
-        lines = [line for line in lines if line and line[0] not in config.COMMENT_C1]
+        lines = [line for line in lines if line.strip() and line[0] not in config.COMMENT_C1]
         return lines
 
 
@@ -50,8 +50,6 @@ class Line:
     def from_line(cls, file_line: str, continuing: bool = False, quote_continuing: bool = False) -> 'Line':
         # Create a line object from a single file line.
         line = cls()
-        if file_line.startswith("ETK10AM"):
-            debug = True
         if len(file_line) > 71 and file_line[71] != ' ':
             line.continuation = True
             file_line = file_line[:71]
