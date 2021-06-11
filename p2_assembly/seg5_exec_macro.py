@@ -254,3 +254,4 @@ class UserDefinedMacroImplementation(StructuredProgrammingMacroImplementation):
         self._command["PARS_DATE"] = self.key_value
         self._command["UIO1_USER_EXIT"] = self.key_value
         self._command["FMSG_USER_EXIT"] = self.key_value
+        self._command["GENERATE_LOCATOR"] = self.key_value

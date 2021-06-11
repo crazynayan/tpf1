@@ -245,6 +245,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["FACE"] = self.face
         self._ex["UIO1_USER_EXIT"] = self.uio1_user_exit
         self._ex["FMSG_USER_EXIT"] = self.fmsg_user_exit
+        self._ex["GENERATE_LOCATOR"] = self.generate_locator
 
         # Realtime Db Macros - Not in ETA5
         self._ex["FINWC"] = self.finwc

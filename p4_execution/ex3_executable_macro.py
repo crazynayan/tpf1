@@ -1,3 +1,4 @@
+import random
 from typing import Optional
 
 from config import config
@@ -295,6 +296,17 @@ class UserDefinedMacro(State):
                 self.regs.R6 = 0
         else:
             self.regs.R6 = 0
+        return node.fall_down
+
+    def generate_locator(self, node: KeyValue) -> str:
+        r6: int = self.regs.get_value("R6")
+        ul4loc: int = r6 + macros["UL0LC"].evaluate("UL4LOC")
+        ul4ord: int = r6 + macros["UL0LC"].evaluate("UL4ORD")
+        ordinal: int = random.randint(0, 26 ** 6)
+        locator: str = PnrLocator.to_locator(ordinal)
+        locator_bytes: bytearray = DataType("C", input=locator).to_bytes()
+        self.vm.set_value(ordinal, ul4ord)
+        self.vm.set_bytes(locator_bytes, ul4loc, len(locator))
         return node.fall_down
 
     def uio1_user_exit(self, node: KeyValue) -> str:
