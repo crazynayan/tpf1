@@ -336,7 +336,12 @@ class UserDefinedMacro(State):
             return node.fall_down
         message_bytes = self.vm.get_bytes(r1, length)
         message = DataType("X", bytes=message_bytes).decode
-        self.messages.append(message)
+        if not self.messages:
+            self.messages.append(message)
+            return node.fall_down
+        original_message = self.messages[0]
+        updated_message = f"{original_message} {message}"
+        self.messages = [updated_message]
         return node.fall_down
 
     def error_check(self, node: KeyValue) -> str:
