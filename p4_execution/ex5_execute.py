@@ -45,6 +45,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["D"] = self.divide_fullword
         self._ex["DR"] = self.divide_register
         self._ex["SRDA"] = self.shift_right_double_algebraic
+        self._ex["MR"] = self.not_implemented
         # MH, M, MR - Not in ETA5
         # SLA, SRA, SLDA - Not in ETA5
 
