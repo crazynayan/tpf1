@@ -198,6 +198,10 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["EVNTC"] = self.not_implemented
         self._ex["EVNWC"] = self.not_implemented
         self._ex["REALTIME"] = self.not_implemented
+        self._ex["CREDC"] = self.not_implemented
+        self._ex["WAITC"] = self.not_implemented
+        self._ex["UNFRC"] = self.not_implemented
+        self._ex["FILNC"] = self.not_implemented
 
         # SPM Macros
         self._ex["#IF"] = self.not_implemented
@@ -238,6 +242,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["TKMAC"] = self.not_implemented
         self._ex["PNRCU"] = self.not_implemented
         self._ex["FLBKA"] = self.no_operation
+        self._ex["TOURA"] = self.not_implemented
 
         # User Defined Executable Macros created for this tool
         self._ex["PARS_DATE"] = self.pars_date
