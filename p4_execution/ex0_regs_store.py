@@ -134,14 +134,18 @@ class Storage:
         haalc = config.GLOBAL + macros['GLOBAL'].evaluate('@HAALC')
         self.set_bytes(bytearray([0xC1, 0xC1]), haalc, 2)
         u1dmo = config.GLOBAL + macros['GLOBAL'].evaluate('@U1DMO')
-        today = datetime.today()
-        today = datetime(year=today.year, month=today.month, day=today.day)
+        now = datetime.now()
+        today = datetime(year=now.year, month=now.month, day=now.day)
         pars_today = (today - config.PARS_DAY_1).days
         self.set_value(pars_today, u1dmo, 2)
         tjord = config.GLOBAL + macros['GLOBAL'].evaluate('@TJORD')
         self.set_value(0x00088EDC, tjord)
         multi_host = config.GLOBAL + macros['GLOBAL'].evaluate('@MHSTC')
         self.set_value(config.MULTI_HOST, multi_host)
+        u1tym = config.GLOBAL + macros['GLOBAL'].evaluate('@U1TYM')
+        time: str = f"{now.hour:02}{now.minute:02}"
+        time_bytes: bytearray = DataType("C", input=time).to_bytes()
+        self.set_bytes(time_bytes, u1tym)
 
     def get_allocated_address(self) -> bytearray:
         return DataType('F', input=str(self.nab - config.F4K)).to_bytes(config.REG_BYTES)
