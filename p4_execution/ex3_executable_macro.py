@@ -1,4 +1,5 @@
 import random
+from copy import copy
 from typing import Optional
 
 from config import config
@@ -155,6 +156,17 @@ class UserDefinedMacro(State):
         reg = Register(node.get_value("BASEREG"))
         if reg.is_valid():
             self.regs.set_value(address, reg)
+        return node.fall_down
+
+    def aacpy(self, node: KeyValue) -> str:
+        to_level = node.get_value("TO")
+        if to_level not in config.ECB_LEVELS or to_level == "1":
+            raise UserDefinedMacroExecutionError(node)
+        core_reference = self.get_ecb_address(f"D{to_level}", "CE1CR")
+        aaa_copy = self.vm.allocate()
+        self.vm.set_value(aaa_copy, core_reference)
+        aaa_bytes = copy(self.vm.frames[self.vm.base_key(config.AAA)])
+        self.vm.set_bytes(aaa_bytes, aaa_copy, len(aaa_bytes))
         return node.fall_down
 
     def heapa(self, node: KeyValue) -> str:
