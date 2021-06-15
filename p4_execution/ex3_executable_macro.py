@@ -74,6 +74,23 @@ class RealTimeMacro(State):
         self.vm.set_bytes(file_bytes, file_address, len(file_bytes))
         return node.fall_down
 
+    def flipc(self, node: KeyValue) -> str:
+        level1: str = node.keys[0]
+        level2: str = node.keys[1]
+        core_address1 = self.get_ecb_address(level1, "CE1CR")
+        file_address1 = self.get_ecb_address(level1, "CE1FA")
+        core_address2 = self.get_ecb_address(level2, "CE1CR")
+        file_address2 = self.get_ecb_address(level2, "CE1FA")
+        core_bytes1 = self.vm.get_bytes(core_address1, 8)
+        file_bytes1 = self.vm.get_bytes(file_address1, 8)
+        core_bytes2 = self.vm.get_bytes(core_address2, 8)
+        file_bytes2 = self.vm.get_bytes(file_address2, 8)
+        self.vm.set_bytes(core_bytes1, core_address2, len(core_bytes1))
+        self.vm.set_bytes(file_bytes1, file_address2, len(file_bytes1))
+        self.vm.set_bytes(core_bytes2, core_address1, len(core_bytes2))
+        self.vm.set_bytes(file_bytes2, file_address1, len(file_bytes2))
+        return node.fall_down
+
     def senda(self, node: KeyValue) -> str:
         message: str = node.get_value("MSG")
         if message:

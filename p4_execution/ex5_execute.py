@@ -188,7 +188,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["BACKC"] = self.backc
         self._ex["ALASC"] = self.alasc
         self._ex["PNAMC"] = self.pnamc
-        self._ex["FLIPC"] = self.not_implemented
+        self._ex["FLIPC"] = self.flipc
         self._ex["LODIC"] = self.not_implemented
         self._ex["EOWNRC"] = self.no_operation
         self._ex["DLAYC"] = self.not_implemented
