@@ -13,24 +13,22 @@ class Etg1Test(TestDebug):
         fixed_file = FixedFile()
         fixed_file.rec_id = DataType("C", input="P9").value
         fixed_file.macro_name = "TJ2TJ"
-        fixed_file.fixed_type = macros["SYSEQC"].evaluate("#PR9RI")
-        fixed_file.fixed_ordinal = 0x17F // macros["TJ2TJ"].evaluate("#TJ2MAX")  # 38
-        item_count = 0x17F % macros["TJ2TJ"].evaluate("#TJ2MAX")
+        fixed_file.fixed_type = macros["SYSEQC"].evaluate("#PR9RI")  # 390
+        fixed_file.fixed_ordinal = 0x17F // macros["TJ2TJ"].evaluate("#TJ2MAX")  # 38  0x26
         item = FileItem()
         item.macro_name = "TJ2TJ"
         item.field = "TJ2ITM"
-        item.adjust = False
+        item.adjust = True
         item.field_data = [
             {
-                "field": "TJ9QAA",
+                "field": "TJ2QAA",
                 "data": b64encode(DataType("X", input=tj2qaa).to_bytes()).decode()
             },
         ]
-        for _ in range(item_count + 1):
-            fixed_file.file_items.append(item)
-        items_dict = [item.doc_to_dict() for item in fixed_file.file_items]
+        item.repeat = 0x17F % macros["TJ2TJ"].evaluate("#TJ2MAX") + 1  # 4
+        fixed_file.file_items.append(item)
         file_dict = fixed_file.doc_to_dict()
-        file_dict["file_items"] = items_dict
+        file_dict["file_items"] = [item.doc_to_dict() for item in fixed_file.file_items]
         self.test_data.create_fixed_file(file_dict, persistence=False)
         return
 

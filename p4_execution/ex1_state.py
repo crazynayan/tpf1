@@ -231,7 +231,8 @@ class State:
                             raise FileItemSpecificationError
                         count_field = item.count_field
                     item_field = item.field
-                    item_list.append(self._field_data_to_bytearray(item.field_data))
+                    for _ in range(item.repeat):
+                        item_list.append(self._field_data_to_bytearray(item.field_data))
                 pool_file_bytes_dict = self._field_data_to_bytearray(pool_file.field_data) if pool_file.field_data \
                     else None
                 if item_field:
@@ -267,7 +268,8 @@ class State:
                     if item.count_field:
                         if not macros[fixed_file.macro_name].check(item.count_field):
                             raise FileItemSpecificationError
-                    item_list.append(self._field_data_to_bytearray(item.field_data))
+                    for _ in range(item.repeat):
+                        item_list.append(self._field_data_to_bytearray(item.field_data))
                 data_bytes = Stream(macros[fixed_file.macro_name]) \
                     .item_to_bytes(item_list, fixed_file.file_items[0].field, fixed_file.file_items[0].count_field,
                                    fixed_dict, fixed_file.file_items[0].adjust)
