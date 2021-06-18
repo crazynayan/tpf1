@@ -11,7 +11,6 @@ class NameSuccessETAW(NameGeneral):
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
         self.assertEqual(self.SUCCESS_END, self.output.last_line)
-        self.assertEqual(list(), self.output.messages)
         self.assertListEqual(list(), self.output.dumps)
         self.assertEqual("F0F0", test_data.get_field("WA0EXT"))
         self.assertEqual("01", test_data.get_field("WA0PTY"))
@@ -22,7 +21,6 @@ class NameSuccessETAW(NameGeneral):
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
         self.assertEqual(self.SUCCESS_END, self.output.last_line)
-        self.assertEqual(list(), self.output.messages)
         self.assertListEqual(list(), self.output.dumps)
         self.assertEqual("F0F0", test_data.get_field("WA0EXT"))
         self.assertEqual(f"{99:02X}", test_data.get_field("WA0PTY"))
@@ -57,7 +55,6 @@ class NameSuccessETAW(NameGeneral):
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
         self.assertEqual(self.SUCCESS_END, self.output.last_line)
-        self.assertEqual(list(), self.output.messages)
         self.assertListEqual(list(), self.output.dumps)
         self.assertEqual("F1F9", test_data.get_field("WA0EXT"))
         self.assertEqual(f"{21:02X}", test_data.get_field("WA0PTY"))
@@ -74,8 +71,6 @@ class NameSuccessETAW(NameGeneral):
         self.assertListEqual(list(), self.output.dumps)
         self.assertEqual("F2F2", test_data.get_field("WA0EXT"))
         self.assertEqual(f"{25:02X}", test_data.get_field("WA0PTY"))
-        self.assertEqual(list(), self.output.messages)
-
         self.assertEqual("10", test_data.get_field("EBSW01"))
 
     def test_group_C_not_at_start_wa0pty_history_no_match_ETAW(self):
@@ -84,8 +79,6 @@ class NameSuccessETAW(NameGeneral):
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
         self.assertEqual(self.SUCCESS_END, self.output.last_line)
-        self.assertEqual(list(), self.output.messages)
-
         self.assertListEqual(list(), self.output.dumps)
         self.assertEqual("F1F0", test_data.get_field("WA0EXT"))
         self.assertEqual("95", test_data.get_field("WA0PTY"))  # 0x15 with bit0 on
@@ -96,8 +89,6 @@ class NameSuccessETAW(NameGeneral):
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
         self.assertEqual(self.SUCCESS_END, self.output.last_line)
-        self.assertEqual(list(), self.output.messages)
-
         self.assertEqual("F0F6", test_data.get_field("WA0EXT"))
         self.assertEqual("09", test_data.get_field("WA0PTY"))
 
@@ -107,8 +98,6 @@ class NameSuccessETAW(NameGeneral):
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
         self.assertEqual(self.SUCCESS_END, self.output.last_line)
-        self.assertEqual(list(), self.output.messages)
-
         self.assertEqual("F9F6", test_data.get_field("WA0EXT"))
         self.assertEqual(f"{99:02X}", test_data.get_field("WA0PTY"))
 
@@ -120,7 +109,6 @@ class NameSuccessETAW(NameGeneral):
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
         self.assertEqual(self.SUCCESS_END, self.output.last_line)
-        self.assertEqual(list(), self.output.messages)
         self.assertEqual("F9F6", test_data.get_field("WA0EXT"))
         self.assertEqual("E3", test_data.get_field("WA0PTY"))
 
@@ -131,7 +119,6 @@ class NameSuccessETAW(NameGeneral):
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
         self.assertEqual(self.SUCCESS_END, self.output.last_line)
-        self.assertEqual(list(), self.output.messages)
         self.assertIn("021014", self.output.dumps)
         self.assertEqual("F9F6", test_data.get_field("WA0EXT"))
         self.assertEqual(f"{99:02X}", test_data.get_field("WA0PTY"))

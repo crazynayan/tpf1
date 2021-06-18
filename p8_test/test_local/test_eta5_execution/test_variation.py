@@ -46,7 +46,7 @@ class Variation(NameGeneral):
         self.assertEqual(f"{99:02X}", test_data.get_field("WA0PTY", core_variation=1, pnr_variation=1))
         self.assertEqual(f"{99:02X}", test_data.get_field("WA0PTY", core_variation=1, pnr_variation=2))
         for core_variation, pnr_variation in product(range(2), range(3)):
-            self.assertEqual(list(), test_data.get_output(core_variation, pnr_variation).messages)
+            self.assertIn("OK", test_data.get_output(core_variation, pnr_variation).messages[0])
             self.assertEqual(list(), test_data.get_output(core_variation, pnr_variation).dumps)
 
     def test_tpfdf_variation(self):

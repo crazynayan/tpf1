@@ -8,6 +8,7 @@ from p8_test.test_local import TestDebug
 
 
 class Etg1Test(TestDebug):
+    SEGMENTS = ["ETG2"]
 
     def _mini_tjr_setup(self, tj2qaa) -> None:
         fixed_file = FixedFile()
@@ -61,7 +62,7 @@ class Etg1Test(TestDebug):
         test_data = self.tpf_server.run("ETA1", self.test_data)
         self.output = test_data.output
         self.assertEqual(self.SUCCESS_END, self.output.last_line, f"{self.output.last_node}--{self.output.dumps}")
-        self.assertEqual(list(), self.output.messages)
+        self.assertIn("OK", self.output.messages[0], self.output.debug)
 
     def test_etg1_insurance_no_main_tjr(self) -> None:
         self.test_data.set_field("WA0ET5", DataType("X", input="01").to_bytes())
