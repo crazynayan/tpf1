@@ -8,7 +8,6 @@ from p8_test.test_local import TestDebug
 
 
 class Etg1Test(TestDebug):
-    SEGMENTS = ["ETG2"]
 
     def _mini_tjr_setup(self, tj2qaa) -> None:
         fixed_file = FixedFile()
