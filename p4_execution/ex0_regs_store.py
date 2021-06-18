@@ -1,10 +1,8 @@
-from datetime import datetime
 from typing import Union, Optional, Tuple, Dict
 
 from config import config
 from p1_utils.data_type import DataType, Register
 from p1_utils.errors import RegisterInvalidError, BaseAddressError, MaskError
-from p2_assembly.mac2_data_macro import macros
 
 
 class Registers:
@@ -113,7 +111,6 @@ class Storage:
         self.allocate_fixed(config.AAA)
         self.allocate_fixed(config.IMG)
         self.allocate_fixed(config.MULTI_HOST)
-        self._setup_global()
 
     def __repr__(self) -> str:
         return f"Storage:{len(self.frames)}"
@@ -129,23 +126,6 @@ class Storage:
         base_address = self.base_key(address)
         self.frames[base_address] = bytearray()
         self._frame[base_address] = bytearray()
-
-    def _setup_global(self):
-        haalc = config.GLOBAL + macros['GLOBAL'].evaluate('@HAALC')
-        self.set_bytes(bytearray([0xC1, 0xC1]), haalc, 2)
-        u1dmo = config.GLOBAL + macros['GLOBAL'].evaluate('@U1DMO')
-        now = datetime.now()
-        today = datetime(year=now.year, month=now.month, day=now.day)
-        pars_today = (today - config.PARS_DAY_1).days
-        self.set_value(pars_today, u1dmo, 2)
-        tjord = config.GLOBAL + macros['GLOBAL'].evaluate('@TJORD')
-        self.set_value(0x00088EDC, tjord)
-        multi_host = config.GLOBAL + macros['GLOBAL'].evaluate('@MHSTC')
-        self.set_value(config.MULTI_HOST, multi_host)
-        u1tym = config.GLOBAL + macros['GLOBAL'].evaluate('@U1TYM')
-        time: str = f"{now.hour:02}{now.minute:02}"
-        time_bytes: bytearray = DataType("C", input=time).to_bytes()
-        self.set_bytes(time_bytes, u1tym)
 
     def get_allocated_address(self) -> bytearray:
         return DataType('F', input=str(self.nab - config.F4K)).to_bytes(config.REG_BYTES)
