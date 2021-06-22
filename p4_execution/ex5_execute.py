@@ -268,7 +268,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         # FILNC
 
         # User defined Db Macros
-        self._ex["PDCRE"] = self.not_implemented
+        self._ex["PDCRE"] = self.no_operation
         self._ex["PDRED"] = self.pdred
         self._ex["PDCLS"] = self.pdcls
         self._ex["PDMOD"] = self.not_implemented
