@@ -9,7 +9,7 @@ class RegisterVariants(unittest.TestCase):
     def test_reg_variants(self):
         seg: Segment = segments['TS05']
         self.assertRaises(RegisterInvalidError, seg.reg_data, Line.from_line(" LHI RAB,1"))
-        self.assertRaises(DataInvalidError, seg.reg_data, Line.from_line(" LHI R1,X'10000'"))
+        self.assertRaises(DataInvalidError, seg.reg_data, Line.from_line(" LHI R1,X'100000000'"))
         self.assertRaises(RegisterInvalidError, seg.reg_reg_field, Line.from_line(" STM R14,R16,EBW000"))
         self.assertRaises(RegisterInvalidError, seg.reg_reg_field, Line.from_line(" LM RDC,R7,EBW000"))
         self.assertRaises(NotFoundInSymbolTableError, seg.reg_reg_field, Line.from_line(" LM R0,R1,PD0_C_ITM"))
@@ -45,7 +45,7 @@ class RegisterVariants(unittest.TestCase):
         # LHI   R05,X'7FFF'+1
         node = seg.nodes['TS050110.2']
         self.assertEqual('R5', node.reg.reg)
-        self.assertEqual(-32768, node.data)
+        self.assertEqual(32768, node.data)  # RegisterData is now 32 bit so this will be positive value
         # LHI   RG1,32767
         node = seg.nodes['TS050110.3']
         self.assertEqual('R1', node.reg.reg)
