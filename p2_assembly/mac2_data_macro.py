@@ -67,7 +67,7 @@ class DataMacro(DataMacroImplementation):
 class _DataMacroCollection:
     MAC_EXT = {".mac", ".txt"}
     MAC_FOLDER_NAME = os.path.join(config.ROOT_DIR, "p0_source", "macro")
-    DEFAULT_MACROS = ("AASEQ", "SYSEQ", "SYSEQC", "EB0EB", "UATKW")
+    DEFAULT_MACROS = ("AASEQ", "SYSEQ", "SYSEQC", "EB0EB", "UATKW", "CUSTOM")
 
     def __init__(self):
         self.macros: Dict[str, DataMacro] = dict()
