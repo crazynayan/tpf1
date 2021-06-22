@@ -109,6 +109,8 @@ class RealtimeMacroImplementation(InstructionImplementation):
         self._command["DBOPN"] = self.key_value
         self._command["DBRED"] = self.dbred
         self._command["DBCLS"] = self.key_value
+        self._command["DBDEL"] = self.key_value
+        self._command["DBADD"] = self.key_value
         self._command["DBIFB"] = self.key_value
         self._command["DBREP"] = self.key_value
         self._command["DBMOD"] = self.key_value
@@ -120,6 +122,7 @@ class RealtimeMacroImplementation(InstructionImplementation):
         self._command["CREMC"] = self.key_value
         self._command["KEYRC"] = self.key_value
         self._command["KEYCC"] = self.key_value
+        self._command["GLBLC"] = self.key_value
         self._command["REALTIME"] = self.key_value
         self._command["REALTIMA"] = self.key_value
         self._command["SWISC"] = self.key_value
@@ -223,6 +226,7 @@ class StructuredProgrammingMacroImplementation(RealtimeMacroImplementation):
         self._command["#SUBR"] = self.key_value
         self._command["#ESUB"] = self.key_value
         self._command["#SPM"] = self.key_value
+        self._command["#ELSE"] = self.key_value
 
 
 class UserDefinedMacroImplementation(StructuredProgrammingMacroImplementation):
