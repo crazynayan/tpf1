@@ -8,6 +8,7 @@ from p3_db.stream import Stream
 
 NAME, HFAX, FQTV, ITIN, RCVD_FROM, PHONE, REMARKS = "name", "hfax", "fqtv", "itin", "rcvd_from", "phone", "remarks"
 SUBS_CARD_SEG, GROUP_PLAN, RECORD_LOC, PRS_SEATS = "subs_card_seg", "group_plan", "record_loc", "prs_seats"
+HEADER = "header"
 
 
 class PnrAttribute:
@@ -35,7 +36,7 @@ class PnrLrec:
 
 class Pnr:
     DB: List[Dict[str, Union[str, List[Dict[str, bytearray]]]]] = [{"id": config.AAAPNR, "doc": list()}]
-    HEADER = bytearray([0x00] * 0x14)
+    STD_PREFIX_BYTES = bytearray([0x00] * 0x14)
     ATTRIBUTES = [
         PnrAttribute(NAME, "50", std_var=bytearray([0x00, 0x00, 0x02, 0x00])),
         PnrAttribute(HFAX, "84", std_fix=bytearray([0x00] * 0x08), std_var=bytearray([0x02, 0x01])),
@@ -48,11 +49,13 @@ class Pnr:
         PnrAttribute(PHONE, "5C", std_var=bytearray([0x80])),  # Indicate NEW item
         PnrAttribute(REMARKS, "B0", std_var=bytearray([0x00, 0x00, 0x00, 0x00, 0x00])),  # Indicate NEW item
         PnrAttribute(PRS_SEATS, "80", std_var=bytearray([0x80])),  # Indicate NEW item
+        PnrAttribute(HEADER, "20", byte_array=True, packed=True),
     ]
 
     @classmethod
     def init_db(cls) -> None:
         cls.DB = [{"id": config.AAAPNR, "doc": list()}]
+        cls.add_from_byte_array(byte_array={"PR00_20_SID": bytearray([0x00])}, key=HEADER, locator=config.AAAPNR)
 
     @staticmethod
     def get_pnr_data(pnr_locator: str, key: str, item_number: int, packed: bool = False,
@@ -67,11 +70,11 @@ class Pnr:
         attribute = Pnr.get_attribute_by_key(key)
         if not attribute:
             raise PnrElementError
-        start = (len(Pnr.HEADER) + len(attribute.std_fix) + len(attribute.std_var)) \
+        start = (len(Pnr.STD_PREFIX_BYTES) + len(attribute.std_fix) + len(attribute.std_var)) \
             if packed else len(attribute.std_var)
         for item_number in range(item_number, len(data_list) + 1):
             data = data_list[item_number - 1]
-            data = data[len(Pnr.HEADER) + len(attribute.std_fix):] if not packed else data
+            data = data[len(Pnr.STD_PREFIX_BYTES) + len(attribute.std_fix):] if not packed else data
             if starts_with is None:
                 return data, item_number
             elif data[start: start + len(starts_with)] == starts_with:
@@ -110,7 +113,7 @@ class Pnr:
             raise PnrElementError
         pnr_doc: List[Dict[str, bytearray]] = Pnr.get_pnr_doc(locator)
         lrec = PnrLrec(attribute.key)
-        lrec.data.extend(Pnr.HEADER[:])
+        lrec.data.extend(Pnr.STD_PREFIX_BYTES[:])
         lrec.data.extend(attribute.std_fix)
         lrec.data.extend(attribute.std_var)
         lrec.data.extend(DataType("C", input=data).to_bytes())
@@ -124,7 +127,7 @@ class Pnr:
         pnr_doc: List[Dict[str, bytearray]] = Pnr.get_pnr_doc(locator)
         lrec = PnrLrec(attribute.key)
         if not attribute.packed:
-            lrec.data.extend(Pnr.HEADER[:])
+            lrec.data.extend(Pnr.STD_PREFIX_BYTES[:])
             lrec.data.extend(attribute.std_fix)
             lrec.data.extend(attribute.std_var)
         lrec.data.extend(Stream(macros[attribute.macro_name]).to_bytes(byte_array))
