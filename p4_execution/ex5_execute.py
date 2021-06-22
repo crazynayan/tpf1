@@ -14,7 +14,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         # S03 - Load & Store
         self._ex["LR"] = self.load_register
         self._ex["LTR"] = self.load_test_register
-        # LPR - Not in ETA5
+        self._ex["LPR"] = self.not_implemented
         # LNR - Not in ETA5
         # LCR - Not in ETA5
         self._ex["L"] = self.load_fullword
@@ -159,12 +159,18 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         # CP
         self._ex["TP"] = self.tp
         self._ex["TR"] = self.tr
+        self._ex["TRT"] = self.not_implemented
         self._ex["EDMK"] = self.not_implemented
-        # TRT
-        # ED, EDMK
+        # ED
 
         # S09 - All new z/TPF instruction
         self._ex["CLHHSI"] = self.not_implemented
+        self._ex["MVHHI"] = self.not_implemented
+        self._ex["LLC"] = self.not_implemented
+        self._ex["LG"] = self.not_implemented
+        self._ex["STG"] = self.not_implemented
+        self._ex["AFI"] = self.not_implemented
+        self._ex["XGR"] = self.not_implemented
 
         # Realtime Macros
         self._ex["GETCC"] = self.getcc
@@ -196,6 +202,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["CREMC"] = self.not_implemented
         self._ex["KEYCC"] = self.not_implemented
         self._ex["KEYRC"] = self.not_implemented
+        self._ex["GLBLC"] = self.not_implemented
         self._ex["EVNTC"] = self.not_implemented
         self._ex["EVNWC"] = self.not_implemented
         self._ex["REALTIME"] = self.not_implemented
@@ -224,6 +231,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["#SUBR"] = self.not_implemented
         self._ex["#ESUB"] = self.not_implemented
         self._ex["#SPM"] = self.no_operation
+        self._ex["#ELSE"] = self.not_implemented
 
         # User Defined Executable Macros
         self._ex["AAGET"] = self.aaget
@@ -282,7 +290,8 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["DBIFB"] = self.dbifb
         self._ex["DBREP"] = self.not_implemented
         self._ex["DBMOD"] = self.not_implemented
-        # DBADD, DBDEL - Not in ETA5
+        self._ex["DBDEL"] = self.not_implemented
+        self._ex["DBADD"] = self.not_implemented
 
         # No operation
         self._ex["EQU"] = self.no_operation
