@@ -205,6 +205,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["WAITC"] = self.not_implemented
         self._ex["UNFRC"] = self.not_implemented
         self._ex["FILNC"] = self.not_implemented
+        self._ex["POSTC"] = self.not_implemented
 
         # SPM Macros
         self._ex["#IF"] = self.not_implemented
@@ -227,6 +228,8 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         # User Defined Executable Macros
         self._ex["AAGET"] = self.aaget
         self._ex["AACPY"] = self.aacpy
+        self._ex["LOCAA"] = self.not_implemented
+        self._ex["DELAA"] = self.not_implemented
         self._ex["CFCMA"] = self.heapa
         self._ex["HEAPA"] = self.heapa
         self._ex["EHEAPA"] = self.heapa
@@ -246,6 +249,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["PNRCU"] = self.not_implemented
         self._ex["FLBKA"] = self.no_operation
         self._ex["TOURA"] = self.not_implemented
+        self._ex["PNRUA"] = self.not_implemented
 
         # User Defined Executable Macros created for this tool
         self._ex["PARS_DATE"] = self.pars_date
@@ -264,12 +268,11 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         # FILNC
 
         # User defined Db Macros
+        self._ex["PDCRE"] = self.not_implemented
         self._ex["PDRED"] = self.pdred
         self._ex["PDCLS"] = self.pdcls
         self._ex["PDMOD"] = self.not_implemented
         self._ex["PDADD"] = self.not_implemented
-        self._ex["LOCAA"] = self.not_implemented
-        self._ex["DELAA"] = self.not_implemented
         # PDADD, PDDEL - Not in ETA5
 
         # TPFDF Macros
