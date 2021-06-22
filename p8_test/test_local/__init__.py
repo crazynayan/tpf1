@@ -62,8 +62,8 @@ class TestDataUTS(TestData):
 
 class TestDebug(unittest.TestCase):
     SEGMENTS = ["ETA1", "ETAX", "ETAF", "ETAZ", "ETK1", "ETKF", "ETA4", "ETA5", "ETAW", "ETA6", "ETK2", "ETK6", "ETAA",
-                "ETA9", "ETG1", "INS0", "ETG2", "ETGG", "ETG3", "ETGE"]
-    SUCCESS_END = "EWA10000"
+                "ETA9", "ETG1", "INS0", "ETG2", "ETGG", "ETG3", "ETGE", "EWA1"]
+    SUCCESS_END = "EXA10000"
     ETG1_TJR_END = "ETG10750.2"
     FMSG_END = "FMSG0100"
 
