@@ -127,7 +127,7 @@ class RegisterFieldIndex(InstructionGeneric):
 
 
 class RegisterData(InstructionGeneric):
-    DATA_LENGTH = 16  # 16 bits
+    DATA_LENGTH = 16  # 32 bits
 
     def __init__(self, line: Line, reg: Register, data: int):
         super().__init__(line)

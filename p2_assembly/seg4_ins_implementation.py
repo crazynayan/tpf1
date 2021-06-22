@@ -263,7 +263,7 @@ class InstructionImplementation(InstructionOperand):
         min_signed_value = -1 << RegisterData.DATA_LENGTH - 1
         max_signed_value = (1 << RegisterData.DATA_LENGTH - 1) - 1
         if not min_signed_value <= data <= max_unsigned_value:
-            raise DataInvalidError
+            raise DataInvalidError((line, data))
         if data > max_signed_value:
             data -= max_unsigned_value + 1  # Two"s complement negative number
         return RegisterData(line, reg, data)

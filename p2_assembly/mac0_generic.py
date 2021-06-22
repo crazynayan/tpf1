@@ -98,6 +98,9 @@ class MacroGeneric:
                 return value_list.pop()
             return self._location_counter if exp_list[0] == "*" else self.evaluate(exp_list[0])
         exp_list = [expression for expression in exp_list if expression]
+        if len(exp_list) >= 2 and exp_list[0] == "-" and exp_list[1].isdigit():
+            exp_list.pop(0)
+            exp_list[0] = f"-{exp_list[0]}"
         exp_list = [(index, expression) for index, expression in enumerate(exp_list)]
         parenthesis = [indexed_expression for indexed_expression in exp_list if indexed_expression[1] in "()"]
         exp_list = [indexed_expression for indexed_expression in exp_list if indexed_expression[1] not in "()"]
@@ -110,7 +113,7 @@ class MacroGeneric:
                     value = value_list.pop()
                 elif expression == "*":
                     value = self._location_counter
-                elif expression.isdigit():
+                elif expression.isdigit() or (expression[0] == "-" and expression[1:].isdigit()):
                     value = expression
                 elif Register(expression).is_valid():
                     value = Register(expression).value
