@@ -199,7 +199,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["EVNTC"] = self.not_implemented
         self._ex["EVNWC"] = self.not_implemented
         self._ex["REALTIME"] = self.not_implemented
-        self._ex["REALTIMA"] = self.not_implemented
+        self._ex["REALTIMA"] = self.realtima
         self._ex["SWISC"] = self.not_implemented
         self._ex["CREDC"] = self.not_implemented
         self._ex["WAITC"] = self.not_implemented

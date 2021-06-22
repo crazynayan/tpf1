@@ -166,6 +166,11 @@ class RealTimeMacro(State):
 
 
 class UserDefinedMacro(State):
+
+    def realtima(self, node: KeyValue) -> str:
+        realtime_label = node.get_value("YES") if node.get_value("YES") else node.fall_down
+        return realtime_label
+
     def aaget(self, node: KeyValue) -> str:
         address = self.vm.allocate()
         ecb_address = self.get_ecb_address("D1", "CE1CR")
