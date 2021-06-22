@@ -46,6 +46,7 @@ class InstructionImplementation(InstructionOperand):
         self._command["CLI"] = self.field_data
         self._command["CLHHSI"] = self.field_data
         self._command["MVI"] = self.field_data
+        self._command["MVHHI"] = self.field_data
         self._command["LTR"] = self.reg_reg
         self._command["LR"] = self.reg_reg
         self._command["AR"] = self.reg_reg
@@ -65,17 +66,21 @@ class InstructionImplementation(InstructionOperand):
         self._command["NR"] = self.reg_reg
         self._command["OR"] = self.reg_reg
         self._command["XR"] = self.reg_reg
+        self._command["XGR"] = self.reg_reg
         self._command["BASR"] = self.reg_reg
+        self._command["LG"] = self.reg_field_index
         self._command["L"] = self.reg_field_index
         self._command["LH"] = self.reg_field_index
         self._command["LA"] = self.reg_field_index
         self._command["LARL"] = self.reg_field_index
         self._command["IC"] = self.reg_field_index
+        self._command["LLC"] = self.reg_field_index
         self._command["STH"] = self.reg_field_index
         self._command["N"] = self.reg_field_index
         self._command["O"] = self.reg_field_index
         self._command["X"] = self.reg_field_index
         self._command["ST"] = self.reg_field_index
+        self._command["STG"] = self.reg_field_index
         self._command["STC"] = self.reg_field_index
         self._command["CVB"] = self.reg_field_index
         self._command["CVD"] = self.reg_field_index
@@ -99,6 +104,7 @@ class InstructionImplementation(InstructionOperand):
         self._command["SRL"] = self.reg_field_index
         self._command["SLDL"] = self.reg_field_index
         self._command["SRDL"] = self.reg_field_index
+        self._command["AFI"] = self.reg_data
         self._command["AHI"] = self.reg_data
         self._command["LHI"] = self.reg_data
         self._command["CHI"] = self.reg_data
