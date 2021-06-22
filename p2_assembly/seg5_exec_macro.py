@@ -129,6 +129,8 @@ class RealtimeMacroImplementation(InstructionImplementation):
         self._command["WAITC"] = self.key_value
         self._command["CREDC"] = self.key_value
         self._command["UNFRC"] = self.key_value
+        self._command["POSTC"] = self.key_value
+        self._command["PDCRE"] = self.key_value
 
     def key_value(self, line: Line) -> KeyValue:
         operands_list: List[str] = line.split_operands()
@@ -256,6 +258,8 @@ class UserDefinedMacroImplementation(StructuredProgrammingMacroImplementation):
         self._command["PNRCU"] = self.key_value
         self._command["FLBKA"] = self.key_value
         self._command["TOURA"] = self.key_value
+        self._command["TSTWK24"] = self.key_value
+        self._command["PNRUA"] = self.key_value
         # Tool specific commands
         self._command["ERROR_CHECK"] = self.key_value
         self._command["PARS_DATE"] = self.key_value
