@@ -65,6 +65,7 @@ class TestDebug(unittest.TestCase):
                 "ETA9", "ETG1", "INS0", "ETG2", "ETGG", "ETG3", "ETGE", "EWA1", "EXA1", "EXAA"]
     SUCCESS_END = "EXAK0000"
     ETG1_TJR_END = "ETG10750.2"
+    EXAA_NPTY_END = "EXAA0525.6"
     FMSG_END = "FMSG0100"
 
     def setUp(self) -> None:

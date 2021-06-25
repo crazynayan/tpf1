@@ -78,8 +78,8 @@ class NameSuccessETAW(NameGeneral):
         self.test_data.set_field("WA0PTY", bytearray([0xE3]))  # 99 = 0x63 with bit0 on is 0xE3
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
-        self.assertEqual(self.SUCCESS_END, self.output.last_line)
-        self.assertListEqual(list(), self.output.dumps)
+        self.assertEqual(self.EXAA_NPTY_END, self.output.last_line)
+        self.assertIn("021018", self.output.dumps)
         self.assertEqual("F1F0", test_data.get_field("WA0EXT"))
         self.assertEqual("95", test_data.get_field("WA0PTY"))  # 0x15 with bit0 on
 
@@ -108,7 +108,8 @@ class NameSuccessETAW(NameGeneral):
         self.test_data.set_field("WA0PTY", bytearray([0xE3]))  # 99 = 0x63 with bit0 on is 0xE3
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
-        self.assertEqual(self.SUCCESS_END, self.output.last_line)
+        self.assertEqual(self.EXAA_NPTY_END, self.output.last_line)
+        self.assertIn("021018", self.output.dumps)
         self.assertEqual("F9F6", test_data.get_field("WA0EXT"))
         self.assertEqual("E3", test_data.get_field("WA0PTY"))
 
@@ -173,8 +174,9 @@ class NameSuccessETAW(NameGeneral):
         self.test_data.add_pnr_element(["I/5ZAVERI", "3ZAVERI", "C/25TOURS", "6SHAH", "I/2SHAH"], "name")
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
-        self.assertEqual(self.SUCCESS_END, self.output.last_line, self.output.last_node)
+        self.assertEqual(self.EXAA_NPTY_END, self.output.last_line, self.output.last_node)
         self.assertIn("021014", self.output.dumps)
+        self.assertIn("021018", self.output.dumps)
         self.assertEqual("F1F6", test_data.get_field("WA0EXT"))
         self.assertEqual(f"{32:02X}", test_data.get_field("WA0PTY"))
         self.assertEqual("07", test_data.get_field("EBW010"))
