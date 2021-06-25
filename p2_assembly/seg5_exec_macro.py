@@ -263,9 +263,15 @@ class UserDefinedMacroImplementation(StructuredProgrammingMacroImplementation):
         self._command["FLBKA"] = self.key_value
         self._command["TOURA"] = self.key_value
         self._command["PNRUA"] = self.key_value
+        self._command["TSTWK24"] = self.tstwk24
         # Tool specific commands
         self._command["ERROR_CHECK"] = self.key_value
         self._command["PARS_DATE"] = self.key_value
         self._command["UIO1_USER_EXIT"] = self.key_value
         self._command["FMSG_USER_EXIT"] = self.key_value
         self._command["GENERATE_LOCATOR"] = self.key_value
+
+    def tstwk24(self, line: Line) -> KeyValue:
+        tstswk24_node = self.key_value(line)
+        self.load_macro("_TSTWK24")
+        return tstswk24_node
