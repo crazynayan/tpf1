@@ -65,6 +65,9 @@ class Config:
     REG_BYTES: int = REG_BITS // 8
     REG_MAX: int = (1 << REG_BITS) - 1  # 0xFFFFFFFF
     REG_NEG: int = 1 << REG_BITS - 1  # 0x80000000
+    REG_BITS64: int = 64
+    REG_MAX64: int = (1 << REG_BITS) - 1  # 0xFFFFFFFFFFFFFFFF
+    REG_NEG64: int = 1 << REG_BITS - 1  # 0x8000000000000000
     NIBBLE: int = 4
     DSP_SHIFT: int = 12
     ZERO: int = 0x00

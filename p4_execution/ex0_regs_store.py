@@ -72,7 +72,15 @@ class Registers:
             value -= config.REG_MAX + 1
         setattr(self, str(reg), value)
 
-    def set_bytes_from_mask(self,  byte_array: bytearray, reg: Register, mask: int) -> None:
+    def set_value64(self, value: int, reg: Union[Register, str]) -> None:
+        self.get_value(reg)
+        if value < -config.REG_NEG64 or value > config.REG_MAX64:
+            value &= config.REG_MAX64
+        if value > 0 and value & config.REG_NEG64 != 0:
+            value -= config.REG_MAX64 + 1
+        setattr(self, str(reg), value)
+
+    def set_bytes_from_mask(self, byte_array: bytearray, reg: Register, mask: int) -> None:
         reg_bytes = self.get_bytes(reg)
         if len(byte_array) < bin(mask).count('1'):
             raise MaskError

@@ -167,7 +167,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["CLHHSI"] = self.not_implemented
         self._ex["MVHHI"] = self.not_implemented
         self._ex["LLC"] = self.not_implemented
-        self._ex["LG"] = self.not_implemented
+        self._ex["LG"] = self.load_grande
         self._ex["STG"] = self.not_implemented
         self._ex["AFI"] = self.not_implemented
         self._ex["XGR"] = self.not_implemented
@@ -202,7 +202,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["CREMC"] = self.not_implemented
         self._ex["KEYCC"] = self.not_implemented
         self._ex["KEYRC"] = self.not_implemented
-        self._ex["GLBLC"] = self.not_implemented
+        self._ex["GLBLC"] = self.no_operation
         self._ex["EVNTC"] = self.not_implemented
         self._ex["EVNWC"] = self.not_implemented
         self._ex["REALTIME"] = self.not_implemented

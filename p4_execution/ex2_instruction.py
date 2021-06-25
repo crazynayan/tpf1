@@ -27,6 +27,12 @@ class LoadStore(State):
         self.regs.set_value(value, node.reg)
         return node.fall_down
 
+    def load_grande(self, node: RegisterFieldIndex) -> str:
+        address = self.regs.get_address(node.field.base, node.field.dsp, node.field.index)
+        value = self.vm.get_value(address, 8)
+        self.regs.set_value64(value, node.reg)
+        return node.fall_down
+
     def load_address(self, node: RegisterFieldIndex) -> str:
         address = self.regs.get_address(node.field.base, node.field.dsp, node.field.index)
         self.regs.set_value(address, node.reg)
