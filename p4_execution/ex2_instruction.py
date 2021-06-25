@@ -370,6 +370,13 @@ class LogicalUsefulConversion(State):
         self.set_zero_cc(value)
         return node.fall_down
 
+    def xor_grande_register(self, node: RegisterRegister) -> str:
+        value = self.regs.get_value(node.reg1)
+        value ^= self.regs.get_value(node.reg2)
+        self.regs.set_value64(value, node.reg1)
+        self.set_zero_cc(value)
+        return node.fall_down
+
     def and_fullword(self, node: RegisterFieldIndex) -> str:
         address = self.regs.get_address(node.field.base, node.field.dsp, node.field.index)
         value = self.vm.get_value(address)

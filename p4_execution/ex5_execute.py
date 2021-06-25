@@ -170,7 +170,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["LG"] = self.load_grande
         self._ex["STG"] = self.store_grande
         self._ex["AFI"] = self.not_implemented
-        self._ex["XGR"] = self.not_implemented
+        self._ex["XGR"] = self.xor_grande_register
 
         # Realtime Macros
         self._ex["GETCC"] = self.getcc
