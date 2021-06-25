@@ -104,8 +104,11 @@ class UserDefinedDbMacro(State):
         # Get the data
         pnr_locator = self._get_pnr_locator()
         packed = node.get_value("FORMATOUT") == "PACKED"
-        data, item_number = Pnr.get_pnr_data(pnr_locator, key, item_number, packed=packed, starts_with=starts_with)
-        self.vm.set_value(item_number, pd0_base + pd0_mc_cin.dsp, pd0_mc_cin.length)
+        if key == "20":  # PNR Header
+            data, item_number = Pnr.get_pnr_data(pnr_locator, "20", 1, packed=True)
+        else:
+            data, item_number = Pnr.get_pnr_data(pnr_locator, key, item_number, packed=packed, starts_with=starts_with)
+            self.vm.set_value(item_number, pd0_base + pd0_mc_cin.dsp, pd0_mc_cin.length)
 
         # NOTFOUND & last item
         if data is None:
@@ -128,7 +131,7 @@ class UserDefinedDbMacro(State):
         if node.get_value("POINT") == "YES":
             attribute = Pnr.get_attribute_by_key(key)
             if packed:
-                pd0_rt_adr_value += (len(Pnr.HEADER) + len(attribute.std_fix))
+                pd0_rt_adr_value += (len(Pnr.STD_PREFIX_BYTES) + len(attribute.std_fix))
             pd0_rt_adr_value += len(attribute.std_var)
         self.vm.set_value(pd0_rt_adr_value, pd0_base + pd0_rt_adr.dsp, pd0_rt_adr.length)
         return node.fall_down
