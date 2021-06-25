@@ -44,6 +44,12 @@ class LoadStore(State):
         self.vm.set_value(value, address, 4)
         return node.fall_down
 
+    def store_grande(self, node: RegisterFieldIndex) -> str:
+        address = self.regs.get_address(node.field.base, node.field.dsp, node.field.index)
+        value = self.regs.get_value(node.reg)
+        self.vm.set_value(value, address, 8)
+        return node.fall_down
+
     def load_halfword(self, node: RegisterFieldIndex) -> str:
         address = self.regs.get_address(node.field.base, node.field.dsp, node.field.index)
         value = self.vm.get_value(address, 2)

@@ -168,7 +168,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["MVHHI"] = self.not_implemented
         self._ex["LLC"] = self.not_implemented
         self._ex["LG"] = self.load_grande
-        self._ex["STG"] = self.not_implemented
+        self._ex["STG"] = self.store_grande
         self._ex["AFI"] = self.not_implemented
         self._ex["XGR"] = self.not_implemented
 
