@@ -264,6 +264,8 @@ class UserDefinedMacroImplementation(StructuredProgrammingMacroImplementation):
         self._command["TOURA"] = self.key_value
         self._command["PNRUA"] = self.key_value
         self._command["TSTWK24"] = self.tstwk24
+        self._command["CINFC"] = self.key_value
+        self._command["TYCVA"] = self.key_value
         # Tool specific commands
         self._command["ERROR_CHECK"] = self.key_value
         self._command["PARS_DATE"] = self.key_value
