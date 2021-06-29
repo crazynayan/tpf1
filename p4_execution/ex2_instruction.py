@@ -220,6 +220,28 @@ class MoveLogicControl(State):
             self.vm.set_byte(byte, target_address + index)
         return node.fall_down
 
+    def move_character_long(self, node: RegisterRegister) -> str:
+        target_address = self.regs.get_unsigned_value(node.reg1)
+        target_reg = self.regs.next_reg(node.reg1)
+        target_length = self.regs.get_unsigned_value(target_reg) & 0x00FFFFFF
+        source_address = self.regs.get_unsigned_value(node.reg2)
+        source_reg = self.regs.next_reg(node.reg2)
+        source_length = self.regs.get_unsigned_value(source_reg) & 0x00FFFFFF
+        pad_character: int = self.regs.get_bytes_from_mask(source_reg, 0b1000)[0]
+        for index in range(source_length):
+            byte = self.vm.get_byte(source_address + index)
+            self.vm.set_byte(byte, target_address + index)
+        for index in range(source_length, target_length):
+            self.vm.set_byte(pad_character, target_address + index)
+        self.regs.set_value(target_address + target_length, node.reg1)
+        self.regs.set_value(source_address + source_length, node.reg2)
+        self.regs.set_value(0, target_reg)
+        truncated_count = source_length - target_length if source_length > target_length else 0
+        self.regs.set_value(truncated_count, source_reg)
+        self.regs.set_bytes_from_mask(bytearray([pad_character]), source_reg, 0b1000)
+        self.set_number_cc(target_length - source_length)
+        return node.fall_down
+
     def move_numeric(self, node: FieldLenField) -> str:
         source_address = self.regs.get_address(node.field.base, node.field.dsp)
         target_address = self.regs.get_address(node.field_len.base, node.field_len.dsp)

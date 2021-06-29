@@ -57,7 +57,7 @@ class Registers:
         return config.REGISTERS[0] if reg == config.REGISTERS[-1] \
             else config.REGISTERS[config.REGISTERS.index(str(reg)) + 1]
 
-    def get_bytes_from_mask(self, reg: Register, mask: int) -> bytearray:
+    def get_bytes_from_mask(self, reg: Union[str, Register], mask: int) -> bytearray:
         reg_bytes = self.get_bytes(reg)
         try:
             return bytearray([reg_bytes[index] for index, bit in enumerate(f'{mask:04b}') if bit == '1'])
@@ -80,7 +80,7 @@ class Registers:
             value -= config.REG_MAX64 + 1
         setattr(self, str(reg), value)
 
-    def set_bytes_from_mask(self, byte_array: bytearray, reg: Register, mask: int) -> None:
+    def set_bytes_from_mask(self, byte_array: bytearray, reg: Union[Register, str], mask: int) -> None:
         reg_bytes = self.get_bytes(reg)
         if len(byte_array) < bin(mask).count('1'):
             raise MaskError

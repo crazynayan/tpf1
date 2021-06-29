@@ -52,7 +52,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         # S05 - Move Store & Logic Control
         self._ex["MVC"] = self.move_character
         self._ex["MVI"] = self.move_immediate
-        self._ex["MVCL"] = self.not_implemented
+        self._ex["MVCL"] = self.move_character_long
         self._ex["MVN"] = self.move_numeric
         self._ex["MVZ"] = self.move_zone
         # MVO - Not in ETA5
