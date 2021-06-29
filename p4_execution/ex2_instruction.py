@@ -223,6 +223,30 @@ class MoveLogicControl(State):
             self.vm.set_byte(byte, target_address + index)
         return node.fall_down
 
+    def move_numeric(self, node: FieldLenField) -> str:
+        source_address = self.regs.get_address(node.field.base, node.field.dsp)
+        target_address = self.regs.get_address(node.field_len.base, node.field_len.dsp)
+        for index in range(node.field_len.length + 1):
+            source_byte = self.vm.get_byte(source_address + index)
+            source_byte &= 0x0F  # Zeroes the zone nibble
+            target_byte = self.vm.get_byte(target_address + index)
+            target_byte &= 0xF0  # Zeroes the numeric nibble
+            target_byte |= source_byte  # OR the numeric nibble from source to target
+            self.vm.set_byte(target_byte, target_address + index)
+        return node.fall_down
+
+    def move_zone(self, node: FieldLenField) -> str:
+        source_address = self.regs.get_address(node.field.base, node.field.dsp)
+        target_address = self.regs.get_address(node.field_len.base, node.field_len.dsp)
+        for index in range(node.field_len.length + 1):
+            source_byte = self.vm.get_byte(source_address + index)
+            source_byte &= 0xF0  # Zeroes the numeric nibble
+            target_byte = self.vm.get_byte(target_address + index)
+            target_byte &= 0x0F  # Zeroes the zone nibble
+            target_byte |= source_byte  # OR the zone nibble from source to target
+            self.vm.set_byte(target_byte, target_address + index)
+        return node.fall_down
+
     def move_immediate(self, node: FieldData) -> str:
         address = self.regs.get_address(node.field.base, node.field.dsp)
         self.vm.set_value(node.data, address, 1)

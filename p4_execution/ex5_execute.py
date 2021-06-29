@@ -53,8 +53,8 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["MVC"] = self.move_character
         self._ex["MVI"] = self.move_immediate
         self._ex["MVCL"] = self.not_implemented
-        self._ex["MVN"] = self.not_implemented
-        self._ex["MVZ"] = self.not_implemented
+        self._ex["MVN"] = self.move_numeric
+        self._ex["MVZ"] = self.move_zone
         # MVO - Not in ETA5
         self._ex["BCT"] = self.branch_on_count
         self._ex["JCT"] = self.branch_on_count
