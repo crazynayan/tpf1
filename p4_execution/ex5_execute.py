@@ -53,7 +53,9 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["MVC"] = self.move_character
         self._ex["MVI"] = self.move_immediate
         self._ex["MVCL"] = self.not_implemented
-        # MVZ, MVO, MVN - Not in ETA5
+        self._ex["MVN"] = self.not_implemented
+        self._ex["MVZ"] = self.not_implemented
+        # MVO - Not in ETA5
         self._ex["BCT"] = self.branch_on_count
         self._ex["JCT"] = self.branch_on_count
         self._ex["BCTR"] = self.branch_on_count_register
@@ -259,6 +261,8 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["TOURA"] = self.not_implemented
         self._ex["PNRUA"] = self.not_implemented
         self._ex["TSTWK24"] = self.not_implemented
+        self._ex["CINFC"] = self.not_implemented
+        self._ex["TYCVA"] = self.not_implemented
 
         # User Defined Executable Macros created for this tool
         self._ex["PARS_DATE"] = self.pars_date
