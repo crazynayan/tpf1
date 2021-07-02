@@ -2,7 +2,7 @@ from typing import Optional
 
 from p1_utils.data_type import Register, DataType
 from p1_utils.errors import RegisterInvalidError, Pd0BaseError, PdredFieldError, PdredSearchError, \
-    PdredNotFoundError, PdredPd0Error, DbredError, TpfdfExecutionError, TPFServerMemoryError
+    PdredNotFoundError, PdredPd0Error, DbredError, TpfdfExecutionError, TPFServerMemoryError, NotFoundInSymbolTableError
 from p2_assembly.mac0_generic import LabelReference
 from p2_assembly.seg2_ins_operand import FieldBaseDsp
 from p2_assembly.seg3_ins_type import InstructionGeneric
@@ -50,13 +50,28 @@ class UserDefinedDbMacro(State):
         # Get the key from FIELD= or INDEX=
         self.seg.load_macro("PDEQU")
         self.seg.load_macro("PD0WRK")
-        key_label = f"#PD_{node.get_value('FIELD')}_K"
+        field_value = node.get_value("FIELD")
+        if isinstance(field_value, list):
+            if field_value[0] != "INDEX":
+                raise PdredFieldError(node)
+            index_reg = Register(field_value[1])
+            if not index_reg.is_valid():
+                raise PdredFieldError(node)
+            index_value = self.regs.get_unsigned_value(index_reg)
+            try:
+                key_label = next(label for label, value in Pnr.PDEQU.items() if value == index_value)
+            except StopIteration:
+                raise PdredFieldError(node)
+            key_label = key_label + "_K"
+        elif isinstance(field_value, str):
+            key_label = f"#PD_{field_value}_K"
+        else:
+            raise PdredFieldError(node)
         try:
             key_number = self.seg.evaluate(key_label)
             key = f"{key_number:2X}"
-        except KeyError:
-            # TODO Code for INDEX= Not in ETA5
-            raise PdredFieldError
+        except NotFoundInSymbolTableError:
+            raise PdredFieldError(node)
 
         # ERROR=
         error_label = node.get_value("ERROR")

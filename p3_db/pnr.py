@@ -8,7 +8,7 @@ from p3_db.stream import Stream
 
 NAME, HFAX, FQTV, ITIN, RCVD_FROM, PHONE, REMARKS = "name", "hfax", "fqtv", "itin", "rcvd_from", "phone", "remarks"
 SUBS_CARD_SEG, GROUP_PLAN, RECORD_LOC, PRS_SEATS = "subs_card_seg", "group_plan", "record_loc", "prs_seats"
-HEADER, VCR_COUPON, ICE_DATA = "header", "vcr_coupon", "ice_data"
+HEADER, VCR_COUPON, ICE_DATA, GFAX = "header", "vcr_coupon", "ice_data", "gfax"
 
 
 class PnrAttribute:
@@ -34,12 +34,24 @@ class PnrLrec:
         return self.__dict__
 
 
+def load_pdequ():
+    pdequ = dict()
+    for label, label_ref in macros["PDEQU"].all_labels.items():
+        if not label.startswith("#PD_"):
+            continue
+        if label.endswith("_K") or label.endswith("_D"):
+            continue
+        pdequ[label] = label_ref.dsp
+    return pdequ
+
 class Pnr:
     DB: List[Dict[str, Union[str, List[Dict[str, bytearray]]]]] = [{"id": config.AAAPNR, "doc": list()}]
     STD_PREFIX_BYTES = bytearray([0x00] * 0x14)
+    PDEQU: Dict[str, int] = load_pdequ()
     ATTRIBUTES = [
         PnrAttribute(NAME, "50", std_var=bytearray([0x00, 0x00, 0x02, 0x00])),
         PnrAttribute(HFAX, "84", std_fix=bytearray([0x00] * 0x08), std_var=bytearray([0x02, 0x01])),
+        PnrAttribute(GFAX, "88", std_fix=bytearray([0x00] * 0x08), std_var=bytearray([0x02, 0x01])),
         PnrAttribute(FQTV, "60", byte_array=True, packed=True, std_fix=bytearray([0x00] * 0x16)),
         PnrAttribute(ITIN, "30", byte_array=True, macro_name="WI0BS"),
         PnrAttribute(SUBS_CARD_SEG, "66"),
