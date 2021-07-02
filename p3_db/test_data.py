@@ -248,7 +248,7 @@ class TestData(FirestoreDocument):
             pnr_output: PnrOutput = PnrOutput.dict_to_doc(pnr_output_dict)
         self.output.pnr_outputs.append(pnr_output)
         if persistence:
-            self.save()
+            self.output.save()
         return pnr_output
 
     def delete_pnr_element(self, pnr_id: str) -> Optional[Pnr]:
@@ -266,7 +266,7 @@ class TestData(FirestoreDocument):
         if not pnr_output:
             return None
         copy_pnr = deepcopy(pnr_output)
-        self.pnr.remove(pnr_output)
+        self.output.pnr_outputs.remove(pnr_output)
         self.save()
         pnr_output.delete(cascade=True)
         return copy_pnr

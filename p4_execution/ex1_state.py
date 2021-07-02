@@ -353,7 +353,7 @@ class State:
                     continue
                 field_byte = dict()
                 field_byte["field"] = field
-                field_byte["data"] = b64encode(pnr_data[start:end])
+                field_byte["data"] = b64encode(pnr_data[start:end]).decode()
                 pnr_output.field_data.append(field_byte)
         return
 

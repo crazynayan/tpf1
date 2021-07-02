@@ -111,15 +111,18 @@ class Tpfdf(FirestoreDocument):
 Tpfdf.init("tpfdf")
 
 
-class PnrOutput(Pnr):
+class PnrOutput(FirestoreDocument):
 
     def __init__(self):
         super().__init__()
+        self.locator: str = config.AAAPNR
+        self.key: str = str()
+        self.field_data: List[dict] = list()
         self.position: int = 1
         self.field_len: Dict[str, int] = dict()
 
 
-PnrOutput.init("pnr_output")
+PnrOutput.init("pnr_outputs")
 
 
 class Output(FirestoreDocument):

@@ -196,8 +196,8 @@ def add_input_pnr(test_data_id: str, **kwargs) -> Response:
 @tpf1_app.route("/test_data/<string:test_data_id>/output/pnr", methods=["PATCH"])
 @token_auth.login_required
 @test_data_required
-def add_output_pnr(test_data_id: str, **kwargs) -> Response:
-    pnr: PnrOutput = kwargs[test_data_id].create_output_pnr(request.get_json())
+def add_pnr_output(test_data_id: str, **kwargs) -> Response:
+    pnr: PnrOutput = kwargs[test_data_id].create_pnr_output(request.get_json())
     if not pnr:
         return error_response(400, "Error in adding PNR Output")
     return jsonify(pnr.cascade_to_dict())
@@ -207,7 +207,7 @@ def add_output_pnr(test_data_id: str, **kwargs) -> Response:
 @token_auth.login_required
 @test_data_required
 def delete_pnr_output(test_data_id: str, pnr_output_id: str, **kwargs) -> Response:
-    pnr: PnrOutput = kwargs[test_data_id].delete_pnr_element(pnr_output_id)
+    pnr: PnrOutput = kwargs[test_data_id].delete_pnr_output(pnr_output_id)
     if not pnr:
         return error_response(400, "Error in deleting PNR")
     return jsonify(pnr.cascade_to_dict())
