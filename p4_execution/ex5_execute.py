@@ -215,6 +215,8 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["UNFRC"] = self.not_implemented
         self._ex["FILNC"] = self.not_implemented
         self._ex["POSTC"] = self.not_implemented
+        self._ex["FREEC"] = self.not_implemented
+        self._ex["MALOC"] = self.not_implemented
 
         # SPM Macros
         self._ex["#IF"] = self.not_implemented
@@ -286,7 +288,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["PDCLS"] = self.pdcls
         self._ex["PDMOD"] = self.no_operation
         self._ex["PDADD"] = self.not_implemented
-        # PDADD, PDDEL - Not in ETA5
+        self._ex["PDDEL"] = self.not_implemented
 
         # TPFDF Macros
         self._ex["DBOPN"] = self.dbopn
