@@ -177,7 +177,7 @@ class Companion(NameGeneral):
         self.test_data.errors.append("ETA92500.11")
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
-        self.assertEqual(self.SUCCESS_END, self.output.last_line)
+        self.assertEqual(self.SUCCESS_END, self.output.last_line, self.output.last_node)
         self.assertNotEqual("E6D7F8F9", test_data.get_field("EBX000"))
         self.assertEqual("01", test_data.get_field("WA0PTY"))
 
