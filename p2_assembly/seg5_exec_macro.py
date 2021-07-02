@@ -133,7 +133,8 @@ class RealtimeMacroImplementation(InstructionImplementation):
         self._command["CREDC"] = self.key_value
         self._command["UNFRC"] = self.key_value
         self._command["POSTC"] = self.key_value
-        self._command["PDCRE"] = self.key_value
+        self._command["MALOC"] = self.key_value
+        self._command["FREEC"] = self.key_value
 
     def key_value(self, line: Line) -> KeyValue:
         operands_list: List[str] = line.split_operands()
@@ -237,6 +238,8 @@ class UserDefinedMacroImplementation(StructuredProgrammingMacroImplementation):
         self._command["PDADD"] = self.key_value
         self._command["PDCLS"] = self.key_value
         self._command["PDMOD"] = self.key_value
+        self._command["PDCRE"] = self.key_value
+        self._command["PDDEL"] = self.key_value
         self._command["LOCAA"] = self.key_value
         self._command["DELAA"] = self.key_value
         # Heap & AAA related
