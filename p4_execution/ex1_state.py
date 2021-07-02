@@ -52,7 +52,7 @@ class State:
         else:
             self.seg = segments[seg_name]
             self.seg.assemble()
-            self.regs.R8 = self.vm.allocate()   # Constant
+            self.regs.R8 = self.vm.allocate()  # Constant
             literal = self.vm.allocate()  # Literal is immediately the next frame
             self.vm.set_frame(self.seg.data.constant, self.regs.R8)
             self.vm.set_frame(self.seg.data.literal, literal)
@@ -328,6 +328,33 @@ class State:
                                                              output.reg_pointers[reg]).hex().upper()
             except BaseAddressError:
                 continue
+        self._capture_output_pnr(output)
+        return
+
+    @staticmethod
+    def _capture_output_pnr(output: Output) -> None:
+        for pnr_output in output.pnr_outputs:
+            key = Pnr.get_attribute_by_name(pnr_output.key).key
+            item_number = pnr_output.position
+            data = Pnr.get_pnr_data(pnr_locator=pnr_output.locator, key=key, item_number=item_number, packed=True)
+            pnr_data: bytearray = data[0]
+            if not pnr_data:
+                continue
+            for field, length in pnr_output.field_len.items():
+                if not macros["PR001W"].check(field):
+                    continue
+                label_ref: LabelReference = macros["PR001W"].lookup(field)
+                if not isinstance(length, int):
+                    continue
+                field_len: int = length if length > 0 else label_ref.length
+                start: int = label_ref.dsp
+                end: int = start + field_len
+                if len(pnr_data) < end:
+                    continue
+                field_byte = dict()
+                field_byte["field"] = field
+                field_byte["data"] = b64encode(pnr_data[start:end])
+                pnr_output.field_data.append(field_byte)
         return
 
     def _capture_core(self, field_data: List[dict], macro_name: str, base_address: int) -> None:

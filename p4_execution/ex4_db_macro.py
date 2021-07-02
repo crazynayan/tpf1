@@ -90,6 +90,10 @@ class UserDefinedDbMacro(State):
         if pd0_base == 0:
             raise TPFServerMemoryError
 
+        # Save the key number
+        pd0_in_dfkey: LabelReference = self.seg.lookup("PD0_IN_DFKEY")
+        self.vm.set_byte(key_number, pd0_base + pd0_in_dfkey.dsp)
+
         # Get the item number to read (Item numbers start from 1)
         pd0_ctl_key: LabelReference = self.seg.lookup("PD0_CTL_KEY")
         pd0_mc_cin: LabelReference = self.seg.lookup("PD0_MC_CIN")
@@ -149,6 +153,35 @@ class UserDefinedDbMacro(State):
                 pd0_rt_adr_value += (len(Pnr.STD_PREFIX_BYTES) + len(attribute.std_fix))
             pd0_rt_adr_value += len(attribute.std_var)
         self.vm.set_value(pd0_rt_adr_value, pd0_base + pd0_rt_adr.dsp, pd0_rt_adr.length)
+        return node.fall_down
+
+    def pdmod(self, node: KeyValue) -> str:
+        # Get the base of PD0WRK
+        pd0_base = self._pd0_base(node)
+        if pd0_base == 0:
+            raise TPFServerMemoryError
+
+        # Get the key and pnr locator
+        pd0_in_dfkey: int = self.seg.evaluate("PD0_IN_DFKEY")
+        key_number: int = self.vm.get_byte(pd0_base + pd0_in_dfkey)
+        key = f"{key_number:02X}"
+        pnr_locator = self._get_pnr_locator()
+
+        # Get the data
+        packed = node.get_value("FORMATIN") == "PACKED"
+        pd0_itm: int = self.seg.evaluate("PD0_P_DATA") if packed else self.seg.evaluate("PD0_C_ITM")
+        end_dsp = self.seg.evaluate(f"PR00E{key}")
+        data = self.vm.get_bytes(pd0_base + pd0_itm, end_dsp)
+
+        # Get the item number
+        if key == "20":
+            item_number = 1
+        else:
+            pd0_mc_cin: LabelReference = self.seg.lookup("PD0_MC_CIN")
+            item_number = self.vm.get_value(pd0_base + pd0_mc_cin.dsp, pd0_mc_cin.length)
+
+        # Replace
+        Pnr.replace_pnr_data(data=data, pnr_locator=pnr_locator, key=key, item_number=item_number, packed=packed)
         return node.fall_down
 
 

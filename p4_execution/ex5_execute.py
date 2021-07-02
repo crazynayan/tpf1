@@ -286,7 +286,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["PDCRE"] = self.no_operation
         self._ex["PDRED"] = self.pdred
         self._ex["PDCLS"] = self.pdcls
-        self._ex["PDMOD"] = self.no_operation
+        self._ex["PDMOD"] = self.pdmod
         self._ex["PDADD"] = self.not_implemented
         self._ex["PDDEL"] = self.not_implemented
 

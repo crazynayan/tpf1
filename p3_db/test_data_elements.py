@@ -26,32 +26,32 @@ class Core(FirestoreDocument):
     def validate_field_dict(macro_name: str, field_dict: dict) -> bool:
         if not isinstance(field_dict, dict):
             return False
-        if 'field' not in field_dict or not field_dict['field']:
+        if "field" not in field_dict or not field_dict["field"]:
             return False
         if macro_name not in macros:
             return False
         macros[macro_name].load()
-        if not macros[macro_name].check(field_dict['field']):
+        if not macros[macro_name].check(field_dict["field"]):
             return False
         return True
 
     def create_field_byte(self, field_dict: dict, persistence: bool) -> dict:
-        field_byte = next((field_byte for field_byte in self.field_data if field_byte['field'] == field_dict['field']),
+        field_byte = next((field_byte for field_byte in self.field_data if field_byte["field"] == field_dict["field"]),
                           None)
         if not field_byte:
             field_byte = field_dict.copy()
             self.field_data.append(field_byte)
         else:
-            if 'length' in field_dict:
-                field_byte['length'] = field_dict['length']
-            if 'data' in field_dict:
-                field_byte['data'] = field_dict['data']
+            if "length" in field_dict:
+                field_byte["length"] = field_dict["length"]
+            if "data" in field_dict:
+                field_byte["data"] = field_dict["data"]
         if persistence:
             self.save()
         return field_byte
 
     def delete_field_byte(self, field_name: str) -> dict:
-        field_byte = next((field_byte for field_byte in self.field_data if field_byte['field'] == field_name), None)
+        field_byte = next((field_byte for field_byte in self.field_data if field_byte["field"] == field_name), None)
         if not field_byte:
             return dict()
         self.field_data.remove(field_byte)
@@ -66,7 +66,7 @@ class Pnr(FirestoreDocument):
 
     def __init__(self):
         super().__init__()
-        self.locator: str = str()
+        self.locator: str = config.AAAPNR
         self.key: str = str()
         self.data: str = str()
         self.field_data: List[dict] = list()
@@ -85,16 +85,16 @@ class Pnr(FirestoreDocument):
             return False
         if not all(isinstance(value, type(template[field])) for field, value in pnr_dict.items()):
             return False
-        if not {'locator', 'key', 'variation', 'variation_name'}.issubset(pnr_dict):
+        if not {"locator", "key", "variation", "variation_name"}.issubset(pnr_dict):
             return False
-        if pnr_dict['locator'] and len(pnr_dict['locator']) != 6:
+        if pnr_dict["locator"] and len(pnr_dict["locator"]) != 6:
             return False
-        if db_pnr.Pnr.get_attribute_by_name(pnr_dict['key']) is None:
+        if db_pnr.Pnr.get_attribute_by_name(pnr_dict["key"]) is None:
             return False
         return True
 
 
-Pnr.init('pnr')
+Pnr.init("pnr")
 
 
 class Tpfdf(FirestoreDocument):
@@ -108,7 +108,18 @@ class Tpfdf(FirestoreDocument):
         self.variation_name: str = str()
 
 
-Tpfdf.init('tpfdf')
+Tpfdf.init("tpfdf")
+
+
+class PnrOutput(Pnr):
+
+    def __init__(self):
+        super().__init__()
+        self.position: int = 1
+        self.field_len: Dict[str, int] = dict()
+
+
+PnrOutput.init("pnr_output")
 
 
 class Output(FirestoreDocument):
@@ -118,37 +129,38 @@ class Output(FirestoreDocument):
         self.regs: Dict[str, int] = dict()
         self.reg_pointers: Dict[str, Union[str, int]] = dict()
         self.cores: List[Core] = list()
+        self.pnr_outputs: List[PnrOutput] = list()
         self.dumps: List[str] = list()
         self.messages: List[str] = list()
         self.last_line: str = str()
         self.last_node: str = str()
         self.debug: List[Union[str, dict]] = list()
         self.debug_missed: List[dict] = list()
-        self.variation: Dict[str, int] = {'core': 0, 'pnr': 0, 'tpfdf': 0, 'file': 0}
-        self.variation_name: Dict[str, str] = {'core': str(), 'pnr': str(), 'tpfdf': str(), 'file': str()}
+        self.variation: Dict[str, int] = {"core": 0, "pnr": 0, "tpfdf": 0, "file": 0}
+        self.variation_name: Dict[str, str] = {"core": str(), "pnr": str(), "tpfdf": str(), "file": str()}
 
     def create_field_byte(self, macro_name: str, field_dict: dict, persistence=True) -> dict:
         if not Core.validate_field_dict(macro_name, field_dict):
             return dict()
-        if set(field_dict) != {'field', 'length', 'base_reg'}:
+        if set(field_dict) != {"field", "length", "base_reg"}:
             return dict()
-        if not isinstance(field_dict['length'], int) or field_dict['length'] < 0:
+        if not isinstance(field_dict["length"], int) or field_dict["length"] < 0:
             return dict()
-        if field_dict['base_reg'] and not Register(field_dict['base_reg']).is_valid():
+        if field_dict["base_reg"] and not Register(field_dict["base_reg"]).is_valid():
             return dict()
-        core_dict = {'macro_name': macro_name, 'base_reg': field_dict['base_reg']}
+        core_dict = {"macro_name": macro_name, "base_reg": field_dict["base_reg"]}
         field_dict = field_dict.copy()
-        del field_dict['base_reg']
-        core_dict['base_reg'] = core_dict['base_reg'] if core_dict['base_reg'] != 'R0' else str()
-        if not core_dict['base_reg'] and macro_name not in config.DEFAULT_MACROS:
+        del field_dict["base_reg"]
+        core_dict["base_reg"] = core_dict["base_reg"] if core_dict["base_reg"] != "R0" else str()
+        if not core_dict["base_reg"] and macro_name not in config.DEFAULT_MACROS:
             return dict()
-        if core_dict['base_reg'] and macro_name in config.DEFAULT_MACROS:
+        if core_dict["base_reg"] and macro_name in config.DEFAULT_MACROS:
             return dict()
-        field_dict['length'] = field_dict['length'] if 'length' in field_dict and field_dict['length'] \
+        field_dict["length"] = field_dict["length"] if "length" in field_dict and field_dict["length"] \
             else macros[macro_name].evaluate(f"L'{field_dict['field']}")
-        core = next((core for core in self.cores if core.macro_name == core_dict['macro_name']), None)
+        core = next((core for core in self.cores if core.macro_name == core_dict["macro_name"]), None)
         if core:
-            core.base_reg = core_dict['base_reg']
+            core.base_reg = core_dict["base_reg"]
         else:
             core: Core = Core.create_from_dict(core_dict) if persistence else Core.dict_to_doc(core_dict)
             self.cores.append(core)
@@ -171,10 +183,10 @@ class Output(FirestoreDocument):
         return field_byte
 
     def create_regs(self, reg_dict: dict) -> bool:
-        if 'regs' not in reg_dict:
+        if "regs" not in reg_dict:
             return False
         self.regs = dict()
-        for reg in reg_dict['regs']:
+        for reg in reg_dict["regs"]:
             if not Register(reg).is_valid():
                 return False
             self.regs[reg] = 0
@@ -182,12 +194,12 @@ class Output(FirestoreDocument):
         return True
 
     def add_debug_seg(self, debug: dict, persistence=True) -> list:
-        if 'traces' not in debug or not debug['traces'] or not isinstance(debug['traces'], list):
+        if "traces" not in debug or not debug["traces"] or not isinstance(debug["traces"], list):
             return list()
-        for seg in debug['traces']:
+        for seg in debug["traces"]:
             if seg.upper() not in segments:
                 return list()
-        for seg in debug['traces']:
+        for seg in debug["traces"]:
             self.debug.append(seg.upper())
         if persistence:
             self.save()
@@ -230,7 +242,7 @@ class FlatFile(FirestoreDocument):
             return False
         if not all(isinstance(value, type(template[field])) for field, value in file_dict.items()):
             return False
-        if not {'macro_name', 'rec_id'}.issubset(file_dict):
+        if not {"macro_name", "rec_id"}.issubset(file_dict):
             return False
         file = cls.dict_to_doc(file_dict, cascade=False)
         if file.rec_id <= 0:
@@ -251,11 +263,11 @@ class FlatFile(FirestoreDocument):
         for field_value in file.field_data:
             if not isinstance(field_value, dict):
                 return False
-            if set(field_value) != {'field', 'data'}:
+            if set(field_value) != {"field", "data"}:
                 return False
-            if not macro.check(field_value['field']):
+            if not macro.check(field_value["field"]):
                 return False
-            if not isinstance(field_value['data'], str):
+            if not isinstance(field_value["data"], str):
                 return False
         return True
 
@@ -276,14 +288,14 @@ class FixedFile(FlatFile):
     def validate(cls, file_dict: dict) -> bool:
         if not super().validate(file_dict):
             return False
-        if not {'variation', 'fixed_type', 'fixed_ordinal'}.issubset(file_dict):
+        if not {"variation", "fixed_type", "fixed_ordinal"}.issubset(file_dict):
             return False
-        if file_dict['fixed_type'] < 0 or file_dict['fixed_ordinal'] < 0 or file_dict['variation'] < 0:
+        if file_dict["fixed_type"] < 0 or file_dict["fixed_ordinal"] < 0 or file_dict["variation"] < 0:
             return False
         return True
 
 
-FixedFile.init('fixed_files')
+FixedFile.init("fixed_files")
 
 
 class PoolFile(FlatFile):
@@ -300,7 +312,7 @@ class PoolFile(FlatFile):
     def validate(cls, file_dict: dict) -> bool:
         if not super().validate(file_dict):
             return False
-        if not {'index_field', 'index_macro_name'}.issubset(file_dict):
+        if not {"index_field", "index_macro_name"}.issubset(file_dict):
             return False
         file = cls.dict_to_doc(file_dict, cascade=False)
         if file.index_macro_name not in macros:
@@ -312,7 +324,7 @@ class PoolFile(FlatFile):
         return True
 
 
-PoolFile.init('pool_files')
+PoolFile.init("pool_files")
 
 
 class FileItem(FirestoreDocument):
@@ -338,7 +350,7 @@ class FileItem(FirestoreDocument):
             return False
         if not all(isinstance(value, type(template[field])) for field, value in item_dict.items()):
             return False
-        if not {'field', 'macro_name', 'field_data'}.issubset(item_dict):
+        if not {"field", "macro_name", "field_data"}.issubset(item_dict):
             return False
         item = cls.dict_to_doc(item_dict, cascade=False)
         if item.macro_name not in macros:
@@ -354,13 +366,13 @@ class FileItem(FirestoreDocument):
         for field_value in item.field_data:
             if not isinstance(field_value, dict):
                 return False
-            if set(field_value) != {'field', 'data'}:
+            if set(field_value) != {"field", "data"}:
                 return False
-            if not macro.check(field_value['field']):
+            if not macro.check(field_value["field"]):
                 return False
-            if not isinstance(field_value['data'], str):
+            if not isinstance(field_value["data"], str):
                 return False
         return True
 
 
-FileItem.init('file_items')
+FileItem.init("file_items")

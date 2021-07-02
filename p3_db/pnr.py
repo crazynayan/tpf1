@@ -96,6 +96,28 @@ class Pnr:
         return None, item_number
 
     @staticmethod
+    def replace_pnr_data(data: bytearray, pnr_locator: str, key: str, item_number: int, packed: bool = False) -> None:
+        # item_number starts from 1 for the 1st item (index 0)
+        try:
+            pnr_doc = next(pnr["doc"] for pnr in Pnr.DB if pnr["id"] == pnr_locator)
+        except StopIteration:
+            raise PnrLocatorNotFoundError
+        attribute = Pnr.get_attribute_by_key(key)
+        if not attribute:
+            raise PnrElementError
+        new_data = bytearray()
+        if not packed:
+            new_data.extend(Pnr.STD_PREFIX_BYTES[:])
+            new_data.extend(attribute.std_fix)
+            new_data.extend(attribute.std_var)
+        new_data.extend(data)
+        pnr_doc.sort(key=lambda pnr_lrec: pnr_lrec["key"])
+        key_index = next(index for index, pnr_lrec in enumerate(pnr_doc) if pnr_lrec["key"] == key)
+        index_to_update = key_index + item_number - 1
+        pnr_doc[index_to_update]["data"] = new_data
+        return
+
+    @staticmethod
     def get_len(pnr_locator: str, key: str) -> int:
         try:
             pnr_doc = next(pnr["doc"] for pnr in Pnr.DB if pnr["id"] == pnr_locator)
