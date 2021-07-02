@@ -51,8 +51,12 @@ class SegmentGeneric(DataMacroImplementation):
         if suffix is not None:
             original_name = name
             name = name + suffix
-            new_symbol_table = {label + suffix: LabelReference(label + suffix, label_ref.dsp, label_ref.length, name)
-                                for label, label_ref in macros[original_name].all_labels.items()}
+            new_symbol_table = dict()
+            for label, label_ref in macros[original_name].all_labels.items():
+                new_label = label + suffix
+                new_label_ref = LabelReference(new_label, label_ref.dsp, label_ref.length, name)
+                new_label_ref.label = new_label
+                new_symbol_table[new_label] = new_label_ref
             self._symbol_table = {**self.all_labels, **new_symbol_table}
         elif name not in self.data_macro:
             self._symbol_table = {**self.all_labels, **macros[name].all_labels}
