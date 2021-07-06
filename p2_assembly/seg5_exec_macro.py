@@ -240,6 +240,7 @@ class UserDefinedMacroImplementation(StructuredProgrammingMacroImplementation):
         self._command["PDMOD"] = self.key_value
         self._command["PDCRE"] = self.key_value
         self._command["PDDEL"] = self.key_value
+        self._command["PDCTL"] = self.key_value
         self._command["LOCAA"] = self.key_value
         self._command["DELAA"] = self.key_value
         # Heap & AAA related
