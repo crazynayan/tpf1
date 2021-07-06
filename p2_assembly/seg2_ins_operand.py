@@ -125,7 +125,7 @@ class InstructionOperand(DirectiveImplementation):
             base = Register('R0')
         return FieldBaseDsp(name, base, dsp)
 
-    def _get_field_by_base_dsp(self, base: str, dsp: str, length: Optional[int] = None) -> FieldBaseDsp:
+    def _get_field_by_base_dsp(self, base: str, dsp: str) -> FieldBaseDsp:
         # Set base register
         base = Register(base)
         if not base.is_valid():
