@@ -193,6 +193,9 @@ class UserDefinedDbMacro(State):
         heap = self.vm.allocate()
         pd0_ctl_tbl_hp = self.seg.evaluate("PD0_CTL_TBL_HP")
         self.vm.set_value(heap, pd0_base + pd0_ctl_tbl_hp)
+        # Init PD0C_CTL_ITM_CNT
+        pd0c_ctl_itm_cnt = self.seg.lookup("PD0C_CTL_ITM_CNT")
+        self.vm.set_value(1, heap + pd0c_ctl_itm_cnt.dsp, pd0c_ctl_itm_cnt.length)
         return node.fall_down
 
 
