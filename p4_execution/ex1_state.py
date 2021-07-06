@@ -336,7 +336,8 @@ class State:
         for pnr_output in output.pnr_outputs:
             key = Pnr.get_attribute_by_name(pnr_output.key).key
             item_number = pnr_output.position
-            data = Pnr.get_pnr_data(pnr_locator=pnr_output.locator, key=key, item_number=item_number, packed=True)
+            pnr_locator = config.AAAPNR if not pnr_output.locator else pnr_output.locator
+            data = Pnr.get_pnr_data(pnr_locator=pnr_locator, key=key, item_number=item_number, packed=True)
             pnr_data: bytearray = data[0]
             if not pnr_data:
                 continue
