@@ -17,12 +17,15 @@ class DataMacro(DataMacroImplementation):
     def __repr__(self) -> str:
         return f"{self.name} ({len(self._symbol_table)})"
 
-    def _second_pass(self, command: str, second_list: List[Tuple[Line, int]]):
+    def _second_pass(self, second_list: List[Tuple[Line, int]]):
         for line, location_counter in second_list:
-            if line.command != command:
+            if line.command not in {"EQU", "DS"}:
                 continue
             self._location_counter = location_counter
-            self._command[line.command](line)
+            try:
+                self._command[line.command](line)
+            except NotFoundInSymbolTableError:
+                raise NotFoundInSymbolTableError(line)
         return
 
     def load(self) -> None:
@@ -45,10 +48,11 @@ class DataMacro(DataMacroImplementation):
                 pass
             except NotFoundInSymbolTableError:
                 second_list.append((line, self._location_counter))
-        # Add the saved equates which were not added in the first pass
-        self._second_pass("EQU", second_list)
-        # Add the saved DS which were not added in the first pass
-        self._second_pass("DS", second_list)
+        # # Add the saved equates which were not added in the first pass
+        # self._second_pass("EQU", second_list)
+        # # Add the saved DS which were not added in the first pass
+        # self._second_pass("DS", second_list)
+        self._second_pass(second_list)
         return
 
     @property
