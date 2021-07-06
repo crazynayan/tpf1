@@ -13,3 +13,13 @@ from p7_flask_app import routes, auth
 from p7_flask_app.api import bp as api_bp
 
 tpf1_app.register_blueprint(api_bp, url_prefix="/api")
+
+
+@tpf1_app.shell_context_processor
+def make_shell_context():
+    from p3_db.test_data import TestData
+    from p4_execution.ex5_execute import TpfServer
+    return {
+        "TestData": TestData,
+        "TpfServer": TpfServer,
+    }
