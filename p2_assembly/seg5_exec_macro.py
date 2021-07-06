@@ -110,7 +110,7 @@ class RealtimeMacroImplementation(InstructionImplementation):
         self._command["DBRED"] = self.dbred
         self._command["DBCLS"] = self.key_value
         self._command["DBDEL"] = self.key_value
-        self._command["DBADD"] = self.key_value
+        self._command["DBADD"] = self.dbadd
         self._command["DBIFB"] = self.key_value
         self._command["DBREP"] = self.key_value
         self._command["DBMOD"] = self.key_value
@@ -189,13 +189,25 @@ class RealtimeMacroImplementation(InstructionImplementation):
             dbred_key.set_sub_value(field, field_name, key_n, "S")
         return dbred_key
 
+    def dbadd(self, line: Line) -> KeyValue:
+        dbadd_key: KeyValue = self.key_value(line)
+        newlrec_value: str = dbadd_key.get_value("NEWLREC")
+        if Register(newlrec_value).is_valid():
+            return dbadd_key
+        try:
+            newlrec_field: FieldBaseDsp = self.field_base_dsp(newlrec_value)
+        except Exception:
+            raise AssemblyError(line)
+        dbadd_key.set_value(newlrec_field, newlrec_value, "NEWLREC")
+        return dbadd_key
+
     def pnamc(self, line: Line) -> KeyValue:
         pnamc_key_value = self.key_value(line)
         if pnamc_key_value.get_value("NAMETYPE") != "ENTER":
-            raise AssemblyError
+            raise AssemblyError(line)
         field_name = pnamc_key_value.get_value("FIELD")
         if not field_name:
-            raise AssemblyError
+            raise AssemblyError(line)
         pnamc_key_value.set_value(self.field_base_dsp(field_name), field_name, "FIELD")
         return pnamc_key_value
 

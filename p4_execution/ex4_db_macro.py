@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Tuple
 
 from p1_utils.data_type import Register, DataType
 from p1_utils.errors import RegisterInvalidError, Pd0BaseError, PdredFieldError, PdredSearchError, \
@@ -186,16 +186,24 @@ class UserDefinedDbMacro(State):
 
     def pdctl(self, node: KeyValue) -> str:
         # Get the base of PD0WRK
-        pd0_base = self._pd0_base(node)
+        pd0_base: int = self._pd0_base(node)
         if pd0_base == 0:
             raise TPFServerMemoryError
         # Init ctl heap
-        heap = self.vm.allocate()
-        pd0_ctl_tbl_hp = self.seg.evaluate("PD0_CTL_TBL_HP")
+        heap: int = self.vm.allocate()
+        pd0_ctl_tbl_hp: int = self.seg.evaluate("PD0_CTL_TBL_HP")
         self.vm.set_value(heap, pd0_base + pd0_ctl_tbl_hp)
         # Init PD0C_CTL_ITM_CNT
-        pd0c_ctl_itm_cnt = self.seg.lookup("PD0C_CTL_ITM_CNT")
+        pd0c_ctl_itm_cnt: LabelReference = self.seg.lookup("PD0C_CTL_ITM_CNT")
         self.vm.set_value(1, heap + pd0c_ctl_itm_cnt.dsp, pd0c_ctl_itm_cnt.length)
+        # Init PDAT item as header
+        pnr_locator: str = self._get_pnr_locator()
+        data: Tuple[bytearray, int] = Pnr.get_pnr_data(pnr_locator=pnr_locator, key="20", item_number=1, packed=True)
+        data_length: int = len(data[0])
+        pd0c_ctl_itm_lgth: LabelReference = self.seg.lookup("PD0C_CTL_ITM_LGTH")
+        self.vm.set_value(data_length, heap + pd0c_ctl_itm_lgth.dsp, pd0c_ctl_itm_lgth.length)
+        pd0c_ctl_item: int = self.seg.evaluate("PD0C_CTL_ITEM")
+        self.vm.set_bytes(data[0], heap + pd0c_ctl_item, data_length)
         return node.fall_down
 
 
@@ -322,6 +330,29 @@ class TpfdfMacro(State):
         if error_label and self.is_error(node.label):
             return error_label
 
+        return node.fall_down
+
+    def dbadd(self, node: KeyValue) -> str:
+        self._base_sw00sr()
+        # Get Key
+        pky = node.get_sub_value("KEY1", "PKY")
+        if pky is not None:
+            key = f"{self.seg.evaluate(pky):02X}"
+        else:
+            key = f"{self.seg.evaluate(node.get_sub_value('KEY1', 'S')):02X}"
+        # Get data
+        newlrec: FieldBaseDsp = node.get_value("NEWLREC")
+        source_address: int = self.regs.get_unsigned_value(newlrec.base) + newlrec.dsp
+        length = self.vm.get_value(source_address, 2)
+        data: bytearray = self.vm.get_bytes(source_address, length)
+        # Build the lrec
+        data_bytes: bytearray = DataType("H", input=str(length + 3)).to_bytes(length=2)
+        key_bytes: bytearray = DataType("X", input=key).to_bytes(length=1)
+        data_bytes.extend(key_bytes)
+        data_bytes.extend(data)
+        # Add it
+        ref_name = node.get_value("REF")
+        Tpfdf.add_bytes(data=data_bytes, key=key, ref_name=ref_name)
         return node.fall_down
 
 

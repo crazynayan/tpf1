@@ -299,7 +299,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["DBREP"] = self.not_implemented
         self._ex["DBMOD"] = self.not_implemented
         self._ex["DBDEL"] = self.not_implemented
-        self._ex["DBADD"] = self.no_operation
+        self._ex["DBADD"] = self.dbadd
 
         # No operation
         self._ex["EQU"] = self.no_operation

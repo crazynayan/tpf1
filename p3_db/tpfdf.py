@@ -43,6 +43,15 @@ class Tpfdf:
         ref.append(lrec)
 
     @staticmethod
+    def add_bytes(data: bytearray, key: str, ref_name: str) -> None:
+        ref = Tpfdf.get_ref(ref_name)
+        macros[ref_name].load()
+        lrec = dict()
+        lrec['key'] = key
+        lrec['data'] = data
+        ref.append(lrec)
+
+    @staticmethod
     def init_db(ref_name: Optional[str] = None):
         if ref_name is None:
             Tpfdf.DB = list()
