@@ -48,10 +48,6 @@ class DataMacro(DataMacroImplementation):
                 pass
             except NotFoundInSymbolTableError:
                 second_list.append((line, self._location_counter))
-        # # Add the saved equates which were not added in the first pass
-        # self._second_pass("EQU", second_list)
-        # # Add the saved DS which were not added in the first pass
-        # self._second_pass("DS", second_list)
         self._second_pass(second_list)
         return
 
