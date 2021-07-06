@@ -11,7 +11,6 @@ class NameSuccessETAW(NameGeneral):
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
         self.assertEqual(self.SUCCESS_END, self.output.last_line)
-        self.assertListEqual(list(), self.output.dumps)
         self.assertEqual("F0F0", test_data.get_field("WA0EXT"))
         self.assertEqual("01", test_data.get_field("WA0PTY"))
 
@@ -21,7 +20,6 @@ class NameSuccessETAW(NameGeneral):
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
         self.assertEqual(self.SUCCESS_END, self.output.last_line)
-        self.assertListEqual(list(), self.output.dumps)
         self.assertEqual("F0F0", test_data.get_field("WA0EXT"))
         self.assertEqual(f"{99:02X}", test_data.get_field("WA0PTY"))
 
@@ -32,7 +30,6 @@ class NameSuccessETAW(NameGeneral):
         self.output = test_data.output
         self.assertEqual(self.FMSG_END, self.output.last_line, self.output.last_node)
         self.assertIn("VERIFY NAME ASSOCIATED DATA", self.output.messages)
-        self.assertListEqual(list(), self.output.dumps)
         self.assertEqual("F0F0", test_data.get_field("WA0EXT"))
         self.assertEqual("04", test_data.get_field("WA0PTY"))
         self.assertEqual(7, self.output.regs["R6"])  # Call to ETK2 with R6=7 will ensure Name association is deleted
@@ -55,7 +52,6 @@ class NameSuccessETAW(NameGeneral):
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
         self.assertEqual(self.SUCCESS_END, self.output.last_line)
-        self.assertListEqual(list(), self.output.dumps)
         self.assertEqual("F1F9", test_data.get_field("WA0EXT"))
         self.assertEqual(f"{21:02X}", test_data.get_field("WA0PTY"))
         self.assertEqual("80", test_data.get_field("EBW038"))
@@ -68,7 +64,6 @@ class NameSuccessETAW(NameGeneral):
         self.output = test_data.output
         self.assertEqual(self.SUCCESS_END, self.output.last_line)
         self.assertEqual("80", test_data.get_field("EBW038"))
-        self.assertListEqual(list(), self.output.dumps)
         self.assertEqual("F2F2", test_data.get_field("WA0EXT"))
         self.assertEqual(f"{25:02X}", test_data.get_field("WA0PTY"))
         self.assertEqual("10", test_data.get_field("EBSW01"))
@@ -164,7 +159,6 @@ class NameSuccessETAW(NameGeneral):
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
         self.assertEqual(self.SUCCESS_END, self.output.last_line)
-        self.assertListEqual(list(), self.output.dumps)
         self.assertEqual("F1F4", test_data.get_field("WA0EXT"))
         self.assertEqual(f"{24:02X}", test_data.get_field("WA0PTY"))
         self.assertEqual("03", test_data.get_field("EBW010"))
