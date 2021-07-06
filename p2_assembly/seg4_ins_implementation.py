@@ -249,8 +249,11 @@ class InstructionImplementation(InstructionOperand):
         operand1, operand2 = line.split_operands()
         reg = Register(operand1)
         if not reg.is_valid():
-            raise RegisterInvalidError
-        field = self.field_index(operand2)
+            raise RegisterInvalidError(line)
+        try:
+            field = self.field_index(operand2)
+        except RegisterInvalidError:
+            raise RegisterInvalidError(line)
         return RegisterFieldIndex(line, reg, field)
 
     def reg_data(self, line: Line) -> RegisterData:
