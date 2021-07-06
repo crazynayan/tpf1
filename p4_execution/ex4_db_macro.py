@@ -184,6 +184,17 @@ class UserDefinedDbMacro(State):
         Pnr.replace_pnr_data(data=data, pnr_locator=pnr_locator, key=key, item_number=item_number, packed=packed)
         return node.fall_down
 
+    def pdctl(self, node: KeyValue) -> str:
+        # Get the base of PD0WRK
+        pd0_base = self._pd0_base(node)
+        if pd0_base == 0:
+            raise TPFServerMemoryError
+        # Init ctl heap
+        heap = self.vm.allocate()
+        pd0_ctl_tbl_hp = self.seg.evaluate("PD0_CTL_TBL_HP")
+        self.vm.set_value(heap, pd0_base + pd0_ctl_tbl_hp)
+        return node.fall_down
+
 
 class RealTimeDbMacro(State):
 
