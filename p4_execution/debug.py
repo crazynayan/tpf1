@@ -6,13 +6,17 @@ INDEX, LINE, HITS, NEXT_HITS, LABEL = "index", "line", "hits", "next_hits", "lab
 COMMAND, SEGMENT, OPERANDS = "command", "segment", "operands"
 
 
+def get_label(label: str, segment: str) -> str:
+    return f"{segment}-{label}"
+
+
 class Trace:
-    def __init__(self, node: InstructionType, segment):
+    def __init__(self, node: InstructionType, segment: str):
         self.index: int = node.index
         self.line: str = str(node)
         self.hits: int = 0
-        self.next_hits: Dict[str, int] = {label: 0 for label in node.next_labels}
-        self.label: str = node.label
+        self.next_hits: Dict[str, int] = {get_label(label, segment): 0 for label in node.next_labels}
+        self.label: str = get_label(node.label, segment)
         self.command: str = node.command
         self.segment: str = segment
         self.operands: str = str()
@@ -41,15 +45,18 @@ class Debug:
         self.seg_list: List[str] = list()
 
     def add_trace(self, nodes: Dict[str, InstructionType], segment: str):
-        traces = {label: Trace(node, segment) for label, node in nodes.items()}
+        traces = {f"{segment}-{label}": Trace(node, segment) for label, node in nodes.items()}
         self.traces = {**traces, **self.traces}
         self.seg_list.append(segment)
 
-    def hit(self, node: InstructionType, next_label: Optional[str]) -> None:
-        if node.label in self.traces:
-            self.traces[node.label].hit(next_label)
+    def hit(self, node: InstructionType, next_label: str, segment: str) -> None:
+        next_seg_label = get_label(next_label, segment)
+        node_label = get_label(node.label, segment)
+        fall_down_label = get_label(node.fall_down, segment)
+        if node_label in self.traces:
+            self.traces[node_label].hit(next_seg_label)
             if node.command in ["ENTRC", "BAS"]:
-                self.traces[node.label].next_hits[node.fall_down] += 1
+                self.traces[node_label].next_hits[fall_down_label] += 1
 
     def get_no_hit(self) -> List[Trace]:
         return [trace for _, trace in self.traces.items() if trace.is_not_hit()]

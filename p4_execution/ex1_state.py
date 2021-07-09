@@ -145,7 +145,7 @@ class State:
     def _ex_command(self, node: InstructionType, execute_label: Optional[str] = None) -> str:
         label = self._ex[node.command](node)
         next_label = str() if execute_label else label
-        self.debug.hit(node, next_label)
+        self.debug.hit(node, next_label, self.seg.seg_name)
         return label
 
     def set_number_cc(self, number: int) -> None:
