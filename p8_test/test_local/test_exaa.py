@@ -76,3 +76,14 @@ class ExaaTest(TestDebug):
         self.assertEqual(self.SUCCESS_END, self.output.last_line, f"{self.output.last_node}--{self.output.dumps}")
         self.assertIn("OK", self.output.messages[0], self.output.debug)
         self.assertEqual("0009", test_data.get_pnr_field("PR00_20_PTY"))
+
+    def test_et2_direct(self) -> None:
+        self._setup_output_pnr_header()
+        self.test_data.set_field("WA0PTY", DataType("X", input="03").to_bytes())
+        self.test_data.add_pnr_element(["3ZAVERI/NAYAN/PURVI/SANAY"], NAME)
+        self.test_data.add_pnr_element(["NAYAN"], RCVD_FROM)
+        self.test_data.add_pnr_element(["123456"], PHONE)
+        test_data = self.tpf_server.run("EWA1", self.test_data)
+        self.output = test_data.output
+        self.assertEqual(self.SUCCESS_END, self.output.last_line, f"{self.output.last_node}--{self.output.dumps}")
+        self.assertEqual("0003", test_data.get_pnr_field("PR00_20_PTY"))
