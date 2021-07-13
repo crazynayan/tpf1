@@ -84,20 +84,21 @@ class State:
             self.vm.set_value(1, ce1ct + 1, 1)
 
     def _init_globals(self) -> None:
-        mh00c = config.GLOBAL + macros["GLOBAL"].evaluate("@MH00C")
-        self.vm.set_value(self.vm.allocate(), mh00c)
-        haalc = config.GLOBAL + macros['GLOBAL'].evaluate('@HAALC')
+        for global_name in ("@MH00C", "@APCIB"):
+            address = config.GLOBAL + macros["GLOBAL"].evaluate(global_name)
+            self.vm.set_value(self.vm.allocate(), address)
+        haalc = config.GLOBAL + macros["GLOBAL"].evaluate("@HAALC")
         self.vm.set_bytes(bytearray([0xC1, 0xC1]), haalc, 2)
-        u1dmo = config.GLOBAL + macros['GLOBAL'].evaluate('@U1DMO')
+        u1dmo = config.GLOBAL + macros["GLOBAL"].evaluate("@U1DMO")
         now = datetime.utcnow()
         today = datetime(year=now.year, month=now.month, day=now.day)
         pars_today = (today - config.PARS_DAY_1).days
         self.vm.set_value(pars_today, u1dmo, 2)
-        tjord = config.GLOBAL + macros['GLOBAL'].evaluate('@TJORD')
+        tjord = config.GLOBAL + macros["GLOBAL"].evaluate("@TJORD")
         self.vm.set_value(0x00088EDC, tjord)
-        multi_host = config.GLOBAL + macros['GLOBAL'].evaluate('@MHSTC')
+        multi_host = config.GLOBAL + macros["GLOBAL"].evaluate("@MHSTC")
         self.vm.set_value(config.MULTI_HOST, multi_host)
-        u1tym = config.GLOBAL + macros['GLOBAL'].evaluate('@U1TYM')
+        u1tym = config.GLOBAL + macros["GLOBAL"].evaluate("@U1TYM")
         time: str = f"{now.hour:02}{now.minute:02}"
         time_bytes: bytearray = DataType("C", input=time).to_bytes()
         self.vm.set_bytes(time_bytes, u1tym, len(time_bytes))
