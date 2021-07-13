@@ -125,6 +125,7 @@ class RealtimeMacroImplementation(InstructionImplementation):
         self._command["CREEC"] = self.key_value
         self._command["KEYRC"] = self.key_value
         self._command["KEYCC"] = self.key_value
+        self._command["SYNCC"] = self.key_value
         self._command["GLBLC"] = self.key_value
         self._command["REALTIME"] = self.key_value
         self._command["REALTIMA"] = self.key_value
