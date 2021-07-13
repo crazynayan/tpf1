@@ -99,7 +99,9 @@ class RealtimeMacroImplementation(InstructionImplementation):
         self._command["FACE"] = self.instruction_generic
         self._command["FINWC"] = self.key_value
         self._command["FIWHC"] = self.key_value
+        self._command["SONIC"] = self.key_value
         self._command["FILEC"] = self.key_value
+        self._command["FILUC"] = self.key_value
         self._command["GETFC"] = self.key_value
         self._command["PNAMC"] = self.pnamc
         self._command["SYSRA"] = self.key_value
@@ -120,6 +122,7 @@ class RealtimeMacroImplementation(InstructionImplementation):
         self._command["DLAYC"] = self.key_value
         self._command["DEFRC"] = self.key_value
         self._command["CREMC"] = self.key_value
+        self._command["CREEC"] = self.key_value
         self._command["KEYRC"] = self.key_value
         self._command["KEYCC"] = self.key_value
         self._command["GLBLC"] = self.key_value
@@ -134,6 +137,7 @@ class RealtimeMacroImplementation(InstructionImplementation):
         self._command["UNFRC"] = self.key_value
         self._command["POSTC"] = self.key_value
         self._command["MALOC"] = self.key_value
+        self._command["CALOC"] = self.key_value
         self._command["FREEC"] = self.key_value
 
     def key_value(self, line: Line) -> KeyValue:
