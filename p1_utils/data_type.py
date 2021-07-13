@@ -193,11 +193,15 @@ class NumericDataType(DataTypeGeneric):
         return round(float(self.input)) if self.input is not None else self.from_bytes()
 
     def to_bytes(self, length: int = None) -> bytearray:
-        length = length or self.length
+        number_length = length or self.length
+        number = self.value
         try:
-            return bytearray(self.value.to_bytes(length, 'big', signed=True))
+            return bytearray(number.to_bytes(number_length, 'big', signed=True))
         except OverflowError:
-            return bytearray(self.value.to_bytes(self.length, 'big', signed=True)[(self.length - length):])
+            try:
+                return bytearray(number.to_bytes(self.length, 'big', signed=True)[(self.length - number_length):])
+            except OverflowError:
+                return bytearray(number.to_bytes(number_length, 'big', signed=False))
 
     def from_bytes(self) -> int:
         return int.from_bytes(self.bytes, 'big', signed=True)
