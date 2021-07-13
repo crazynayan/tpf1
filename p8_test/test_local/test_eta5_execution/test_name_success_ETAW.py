@@ -55,7 +55,6 @@ class NameSuccessETAW(NameGeneral):
         self.assertEqual("F1F9", test_data.get_field("WA0EXT"))
         self.assertEqual(f"{21:02X}", test_data.get_field("WA0PTY"))
         self.assertEqual("80", test_data.get_field("EBW038"))
-        self.assertEqual("10", test_data.get_field("EBSW01"))
 
     def test_group_Z_ETAW_wa0pyt_no_match(self) -> None:
         self.test_data.add_pnr_element(["Z/25SABRE", "3SHAH"], "name")
@@ -66,7 +65,6 @@ class NameSuccessETAW(NameGeneral):
         self.assertEqual("80", test_data.get_field("EBW038"))
         self.assertEqual("F2F2", test_data.get_field("WA0EXT"))
         self.assertEqual(f"{25:02X}", test_data.get_field("WA0PTY"))
-        self.assertEqual("10", test_data.get_field("EBSW01"))
 
     def test_group_C_not_at_start_wa0pty_history_no_match_ETAW(self):
         self.test_data.add_pnr_element(["10ZAVERI", "C/21TOURS", "1SHAH"], "name")
