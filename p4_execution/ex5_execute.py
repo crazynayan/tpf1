@@ -211,12 +211,14 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["REALTIMA"] = self.realtima
         self._ex["SWISC"] = self.not_implemented
         self._ex["CREDC"] = self.not_implemented
+        self._ex["CREEC"] = self.not_implemented
         self._ex["WAITC"] = self.not_implemented
         self._ex["UNFRC"] = self.not_implemented
         self._ex["FILNC"] = self.not_implemented
         self._ex["POSTC"] = self.not_implemented
         self._ex["FREEC"] = self.not_implemented
         self._ex["MALOC"] = self.not_implemented
+        self._ex["CALOC"] = self.not_implemented
 
         # SPM Macros
         self._ex["#IF"] = self.not_implemented
@@ -278,8 +280,10 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["FINWC"] = self.finwc
         self._ex["FIWHC"] = self.finwc
         self._ex["FILEC"] = self.not_implemented
+        self._ex["FILUC"] = self.not_implemented
         self._ex["GETFC"] = self.not_implemented
-        # FINWC, FINDC, FINHC
+        self._ex["SONIC"] = self.not_implemented
+        # FINHC
         # FILNC
 
         # User defined Db Macros
