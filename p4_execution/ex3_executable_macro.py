@@ -159,6 +159,14 @@ class RealTimeMacro(State):
         self._init_seg(seg_name)
         return branch
 
+    def maloc(self, node: KeyValue) -> str:
+        size_reg: str = node.get_value("SIZE")
+        reg: Register = Register(size_reg)
+        if not reg.is_valid():
+            raise UserDefinedMacroExecutionError(node)
+        self.regs.set_value(self.vm.allocate(), reg)
+        return node.fall_down
+
     def pnamc(self, node: KeyValue) -> str:
         field: FieldBaseDsp = node.get_value("FIELD")
         self.vm.set_bytes(self.fields["CE3ENTPGM"], self.regs.get_value(field.base) + field.dsp, 4)

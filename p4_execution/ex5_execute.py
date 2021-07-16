@@ -219,7 +219,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["FILNC"] = self.not_implemented
         self._ex["POSTC"] = self.not_implemented
         self._ex["FREEC"] = self.not_implemented
-        self._ex["MALOC"] = self.not_implemented
+        self._ex["MALOC"] = self.maloc
         self._ex["CALOC"] = self.not_implemented
         self._ex["LISTC"] = self.not_implemented
 
