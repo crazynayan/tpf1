@@ -9,7 +9,7 @@ from p2_assembly.seg2_ins_operand import InstructionOperand
 from p2_assembly.seg3_ins_type import InstructionGeneric, FieldBits, FieldLenField, FieldLenFieldLen, FieldData, \
     RegisterRegister, RegisterFieldIndex, RegisterData, RegisterRegisterField, RegisterDataField, BranchCondition, \
     RegisterBranch, BranchConditionRegister, FieldSingle, RegisterRegisterBranch, InstructionType, \
-    FieldLenFieldData, BranchGeneric
+    FieldLenFieldData, BranchGeneric, FieldSingleBaseDsp
 
 
 class InstructionImplementation(InstructionOperand):
@@ -43,6 +43,7 @@ class InstructionImplementation(InstructionOperand):
         self._command["CP"] = self.field_len_field_len
         self._command["SRP"] = self.field_len_field_data
         self._command["TP"] = self.field_single
+        self._command["STCK"] = self.field_single_base_dsp
         self._command["CLI"] = self.field_data
         self._command["CLHHSI"] = self.field_data
         self._command["MVI"] = self.field_data
@@ -226,6 +227,10 @@ class InstructionImplementation(InstructionOperand):
     def field_single(self, line: Line) -> FieldSingle:
         field = self.field_len(line.operand, FieldSingle.MAX_LEN)
         return FieldSingle(line, field)
+
+    def field_single_base_dsp(self, line: Line) -> FieldSingleBaseDsp:
+        field = self.field_base_dsp(line.operand)
+        return FieldSingleBaseDsp(line, field)
 
     def field_len_field_data(self, line: Line) -> FieldLenFieldData:
         operand1, operand2, operand3 = line.split_operands()

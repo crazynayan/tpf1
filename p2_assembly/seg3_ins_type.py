@@ -90,6 +90,15 @@ class FieldSingle(InstructionGeneric):
         return f"{super().__repr__()}:{self.field}"
 
 
+class FieldSingleBaseDsp(InstructionGeneric):
+    def __init__(self, line: Line, field: FieldBaseDsp):
+        super().__init__(line)
+        self.field: FieldBaseDsp = field
+
+    def __repr__(self) -> str:
+        return f"{super().__repr__()}:{self.field}"
+
+
 class FieldLenFieldData(InstructionGeneric):
     MAX_LEN = 16
     MAX_VALUE = 9
