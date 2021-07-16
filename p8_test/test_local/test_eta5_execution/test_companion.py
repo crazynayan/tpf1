@@ -69,7 +69,7 @@ class Companion(NameGeneral):
         self.test_data.add_pnr_field_data(itin_2811_2812, "itin", "DGHWCL")
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
-        self.assertEqual(self.SUCCESS_END, self.output.last_line)
+        self.assertEqual(self.IGR1_END, self.output.last_line)
         self.assertEqual("E6D7F8F9", test_data.get_field("EBX000"))
         self.assertEqual("01", test_data.get_field("WA0PTY"))
 
@@ -80,7 +80,7 @@ class Companion(NameGeneral):
         self.test_data.add_pnr_field_data(itin_2811_2812, "itin", "DGHWCL")
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
-        self.assertEqual(self.SUCCESS_END, self.output.last_line)
+        self.assertEqual(self.IGR1_END, self.output.last_line)
         self.assertEqual("E6D7F8F9", test_data.get_field("EBX000"))
         self.assertEqual("01", test_data.get_field("WA0PTY"))
 
@@ -91,7 +91,7 @@ class Companion(NameGeneral):
         self.test_data.add_pnr_field_data(itin_2811_2812, "itin", "DGHWCL")
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
-        self.assertEqual(self.SUCCESS_END, self.output.last_line)
+        self.assertEqual(self.IGR1_END, self.output.last_line)
         self.assertEqual("E6D7F8F9", test_data.get_field("EBX000"))
         self.assertEqual("01", test_data.get_field("WA0PTY"))
 
@@ -102,7 +102,7 @@ class Companion(NameGeneral):
         self.test_data.tpfdf = list()
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
-        self.assertEqual(self.SUCCESS_END, self.output.last_line)
+        self.assertEqual(self.IGR1_END, self.output.last_line)
         self.assertNotEqual("E6D7F8F9", test_data.get_field("EBX000"))
         self.assertEqual("01", test_data.get_field("WA0PTY"))
 
@@ -111,7 +111,7 @@ class Companion(NameGeneral):
         self.test_data.errors.append("ETA92100.1")
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
-        self.assertEqual(self.SUCCESS_END, self.output.last_line)
+        self.assertEqual(self.IGR1_END, self.output.last_line)
         self.assertNotEqual("E6D7F8F9", test_data.get_field("EBX000"))
         self.assertEqual("01", test_data.get_field("WA0PTY"))
 
@@ -120,7 +120,7 @@ class Companion(NameGeneral):
         self.test_data.errors.append("ETA92300.1")
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
-        self.assertEqual(self.SUCCESS_END, self.output.last_line)
+        self.assertEqual(self.IGR1_END, self.output.last_line)
         self.assertNotEqual("E6D7F8F9", test_data.get_field("EBX000"))
         self.assertEqual("01", test_data.get_field("WA0PTY"))
 
@@ -129,7 +129,7 @@ class Companion(NameGeneral):
         self.test_data.errors.append("ETA92300.10")
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
-        self.assertEqual(self.SUCCESS_END, self.output.last_line)
+        self.assertEqual(self.IGR1_END, self.output.last_line)
         self.assertNotEqual("E6D7F8F9", test_data.get_field("EBX000"))
         self.assertEqual("01", test_data.get_field("WA0PTY"))
 
@@ -138,7 +138,7 @@ class Companion(NameGeneral):
         self.test_data.errors.append("PRP1ERR")
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
-        self.assertEqual(self.SUCCESS_END, self.output.last_line)
+        self.assertEqual(self.IGR1_END, self.output.last_line)
         self.assertNotEqual("E6D7F8F9", test_data.get_field("EBX000"))
         self.assertEqual("01", test_data.get_field("WA0PTY"))
 
@@ -147,7 +147,7 @@ class Companion(NameGeneral):
         self.test_data.errors.append("ETA92300.27")
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
-        self.assertEqual(self.SUCCESS_END, self.output.last_line)
+        self.assertEqual(self.IGR1_END, self.output.last_line)
         self.assertNotEqual("E6D7F8F9", test_data.get_field("EBX000"))
         self.assertEqual("01", test_data.get_field("WA0PTY"))
 
@@ -156,7 +156,7 @@ class Companion(NameGeneral):
         self.test_data.errors.append("ETA92400.1")
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
-        self.assertEqual(self.SUCCESS_END, self.output.last_line)
+        self.assertEqual(self.IGR1_END, self.output.last_line)
         self.assertNotEqual("E6D7F8F9", test_data.get_field("EBX000"))
         self.assertEqual("01", test_data.get_field("WA0PTY"))
 
@@ -166,7 +166,7 @@ class Companion(NameGeneral):
         self.test_data.errors.append("ETA92500.1")
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
-        self.assertEqual(self.SUCCESS_END, self.output.last_line)
+        self.assertEqual(self.IGR1_END, self.output.last_line)
         self.assertNotEqual("E6D7F8F9", test_data.get_field("EBX000"))
         self.assertEqual("01", test_data.get_field("WA0PTY"))
 
@@ -177,7 +177,7 @@ class Companion(NameGeneral):
         self.test_data.errors.append("ETA92500.11")
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
-        self.assertEqual(self.SUCCESS_END, self.output.last_line, self.output.last_node)
+        self.assertEqual(self.IGR1_END, self.output.last_line, self.output.last_node)
         self.assertNotEqual("E6D7F8F9", test_data.get_field("EBX000"))
         self.assertEqual("01", test_data.get_field("WA0PTY"))
 
@@ -188,7 +188,7 @@ class Companion(NameGeneral):
         self.test_data.errors.append("ETA92500.24")
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
-        self.assertEqual(self.SUCCESS_END, self.output.last_line)
+        self.assertEqual(self.IGR1_END, self.output.last_line)
         self.assertEqual("E6D7F8F9", test_data.get_field("EBX000"))
         self.assertEqual("01", test_data.get_field("WA0PTY"))
 
@@ -199,6 +199,6 @@ class Companion(NameGeneral):
         self.test_data.errors.append("WP89ERR")
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
-        self.assertEqual(self.SUCCESS_END, self.output.last_line)
+        self.assertEqual(self.IGR1_END, self.output.last_line)
         self.assertEqual("E6D7F8F9", test_data.get_field("EBX000"))
         self.assertEqual("01", test_data.get_field("WA0PTY"))
