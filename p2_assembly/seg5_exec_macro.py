@@ -140,6 +140,7 @@ class RealtimeMacroImplementation(InstructionImplementation):
         self._command["MALOC"] = self.key_value
         self._command["CALOC"] = self.key_value
         self._command["FREEC"] = self.key_value
+        self._command["LISTC"] = self.key_value
 
     def key_value(self, line: Line) -> KeyValue:
         operands_list: List[str] = line.split_operands()
@@ -288,6 +289,7 @@ class UserDefinedMacroImplementation(StructuredProgrammingMacroImplementation):
         self._command["SONIC"] = self.executable_data_macro
         self._command["CINFC"] = self.key_value
         self._command["TYCVA"] = self.key_value
+        self._command["ALPHA"] = self.key_value
         # Tool specific commands
         self._command["ERROR_CHECK"] = self.key_value
         self._command["PARS_DATE"] = self.key_value
