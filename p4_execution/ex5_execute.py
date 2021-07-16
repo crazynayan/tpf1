@@ -190,7 +190,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["SENDA"] = self.senda
         self._ex["SYSRA"] = self.sysra
         self._ex["SERRC"] = self.serrc
-        self._ex["SNAPC"] = self.not_implemented
+        self._ex["SNAPC"] = self.snapc
         self._ex["ENTRC"] = self.entrc
         self._ex["ENTNC"] = self.entnc
         self._ex["ENTDC"] = self.entdc

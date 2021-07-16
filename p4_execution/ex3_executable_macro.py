@@ -131,6 +131,13 @@ class RealTimeMacro(State):
         else:
             raise DumpExecutionError
 
+    def snapc(self, node: KeyValue) -> str:
+        dump = node.keys[1]
+        if len(dump) != 6:
+            raise DumpExecutionError(node)
+        self.dumps.append(dump)
+        return node.fall_down
+
     def entrc(self, node: SegmentCall) -> str:
         if node.keys[0] not in segments:
             raise SegmentNotFoundError
