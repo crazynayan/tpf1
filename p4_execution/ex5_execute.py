@@ -202,7 +202,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["EOWNRC"] = self.no_operation
         self._ex["DLAYC"] = self.not_implemented
         self._ex["DEFRC"] = self.not_implemented
-        self._ex["CREMC"] = self.not_implemented
+        self._ex["CREMC"] = self.no_operation
         self._ex["KEYCC"] = self.not_implemented
         self._ex["KEYRC"] = self.not_implemented
         self._ex["SYNCC"] = self.not_implemented
