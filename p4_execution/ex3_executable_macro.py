@@ -154,8 +154,11 @@ class RealTimeMacro(State):
         self._init_seg(node.keys[0])
         return node.goes
 
-    def backc(self, _) -> str:
-        branch, seg_name = self.call_stack.pop()
+    def backc(self, node) -> str:
+        try:
+            branch, seg_name = self.call_stack.pop()
+        except IndexError:
+            raise SegmentNotFoundError(node)
         self._init_seg(seg_name)
         return branch
 
