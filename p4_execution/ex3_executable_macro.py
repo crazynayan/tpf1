@@ -175,7 +175,8 @@ class RealTimeMacro(State):
 
 class UserDefinedMacro(State):
 
-    def realtima(self, node: KeyValue) -> str:
+    @staticmethod
+    def realtima(node: KeyValue) -> str:
         realtime_label = node.get_value("YES") if node.get_value("YES") else node.fall_down
         return realtime_label
 
@@ -261,6 +262,8 @@ class UserDefinedMacro(State):
             if not_mcp_label and self.get_partition() not in {"LA", "4M", "XL"}:
                 return not_mcp_label
             return match_label if self.get_partition() in {"LA"} else not_match_label
+        if node.get_value("NO"):
+            return match_label if self.get_partition() in {"LA", "4M", "XL"} else not_match_label
         raise McpckExecutionError
 
     @staticmethod
