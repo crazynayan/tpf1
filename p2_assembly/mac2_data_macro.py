@@ -39,6 +39,9 @@ class DataMacro(DataMacroImplementation):
         lines = Line.from_file(file_lines)
         # Remove suffix like &CG1 from label and only keep the accepted commands.
         lines = [line.remove_suffix() for line in lines if line.command in self._command]
+        # Add the macro name in symbol table
+        line = Line.from_line(f"{self.name} EQU *")
+        lines.insert(0, line)
         # Create LabelReference for each label and add it to dummy macro data_map.
         second_list: List[Tuple[Line, int]] = list()
         for line in lines:
