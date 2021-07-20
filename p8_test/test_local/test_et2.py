@@ -23,6 +23,7 @@ class Et2Test(TestDebug):
             {
                 "WI0SZE": b64encode(DataType("X", input="F0").to_bytes()).decode(),
                 "WI0ARC": b64encode(DataType("C", input="BA").to_bytes()).decode(),
+                "WI0TYP": b64encode(DataType("X", input="04").to_bytes()).decode(),
             }
         ]
         self.test_data.add_pnr_field_data(itin_input, ITIN)
