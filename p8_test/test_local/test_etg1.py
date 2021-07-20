@@ -60,7 +60,7 @@ class Etg1Test(TestDebug):
         self._mini_tjr_setup("00")
         test_data = self.tpf_server.run("ETA1", self.test_data)
         self.output = test_data.output
-        self.assertEqual(self.SUCCESS_END, self.output.last_line, f"{self.output.last_node}--{self.output.dumps}")
+        self.assertEqual(self.IGR1_END, self.output.last_line, f"{self.output.last_node}--{self.output.dumps}")
         self.assertIn("OK", self.output.messages[0], self.output.debug)
 
     def test_etg1_insurance_no_main_tjr(self) -> None:

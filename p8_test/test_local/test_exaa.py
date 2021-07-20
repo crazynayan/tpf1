@@ -56,7 +56,7 @@ class ExaaTest(TestDebug):
         self._mini_tjr_setup("00")
         test_data = self.tpf_server.run("ETA1", self.test_data)
         self.output = test_data.output
-        self.assertEqual(self.SUCCESS_END, self.output.last_line, f"{self.output.last_node}--{self.output.dumps}")
+        self.assertEqual(self.IGR1_END, self.output.last_line, f"{self.output.last_node}--{self.output.dumps}")
         self.assertIn("OK", self.output.messages[0], self.output.debug)
         self.assertEqual("0007", test_data.get_pnr_field("PR00_20_PTY"))
 
@@ -73,6 +73,6 @@ class ExaaTest(TestDebug):
         self._mini_tjr_setup("00")
         test_data = self.tpf_server.run("ETA1", self.test_data)
         self.output = test_data.output
-        self.assertEqual(self.SUCCESS_END, self.output.last_line, f"{self.output.last_node}--{self.output.dumps}")
+        self.assertEqual(self.IGR1_END, self.output.last_line, f"{self.output.last_node}--{self.output.dumps}")
         self.assertIn("OK", self.output.messages[0], self.output.debug)
         self.assertEqual("0009", test_data.get_pnr_field("PR00_20_PTY"))
