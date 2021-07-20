@@ -312,6 +312,16 @@ class Register:
     def is_valid(self) -> bool:
         return self.reg != config.REG_INVALID
 
+    def is_even(self) -> bool:
+        return self.reg in config.REGISTERS_EVEN
+
+    def get_next_register(self) -> 'Register':
+        if not self.is_valid():
+            return self
+        if self.reg == "R15":
+            return Register("R0")
+        return Register(config.REGISTERS[self.value + 1])
+
     @property
     def value(self) -> int:
         return config.REGISTERS.index(self.reg)

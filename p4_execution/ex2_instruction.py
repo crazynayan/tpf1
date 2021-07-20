@@ -5,7 +5,7 @@ from p1_utils.data_type import DataType, Register, PDataType
 from p1_utils.errors import PackExecutionError, BctExecutionError, ExExecutionError
 from p2_assembly.seg3_ins_type import RegisterRegister, RegisterFieldIndex, RegisterData, RegisterDataField, \
     RegisterRegisterField, FieldLenField, FieldData, BranchCondition, RegisterBranch, BranchConditionRegister, \
-    FieldBits, FieldLenFieldLen, FieldSingle
+    FieldBits, FieldLenFieldLen, FieldSingle, RegisterRegisterBranch
 from p4_execution.ex1_state import State
 
 
@@ -312,6 +312,15 @@ class MoveLogicControl(State):
         else:
             label = node.fall_down
         return label
+
+    def branch_on_index_low_or_equal(self, node: RegisterRegisterBranch) -> str:
+        increment: Register = node.reg2
+        comparator: Register = node.reg2.get_next_register() if node.reg2.is_even() else node.reg2
+        sum: int = self.regs.get_value(node.reg1) + self.regs.get_value(increment)
+        self.regs.set_value(sum, node.reg1)
+        if sum <= self.regs.get_value(comparator):
+            return self.index_to_label(node.branch)
+        return node.fall_down
 
 
 class CompareLogical(State):
