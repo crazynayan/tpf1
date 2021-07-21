@@ -114,7 +114,7 @@ class MacroGeneric:
                 elif expression == "*":
                     value = self._location_counter
                 elif expression.isdigit() or (expression[0] == "-" and expression[1:].isdigit()):
-                    value = expression
+                    value = str(int(expression))
                 elif Register(expression).is_valid():
                     value = Register(expression).value
                 else:
@@ -123,7 +123,11 @@ class MacroGeneric:
         eval_list.extend(parenthesis)
         eval_list.sort(key=lambda item: item[0])
         eval_list = [expression for _, expression in eval_list]
-        return int(eval("".join(eval_list)))
+        try:
+            return_value = int(eval("".join(eval_list)))
+        except SyntaxError:
+            raise SyntaxError(operand)
+        return return_value
 
     def is_based(self, operand: str) -> bool:
         if operand == "*":
