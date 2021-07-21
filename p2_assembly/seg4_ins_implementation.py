@@ -262,6 +262,8 @@ class InstructionImplementation(InstructionOperand):
             field = self.field_index(operand2)
         except RegisterInvalidError:
             raise RegisterInvalidError(line)
+        except NotFoundInSymbolTableError:
+            raise NotFoundInSymbolTableError(line)
         return RegisterFieldIndex(line, reg, field)
 
     def reg_data(self, line: Line) -> RegisterData:
