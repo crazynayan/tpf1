@@ -194,7 +194,10 @@ class InstructionImplementation(InstructionOperand):
             operand1, operand2 = line.split_operands()
         except ValueError:
             raise AssemblyError(line)
-        field = self.field_base_dsp(operand1)
+        try:
+            field = self.field_base_dsp(operand1)
+        except NotFoundInSymbolTableError:
+            raise NotFoundInSymbolTableError(line)
         bits = self.get_bits(operand2)
         return FieldBits(line, field, bits)
 
