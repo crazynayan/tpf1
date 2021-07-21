@@ -9,6 +9,7 @@ from p3_db.stream import Stream
 NAME, HFAX, FQTV, ITIN, RCVD_FROM, PHONE, REMARKS = "name", "hfax", "fqtv", "itin", "rcvd_from", "phone", "remarks"
 SUBS_CARD_SEG, GROUP_PLAN, RECORD_LOC, PRS_SEATS = "subs_card_seg", "group_plan", "record_loc", "prs_seats"
 HEADER, VCR_COUPON, ICE_DATA, GFAX, ADM_CLUB = "header", "vcr_coupon", "ice_data", "gfax", "adm_club"
+TKT_TIM_LMT = "tkt_tim_lmt"
 
 
 class PnrAttribute:
@@ -65,6 +66,7 @@ class Pnr:
         PnrAttribute(VCR_COUPON, "64", std_var=bytearray([0x80])),  # Indicate NEW item
         PnrAttribute(ICE_DATA, "38", std_var=bytearray([0x80])),  # Indicate NEW item
         PnrAttribute(ADM_CLUB, "82", std_var=bytearray([0x80])),  # Indicate NEW item
+        PnrAttribute(TKT_TIM_LMT, "68", std_var=bytearray([0x80])),  # Indicate NEW item
     ]
 
     @classmethod
