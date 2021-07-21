@@ -328,6 +328,11 @@ class UserDefinedMacro(State):
             self.vm.set_value(ordinal, pnrcm_base + self.seg.evaluate("PM1FAD"))
         return node.fall_down
 
+    def pnrua(self, node: KeyValue) -> str:
+        # Ensure PNRUA always return an error by setting R0 to 1
+        self.regs.set_value(1, "R0")
+        return node.fall_down
+
     def pars_date(self, node: KeyValue) -> str:
         # Get the option_byte and do the conversion
         option_byte = self.vm.get_byte(self.regs.R6)
