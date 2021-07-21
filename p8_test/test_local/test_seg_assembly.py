@@ -7,8 +7,8 @@ from p4_execution.ex5_execute import TpfServer
 
 
 class SegmentTest(unittest.TestCase):
-    NUMBER_OF_FILES: int = 124
-    SEG_NAME: str = "EXE3"
+    NUMBER_OF_FILES: int = 125
+    SEG_NAME: str = "EXE6"
 
     def test_files(self):
         self.assertTrue("TS02" in segments)
