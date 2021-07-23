@@ -48,5 +48,5 @@ class Et2Test(TestDebug):
         self._setup_input_itin()
         test_data = self.tpf_server.run("EWA1", self.test_data)
         self.output = test_data.output
-        self.assertEqual(self.SUCCESS_END, self.output.last_line, f"{self.output.last_node}--{self.output.dumps}")
+        self.assertEqual(self.IGR1_END, self.output.last_line, f"{self.output.last_node}--{self.output.dumps}")
         self.assertEqual("0003", test_data.get_pnr_field("PR00_20_PTY"))
