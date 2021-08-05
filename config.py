@@ -14,6 +14,8 @@ class Config:
     # Used by flask_app.auth
     DEFAULT_PASSWORD = b64encode(os.urandom(24)).decode()
     DEFAULT_TOKEN = b64encode(os.urandom(24)).decode()
+    ADMIN, MEMBER = "admin", "member"
+    ROLES = [ADMIN, MEMBER]
 
     # Used by flask
     SECRET_KEY = os.environ.get("SECRET_KEY") or b64encode(os.urandom(24)).decode()
