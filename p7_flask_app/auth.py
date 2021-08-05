@@ -26,11 +26,18 @@ def basic_auth_error() -> Response:
     return error_response(401)
 
 
-@tpf1_app.route('/tokens', methods=['POST'])
+@tpf1_app.route("/tokens", methods=["POST"])
 @basic_auth.login_required
 def generate_token() -> Response:
-    token = g.current_user.generate_token()
-    return jsonify({'token': token})
+    g.current_user.generate_token()
+    user_response: dict = {
+        "email": g.current_user.email,
+        "id": g.current_user.id,
+        "initial": g.current_user.initial,
+        "role": g.current_user.role,
+        "token": g.current_user.token,
+    }
+    return jsonify(user_response)
 
 
 @token_auth.verify_token
@@ -48,9 +55,14 @@ class User(FirestoreDocument):
 
     def __init__(self):
         super().__init__()
-        self.email: str = str()
+        self.email: str = str()  # email address is the username
+        self.initial: str = str()  # 2 character initial in uppercase
+        self.role: str = config.MEMBER  # Role of the user. Refer config.ROLES
         self.password_hash: str = config.DEFAULT_PASSWORD
         self.token: str = config.DEFAULT_TOKEN
+
+    def __repr__(self):
+        return f"{self.email}|{self.initial}|{self.role}"
 
     def set_password(self, password) -> None:
         self.password_hash = generate_password_hash(password)
@@ -73,15 +85,15 @@ class User(FirestoreDocument):
         if not user:
             return None
         user_dict: Dict[str, str] = dict()
-        user_dict['email'] = user.email
+        user_dict["email"] = user.email
         return user_dict
 
     @classmethod
-    def get_by_token(cls, token: str) -> Optional['User']:
+    def get_by_token(cls, token: str) -> Optional["User"]:
         return cls.objects.filter_by(token=token).first()
 
     @classmethod
-    def get_by_email(cls, email: str) -> Optional['User']:
+    def get_by_email(cls, email: str) -> Optional["User"]:
         return cls.objects.filter_by(email=email).first()
 
 
