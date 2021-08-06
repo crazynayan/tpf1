@@ -2,7 +2,7 @@ from functools import wraps
 from typing import Dict, List
 from urllib.parse import unquote
 
-from flask import Response, jsonify, request
+from flask import Response, jsonify, request, g
 
 from p2_assembly.mac0_generic import LabelReference
 from p2_assembly.mac2_data_macro import macros
@@ -25,6 +25,18 @@ def test_data_required(func):
         return func(test_data_id, *args, **kwargs)
 
     return test_data_wrapper
+
+
+# role_check_required should only be used after test_data_required
+def role_check_required(func):
+    @wraps(func)
+    def role_check_wrapper(test_data_id, *args, **kwargs):
+        test_data: TestData = kwargs[test_data_id]
+        if test_data.owner != g.current_user.email:
+            return error_response(403, "Insufficient privileges to perform this action")
+        return func(test_data_id, *args, **kwargs)
+
+    return role_check_wrapper
 
 
 @tpf1_app.route("/users/<string:doc_id>")
@@ -63,6 +75,7 @@ def get_test_data_header() -> Response:
 @tpf1_app.route("/test_data/<string:test_data_id>/rename", methods=["PATCH"])
 @token_auth.login_required
 @test_data_required
+@role_check_required
 def rename_test_data(test_data_id: str, **kwargs) -> Response:
     header: dict = request.get_json()
     test_data: TestData = kwargs[test_data_id]
@@ -78,6 +91,8 @@ def copy_test_data(test_data_id: str, **kwargs) -> Response:
     new_test_data: TestData = kwargs[test_data_id].copy()
     if not new_test_data:
         return error_response(400, "Error in copying test data")
+    new_test_data.owner = g.current_user.email
+    new_test_data.save()
     return jsonify(new_test_data.get_header_dict())
 
 
@@ -103,7 +118,9 @@ def get_test_data(test_data_id: str, **kwargs) -> Response:
 
 @tpf1_app.route("/test_data/<string:test_data_id>", methods=["DELETE"])
 @token_auth.login_required
-def delete_test_data(test_data_id: str) -> Response:
+@test_data_required
+@role_check_required
+def delete_test_data(test_data_id: str, **_) -> Response:
     test_data_id: str = TestData.delete_test_data(test_data_id)
     if not test_data_id:
         return error_response(404, "Test data id not found")
@@ -113,6 +130,7 @@ def delete_test_data(test_data_id: str) -> Response:
 @tpf1_app.route("/test_data/<string:test_data_id>/output/regs", methods=["PATCH"])
 @token_auth.login_required
 @test_data_required
+@role_check_required
 def add_output_regs(test_data_id: str, **kwargs) -> Response:
     test_data: TestData = kwargs[test_data_id]
     reg_dict: dict = request.get_json()
@@ -124,6 +142,7 @@ def add_output_regs(test_data_id: str, **kwargs) -> Response:
 @tpf1_app.route("/test_data/<string:test_data_id>/output/cores/<string:macro_name>/fields", methods=["PATCH"])
 @token_auth.login_required
 @test_data_required
+@role_check_required
 def add_output_field(test_data_id: str, macro_name: str, **kwargs) -> Response:
     field_byte_dict: dict = request.get_json()
     field_byte: dict = kwargs[test_data_id].output.create_field_byte(macro_name, field_byte_dict)
@@ -136,6 +155,7 @@ def add_output_field(test_data_id: str, macro_name: str, **kwargs) -> Response:
                 methods=["DELETE"])
 @token_auth.login_required
 @test_data_required
+@role_check_required
 def delete_output_field(test_data_id: str, macro_name: str, field_name: str, **kwargs) -> Response:
     field_byte: dict = kwargs[test_data_id].output.delete_field_byte(macro_name, unquote(field_name))
     if not field_byte:
@@ -146,6 +166,7 @@ def delete_output_field(test_data_id: str, macro_name: str, field_name: str, **k
 @tpf1_app.route("/test_data/<string:test_data_id>/input/cores/<string:macro_name>/fields", methods=["PATCH"])
 @token_auth.login_required
 @test_data_required
+@role_check_required
 def add_input_field(test_data_id: str, macro_name: str, **kwargs) -> Response:
     field_byte_dict: dict = request.get_json()
     field_byte: dict = kwargs[test_data_id].create_field_byte(macro_name, field_byte_dict)
@@ -158,6 +179,7 @@ def add_input_field(test_data_id: str, macro_name: str, **kwargs) -> Response:
                 methods=["DELETE"])
 @token_auth.login_required
 @test_data_required
+@role_check_required
 def delete_input_field(test_data_id: str, macro_name: str, field_name: str, **kwargs) -> Response:
     field_byte: dict = kwargs[test_data_id].delete_field_byte(macro_name, unquote(field_name))
     if not field_byte:
@@ -168,6 +190,7 @@ def delete_input_field(test_data_id: str, macro_name: str, field_name: str, **kw
 @tpf1_app.route("/test_data/<string:test_data_id>/input/regs", methods=["PATCH"])
 @token_auth.login_required
 @test_data_required
+@role_check_required
 def add_input_regs(test_data_id: str, **kwargs) -> Response:
     if not kwargs[test_data_id].add_reg(request.get_json()):
         return error_response(400, "Invalid format of input Register")
@@ -177,6 +200,7 @@ def add_input_regs(test_data_id: str, **kwargs) -> Response:
 @tpf1_app.route("/test_data/<string:test_data_id>/input/regs/<string:reg>", methods=["DELETE"])
 @token_auth.login_required
 @test_data_required
+@role_check_required
 def delete_input_regs(test_data_id: str, reg: str, **kwargs) -> Response:
     if not kwargs[test_data_id].delete_reg(reg):
         return error_response(400, "Invalid Register")
@@ -186,6 +210,7 @@ def delete_input_regs(test_data_id: str, reg: str, **kwargs) -> Response:
 @tpf1_app.route("/test_data/<string:test_data_id>/input/pnr", methods=["PATCH"])
 @token_auth.login_required
 @test_data_required
+@role_check_required
 def add_input_pnr(test_data_id: str, **kwargs) -> Response:
     pnr: Pnr = kwargs[test_data_id].create_pnr_element(request.get_json())
     if not pnr:
@@ -196,6 +221,7 @@ def add_input_pnr(test_data_id: str, **kwargs) -> Response:
 @tpf1_app.route("/test_data/<string:test_data_id>/output/pnr", methods=["PATCH"])
 @token_auth.login_required
 @test_data_required
+@role_check_required
 def add_pnr_output(test_data_id: str, **kwargs) -> Response:
     pnr: PnrOutput = kwargs[test_data_id].create_pnr_output(request.get_json())
     if not pnr:
@@ -206,6 +232,7 @@ def add_pnr_output(test_data_id: str, **kwargs) -> Response:
 @tpf1_app.route("/test_data/<string:test_data_id>/output/pnr/<string:pnr_output_id>", methods=["DELETE"])
 @token_auth.login_required
 @test_data_required
+@role_check_required
 def delete_pnr_output(test_data_id: str, pnr_output_id: str, **kwargs) -> Response:
     pnr: PnrOutput = kwargs[test_data_id].delete_pnr_output(pnr_output_id)
     if not pnr:
@@ -216,6 +243,7 @@ def delete_pnr_output(test_data_id: str, pnr_output_id: str, **kwargs) -> Respon
 @tpf1_app.route("/test_data/<string:test_data_id>/input/pnr/<string:pnr_id>/fields", methods=["PATCH"])
 @token_auth.login_required
 @test_data_required
+@role_check_required
 def add_pnr_fields(test_data_id: str, pnr_id: str, **kwargs) -> Response:
     pnr: Pnr = kwargs[test_data_id].create_pnr_field_data(pnr_id, request.get_json())
     if not pnr:
@@ -226,6 +254,7 @@ def add_pnr_fields(test_data_id: str, pnr_id: str, **kwargs) -> Response:
 @tpf1_app.route("/test_data/<string:test_data_id>/input/pnr/<string:pnr_id>", methods=["DELETE"])
 @token_auth.login_required
 @test_data_required
+@role_check_required
 def delete_pnr_element(test_data_id: str, pnr_id: str, **kwargs) -> Response:
     pnr: Pnr = kwargs[test_data_id].delete_pnr_element(pnr_id)
     if not pnr:
@@ -236,6 +265,7 @@ def delete_pnr_element(test_data_id: str, pnr_id: str, **kwargs) -> Response:
 @tpf1_app.route("/test_data/<string:test_data_id>/input/tpfdf", methods=["PATCH"])
 @token_auth.login_required
 @test_data_required
+@role_check_required
 def add_tpfdf_lrec(test_data_id: str, **kwargs) -> Response:
     df: Tpfdf = kwargs[test_data_id].create_tpfdf_lrec(request.get_json())
     if not df:
@@ -246,6 +276,7 @@ def add_tpfdf_lrec(test_data_id: str, **kwargs) -> Response:
 @tpf1_app.route("/test_data/<string:test_data_id>/input/tpfdf/<string:df_id>", methods=["DELETE"])
 @token_auth.login_required
 @test_data_required
+@role_check_required
 def delete_tpfdf_lrec(test_data_id: str, df_id: str, **kwargs) -> Response:
     df: Tpfdf = kwargs[test_data_id].delete_tpfdf_lrec(df_id)
     if not df:
@@ -256,6 +287,7 @@ def delete_tpfdf_lrec(test_data_id: str, df_id: str, **kwargs) -> Response:
 @tpf1_app.route("/test_data/<string:test_data_id>/input/fixed_files", methods=["PATCH"])
 @token_auth.login_required
 @test_data_required
+@role_check_required
 def add_fixed_file(test_data_id: str, **kwargs) -> Response:
     file: FixedFile = kwargs[test_data_id].create_fixed_file(request.get_json())
     if not file:
@@ -266,6 +298,7 @@ def add_fixed_file(test_data_id: str, **kwargs) -> Response:
 @tpf1_app.route("/test_data/<string:test_data_id>/input/fixed_files/<string:file_id>", methods=["DELETE"])
 @token_auth.login_required
 @test_data_required
+@role_check_required
 def delete_fixed_file(test_data_id: str, file_id: str, **kwargs) -> Response:
     file: FixedFile = kwargs[test_data_id].delete_fixed_file(file_id)
     if not file:
@@ -276,6 +309,7 @@ def delete_fixed_file(test_data_id: str, file_id: str, **kwargs) -> Response:
 @tpf1_app.route("/test_data/<string:test_data_id>/output/debug", methods=["PATCH"])
 @token_auth.login_required
 @test_data_required
+@role_check_required
 def add_debug(test_data_id: str, **kwargs) -> Response:
     if not kwargs[test_data_id].output.add_debug_seg(request.get_json()):
         return error_response(400, "Error in adding debug segments")
@@ -285,6 +319,7 @@ def add_debug(test_data_id: str, **kwargs) -> Response:
 @tpf1_app.route("/test_data/<string:test_data_id>/output/debug/<string:seg_name>", methods=["DELETE"])
 @token_auth.login_required
 @test_data_required
+@role_check_required
 def delete_debug(test_data_id: str, seg_name: str, **kwargs) -> Response:
     if not kwargs[test_data_id].output.delete_debug_seg(seg_name):
         return error_response(400, "Error in deleting debug segment")
