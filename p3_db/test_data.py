@@ -19,6 +19,7 @@ class TestData(FirestoreDocument):
     def __init__(self):
         super().__init__()
         self.name: str = ""
+        self.owner: str = ""  # Email address of the user who created the test data
         self.seg_name: str = ""
         self.cores: List[Core] = list()
         self.pnr: List[Pnr] = list()
@@ -96,8 +97,6 @@ class TestData(FirestoreDocument):
         header["seg_name"] = header["seg_name"].upper()
         if header["seg_name"] not in segments or not header["name"]:
             return False
-        if len(header) != 2:
-            return False
         return True
 
     def _validate_and_update_variation(self, item_dict: dict, input_type: str) -> bool:
@@ -158,7 +157,7 @@ class TestData(FirestoreDocument):
         return test_data.delete(cascade=True) if test_data else str()
 
     def get_header_dict(self) -> dict:
-        return {"id": self.id, "name": self.name, "seg_name": self.seg_name}
+        return {"id": self.id, "name": self.name, "seg_name": self.seg_name, "owner": self.owner}
 
     def create_field_byte(self, macro_name, field_dict, persistence=True) -> dict:
         if not Core.validate_field_dict(macro_name, field_dict):
