@@ -21,6 +21,7 @@ class TestData(FirestoreDocument):
         self.name: str = ""
         self.owner: str = ""  # Email address of the user who created the test data
         self.seg_name: str = ""
+        self.stop_segments: List[str] = list()
         self.cores: List[Core] = list()
         self.pnr: List[Pnr] = list()
         self.tpfdf: List[Tpfdf] = list()

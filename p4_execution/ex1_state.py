@@ -41,6 +41,7 @@ class State:
         self.errors: Set[str] = set()
         self.debug: Debug = Debug()
         self.fields: dict = {"CE3ENTPGM": bytearray()}
+        self.stop_segments: List[str] = list()
 
     def __repr__(self) -> str:
         return f"State:{self.seg}:{self.regs}:{self.vm}"
@@ -206,6 +207,7 @@ class State:
 
     def _set_from_test_data(self, test_data: TestData) -> None:
         self.errors = set(test_data.errors)
+        self.stop_segments = test_data.stop_segments
         if test_data.output.debug:
             self.init_debug(test_data.output.debug)
         if test_data.partition:
