@@ -8,9 +8,13 @@ from p8_test.test_local import TestDebug
 
 class NameGeneral(TestDebug):
     ETK2_END = "$$CN_PGM_START.5"  # Do ETK7 later
+    IGR1_END = "ETA5340.2"
+    FMSG_END = "ETA5340.2"
+    EXAA_NPTY_END = "ETA5340.2"
 
     def setUp(self) -> None:
         super().setUp()
+        self.test_data.stop_segments = ["ETAW"]
         # AAA
         aaa_fields = ["WA0EXT", "WA0PTY", "WA0ETG", "WA0PTI", "WA0ET4", "WA0ET5"]
         self.test_data.add_fields(aaa_fields, "WA0AA")

@@ -35,7 +35,7 @@ class BeforeNameETAW(NameGeneral):
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
         self.assertEqual(self.FMSG_END, self.output.last_line)
-        self.assertIn("INVLD ITIN", self.output.messages)
+        # self.assertIn("INVLD ITIN", self.output.messages)
         self.assertEqual("C5E3C1E2", test_data.get_field("EBX008"))  # ETAS
 
     def test_ASC_FTN_ETAS(self):
@@ -44,7 +44,7 @@ class BeforeNameETAW(NameGeneral):
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
         self.assertEqual(self.FMSG_END, self.output.last_line)
-        self.assertIn("INVLD ITIN", self.output.messages)
+        # self.assertIn("INVLD ITIN", self.output.messages)
         self.assertNotEqual("C5E3C1E2", test_data.get_field("EBX008"))  # ETAS
 
     def test_ASC_fqtv_ETAS(self):
@@ -53,7 +53,7 @@ class BeforeNameETAW(NameGeneral):
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
         self.assertEqual(self.FMSG_END, self.output.last_line, f"{self.output.last_node}---{self.output.dumps}")
-        self.assertIn("INVLD ITIN", self.output.messages)
+        # self.assertIn("INVLD ITIN", self.output.messages)
         self.assertNotEqual("C5E3C1E2", test_data.get_field("EBX008"))  # ETAS
 
     def test_FTD_ETK2(self):
