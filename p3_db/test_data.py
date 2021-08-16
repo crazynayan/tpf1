@@ -98,6 +98,8 @@ class TestData(FirestoreDocument):
         header["seg_name"] = header["seg_name"].upper()
         if header["seg_name"] not in segments or not header["name"]:
             return False
+        if "stop_segments" in header and any(segment not in segments for segment in header["stop_segments"]):
+            return False
         return True
 
     def _validate_and_update_variation(self, item_dict: dict, input_type: str) -> bool:
@@ -128,6 +130,7 @@ class TestData(FirestoreDocument):
             return False
         self.name = header["name"]
         self.seg_name = header["seg_name"]
+        self.stop_segments = header["stop_segments"]
         return self.save()
 
     def copy(self) -> Optional["TestData"]:
@@ -158,7 +161,8 @@ class TestData(FirestoreDocument):
         return test_data.delete(cascade=True) if test_data else str()
 
     def get_header_dict(self) -> dict:
-        return {"id": self.id, "name": self.name, "seg_name": self.seg_name, "owner": self.owner}
+        return {"id": self.id, "name": self.name, "seg_name": self.seg_name, "owner": self.owner,
+                "stop_segments": self.stop_segments}
 
     def create_field_byte(self, macro_name, field_dict, persistence=True) -> dict:
         if not Core.validate_field_dict(macro_name, field_dict):
