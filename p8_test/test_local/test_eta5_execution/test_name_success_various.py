@@ -42,9 +42,10 @@ class NameSuccessVarious(NameGeneral):
         self.test_data.set_field("WA0PTY", bytes([0x00]))
         self.test_data.set_field("WA0ET3", bytes([0x10]))
         self.test_data.errors.append("ETC1ERR")
+        self.test_data.stop_segments = ["FRD1"]
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
-        self.assertEqual("$$FRD1$$.1", self.output.last_line)
+        self.assertEqual("ETA5290.1", self.output.last_line, f"{self.output.dumps}")
         self.assertIn("021014", self.output.dumps)
         self.assertEqual("F1F6", test_data.get_field("WA0EXT"))  # Group - Adults
         self.assertEqual(f"{32:02X}", test_data.get_field("EBW015"))  # Group + Infants
