@@ -148,22 +148,22 @@ class RealTimeMacro(State):
 
     def entnc(self, node: SegmentCall) -> Optional[str]:
         called_seg: str = node.keys[0]
+        if called_seg in self.stop_segments:
+            return None
         if called_seg not in segments:
             raise SegmentNotFoundError
         self.fields["CE3ENTPGM"] = DataType("C", input=self.seg.name).to_bytes()
-        if called_seg in self.stop_segments:
-            return None
         self._init_seg(called_seg)
         return node.goes
 
     def entdc(self, node: SegmentCall) -> Optional[str]:
         called_seg: str = node.keys[0]
+        if called_seg in self.stop_segments:
+            return None
         if called_seg not in segments:
             raise SegmentNotFoundError
         self.fields["CE3ENTPGM"] = DataType("C", input=self.seg.name).to_bytes()
         del self.call_stack[:]
-        if called_seg in self.stop_segments:
-            return None
         self._init_seg(called_seg)
         return node.goes
 
