@@ -137,14 +137,26 @@ class Segment(UserDefinedMacroImplementation):
 class _SegmentCollection:
     ASM_EXT = {".asm", ".txt"}
     ASM_FOLDER_NAME = os.path.join(config.ROOT_DIR, "p0_source", "asm")
+    LST_EXT = {".lst"}
+    LST_FOLDER_NAME = os.path.join(config.ROOT_DIR, "p0_source", "lst")
 
     def __init__(self):
         self.segments: Dict = dict()  # Dictionary of Segment. Segment name is the key.
         for file_name in os.listdir(self.ASM_FOLDER_NAME):
             if len(file_name) < 6 or file_name[-4:].lower() not in self.ASM_EXT:
                 continue
-            seg_name = file_name[:-4].upper()
+            seg_name = file_name[:4].upper()
+            if seg_name in self.segments:
+                continue
             file_name = os.path.join(self.ASM_FOLDER_NAME, file_name)
+            self.segments[seg_name] = Segment(seg_name, file_name)
+        for file_name in os.listdir(self.LST_FOLDER_NAME):
+            if len(file_name) < 6 or file_name[-4:].lower() not in self.LST_EXT:
+                continue
+            seg_name = file_name[:4].upper()
+            if seg_name in self.segments:
+                continue
+            file_name = os.path.join(self.LST_FOLDER_NAME, file_name)
             self.segments[seg_name] = Segment(seg_name, file_name)
         return
 

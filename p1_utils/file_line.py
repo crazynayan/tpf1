@@ -14,6 +14,13 @@ class File:
                 lines = file.readlines()
         except FileNotFoundError:
             return list()
+        # Check for listing
+        if file_name[-4:] == ".lst":
+            lines = [line[50:-1] for line in lines if len(line) >= 50 and line[48].isdigit() and line[49] == " "]
+            finis = next(line for line in lines if "FINIS" == line.strip().split()[0])
+            ltorg = next((line for line in lines if "LTORG" == line.strip().split()[0]), None)
+            end_line = ltorg if ltorg else finis
+            lines = lines[:lines.index(end_line)]
         # Remove the CVS header if present
         index = 0
         for line in lines:
