@@ -138,12 +138,15 @@ class RealTimeMacro(State):
         self.dumps.append(dump)
         return node.fall_down
 
-    def entrc(self, node: SegmentCall) -> str:
-        if node.keys[0] not in segments:
+    def entrc(self, node: SegmentCall) -> Optional[str]:
+        called_seg: str = node.keys[0]
+        if called_seg in self.stop_segments:
+            return None
+        if called_seg not in segments:
             raise SegmentNotFoundError
         self.fields["CE3ENTPGM"] = DataType("C", input=self.seg.name).to_bytes()
         self.call_stack.append((node.fall_down, self.seg.name))
-        self._init_seg(node.keys[0])
+        self._init_seg(called_seg)
         return node.goes
 
     def entnc(self, node: SegmentCall) -> Optional[str]:
