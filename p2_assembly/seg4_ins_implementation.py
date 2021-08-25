@@ -221,7 +221,10 @@ class InstructionImplementation(InstructionOperand):
 
     def field_data(self, line: Line) -> FieldData:
         operand1, operand2 = line.split_operands()
-        field = self.field_base_dsp(operand1)
+        try:
+            field = self.field_base_dsp(operand1)
+        except NotFoundInSymbolTableError:
+            raise NotFoundInSymbolTableError(line)
         data = self.get_value(operand2)
         if not 0 <= data <= FieldData.MAX_VALUE:
             raise DataInvalidError
