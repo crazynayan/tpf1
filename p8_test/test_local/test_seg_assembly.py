@@ -8,7 +8,7 @@ from p4_execution.ex5_execute import TpfServer
 
 class SegmentTest(unittest.TestCase):
     NUMBER_OF_FILES: int = 131
-    SEG_NAME: str = "PRIR"
+    SEG_NAME: str = "WPXJ"
 
     def test_files(self):
         self.assertTrue("TS02" in segments)
@@ -19,14 +19,20 @@ class SegmentTest(unittest.TestCase):
     def test_segment(self):
         self.maxDiff = None
         seg: Segment = segments[self.SEG_NAME]
-        lines = Line.from_file(File(segments[self.SEG_NAME].file_name).lines)
-        instructions = [line.command for line in lines if line.command not in macros]
+        file: File = File(segments[self.SEG_NAME].file_name)
+        lines = Line.from_file(file.lines)
+        instructions = [line.command for line in lines if
+                        line.command not in macros and line.command not in file.macros]
         unknown_in_assembly = {command: "" for command in instructions if command not in seg.all_commands}
         unknown_in_assembly = list(dict.fromkeys(unknown_in_assembly))
         self.assertListEqual(list(), unknown_in_assembly, "\nUnknown in assembly.")
         seg.assemble()
         unknown_in_execute = {node.command for _, node in seg.nodes.items() if node.command not in TpfServer()._ex}
         self.assertSetEqual(set(), unknown_in_execute, "\nUnknown in execute.")
+
+    def test_assemble_segment(self):
+        seg: Segment = segments[self.SEG_NAME]
+        seg.assemble()
 
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@ from config import config
 from p1_utils.data_type import Register, DataType
 from p1_utils.errors import NotFoundInSymbolTableError
 from p1_utils.file_line import Line, File
-from p2_assembly.mac2_data_macro import macros
+from p2_assembly.mac2_data_macro import macros, DataMacro
 from p2_assembly.seg2_ins_operand import Label
 from p2_assembly.seg5_exec_macro import UserDefinedMacroImplementation
 
@@ -41,7 +41,7 @@ class Segment(UserDefinedMacroImplementation):
         # Create a list of Line objects
         lines = Line.from_file(file.lines)
         # First pass - Build Symbol Table and generate constants.
-        self._build_symbol_table(lines)
+        self._build_symbol_table(lines, file)
         # Update index of each line
         lines = self._update_index(lines)
         # Generate constants
@@ -50,11 +50,15 @@ class Segment(UserDefinedMacroImplementation):
         self._assemble_instructions(lines)
         return
 
-    def _build_symbol_table(self, lines: List[Line]) -> None:
+    def _build_symbol_table(self, lines: List[Line], file: File) -> None:
         prior_label: Label = Label(self.root_label())
         self.equ(self.root_line)
         for line in lines:
             if line.command in macros:
+                self.load_macro_from_line(line)
+                continue
+            if line.command in file.macros:
+                macros[line.command] = DataMacro(name=line.command, macro_lines=file.macros[line.command])
                 self.load_macro_from_line(line)
                 continue
             if line.is_first_pass:

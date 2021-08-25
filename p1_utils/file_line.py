@@ -1,5 +1,5 @@
 import re
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 from config import config
 
@@ -11,18 +11,19 @@ class File:
         line: Optional[str] = next((line for line in lines if line[50:].strip().split()[0] == word), None)
         return line
 
-    def __init__(self, file_name: str):
+    def __init__(self, filename: str):
         self.lines: List[str] = list()
+        self.macros: Dict[str, list] = dict()  # Macro names -> Listing generated macros
         # Open the file
         try:
-            with open(file_name, "r", errors="replace") as file:
+            with open(filename, "r", errors="replace") as file:
                 lines = file.readlines()
         except FileNotFoundError:
             return
         # Check for listing
-        if file_name[-4:] == ".lst":
+        if filename[-4:] == ".lst":
             lines = [line[:-1].upper() for line in lines if len(line) >= 50 and line[48].isdigit()
-                     and line[49] == " " and not line.startswith("   Active Usings")]
+                     and line[49] in {" ", "+"} and not line.startswith("   Active Usings")]
             # Remove everything after FINIS/ORG
             finis = self._get_line("FINIS", lines)
             ltorg = self._get_line("LTORG", lines)
@@ -34,8 +35,25 @@ class File:
                 mend = self._get_line("MEND", lines)
                 lines = lines[:lines.index(macro)] + lines[lines.index(mend) + 1:]
                 macro = self._get_line("MACRO", lines)
+            # Extract data macros (Only REG=) TODO: DATAS
+            macros = [line for line in lines if len(line[50:].strip().split()) > 1
+                      and line[50:].strip().split()[1].startswith("REG=")]
+            macro_dict = dict()
+            for line in macros:
+                macro_name = line[50:].strip().split()[0]
+                if macro_name in macro_dict:
+                    continue
+                macro_dict[macro_name] = line
+            for macro_name, macro_line in macro_dict.items():
+                self.macros[macro_name] = list()
+                for line in lines[lines.index(macro_line) + 1:]:
+                    if line[49] != "+":
+                        break
+                    if line[50] in config.COMMENT_C1:
+                        continue
+                    self.macros[macro_name].append(line[50:])
             # Truncate all starting characters to match CC=1 for assembly
-            lines = [line[50:] for line in lines]
+            lines = [line[50:] for line in lines if line[49] == " "]
         # Remove the CVS header if present
         index = 0
         for line in lines:

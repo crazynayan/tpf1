@@ -9,10 +9,12 @@ from p2_assembly.mac1_implementation import DataMacroImplementation
 
 
 class DataMacro(DataMacroImplementation):
-    def __init__(self, name: str, file_name: str, default_macros: Dict[str, LabelReference]):
+    def __init__(self, name: str, filename: str = None, default_macros: Dict[str, LabelReference] = None,
+                 macro_lines: List[str] = None):
         super().__init__(name)
-        self.file_name: str = file_name
-        self.default_macros: Dict[str, LabelReference] = default_macros
+        self.file_name: str = filename if filename else str()
+        self.default_macros: Dict[str, LabelReference] = default_macros if default_macros else dict()
+        self.macro_lines: List[str] = macro_lines if macro_lines else list()
 
     def __repr__(self) -> str:
         return f"{self.name} ({len(self._symbol_table)})"
@@ -33,10 +35,9 @@ class DataMacro(DataMacroImplementation):
             return
         # Load default macros
         self._symbol_table = {**self.all_labels, **self.default_macros}
-        # Get the data from file after removing CVS and empty lines.
-        file = File(self.file_name)
-        # Create a list of Line objects
-        lines = Line.from_file(file.lines)
+        # Create a list of Line objects from file or listing
+        file_lines = self.macro_lines if self.macro_lines else File(self.file_name).lines
+        lines = Line.from_file(file_lines)
         # Remove suffix like &CG1 from label and only keep the accepted commands.
         lines = [line.remove_suffix() for line in lines if line.command in self._command]
         # Add the macro name in symbol table
@@ -90,12 +91,13 @@ class _DataMacroCollection:
         # Initialize default macros in hierarchical order
         default_macros: Dict[str, LabelReference] = dict()
         for macro_name in self.DEFAULT_MACROS:
-            self.macros[macro_name] = DataMacro(macro_name, default_macros_dict[macro_name], default_macros)
+            self.macros[macro_name] = DataMacro(name=macro_name, filename=default_macros_dict[macro_name],
+                                                default_macros=default_macros)
             self.macros[macro_name].load()
             default_macros = {**default_macros, **self.macros[macro_name].all_labels}
         # Initialize non default macros
         for macro_name, file_name in non_default_macros_dict.items():
-            self.macros[macro_name] = DataMacro(macro_name, file_name, default_macros)
+            self.macros[macro_name] = DataMacro(name=macro_name, filename=file_name, default_macros=default_macros)
         for macro_name, data_macro in self.macros.items():
             data_macro.load()
             self.indexed_labels = {**self.indexed_labels,
