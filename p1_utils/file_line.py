@@ -6,21 +6,36 @@ from config import config
 
 class File:
 
-    @classmethod
-    def open(cls, file_name: str) -> List[str]:
+    @staticmethod
+    def _get_line(word: str, lines: List[str]) -> Optional[str]:
+        line: Optional[str] = next((line for line in lines if line[50:].strip().split()[0] == word), None)
+        return line
+
+    def __init__(self, file_name: str):
+        self.lines: List[str] = list()
         # Open the file
         try:
-            with open(file_name, 'r', errors='replace') as file:
+            with open(file_name, "r", errors="replace") as file:
                 lines = file.readlines()
         except FileNotFoundError:
-            return list()
+            return
         # Check for listing
         if file_name[-4:] == ".lst":
-            lines = [line[50:-1] for line in lines if len(line) >= 50 and line[48].isdigit() and line[49] == " "]
-            finis = next(line for line in lines if "FINIS" == line.strip().split()[0])
-            ltorg = next((line for line in lines if "LTORG" == line.strip().split()[0]), None)
+            lines = [line[:-1].upper() for line in lines if len(line) >= 50 and line[48].isdigit()
+                     and line[49] == " " and not line.startswith("   Active Usings")]
+            # Remove everything after FINIS/ORG
+            finis = self._get_line("FINIS", lines)
+            ltorg = self._get_line("LTORG", lines)
             end_line = ltorg if ltorg else finis
             lines = lines[:lines.index(end_line)]
+            # Remove all code between MACRO and MEND
+            macro = self._get_line("MACRO", lines)
+            while macro:
+                mend = self._get_line("MEND", lines)
+                lines = lines[:lines.index(macro)] + lines[lines.index(mend) + 1:]
+                macro = self._get_line("MACRO", lines)
+            # Truncate all starting characters to match CC=1 for assembly
+            lines = [line[50:] for line in lines]
         # Remove the CVS header if present
         index = 0
         for line in lines:
@@ -29,11 +44,11 @@ class File:
             index += 1
         lines = lines[index:] if index < len(lines) else list()
         # Remove empty lines and trailing new line character & make everything upper case
-        lines = [line.strip('\n').upper() for line in lines if line.strip()]
+        lines = [line.strip("\n").upper() for line in lines if line.strip()]
         if not lines:
-            return list()
+            return
         # Find the character that is added by CVS on each line
-        char = ''
+        char = str()
         if all(line[0] == lines[0][0] for line in lines):
             char = lines[0][0]
         # Remove (TRIM) the character from each line
@@ -41,7 +56,8 @@ class File:
             lines = [line[config.TRIM[char]:] for line in lines]
         # Remove comments
         lines = [line for line in lines if line.strip() and line[0] not in config.COMMENT_C1]
-        return lines
+        self.lines = lines
+        return
 
 
 class Line:
@@ -54,10 +70,10 @@ class Line:
         self.index: Optional[int] = None
 
     @classmethod
-    def from_line(cls, file_line: str, continuing: bool = False, quote_continuing: bool = False) -> 'Line':
+    def from_line(cls, file_line: str, continuing: bool = False, quote_continuing: bool = False) -> "Line":
         # Create a line object from a single file line.
         line = cls()
-        if len(file_line) > 71 and file_line[71] != ' ':
+        if len(file_line) > 71 and file_line[71] != " ":
             line.continuation = True
             file_line = file_line[:71]
         if quote_continuing:
@@ -77,7 +93,7 @@ class Line:
         else:
             # Split the line in words. Keep words within single quotes together.
             words = re.findall(r"(?:[^L\s]'[^']*'|\S)+", file_line)
-        if file_line[0] == ' ':
+        if file_line[0] == " ":
             # The label is None for lines with first character space (No label)
             words.insert(0, None)
         if continuing:
@@ -89,7 +105,7 @@ class Line:
         return line
 
     @classmethod
-    def from_file(cls, file_lines: List[str]) -> List['Line']:
+    def from_file(cls, file_lines: List[str]) -> List["Line"]:
         # Create a list of Line objects. Also combines multiple continuing lines in a single line object.
         lines = list()
         prior_line = Line()
@@ -104,8 +120,8 @@ class Line:
             prior_line = line
         return lines
 
-    def remove_suffix(self) -> 'Line':
-        self.label = next(iter(self.label.split('&'))) if self.label is not None else None
+    def remove_suffix(self) -> "Line":
+        self.label = next(iter(self.label.split("&"))) if self.label is not None else None
         return self
 
     @property
@@ -166,4 +182,4 @@ class Line:
         return "".join(new_operand).split("|")
 
     def __repr__(self) -> str:
-        return f'{self.label}:{self.command}:{self.operand}'
+        return f"{self.label}:{self.command}:{self.operand}"
