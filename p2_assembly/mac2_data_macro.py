@@ -34,9 +34,9 @@ class DataMacro(DataMacroImplementation):
         # Load default macros
         self._symbol_table = {**self.all_labels, **self.default_macros}
         # Get the data from file after removing CVS and empty lines.
-        file_lines = File.open(self.file_name)
+        file = File(self.file_name)
         # Create a list of Line objects
-        lines = Line.from_file(file_lines)
+        lines = Line.from_file(file.lines)
         # Remove suffix like &CG1 from label and only keep the accepted commands.
         lines = [line.remove_suffix() for line in lines if line.command in self._command]
         # Add the macro name in symbol table

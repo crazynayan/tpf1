@@ -37,9 +37,9 @@ class Segment(UserDefinedMacroImplementation):
         self.set_using(self.name, Register("R8"))
         self.load_macro("EB0EB", base="R9")
         # Get the data from line after removing CVS and empty lines.
-        file_lines = File.open(self.file_name)
+        file = File(self.file_name)
         # Create a list of Line objects
-        lines = Line.from_file(file_lines)
+        lines = Line.from_file(file.lines)
         # First pass - Build Symbol Table and generate constants.
         self._build_symbol_table(lines)
         # Update index of each line
