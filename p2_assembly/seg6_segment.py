@@ -146,21 +146,17 @@ class _SegmentCollection:
 
     def __init__(self):
         self.segments: Dict = dict()  # Dictionary of Segment. Segment name is the key.
-        for file_name in os.listdir(self.ASM_FOLDER_NAME):
-            if len(file_name) < 6 or file_name[-4:].lower() not in self.ASM_EXT:
+        self.init_segments(self.ASM_FOLDER_NAME, self.ASM_EXT)
+        self.init_segments(self.LST_FOLDER_NAME, self.LST_EXT)
+
+    def init_segments(self, folder_name: str, extensions: set):
+        for file_name in os.listdir(folder_name):
+            if len(file_name) < 6 or file_name[-4:].lower() not in extensions:
                 continue
             seg_name = file_name[:4].upper()
             if seg_name in self.segments:
                 continue
-            file_name = os.path.join(self.ASM_FOLDER_NAME, file_name)
-            self.segments[seg_name] = Segment(seg_name, file_name)
-        for file_name in os.listdir(self.LST_FOLDER_NAME):
-            if len(file_name) < 6 or file_name[-4:].lower() not in self.LST_EXT:
-                continue
-            seg_name = file_name[:4].upper()
-            if seg_name in self.segments:
-                continue
-            file_name = os.path.join(self.LST_FOLDER_NAME, file_name)
+            file_name = os.path.join(folder_name, file_name)
             self.segments[seg_name] = Segment(seg_name, file_name)
         return
 
