@@ -47,24 +47,21 @@ class SegmentGeneric(DataMacroImplementation):
         return '$$' + self.seg_name + '$$' if name is None else '$$' + name + '$$'
 
     def load_macro(self, name: str, base: Optional[str] = None, suffix: Optional[str] = None,
-                   override: bool = True, from_lst: bool = False) -> None:
+                   override: bool = True) -> None:
         macros[name].load()
         suffix_name = name + suffix if suffix else name
-        if from_lst and suffix_name not in self.data_macro:
-            self._symbol_table = {**self.all_labels, **macros[name].all_labels}
+        if suffix_name not in self.data_macro:
+            if suffix:
+                new_symbol_table = dict()
+                for label, label_ref in macros[name].all_labels.items():
+                    new_label = label + suffix
+                    new_label_ref = LabelReference(new_label, label_ref.dsp, label_ref.length, suffix_name)
+                    new_label_ref.label = new_label
+                    new_symbol_table[new_label] = new_label_ref
+                self._symbol_table = {**self.all_labels, **new_symbol_table}
+            else:
+                self._symbol_table = {**self.all_labels, **macros[name].all_labels}
             self.data_macro.add(suffix_name)
-        elif suffix and suffix_name not in self.data_macro:
-            new_symbol_table = dict()
-            for label, label_ref in macros[name].all_labels.items():
-                new_label = label + suffix
-                new_label_ref = LabelReference(new_label, label_ref.dsp, label_ref.length, suffix_name)
-                new_label_ref.label = new_label
-                new_symbol_table[new_label] = new_label_ref
-            self._symbol_table = {**self.all_labels, **new_symbol_table}
-            self.data_macro.add(suffix_name)
-        elif name not in self.data_macro:
-            self._symbol_table = {**self.all_labels, **macros[name].all_labels}
-            self.data_macro.add(name)
         if base is not None:
             base = Register(base)
             if base.is_valid():

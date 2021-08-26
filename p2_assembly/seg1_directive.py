@@ -96,7 +96,7 @@ class DirectiveImplementation(SegmentGeneric):
                 self.load_macro(operand, base=operands[0], suffix=suffix, override=False)
             elif operand in self.lst_macros:
                 macros[operand] = DataMacro(name=operand, macro_lines=self.lst_macros[operand])
-                self.load_macro(operand, base=operands[0], suffix=suffix, override=False, from_lst=True)
+                self.load_macro(operand, base=operands[0], suffix=suffix, override=False)
             else:
                 raise UsingInvalidError(line)
         return
