@@ -41,30 +41,34 @@ class SegmentGeneric(DataMacroImplementation):
         self.data_macro: Set[str] = set()  # Set of data macro names which are already loaded.
         self.data: Data = Data()
         self.dc_list: List[Dc] = list()
+        self.lst_macros: Dict[str, List] = dict()  # All listing generated macro lines
 
     def root_label(self, name: Optional[str] = None) -> str:
         return '$$' + self.seg_name + '$$' if name is None else '$$' + name + '$$'
 
     def load_macro(self, name: str, base: Optional[str] = None, suffix: Optional[str] = None,
-                   override: bool = True) -> None:
+                   override: bool = True, from_lst: bool = False) -> None:
         macros[name].load()
-        if suffix is not None:
-            original_name = name
-            name = name + suffix
+        suffix_name = name + suffix if suffix else name
+        if from_lst and suffix_name not in self.data_macro:
+            self._symbol_table = {**self.all_labels, **macros[name].all_labels}
+            self.data_macro.add(suffix_name)
+        elif suffix and suffix_name not in self.data_macro:
             new_symbol_table = dict()
-            for label, label_ref in macros[original_name].all_labels.items():
+            for label, label_ref in macros[name].all_labels.items():
                 new_label = label + suffix
-                new_label_ref = LabelReference(new_label, label_ref.dsp, label_ref.length, name)
+                new_label_ref = LabelReference(new_label, label_ref.dsp, label_ref.length, suffix_name)
                 new_label_ref.label = new_label
                 new_symbol_table[new_label] = new_label_ref
             self._symbol_table = {**self.all_labels, **new_symbol_table}
+            self.data_macro.add(suffix_name)
         elif name not in self.data_macro:
             self._symbol_table = {**self.all_labels, **macros[name].all_labels}
             self.data_macro.add(name)
         if base is not None:
             base = Register(base)
             if base.is_valid():
-                self.set_using(name, base, override)
+                self.set_using(suffix_name, base, override)
             else:
                 raise RegisterInvalidError
         return

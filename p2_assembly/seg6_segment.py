@@ -38,10 +38,11 @@ class Segment(UserDefinedMacroImplementation):
         self.load_macro("EB0EB", base="R9")
         # Get the data from line after removing CVS and empty lines.
         file = File(self.file_name)
+        self.lst_macros = file.macros
         # Create a list of Line objects
         lines = Line.from_file(file.lines)
         # First pass - Build Symbol Table and generate constants.
-        self._build_symbol_table(lines, file)
+        self._build_symbol_table(lines)
         # Update index of each line
         lines = self._update_index(lines)
         # Generate constants
@@ -50,15 +51,15 @@ class Segment(UserDefinedMacroImplementation):
         self._assemble_instructions(lines)
         return
 
-    def _build_symbol_table(self, lines: List[Line], file: File) -> None:
+    def _build_symbol_table(self, lines: List[Line]) -> None:
         prior_label: Label = Label(self.root_label())
         self.equ(self.root_line)
         for line in lines:
             if line.command in macros:
                 self.load_macro_from_line(line)
                 continue
-            if line.command in file.macros:
-                macros[line.command] = DataMacro(name=line.command, macro_lines=file.macros[line.command])
+            if line.command in self.lst_macros:
+                macros[line.command] = DataMacro(name=line.command, macro_lines=self.lst_macros[line.command])
                 self.load_macro_from_line(line)
                 continue
             if line.is_first_pass:

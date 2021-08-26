@@ -35,7 +35,7 @@ class File:
                 mend = self._get_line("MEND", lines)
                 lines = lines[:lines.index(macro)] + lines[lines.index(mend) + 1:]
                 macro = self._get_line("MACRO", lines)
-            # Extract data macros (Only REG=) TODO: DATAS
+            # Extract data macros (Only REG=). DATAS generated REG= also included.
             macros = [line for line in lines if len(line[50:].strip().split()) > 1
                       and line[50:].strip().split()[1].startswith("REG=")]
             macro_dict = dict()

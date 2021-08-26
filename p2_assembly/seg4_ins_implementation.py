@@ -196,9 +196,9 @@ class InstructionImplementation(InstructionOperand):
             raise AssemblyError(line)
         try:
             field = self.field_base_dsp(operand1)
+            bits = self.get_bits(operand2)
         except NotFoundInSymbolTableError:
             raise NotFoundInSymbolTableError(line)
-        bits = self.get_bits(operand2)
         return FieldBits(line, field, bits)
 
     def field_len_field(self, line: Line) -> FieldLenField:
