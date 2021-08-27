@@ -51,23 +51,18 @@ class SegmentGeneric(DataMacroImplementation):
         macros[name].load()
         suffix_name = name + suffix if suffix else name
         if suffix_name not in self.data_macro:
-            if suffix:
-                new_symbol_table = dict()
-                for label, label_ref in macros[name].all_labels.items():
-                    new_label = label + suffix
-                    new_label_ref = LabelReference(new_label, label_ref.dsp, label_ref.length, suffix_name)
-                    new_label_ref.label = new_label
-                    new_symbol_table[new_label] = new_label_ref
-                self._symbol_table = {**self.all_labels, **new_symbol_table}
-            else:
-                self._symbol_table = {**self.all_labels, **macros[name].all_labels}
+            new_symbol_table: Dict[str, LabelReference] = {
+                f"{label}{suffix}": LabelReference(f"{label}{suffix}", label_ref.dsp, label_ref.length, suffix_name)
+                for label, label_ref in macros[name].all_labels.items()
+            } if suffix else macros[name].all_labels
+            self._symbol_table = {**self.all_labels, **new_symbol_table}
             self.data_macro.add(suffix_name)
-        if base is not None:
-            base = Register(base)
-            if base.is_valid():
-                self.set_using(suffix_name, base, override)
-            else:
-                raise RegisterInvalidError
+        if not base:
+            return
+        base_reg = Register(base)
+        if not base_reg.is_valid():
+            raise RegisterInvalidError
+        self.set_using(suffix_name, base_reg, override)
         return
 
     def set_using(self, dsect: str, reg: Register, override: bool = True) -> None:
