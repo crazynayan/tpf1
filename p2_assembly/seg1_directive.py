@@ -4,7 +4,7 @@ from p1_utils.data_type import Register
 from p1_utils.errors import UsingInvalidError, DropInvalidError
 from p1_utils.file_line import Line
 from p2_assembly.mac1_implementation import Dc
-from p2_assembly.mac2_data_macro import macros, DataMacro
+from p2_assembly.mac2_data_macro import macros
 from p2_assembly.seg0_generic import SegmentGeneric
 
 
@@ -78,27 +78,25 @@ class DirectiveImplementation(SegmentGeneric):
         operands = line.split_operands()
         if len(operands) != 2:
             raise UsingInvalidError
-        base = Register(operands[1])
-        if not base.is_valid():
-            raise UsingInvalidError
         dsect_name = self.name if operands[0] == '*' else operands[0]
-        self.set_using(dsect_name, base)
+        self.set_using(dsect_name, base_reg=operands[1])
 
     def datas(self, line: Line) -> None:
         operands = line.split_operands()
         if len(operands) < 3:
-            raise UsingInvalidError
-        if not Register(operands[0]).is_valid():
-            raise UsingInvalidError
+            raise UsingInvalidError(line)
         suffix: Optional[str] = operands[1] if operands[1] else None
-        for operand in operands[2:]:
-            if operand in macros:
+        try:
+            for operand in operands[2:]:
+                macro_name = operand + suffix if suffix else operand
+                if macro_name in self.lst_macros:
+                    self.set_using(dsect=macro_name, base_reg=operands[0], override=False)
+                    continue
+                if operand not in macros:
+                    raise UsingInvalidError(line)
                 self.load_macro(operand, base=operands[0], suffix=suffix, override=False)
-            elif operand in self.lst_macros:
-                macros[operand] = DataMacro(name=operand, macro_lines=self.lst_macros[operand])
-                self.load_macro(operand, base=operands[0], suffix=suffix, override=False)
-            else:
-                raise UsingInvalidError(line)
+        except UsingInvalidError:
+            raise UsingInvalidError(line)
         return
 
     def no_operation(self, _) -> None:

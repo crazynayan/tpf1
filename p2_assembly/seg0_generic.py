@@ -2,7 +2,7 @@ from typing import Optional, Tuple, Dict, List, Set
 
 from config import config
 from p1_utils.data_type import Register
-from p1_utils.errors import RegisterInvalidError
+from p1_utils.errors import UsingInvalidError
 from p2_assembly.mac0_generic import LabelReference
 from p2_assembly.mac1_implementation import DataMacroImplementation, Dc
 from p2_assembly.mac2_data_macro import macros
@@ -44,10 +44,9 @@ class SegmentGeneric(DataMacroImplementation):
         self.lst_macros: Dict[str, List] = dict()  # All listing generated macro lines
 
     def root_label(self, name: Optional[str] = None) -> str:
-        return '$$' + self.seg_name + '$$' if name is None else '$$' + name + '$$'
+        return "$$" + self.seg_name + "$$" if name is None else "$$" + name + "$$"
 
-    def load_macro(self, name: str, base: Optional[str] = None, suffix: Optional[str] = None,
-                   override: bool = True) -> None:
+    def load_macro(self, name: str, base: str = None, suffix: Optional[str] = None, override: bool = True) -> None:
         macros[name].load()
         suffix_name = name + suffix if suffix else name
         if suffix_name not in self.data_macro:
@@ -57,15 +56,14 @@ class SegmentGeneric(DataMacroImplementation):
             } if suffix else macros[name].all_labels
             self._symbol_table = {**self.all_labels, **new_symbol_table}
             self.data_macro.add(suffix_name)
-        if not base:
-            return
-        base_reg = Register(base)
-        if not base_reg.is_valid():
-            raise RegisterInvalidError
-        self.set_using(suffix_name, base_reg, override)
+        if base:
+            self.set_using(suffix_name, base, override)
         return
 
-    def set_using(self, dsect: str, reg: Register, override: bool = True) -> None:
+    def set_using(self, dsect: str, base_reg: str, override: bool = True) -> None:
+        reg = Register(base_reg)
+        if not reg.is_valid():
+            raise UsingInvalidError
         using_name = next((name for name, using_reg in self._using.items() if using_reg.reg == reg.reg), None)
         if override and using_name is not None:
             del self._using[using_name]
@@ -75,7 +73,7 @@ class SegmentGeneric(DataMacroImplementation):
         return next((name for name, reg in self._using.items() if reg.reg == base.reg), None)
 
     def get_base(self, macro_name: str) -> Register:
-        return self._using[macro_name] if macro_name in self._using else Register('R0')
+        return self._using[macro_name] if macro_name in self._using else Register("R0")
 
     def get_field_name(self, base: Register, dsp: int, length: Optional[int]) -> Optional[str]:
         length = 1 if length is None else length
