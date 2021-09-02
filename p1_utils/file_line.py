@@ -22,8 +22,13 @@ class File:
             return
         # Check for listing
         if filename[-4:] == ".lst":
-            lines = [line[:-1].upper() for line in lines if len(line) >= 50 and line[48].isdigit()
-                     and line[49] in {" ", "+"} and not line.startswith("   Active Usings")]
+            lines = [line[:-1].upper() for index, line in enumerate(lines) if len(line) > 51
+                     and (line[48].isdigit() or (lines[index - 1][121].upper() in {"X", "+"}
+                                                 and line[113:117].upper() != "PAGE"
+                                                 if len(lines[index - 1]) > 121 else False))
+                     and line[49] in {" ", "+"}
+                     and not line.startswith("   Active Usings")
+                     and line[50] not in config.COMMENT_C1]
             # Remove everything after FINIS/ORG
             finis = self._get_line("FINIS", lines)
             ltorg = self._get_line("LTORG", lines)
@@ -36,21 +41,35 @@ class File:
                 lines = lines[:lines.index(macro)] + lines[lines.index(mend) + 1:]
                 macro = self._get_line("MACRO", lines)
             # Extract data macros (Only REG=). DATAS generated REG= also included.
-            macros = [line for line in lines if len(line[50:].strip().split()) > 1
-                      and line[50:].strip().split()[1].startswith("REG=")]
+            globz = "GLOBZ"
+            macros = [line for line in lines
+                      if (len(line[50:].strip().split()) > 1 and line[50:].strip().split()[1].startswith("REG="))
+                      or (len(line[50:].strip().split()) > 0
+                          and (line[50:].strip().split()[0].endswith("EQ") or line[50:].strip().split()[0] == "EB0EB")
+                          and line[50] == " ")
+                      or (len(line[50:].strip().split()) > 1 and line[50:].strip().split()[0] == globz
+                          and line[50:].strip().split()[1].startswith("REG") and "=R" in line[50:].strip().split()[1])
+                      ]
+            # Update macro_dict with SUFFIX
             macro_dict = dict()
+            suffix = "SUFFIX="
             for line in macros:
                 macro_name = line[50:].strip().split()[0]
+                if macro_name == globz:
+                    macro_name = f"{globz}_{line[50:].strip().split()[1][:4]}"
+                if suffix in line:
+                    macro_name += line[line.find(suffix) + len(suffix)]
                 if macro_name in macro_dict:
                     continue
                 macro_dict[macro_name] = line
+            # Update macros with the corresponding generated lines
             for macro_name, macro_line in macro_dict.items():
+                if macro_name == "DCTPFX":
+                    continue
                 self.macros[macro_name] = list()
                 for line in lines[lines.index(macro_line) + 1:]:
                     if line[49] != "+":
                         break
-                    if line[50] in config.COMMENT_C1:
-                        continue
                     self.macros[macro_name].append(line[50:])
             # Truncate all starting characters to match CC=1 for assembly
             lines = [line[50:] for line in lines if line[49] == " "]
@@ -85,15 +104,18 @@ class Line:
         self.operand: Optional[str] = None
         self.continuation: bool = False
         self.quote_continuation: bool = False
+        self.next_line_comment: bool = False
         self.index: Optional[int] = None
 
     @classmethod
-    def from_line(cls, file_line: str, continuing: bool = False, quote_continuing: bool = False) -> "Line":
+    def from_line(cls, file_line: str, continuing: bool = False, quote_continuing: bool = False,
+                  line_is_comment: bool = False, main_line_has_operand: bool = False) -> "Line":
         # Create a line object from a single file line.
         line = cls()
         if len(file_line) > 71 and file_line[71] != " ":
             line.continuation = True
             file_line = file_line[:71]
+        line_without_l = file_line.replace("L'", "~")
         if quote_continuing:
             all_words = file_line.split()
             words = list()
@@ -102,11 +124,11 @@ class Line:
                 if word[-1] == "'":
                     break
             words = [" ".join(words)]
-        elif line.continuation and "'" in file_line and file_line.count("'") % 2 != 0:
+        elif line.continuation and "'" in line_without_l and line_without_l.count("'") % 2 != 0:
             # This is the case where 2 quotes are in separate lines for e.g. MSG='.... X and in next line ...'
             line.quote_continuation = True
-            file_line = file_line + "'"
-            words = re.findall(r"(?:'.*?'|\S)+", file_line)
+            line_with_quote = file_line + "'"
+            words = re.findall(r"(?:'.*?'|\S)+", line_with_quote)
             words[-1] = words[-1][:-1]
         else:
             # Split the line in words. Keep words within single quotes together.
@@ -115,11 +137,17 @@ class Line:
             # The label is None for lines with first character space (No label)
             words.insert(0, None)
         if continuing:
-            # The command is None for continued lines
-            words.insert(0, None)
+            words.insert(0, None)  # The command is None for continued lines
+            if main_line_has_operand and not quote_continuing:
+                if line_is_comment or (len(file_line) > 15 and file_line[15] == " "):
+                    words.insert(0, None)  # The operand is None for continuing line that does NOT start at CC=16
         line.label = words[0]
         line.command = words[1] if len(words) > 1 else None
         line.operand = words[2] if len(words) > 2 else None
+        if line.continuation and not line.quote_continuation and line.operand:
+            if not line.operand.endswith(","):
+                if len(line.operand) > 5 and line.operand[-5:] != file_line[66:71]:
+                    line.next_line_comment = True
         return line
 
     @classmethod
@@ -127,13 +155,16 @@ class Line:
         # Create a list of Line objects. Also combines multiple continuing lines in a single line object.
         lines = list()
         prior_line = Line()
-        main_line = None
+        main_line = Line()
         for file_line in file_lines:
-            line = cls.from_line(file_line, prior_line.continuation, prior_line.quote_continuation)
+            if file_line.startswith("ETK200M"):
+                debug = True
+            line = cls.from_line(file_line, prior_line.continuation, prior_line.quote_continuation,
+                                 prior_line.next_line_comment, main_line.operand is not None)
             if not prior_line.continuation:
                 lines.append(line)
                 main_line = line
-            else:
+            elif line.operand:
                 main_line.operand = main_line.operand + line.operand if main_line.operand is not None else line.operand
             prior_line = line
         return lines
