@@ -3,7 +3,7 @@ import re
 from typing import Dict, Optional, List
 
 from config import config
-from p1_utils.data_type import Register, DataType
+from p1_utils.data_type import DataType
 from p1_utils.errors import NotFoundInSymbolTableError
 from p1_utils.file_line import Line, File
 from p2_assembly.mac2_data_macro import macros, DataMacro
@@ -34,7 +34,7 @@ class Segment(UserDefinedMacroImplementation):
         if self.nodes:
             return
         # Default processing
-        self.set_using(self.name, Register("R8"))
+        self.set_using(self.name, base_reg="R8")
         self.load_macro("EB0EB", base="R9")
         # Get the data from line after removing CVS and empty lines.
         file = File(self.file_name)
@@ -54,12 +54,20 @@ class Segment(UserDefinedMacroImplementation):
     def _build_symbol_table(self, lines: List[Line]) -> None:
         prior_label: Label = Label(self.root_label())
         self.equ(self.root_line)
+        # Load all symbols from listings
+        for macro_name, macro_lines in self.lst_macros.items():
+            macros[macro_name] = DataMacro(name=macro_name, macro_lines=macro_lines, default_macros=self.all_labels)
+            macros[macro_name].load()
+            self._symbol_table = {**self.all_labels, **macros[macro_name].all_labels}
+        # Load inline symbols
         for line in lines:
-            if line.command in macros:
-                self.load_macro_from_line(line)
-                continue
             if line.command in self.lst_macros:
-                macros[line.command] = DataMacro(name=line.command, macro_lines=self.lst_macros[line.command])
+                reg: Optional[str] = self.key_value(line).get_value("REG")
+                if not reg:
+                    continue
+                self.set_using(dsect=line.command, base_reg=reg)
+                continue
+            if line.command in macros:
                 self.load_macro_from_line(line)
                 continue
             if line.is_first_pass:
@@ -86,7 +94,9 @@ class Segment(UserDefinedMacroImplementation):
                     try:
                         dc.data.extend(DataType(dc.data_type, input=str(self.get_value(operand))).to_bytes(dc.length))
                     except KeyError:
-                        raise NotFoundInSymbolTableError(operand)
+                        raise NotFoundInSymbolTableError(f"{operand}=={dc}=={dc.expression}")
+                    except NotFoundInSymbolTableError:
+                        raise NotFoundInSymbolTableError(f"{operand}=={dc}=={dc.expression}")
             self.data.set_constant(dc.data * dc.duplication_factor, dc.start)
         return
 
