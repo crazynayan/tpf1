@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from p1_utils.data_type import DataType
 from p1_utils.errors import EquLabelRequiredError, EquDataTypeHasAmpersandError, DcInvalidError, \
-    NotFoundInSymbolTableError
+    NotFoundInSymbolTableError, ZeroDuplicationLengthError
 from p1_utils.file_line import Line
 from p2_assembly.mac0_generic import MacroGeneric
 
@@ -31,6 +31,7 @@ class DataMacroImplementation(MacroGeneric):
         self._command['EQU'] = self.equ
         self._command['ORG'] = self.org
         self._command['DSECT'] = self.dsect
+        self._command['DC'] = self.ds
 
     @staticmethod
     def get_parameter_in_parenthesis(operand: str) -> str:
@@ -75,11 +76,12 @@ class DataMacroImplementation(MacroGeneric):
             index = len(duplication_factor_text)
         # Data Type
         data_type = operand[index]
+        # noinspection SpellCheckingInspection
         if data_type not in 'CXHFDBZPAY':
             raise DcInvalidError
         index += 1
-        if data_type == 'F' and len(operand) > index and operand[index] == 'D':
-            data_type = 'FD'
+        if data_type in {'F', 'A'} and len(operand) > index and operand[index] == 'D':
+            data_type = f'{data_type}D'
             index += 1
         # Align to boundary
         align_to_boundary = 0
@@ -96,7 +98,13 @@ class DataMacroImplementation(MacroGeneric):
                 length = int(length_text)
             elif operand[index] == '(':
                 length_text = self.get_parameter_in_parenthesis(operand[index:])
-                length = self.get_value(length_text[1:-1])
+                try:
+                    length = self.get_value(length_text[1:-1])
+                except NotFoundInSymbolTableError:
+                    if duplication_factor == 0:
+                        raise ZeroDuplicationLengthError
+                    else:
+                        raise NotFoundInSymbolTableError
             else:
                 raise DcInvalidError
             index += len(length_text)
@@ -140,7 +148,14 @@ class DataMacroImplementation(MacroGeneric):
         try:
             ds: Dc = self._get_dc(operands[0])
         except DcInvalidError:
-            raise DcInvalidError(line)
+            if line.command != "DC":
+                raise DcInvalidError(line)
+            else:
+                return list()
+        except ZeroDuplicationLengthError:
+            if line.label:
+                self.add_label(line.label, self._location_counter, 0, self.name)
+            raise NotFoundInSymbolTableError
         dc_list: List[Dc] = [ds]
         if line.label:
             self.add_label(line.label, ds.start, ds.length, self.name)
@@ -158,7 +173,7 @@ class DataMacroImplementation(MacroGeneric):
         if dsp_operand[0] == '&' or (len(dsp_operand) > 1 and dsp_operand[1] == "'" and dsp_operand[0] != 'L'
                                      and '&' in dsp_operand):
             raise EquDataTypeHasAmpersandError(line)
-        if len(operands) > 1:
+        if len(operands) > 1 and operands[1]:
             length = self.get_value(operands[1])
         try:
             self.add_label(line.label, self.get_value(dsp_operand), length, self.name, self.is_based(dsp_operand))

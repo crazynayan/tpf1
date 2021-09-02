@@ -6,7 +6,7 @@ from p1_utils.errors import PackExecutionError
 
 class DataTypeGeneric:
     DATA_TYPES: Dict[str, int] = {
-        'X': 1, 'C': 1, 'H': 2, 'F': 4, 'D': 8, 'FD': 8, 'B': 1, 'P': 1, 'Z': 1, 'A': 4, 'Y': 2}
+        'X': 1, 'C': 1, 'H': 2, 'F': 4, 'D': 8, 'FD': 8, 'B': 1, 'P': 1, 'Z': 1, 'A': 4, 'Y': 2, 'AD': 8}
 
     def __init__(self):
         self.data_type: Optional[str] = None
@@ -228,6 +228,13 @@ class FDDataType(NumericDataType):
         self.data_type = 'FD'
 
 
+class ADDataType(NumericDataType):
+
+    def __init__(self):
+        super().__init__()
+        self.data_type = 'AD'
+
+
 class DDataType(NumericDataType):
 
     def __init__(self):
@@ -256,6 +263,7 @@ class DataType:
         'F': FDataType,
         'D': DDataType,
         'FD': FDDataType,
+        'AD': ADDataType,
         'B': BDataType,
         'P': PDataType,
         'Z': ZDataType,

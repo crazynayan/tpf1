@@ -22,6 +22,10 @@ class NotFoundInSymbolTableError(AssemblyError):
     pass
 
 
+class ZeroDuplicationLengthError(AssemblyError):
+    pass
+
+
 class EquLabelRequiredError(AssemblyError):
     pass
 
