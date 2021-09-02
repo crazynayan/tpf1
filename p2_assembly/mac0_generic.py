@@ -82,8 +82,8 @@ class MacroGeneric:
         return value
 
     def get_value(self, operand: str) -> int:
-        if operand.isdigit():
-            return int(operand)
+        if operand.strip().isdigit():
+            return int(operand.strip())
         updated_operand = operand.upper()
         data_list = re.findall(r"[CXHFDBZPAY]D?'[^']+'", updated_operand)
         value_list = list()
@@ -127,6 +127,8 @@ class MacroGeneric:
             return_value = int(eval("".join(eval_list)))
         except SyntaxError:
             raise SyntaxError(operand)
+        except ZeroDivisionError:
+            raise NotFoundInSymbolTableError
         return return_value
 
     def is_based(self, operand: str) -> bool:
