@@ -76,6 +76,7 @@ class _DataMacroCollection:
     def __init__(self):
         self.macros: Dict[str, DataMacro] = dict()
         self.indexed_labels: Dict[str, str] = dict()
+        self.default_macros: Dict[str, LabelReference] = dict()
         # Load default macros
         default_macros_dict: Dict[str, str] = dict()
         non_default_macros_dict: Dict[str, str] = dict()
@@ -89,15 +90,14 @@ class _DataMacroCollection:
             else:
                 non_default_macros_dict[macro_name] = file_name
         # Initialize default macros in hierarchical order
-        default_macros: Dict[str, LabelReference] = dict()
         for macro_name in self.DEFAULT_MACROS:
             self.macros[macro_name] = DataMacro(name=macro_name, filename=default_macros_dict[macro_name],
-                                                default_macros=default_macros)
+                                                default_macros=self.default_macros)
             self.macros[macro_name].load()
-            default_macros = {**default_macros, **self.macros[macro_name].all_labels}
+            self.default_macros = {**self.default_macros, **self.macros[macro_name].all_labels}
         # Initialize non default macros
         for macro_name, file_name in non_default_macros_dict.items():
-            self.macros[macro_name] = DataMacro(name=macro_name, filename=file_name, default_macros=default_macros)
+            self.macros[macro_name] = DataMacro(name=macro_name, filename=file_name, default_macros=self.default_macros)
         for macro_name, data_macro in self.macros.items():
             data_macro.load()
             self.indexed_labels = {**self.indexed_labels,
@@ -107,3 +107,4 @@ class _DataMacroCollection:
 _collection = _DataMacroCollection()
 macros = _collection.macros
 indexed_macros = _collection.indexed_labels
+default_macros = _collection.default_macros
