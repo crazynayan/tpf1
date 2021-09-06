@@ -53,7 +53,9 @@ class File:
             macros = [line for line in lines
                       if (len(line[50:].strip().split()) > 1 and line[50:].strip().split()[1].startswith("REG="))
                       or (len(line[50:].strip().split()) > 0
-                          and (line[50:].strip().split()[0].endswith("EQ") or line[50:].strip().split()[0] == "EB0EB")
+                          and (line[50:].strip().split()[0].endswith("EQ")
+                               or line[50:].strip().split()[0] == "EB0EB"
+                               or line[50:].strip().split()[0] == "DATAS")
                           and line[50] == " ")
                       or (len(line[50:].strip().split()) > 1 and line[50:].strip().split()[0] == globz
                           and line[50:].strip().split()[1].startswith("REG") and "=R" in line[50:].strip().split()[1])
@@ -128,6 +130,13 @@ class Line:
             line.continuation = True
             file_line = file_line[:71]
         line_without_l = file_line.replace("L'", "~")
+        line_words = line_without_l.split()
+        line_word_count = len(line_words)
+        if file_line[0] == " ":
+            word_count = 2 if line_word_count > 2 else line_word_count
+        else:
+            word_count = 3 if line_word_count > 3 else line_word_count
+        quote_count = sum(word.count("'") for word in line_words[:word_count])
         if quote_continuing:
             all_words = file_line.split()
             words = list()
@@ -136,13 +145,13 @@ class Line:
                 if word[-1] == "'":
                     break
             words = [" ".join(words)]
-        elif line.continuation and "'" in line_without_l and line_without_l.count("'") % 2 != 0:
+        elif line.continuation and quote_count % 2 != 0:
             # This is the case where 2 quotes are in separate lines for e.g. MSG='.... X and in next line ...'
             line.quote_continuation = True
             line_with_quote = file_line + "'"
             words = re.findall(r"(?:'.*?'|\S)+", line_with_quote)
             words[-1] = words[-1][:-1]
-        elif "'" in file_line:
+        elif quote_count:
             # Split the line in words. Keep words within single quotes together.
             words = re.findall(r"(?:[^L\s]'[^']*'|\S)+", file_line)
         else:
