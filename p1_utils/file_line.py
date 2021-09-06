@@ -23,12 +23,25 @@ class File:
         # Check for listing
         if filename[-4:] == ".lst":
             lines = [line[:-1].upper() for index, line in enumerate(lines) if len(line) > 51
-                     and (line[48].isdigit() or (lines[index - 1][121].upper() in {"X", "+"}
+                     and (line[48].isdigit() or (lines[index - 1][121] != " "
                                                  and line[113:117].upper() != "PAGE"
                                                  if len(lines[index - 1]) > 121 else False))
                      and line[49] in {" ", "+"}
-                     and not line.startswith("   Active Usings")
-                     and line[50] not in config.COMMENT_C1]
+                     and not line.startswith("   Active Usings")]
+            # Remove comments
+            lines_without_comments = list()
+            for index, line in enumerate(lines):
+                if line[50] in config.COMMENT_C1:
+                    continue
+                if index == 0 or len(lines[index - 1]) <= 121:
+                    lines_without_comments.append(line)
+                    continue
+                if lines[index - 1][121] != " " and lines[index - 1][50] in config.COMMENT_C1:
+                    if lines[index - 1] == "0":
+                        raise Exception(line)
+                    continue
+                lines_without_comments.append(line)
+            lines = lines_without_comments
             # Remove everything after FINIS/ORG
             finis = self._get_line("FINIS", lines)
             ltorg = self._get_line("LTORG", lines)
@@ -40,7 +53,7 @@ class File:
                 mend = self._get_line("MEND", lines)
                 lines = lines[:lines.index(macro)] + lines[lines.index(mend) + 1:]
                 macro = self._get_line("MACRO", lines)
-            # Extract data macros (Only REG=). DATAS generated REG= also included.
+            # Extract data macros (REG=, GLOBZ, ...EQ, EB0EB). DATAS generated REG= also included.
             globz = "GLOBZ"
             macros = [line for line in lines
                       if (len(line[50:].strip().split()) > 1 and line[50:].strip().split()[1].startswith("REG="))
@@ -64,8 +77,6 @@ class File:
                 macro_dict[macro_name] = line
             # Update macros with the corresponding generated lines
             for macro_name, macro_line in macro_dict.items():
-                if macro_name == "DCTPFX":
-                    continue
                 self.macros[macro_name] = list()
                 for line in lines[lines.index(macro_line) + 1:]:
                     if line[49] != "+":
@@ -130,9 +141,11 @@ class Line:
             line_with_quote = file_line + "'"
             words = re.findall(r"(?:'.*?'|\S)+", line_with_quote)
             words[-1] = words[-1][:-1]
-        else:
+        elif "'" in file_line:
             # Split the line in words. Keep words within single quotes together.
             words = re.findall(r"(?:[^L\s]'[^']*'|\S)+", file_line)
+        else:
+            words = file_line.split()
         if file_line[0] == " ":
             # The label is None for lines with first character space (No label)
             words.insert(0, None)
@@ -157,8 +170,6 @@ class Line:
         prior_line = Line()
         main_line = Line()
         for file_line in file_lines:
-            if file_line.startswith("ETK200M"):
-                debug = True
             line = cls.from_line(file_line, prior_line.continuation, prior_line.quote_continuation,
                                  prior_line.next_line_comment, main_line.operand is not None)
             if not prior_line.continuation:
