@@ -42,11 +42,6 @@ class File:
                     continue
                 lines_without_comments.append(line)
             lines = lines_without_comments
-            # Remove everything after FINIS/ORG
-            finis = self._get_line("FINIS", lines)
-            ltorg = self._get_line("LTORG", lines)
-            end_line = ltorg if ltorg else finis
-            lines = lines[:lines.index(end_line)]
             # Remove all code between MACRO and MEND
             macro = self._get_line("MACRO", lines)
             while macro:
@@ -82,8 +77,14 @@ class File:
                     if line[49] != "+":
                         break
                     self.macros[macro_name].append(line[50:])
+            # Remove everything after FINIS/ORG
+            finis = self._get_line("FINIS", lines)
+            ltorg = self._get_line("LTORG", lines)
+            end_line = ltorg if ltorg else finis
+            lines = lines[:lines.index(end_line)]
             # Truncate all starting characters to match CC=1 for assembly
-            lines = [line[50:] for line in lines if line[49] == " "]
+            self.lines = [line[50:] for line in lines if line[49] == " "]
+            return
         # Remove the CVS header if present
         index = 0
         for line in lines:
