@@ -77,7 +77,7 @@ class DataMacroImplementation(MacroGeneric):
         # Data Type
         data_type = operand[index]
         # noinspection SpellCheckingInspection
-        if data_type not in 'CXHFDBZPAY':
+        if data_type not in 'CXHFDBZPAYVS':
             raise DcInvalidError
         index += 1
         if data_type in {'F', 'A'} and len(operand) > index and operand[index] == 'D':
@@ -159,9 +159,12 @@ class DataMacroImplementation(MacroGeneric):
         dc_list: List[Dc] = [ds]
         if line.label:
             self.add_label(line.label, ds.start, ds.length, self.name)
-        if len(operands) > 1:
-            for operand in operands[1:]:
-                dc_list.append(self._get_dc(operand))  # Increment location counter for multiple values
+        try:
+            if len(operands) > 1:
+                for operand in operands[1:]:
+                    dc_list.append(self._get_dc(operand))  # Increment location counter for multiple values
+        except DcInvalidError:
+            raise DcInvalidError(line)
         return dc_list
 
     def equ(self, line: Line) -> None:

@@ -6,7 +6,8 @@ from p1_utils.errors import PackExecutionError
 
 class DataTypeGeneric:
     DATA_TYPES: Dict[str, int] = {
-        'X': 1, 'C': 1, 'H': 2, 'F': 4, 'D': 8, 'FD': 8, 'B': 1, 'P': 1, 'Z': 1, 'A': 4, 'Y': 2, 'AD': 8}
+        "X": 1, "C": 1, "H": 2, "F": 4, "D": 8, "FD": 8, "B": 1, "P": 1, "Z": 1, "A": 4, "Y": 2, "AD": 8, "V": 4, "S": 2
+    }
 
     def __init__(self):
         self.data_type: Optional[str] = None
@@ -22,18 +23,18 @@ class DataTypeGeneric:
         return 0 if self.DATA_TYPES[self.data_type] == 1 else self.DATA_TYPES[self.data_type]
 
     def from_bytes(self) -> int:
-        return int.from_bytes(self.bytes, 'big', signed=False)
+        return int.from_bytes(self.bytes, "big", signed=False)
 
     @property
     def decode(self) -> str:
-        return self.bytes.decode(encoding='cp037')
+        return self.bytes.decode(encoding="cp037")
 
 
 class CDataType(DataTypeGeneric):
 
     def __init__(self):
         super().__init__()
-        self.data_type = 'C'
+        self.data_type = "C"
 
     @property
     def length(self) -> int:
@@ -41,11 +42,11 @@ class CDataType(DataTypeGeneric):
 
     @property
     def value(self) -> int:
-        return int.from_bytes(bytes(self.input, encoding='cp037'), 'big', signed=False) \
+        return int.from_bytes(bytes(self.input, encoding="cp037"), "big", signed=False) \
             if self.input is not None else self.from_bytes()
 
     def to_bytes(self, length: int = None) -> bytearray:
-        char_data = bytearray(self.input, encoding='cp037')
+        char_data = bytearray(self.input, encoding="cp037")
         if length is None or length == self.length:
             return char_data
         if self.length > length:
@@ -63,7 +64,7 @@ class XDataType(DataTypeGeneric):
 
     def __init__(self):
         super().__init__()
-        self.data_type = 'X'
+        self.data_type = "X"
 
     @property
     def length(self) -> int:
@@ -76,19 +77,19 @@ class XDataType(DataTypeGeneric):
     def to_bytes(self, length: int = None) -> bytearray:
         length = length or self.length
         try:
-            return bytearray(self.value.to_bytes(length, 'big', signed=False))
+            return bytearray(self.value.to_bytes(length, "big", signed=False))
         except OverflowError:
-            return bytearray(self.value.to_bytes(self.length, 'big', signed=False)[(self.length - length):])
+            return bytearray(self.value.to_bytes(self.length, "big", signed=False)[(self.length - length):])
 
     @property
     def decode(self) -> str:
-        return self.bytes.decode(encoding='cp037') if self.bytes else self.to_bytes().decode(encoding='cp037')
+        return self.bytes.decode(encoding="cp037") if self.bytes else self.to_bytes().decode(encoding="cp037")
 
 
 class BDataType(DataTypeGeneric):
     def __init__(self):
         super().__init__()
-        self.data_type = 'B'
+        self.data_type = "B"
 
     @property
     def length(self) -> int:
@@ -101,22 +102,22 @@ class BDataType(DataTypeGeneric):
     def to_bytes(self, length: int = None) -> bytearray:
         length = length or self.length
         try:
-            return bytearray(self.value.to_bytes(length, 'big', signed=False))
+            return bytearray(self.value.to_bytes(length, "big", signed=False))
         except OverflowError:
-            return bytearray(self.value.to_bytes(self.length, 'big', signed=False)[(self.length - length):])
+            return bytearray(self.value.to_bytes(self.length, "big", signed=False)[(self.length - length):])
 
 
 class PDataType(DataTypeGeneric):
 
     def __init__(self):
         super().__init__()
-        self.data_type = 'P'
+        self.data_type = "P"
 
     @property
     def length(self) -> int:
         if self.input is None:
             return self.default_length
-        length_input = len(self.input) + 1 if self.input[0] not in ['+', '-'] else len(self.input)
+        length_input = len(self.input) + 1 if self.input[0] not in ["+", "-"] else len(self.input)
         return -(-length_input // 2)
 
     @property
@@ -124,18 +125,18 @@ class PDataType(DataTypeGeneric):
         return int(self.input) if self.input is not None else self.from_bytes()
 
     def to_bytes(self, length: int = None) -> bytearray:
-        packed_data = self.input[1:] if self.input[0] in ['+', '-'] else self.input
-        packed_data = packed_data + 'D' if self.input[0] == '-' else packed_data + 'C'
+        packed_data = self.input[1:] if self.input[0] in ["+", "-"] else self.input
+        packed_data = packed_data + "D" if self.input[0] == "-" else packed_data + "C"
         length = length or self.length
         try:
-            return bytearray(int(packed_data, 16).to_bytes(length, 'big', signed=False))
+            return bytearray(int(packed_data, 16).to_bytes(length, "big", signed=False))
         except OverflowError:
-            return bytearray(int(packed_data, 16).to_bytes(self.length, 'big', signed=False)[(self.length - length):])
+            return bytearray(int(packed_data, 16).to_bytes(self.length, "big", signed=False)[(self.length - length):])
 
     def from_bytes(self) -> int:
         if not self.is_sign_valid() or not self.is_packed_digit():
             raise PackExecutionError
-        sign = '-' if self.bytes[-1] & 0x0F in (0xB, 0xD) else '+'
+        sign = "-" if self.bytes[-1] & 0x0F in (0xB, 0xD) else "+"
         return int(f"{sign}{self.bytes.hex()[:-1]}")
 
     def is_packed_digit(self) -> bool:
@@ -151,22 +152,22 @@ class ZDataType(DataTypeGeneric):
 
     def __init__(self):
         super().__init__()
-        self.data_type = 'Z'
+        self.data_type = "Z"
 
     @property
     def length(self) -> int:
         if self.input is None:
             return self.default_length
-        return len(self.input) - 1 if self.input[0] in ['+', '-'] else len(self.input)
+        return len(self.input) - 1 if self.input[0] in ["+", "-"] else len(self.input)
 
     @property
     def value(self) -> int:
         return int(self.input) if self.input is not None else self.from_bytes()
 
     def to_bytes(self, length: int = None) -> bytearray:
-        zoned_data = self.input[1:] if self.input[0] in ['+', '-'] else self.input
-        sign = 0xD0 if self.input[0] == '-' else 0xC0
-        zoned_data = bytearray(zoned_data, 'cp037')
+        zoned_data = self.input[1:] if self.input[0] in ["+", "-"] else self.input
+        sign = 0xD0 if self.input[0] == "-" else 0xC0
+        zoned_data = bytearray(zoned_data, "cp037")
         zoned_data[-1] = zoned_data[-1] & 0x0F | sign
         if length is None or length == self.length:
             return zoned_data
@@ -174,10 +175,10 @@ class ZDataType(DataTypeGeneric):
             return zoned_data[(self.length - length):]  # Truncation
         pad_data = bytearray([config.NUMBER_PADDING] * (length - self.length))
         pad_data.extend(zoned_data)
-        return pad_data                                # Padding
+        return pad_data  # Padding
 
     def from_bytes(self) -> int:
-        sign = '-' if self.bytes[-1] & 0xF0 == 0xD0 else '+'
+        sign = "-" if self.bytes[-1] & 0xF0 == 0xD0 else "+"
         numeric_bytes = self.bytes.copy()
         numeric_bytes[-1] |= 0xF0
         return int(f"{sign}{numeric_bytes.decode(encoding='cp037')}")
@@ -196,85 +197,100 @@ class NumericDataType(DataTypeGeneric):
         number_length = length or self.length
         number = self.value
         try:
-            return bytearray(number.to_bytes(number_length, 'big', signed=True))
+            return bytearray(number.to_bytes(number_length, "big", signed=True))
         except OverflowError:
             try:
-                return bytearray(number.to_bytes(self.length, 'big', signed=True)[(self.length - number_length):])
+                return bytearray(number.to_bytes(self.length, "big", signed=True)[(self.length - number_length):])
             except OverflowError:
-                return bytearray(number.to_bytes(number_length, 'big', signed=False))
+                return bytearray(number.to_bytes(number_length, "big", signed=False))
 
     def from_bytes(self) -> int:
-        return int.from_bytes(self.bytes, 'big', signed=True)
+        return int.from_bytes(self.bytes, "big", signed=True)
 
 
 class FDataType(NumericDataType):
 
     def __init__(self):
         super().__init__()
-        self.data_type = 'F'
+        self.data_type = "F"
 
 
 class HDataType(NumericDataType):
 
     def __init__(self):
         super().__init__()
-        self.data_type = 'H'
+        self.data_type = "H"
 
 
 class FDDataType(NumericDataType):
 
     def __init__(self):
         super().__init__()
-        self.data_type = 'FD'
+        self.data_type = "FD"
 
 
 class ADDataType(NumericDataType):
 
     def __init__(self):
         super().__init__()
-        self.data_type = 'AD'
+        self.data_type = "AD"
 
 
 class DDataType(NumericDataType):
 
     def __init__(self):
         super().__init__()
-        self.data_type = 'D'
+        self.data_type = "D"
 
 
 class ADataType(NumericDataType):
     def __init__(self):
         super().__init__()
-        self.data_type = 'A'
+        self.data_type = "A"
 
 
 class YDataType(NumericDataType):
 
     def __init__(self):
         super().__init__()
-        self.data_type = 'Y'
+        self.data_type = "Y"
+
+
+class VDataType(NumericDataType):
+    def __init__(self):
+        super().__init__()
+        self.data_type = "V"
+
+
+class SDataType(NumericDataType):
+
+    def __init__(self):
+        super().__init__()
+        self.data_type = "S"
 
 
 class DataType:
     DT: Dict[str, Callable] = {
-        'X': XDataType,
-        'C': CDataType,
-        'H': HDataType,
-        'F': FDataType,
-        'D': DDataType,
-        'FD': FDDataType,
-        'AD': ADDataType,
-        'B': BDataType,
-        'P': PDataType,
-        'Z': ZDataType,
-        'A': ADataType,
-        'Y': YDataType,
+        "X": XDataType,
+        "C": CDataType,
+        "H": HDataType,
+        "F": FDataType,
+        "D": DDataType,
+        "FD": FDDataType,
+        "AD": ADDataType,
+        "B": BDataType,
+        "P": PDataType,
+        "Z": ZDataType,
+        "A": ADataType,
+        "Y": YDataType,
+        "V": VDataType,
+        "S": SDataType,
     }
 
     def __init__(self, data_type: str, **kwargs):
         self.data_type_object = self.DT[data_type]()
-        self.data_type_object.input = kwargs['input'] if 'input' in kwargs else None
-        self.data_type_object.bytes = kwargs['bytes'] if 'bytes' in kwargs and 'input' not in kwargs else None
+        self.data_type_object.input = kwargs["input"] if "input" in kwargs else None
+        self.data_type_object.bytes = kwargs["bytes"] if "bytes" in kwargs and "input" not in kwargs else None
 
     @property
     def default_length(self) -> int:
@@ -323,7 +339,7 @@ class Register:
     def is_even(self) -> bool:
         return self.reg in config.REGISTERS_EVEN
 
-    def get_next_register(self) -> 'Register':
+    def get_next_register(self) -> "Register":
         if not self.is_valid():
             return self
         if self.reg == "R15":
