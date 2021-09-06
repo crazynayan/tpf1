@@ -51,8 +51,11 @@ class DirectiveImplementation(SegmentGeneric):
         self.name = line.label
         super().dsect(line)
 
-    def csect(self, _) -> None:
+    def csect(self, line) -> None:
         self.name = self.seg_name
+        if not self._counters:
+            self._location_counter, self._max_counter = 0, 0
+            return
         self._location_counter, self._max_counter = self._counters
         self._counters = None
 
