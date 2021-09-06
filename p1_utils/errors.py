@@ -30,6 +30,10 @@ class EquLabelRequiredError(AssemblyError):
     pass
 
 
+class OrgError(AssemblyError):
+    pass
+
+
 class EquDataTypeHasAmpersandError(AssemblyError):
     pass
 

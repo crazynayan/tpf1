@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from p1_utils.data_type import DataType
 from p1_utils.errors import EquLabelRequiredError, EquDataTypeHasAmpersandError, DcInvalidError, \
-    NotFoundInSymbolTableError, ZeroDuplicationLengthError
+    NotFoundInSymbolTableError, ZeroDuplicationLengthError, OrgError
 from p1_utils.file_line import Line
 from p2_assembly.mac0_generic import MacroGeneric
 
@@ -185,7 +185,13 @@ class DataMacroImplementation(MacroGeneric):
         return
 
     def org(self, line: Line) -> None:
-        self._location_counter = self.get_value(line.operand) if line.operand else self._max_counter
+        try:
+            if line.operand == "," or not line.operand:
+                self._location_counter = self._max_counter
+            else:
+                self._location_counter = self.get_value(line.operand)
+        except NotFoundInSymbolTableError:
+            raise OrgError(line)
         return
 
     def dsect(self, line: Line) -> None:
