@@ -1,12 +1,12 @@
 import os
 import re
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Tuple
 
 from config import config
 from p1_utils.data_type import DataType
-from p1_utils.errors import NotFoundInSymbolTableError
+from p1_utils.errors import NotFoundInSymbolTableError, EquDataTypeHasAmpersandError
 from p1_utils.file_line import Line, File
-from p2_assembly.mac2_data_macro import macros, DataMacro
+from p2_assembly.mac2_data_macro import macros
 from p2_assembly.seg2_ins_operand import Label
 from p2_assembly.seg5_exec_macro import UserDefinedMacroImplementation
 
@@ -54,11 +54,30 @@ class Segment(UserDefinedMacroImplementation):
     def _build_symbol_table(self, lines: List[Line]) -> None:
         prior_label: Label = Label(self.root_label())
         self.equ(self.root_line)
-        # Load all symbols from listings
+        # First pass for listings
+        second_list: List[Tuple[Line, int]] = list()
         for macro_name, macro_lines in self.lst_macros.items():
-            macros[macro_name] = DataMacro(name=macro_name, macro_lines=macro_lines, default_macros=self.all_labels)
-            macros[macro_name].load()
-            self._symbol_table = {**self.all_labels, **macros[macro_name].all_labels}
+            lines_list = Line.from_file(macro_lines)
+            line = Line.from_line(f"{macro_name} EQU *")
+            lines_list.insert(0, line)
+            for line in lines_list:
+                if line.command not in {"DS", "EQU", "ORG", "DSECT", "DC", "CSECT"}:
+                    continue
+                try:
+                    self._command[line.command](line)
+                except EquDataTypeHasAmpersandError:
+                    pass
+                except NotFoundInSymbolTableError:
+                    second_list.append((line, self._location_counter))
+        # Second pass
+        for line, location_counter in second_list:
+            if line.command not in {"EQU", "DS"}:
+                continue
+            self._location_counter = location_counter
+            try:
+                self._command[line.command](line)
+            except NotFoundInSymbolTableError:
+                raise NotFoundInSymbolTableError(line)
         # Load inline symbols
         for line in lines:
             if line.command in self.lst_macros:
@@ -88,7 +107,7 @@ class Segment(UserDefinedMacroImplementation):
 
     def _generate_constants(self) -> None:
         for dc in self.dc_list:
-            if dc.expression:
+            if dc.expression and dc.data_type not in {"S", "V"}:
                 dc.data = bytearray()
                 for operand in dc.expression:
                     try:
@@ -97,6 +116,8 @@ class Segment(UserDefinedMacroImplementation):
                         raise NotFoundInSymbolTableError(f"{operand}=={dc}=={dc.expression}")
                     except NotFoundInSymbolTableError:
                         raise NotFoundInSymbolTableError(f"{operand}=={dc}=={dc.expression}")
+                    except ZeroDivisionError:
+                        pass
             self.data.set_constant(dc.data * dc.duplication_factor, dc.start)
         return
 
@@ -121,6 +142,8 @@ class Segment(UserDefinedMacroImplementation):
             return False
         if line.command in macros:
             self.load_macro_from_line(line)
+            return True
+        if line.command in self.lst_macros:
             return True
         if line.create_node_for_directive and self.is_branch(line.label):
             return False
