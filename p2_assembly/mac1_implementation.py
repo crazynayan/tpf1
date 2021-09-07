@@ -182,6 +182,8 @@ class DataMacroImplementation(MacroGeneric):
             self.add_label(line.label, self.get_value(dsp_operand), length, self.name, self.is_based(dsp_operand))
         except NotFoundInSymbolTableError:
             raise NotFoundInSymbolTableError(line)
+        except ZeroDivisionError:
+            raise NotFoundInSymbolTableError(line)
         return
 
     def org(self, line: Line) -> None:
