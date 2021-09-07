@@ -53,10 +53,10 @@ class File:
             macros = [line for line in lines
                       if (len(line[50:].strip().split()) > 1 and line[50:].strip().split()[1].startswith("REG="))
                       or (len(line[50:].strip().split()) > 0
+                          and line[50] == " "
                           and (line[50:].strip().split()[0].endswith("EQ")
-                               or line[50:].strip().split()[0] == "EB0EB"
-                               or line[50:].strip().split()[0] == "DATAS")
-                          and line[50] == " ")
+                               or line[50:].strip().split()[0].endswith("EQU")
+                               or line[50:].strip().split()[0] in {"EB0EB", "DATAS", "CZ1SE", "FINIS"}))
                       or (len(line[50:].strip().split()) > 1 and line[50:].strip().split()[0] == globz
                           and line[50:].strip().split()[1].startswith("REG") and "=R" in line[50:].strip().split()[1])
                       ]
