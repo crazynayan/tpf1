@@ -127,8 +127,8 @@ class MacroGeneric:
             return_value = int(eval("".join(eval_list)))
         except SyntaxError:
             raise SyntaxError(operand)
-        except ZeroDivisionError:
-            raise NotFoundInSymbolTableError
+        except TypeError:
+            raise TypeError(operand)
         return return_value
 
     def is_based(self, operand: str) -> bool:
