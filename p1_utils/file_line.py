@@ -246,10 +246,10 @@ class Line:
             elif char == "'" and in_quotes:
                 ignore_commas = False
                 in_quotes = False
-            updated_char = "|" if char == "," and ignore_commas is False else char
+            updated_char = "~" if char == "," and ignore_commas is False else char
             prev_char = char
             new_operand.append(updated_char)
-        return "".join(new_operand).split("|")
+        return "".join(new_operand).split("~")
 
     def __repr__(self) -> str:
         return f"{self.label}:{self.command}:{self.operand}"
