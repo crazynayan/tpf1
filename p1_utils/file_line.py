@@ -73,11 +73,15 @@ class File:
                     continue
                 macro_dict[macro_name] = line
             # Update macros with the corresponding generated lines
+            ignore_macros = {"-SERRC"}
             for macro_name, macro_line in macro_dict.items():
                 self.macros[macro_name] = list()
                 for line in lines[lines.index(macro_line) + 1:]:
                     if line[49] != "+":
                         break
+                    # Remove generated lines of certain macro
+                    if any(line.strip().endswith(macro) for macro in ignore_macros):
+                        continue
                     self.macros[macro_name].append(line[50:])
             # Remove everything after FINIS/ORG
             finis = self._get_line("FINIS", lines)

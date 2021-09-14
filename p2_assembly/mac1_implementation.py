@@ -148,10 +148,7 @@ class DataMacroImplementation(MacroGeneric):
         try:
             ds: Dc = self._get_dc(operands[0])
         except DcInvalidError:
-            if line.command != "DC":
-                raise DcInvalidError(line)
-            else:
-                return list()
+            raise DcInvalidError(line)
         except ZeroDuplicationLengthError:
             if line.label:
                 self.add_label(line.label, self._location_counter, 0, self.name)
