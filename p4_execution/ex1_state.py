@@ -7,7 +7,7 @@ from config import config
 from p1_utils.data_type import DataType, Register
 from p1_utils.errors import SegmentNotFoundError, EcbLevelFormatError, InvalidBaseRegError, TpfdfError, \
     PartitionError, FileItemSpecificationError, PoolFileSpecificationError, BaseAddressError, ExecutionError, \
-    TPFServerMemoryError, LevtaExecutionError
+    TPFServerMemoryError, LevtaExecutionError, NotImplementedExecutionError
 from p2_assembly.mac0_generic import LabelReference
 from p2_assembly.mac2_data_macro import macros
 from p2_assembly.seg2_ins_operand import FieldIndex
@@ -146,6 +146,8 @@ class State:
 
     def _ex_command(self, node: InstructionType, execute_label: Optional[str] = None) -> str:
         seg_name = self.seg.seg_name
+        if node.command not in self._ex:
+            raise NotImplementedExecutionError(node)
         label = self._ex[node.command](node)
         next_label = str() if execute_label else label
         self.debug.hit(node, next_label, seg_name)

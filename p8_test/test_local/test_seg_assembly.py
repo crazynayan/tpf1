@@ -18,8 +18,8 @@ class SegmentTest(unittest.TestCase):
         self.maxDiff = None
         seg: Segment = segments[self.SEG_NAME]
         seg.assemble()
-        unknown_in_execute = {node.command for _, node in seg.nodes.items() if node.command not in TpfServer()._ex}
-        self.assertSetEqual(set(), unknown_in_execute, "\nUnknown in execute.")
+        unknown = [str(node) for _, node in seg.nodes.items() if node.command not in TpfServer().supported_commands]
+        self.assertListEqual(list(), unknown, "\nUnknown in execute.")
 
 
 if __name__ == "__main__":

@@ -434,8 +434,6 @@ class UserDefinedMacro(State):
             self.vm.set_bytes(byte_array, address, len(byte_array))
         return node.fall_down
 
-    def not_implemented(self, _) -> None:
-        raise NotImplementedExecutionError
 
 
 class ExecutableMacro(RealTimeMacro, UserDefinedMacro):

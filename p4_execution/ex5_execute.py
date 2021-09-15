@@ -14,8 +14,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         # S03 - Load & Store
         self._ex["LR"] = self.load_register
         self._ex["LTR"] = self.load_test_register
-        self._ex["LPR"] = self.not_implemented
-        # LNR - Not in ETA5
+        # LPR, LNR - Not in ETA5
         # LCR - Not in ETA5
         self._ex["L"] = self.load_fullword
         self._ex["ST"] = self.store_fullword
@@ -45,7 +44,6 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["D"] = self.divide_fullword
         self._ex["DR"] = self.divide_register
         self._ex["SRDA"] = self.shift_right_double_algebraic
-        self._ex["MR"] = self.not_implemented
         # MH, M, MR - Not in ETA5
         # SLA, SRA, SLDA - Not in ETA5
 
@@ -161,24 +159,16 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         # SRP
         # CP
         self._ex["TP"] = self.tp
-        self._ex["STCK"] = self.not_implemented
         self._ex["TR"] = self.tr
-        self._ex["TRT"] = self.not_implemented
-        self._ex["EDMK"] = self.not_implemented
-        # ED
+        # ED, EDMK, TRT, STCK
 
         # S09 - All new z/TPF instruction
-        self._ex["CLHHSI"] = self.not_implemented
-        self._ex["MVHHI"] = self.not_implemented
-        self._ex["LLC"] = self.not_implemented
         self._ex["LG"] = self.load_grande
         self._ex["STG"] = self.store_grande
-        self._ex["AFI"] = self.not_implemented
         self._ex["XGR"] = self.xor_grande_register
 
         # Realtime Macros
         self._ex["GETCC"] = self.getcc
-        self._ex["DECBC"] = self.not_implemented
         self._ex["LEVTA"] = self.levta
         self._ex["MODEC"] = self.no_operation
         self._ex["DETAC"] = self.detac
@@ -199,56 +189,19 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["ALASC"] = self.alasc
         self._ex["PNAMC"] = self.pnamc
         self._ex["FLIPC"] = self.flipc
-        self._ex["LODIC"] = self.not_implemented
         self._ex["EOWNRC"] = self.no_operation
-        self._ex["DLAYC"] = self.not_implemented
-        self._ex["DEFRC"] = self.not_implemented
         self._ex["CREMC"] = self.no_operation
-        self._ex["KEYCC"] = self.not_implemented
-        self._ex["KEYRC"] = self.not_implemented
-        self._ex["SYNCC"] = self.not_implemented
         self._ex["GLBLC"] = self.no_operation
-        self._ex["EVNTC"] = self.not_implemented
-        self._ex["EVNWC"] = self.not_implemented
-        self._ex["REALTIME"] = self.not_implemented
         self._ex["REALTIMA"] = self.realtima
-        self._ex["SWISC"] = self.not_implemented
-        self._ex["CREDC"] = self.not_implemented
-        self._ex["CREEC"] = self.not_implemented
-        self._ex["WAITC"] = self.not_implemented
-        self._ex["UNFRC"] = self.not_implemented
-        self._ex["FILNC"] = self.not_implemented
-        self._ex["POSTC"] = self.not_implemented
-        self._ex["FREEC"] = self.not_implemented
         self._ex["MALOC"] = self.maloc
-        self._ex["CALOC"] = self.not_implemented
-        self._ex["LISTC"] = self.not_implemented
-        self._ex["DEQC"] = self.not_implemented
 
         # SPM Macros
-        self._ex["#IF"] = self.not_implemented
-        self._ex["#ELIF"] = self.not_implemented
-        self._ex["#"] = self.not_implemented
-        self._ex["#EIF"] = self.not_implemented
-        self._ex["#DO"] = self.not_implemented
-        self._ex["#DOEX"] = self.not_implemented
-        self._ex["#EXIF"] = self.not_implemented
-        self._ex["#OREL"] = self.not_implemented
-        self._ex["#ELOP"] = self.not_implemented
-        self._ex["#EDO"] = self.not_implemented
-        self._ex["#GOTO"] = self.not_implemented
-        self._ex["#LOCA"] = self.not_implemented
         self._ex["#PERF"] = self.no_operation
-        self._ex["#SUBR"] = self.not_implemented
-        self._ex["#ESUB"] = self.not_implemented
         self._ex["#SPM"] = self.no_operation
-        self._ex["#ELSE"] = self.not_implemented
 
         # User Defined Executable Macros
         self._ex["AAGET"] = self.aaget
         self._ex["AACPY"] = self.aacpy
-        self._ex["LOCAA"] = self.not_implemented
-        self._ex["DELAA"] = self.not_implemented
         self._ex["CFCMA"] = self.heapa
         self._ex["HEAPA"] = self.heapa
         self._ex["EHEAPA"] = self.heapa
@@ -258,21 +211,9 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["PRIMA"] = self.prima
         self._ex["PNRCC"] = self.pnrcc
         self._ex["AGSQR"] = self.no_operation
-        self._ex["PNRREF"] = self.not_implemented
         self._ex["TKDNA"] = self.tkdna
-        self._ex["CKCOR"] = self.not_implemented
-        self._ex["SCANA"] = self.not_implemented
-        self._ex["TKFRA"] = self.not_implemented
-        self._ex["NAMEA"] = self.not_implemented
-        self._ex["TKMAC"] = self.not_implemented
-        self._ex["PNRCU"] = self.not_implemented
         self._ex["FLBKA"] = self.no_operation
-        self._ex["TOURA"] = self.not_implemented
         self._ex["PNRUA"] = self.pnrua
-        self._ex["TSTWK24"] = self.not_implemented
-        self._ex["CINFC"] = self.not_implemented
-        self._ex["TYCVA"] = self.not_implemented
-        self._ex["ALPHA"] = self.not_implemented
 
         # User Defined Executable Macros created for this tool
         self._ex["PARS_DATE"] = self.pars_date
@@ -285,12 +226,8 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         # Realtime Db Macros - Not in ETA5
         self._ex["FINWC"] = self.finwc
         self._ex["FIWHC"] = self.finwc
-        self._ex["FILEC"] = self.not_implemented
-        self._ex["FILUC"] = self.not_implemented
-        self._ex["GETFC"] = self.not_implemented
-        self._ex["SONIC"] = self.not_implemented
         # FINHC
-        # FILNC
+        # FILNC, FILEC, FILUC, GETFC, SONIC
 
         # User defined Db Macros
         self._ex["PDCRE"] = self.no_operation
@@ -298,23 +235,25 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["PDCLS"] = self.pdcls
         self._ex["PDMOD"] = self.pdmod
         self._ex["PDADD"] = self.no_operation
-        self._ex["PDDEL"] = self.not_implemented
         self._ex["PDCTL"] = self.pdctl
+        # PDDEL
 
         # TPFDF Macros
         self._ex["DBOPN"] = self.dbopn
         self._ex["DBRED"] = self.dbred
         self._ex["DBCLS"] = self.dbcls
         self._ex["DBIFB"] = self.dbifb
-        self._ex["DBREP"] = self.not_implemented
-        self._ex["DBMOD"] = self.not_implemented
-        self._ex["DBDEL"] = self.not_implemented
         self._ex["DBADD"] = self.dbadd
+        # DBREP, DBMOD, DBDEL
 
         # No operation
         self._ex["EQU"] = self.no_operation
         self._ex["DS"] = self.no_operation
         self._ex["EXITC"] = self.no_operation
+
+    @property
+    def supported_commands(self) -> set:
+        return set(self._ex)
 
     @staticmethod
     def no_operation(node: InstructionType) -> str:
