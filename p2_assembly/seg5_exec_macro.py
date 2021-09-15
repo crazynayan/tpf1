@@ -83,64 +83,13 @@ class RealtimeMacroImplementation(InstructionImplementation):
         self._command["ENTDC"] = self.seg_call
         self._command["BACKC"] = self.instruction_generic
         self._command["EXITC"] = self.instruction_generic
-        self._command["GETCC"] = self.key_value
-        self._command["DECBC"] = self.key_value
-        self._command["ALASC"] = self.key_value
-        self._command["LEVTA"] = self.key_value
-        self._command["RELCC"] = self.key_value
-        self._command["RCUNC"] = self.key_value
-        self._command["RELFC"] = self.key_value
-        self._command["RLCHA"] = self.key_value
-        self._command["CRUSA"] = self.key_value
-        self._command["DETAC"] = self.key_value
-        self._command["ATTAC"] = self.key_value
-        self._command["MODEC"] = self.key_value
         self._command["GLOBZ"] = self.globz
         self._command["FACE"] = self.instruction_generic
-        self._command["FINWC"] = self.key_value
-        self._command["FIWHC"] = self.key_value
-        self._command["SONIC"] = self.key_value
-        self._command["FILEC"] = self.key_value
-        self._command["FILUC"] = self.key_value
-        self._command["GETFC"] = self.key_value
         self._command["PNAMC"] = self.pnamc
-        self._command["SYSRA"] = self.key_value
-        self._command["SERRC"] = self.key_value
-        self._command["SNAPC"] = self.key_value
-        self._command["SENDA"] = self.key_value
-        self._command["DBOPN"] = self.key_value
         self._command["DBRED"] = self.dbred
-        self._command["DBCLS"] = self.key_value
-        self._command["DBDEL"] = self.key_value
         self._command["DBADD"] = self.dbadd
-        self._command["DBIFB"] = self.key_value
-        self._command["DBREP"] = self.key_value
-        self._command["DBMOD"] = self.key_value
-        self._command["FLIPC"] = self.key_value
-        self._command["LODIC"] = self.key_value
-        self._command["EOWNRC"] = self.key_value
-        self._command["DLAYC"] = self.key_value
-        self._command["DEFRC"] = self.key_value
-        self._command["CREMC"] = self.key_value
-        self._command["CREEC"] = self.key_value
-        self._command["KEYRC"] = self.key_value
-        self._command["KEYCC"] = self.key_value
-        self._command["SYNCC"] = self.key_value
-        self._command["GLBLC"] = self.key_value
-        self._command["REALTIME"] = self.key_value
-        self._command["REALTIMA"] = self.key_value
-        self._command["SWISC"] = self.key_value
-        self._command["EVNTC"] = self.key_value
-        self._command["EVNWC"] = self.key_value
-        self._command["FILNC"] = self.key_value
-        self._command["WAITC"] = self.key_value
-        self._command["CREDC"] = self.key_value
-        self._command["UNFRC"] = self.key_value
-        self._command["POSTC"] = self.key_value
-        self._command["MALOC"] = self.key_value
-        self._command["CALOC"] = self.key_value
-        self._command["FREEC"] = self.key_value
-        self._command["LISTC"] = self.key_value
+        self._command["TSTWK24"] = self.executable_data_macro
+        self._command["SONIC"] = self.executable_data_macro
 
     def key_value(self, line: Line) -> KeyValue:
         operands_list: List[str] = line.split_operands()
@@ -224,79 +173,6 @@ class RealtimeMacroImplementation(InstructionImplementation):
         suffix = macro_key_value.get_value("SUFFIX")
         self.load_macro(macro_name, reg, suffix)
         return
-
-
-class StructuredProgrammingMacroImplementation(RealtimeMacroImplementation):
-    def __init__(self, name: str):
-        super().__init__(name)
-        self._command["#IF"] = self.key_value
-        self._command["#ELIF"] = self.key_value
-        self._command["#"] = self.key_value
-        self._command["#EIF"] = self.key_value
-        self._command["#DO"] = self.key_value
-        self._command["#DOEX"] = self.key_value
-        self._command["#EXIF"] = self.key_value
-        self._command["#OREL"] = self.key_value
-        self._command["#ELOP"] = self.key_value
-        self._command["#EDO"] = self.key_value
-        self._command["#GOTO"] = self.key_value
-        self._command["#LOCA"] = self.key_value
-        self._command["#PERF"] = self.key_value
-        self._command["#SUBR"] = self.key_value
-        self._command["#ESUB"] = self.key_value
-        self._command["#SPM"] = self.key_value
-        self._command["#ELSE"] = self.key_value
-
-
-class UserDefinedMacroImplementation(StructuredProgrammingMacroImplementation):
-    def __init__(self, name: str):
-        super().__init__(name)
-        # PD MACRO
-        self._command["PDRED"] = self.key_value
-        self._command["PDADD"] = self.key_value
-        self._command["PDCLS"] = self.key_value
-        self._command["PDMOD"] = self.key_value
-        self._command["PDCRE"] = self.key_value
-        self._command["PDDEL"] = self.key_value
-        self._command["PDCTL"] = self.key_value
-        self._command["LOCAA"] = self.key_value
-        self._command["DELAA"] = self.key_value
-        # Heap & AAA related
-        self._command["AAGET"] = self.key_value
-        self._command["AACPY"] = self.key_value
-        self._command["CFCMA"] = self.key_value
-        self._command["HEAPA"] = self.key_value
-        self._command["EHEAPA"] = self.key_value
-        # Sabre related
-        self._command["PNRCC"] = self.key_value
-        self._command["MHINF"] = self.key_value
-        self._command["MCPCK"] = self.key_value
-        self._command["NMSEA"] = self.key_value
-        self._command["PRIMA"] = self.key_value
-        self._command["AGSQR"] = self.key_value
-        self._command["PNRREF"] = self.key_value
-        self._command["TKDNA"] = self.key_value
-        self._command["CKCOR"] = self.key_value
-        self._command["SCANA"] = self.key_value
-        self._command["TKFRA"] = self.key_value
-        self._command["NAMEA"] = self.key_value
-        self._command["TKMAC"] = self.key_value
-        self._command["PNRCU"] = self.key_value
-        self._command["FLBKA"] = self.key_value
-        self._command["TOURA"] = self.key_value
-        self._command["PNRUA"] = self.key_value
-        self._command["TSTWK24"] = self.executable_data_macro
-        self._command["SONIC"] = self.executable_data_macro
-        self._command["CINFC"] = self.key_value
-        self._command["TYCVA"] = self.key_value
-        self._command["ALPHA"] = self.key_value
-        self._command["DEQC"] = self.key_value
-        # Tool specific commands
-        self._command["ERROR_CHECK"] = self.key_value
-        self._command["PARS_DATE"] = self.key_value
-        self._command["UIO1_USER_EXIT"] = self.key_value
-        self._command["FMSG_USER_EXIT"] = self.key_value
-        self._command["GENERATE_LOCATOR"] = self.key_value
 
     def executable_data_macro(self, line: Line) -> KeyValue:
         node = self.key_value(line)

@@ -8,10 +8,10 @@ from p1_utils.errors import NotFoundInSymbolTableError, EquDataTypeHasAmpersandE
 from p1_utils.file_line import Line, File
 from p2_assembly.mac2_data_macro import macros
 from p2_assembly.seg2_ins_operand import Label
-from p2_assembly.seg5_exec_macro import UserDefinedMacroImplementation
+from p2_assembly.seg5_exec_macro import RealtimeMacroImplementation
 
 
-class Segment(UserDefinedMacroImplementation):
+class Segment(RealtimeMacroImplementation):
 
     def __init__(self, name: str, file_name: str):
         super().__init__(name)
@@ -131,7 +131,10 @@ class Segment(UserDefinedMacroImplementation):
             if prior_line.is_fall_down:
                 self.nodes[prior_line.label].fall_down = line.label
             prior_line = line
-            self.nodes[line.label] = self._command[line.command](line)
+            if line.command in self._command:
+                self.nodes[line.label] = self._command[line.command](line)
+            else:
+                self.nodes[line.label] = self.key_value(line)
         return
 
     def _process_assembler_directive(self, line: Line) -> bool:
