@@ -4,6 +4,7 @@ from urllib.parse import unquote
 
 from flask import Response, jsonify, request, g
 
+from p1_utils.errors import AssemblyError
 from p2_assembly.mac0_generic import LabelReference
 from p2_assembly.mac2_data_macro import macros
 from p2_assembly.seg6_segment import segments
@@ -374,10 +375,15 @@ def segment_list() -> Response:
 def segment_instruction(seg_name: str) -> Response:
     if seg_name not in segments:
         return error_response(404, "Segment not found")
-    segments[seg_name].assemble()
+    try:
+        segments[seg_name].assemble()
+    except AssemblyError:
+        return error_response(422, "Assembly error")
     instructions: List[str] = [str(node) for _, node in segments[seg_name].nodes.items()]
     instructions.sort()
-    response_dict = {"seg_name": seg_name, "instructions": instructions}
+    not_supported: List[str] = [str(node) for _, node in segments[seg_name].nodes.items()
+                                if node.command not in TpfServer().supported_commands]
+    response_dict = {"seg_name": seg_name, "instructions": instructions, "not_supported": not_supported}
     return jsonify(response_dict)
 
 
