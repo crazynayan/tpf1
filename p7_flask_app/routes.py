@@ -366,7 +366,15 @@ def find_field(field_name: str) -> Response:
 @token_auth.login_required
 def segment_list() -> Response:
     seg_list: List[str] = sorted(list(segments))
-    response_dict: Dict[str, List[str]] = {"segments": seg_list}
+    attributes: Dict[dict] = dict()
+    for name, segment in segments.items():
+        attribute = dict()
+        attributes[name] = attribute
+        attribute["source"] = segment.source
+        attribute["filename"] = segment.file_name
+        attribute["file_type"] = segment.file_type
+        attribute["blob_name"] = segment.blob_name
+    response_dict: Dict[str, List[str]] = {"segments": seg_list, "attributes": attributes}
     return jsonify(response_dict)
 
 
