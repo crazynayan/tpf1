@@ -16,6 +16,9 @@ class Segment(RealtimeMacroImplementation):
     def __init__(self, name: str, file_name: str):
         super().__init__(name)
         self.file_name: str = file_name
+        self.file_type: str = str()
+        self.source: str = config.LOCAL
+        self.blob_name: str = str()
 
     def __repr__(self) -> str:
         return f"{self.name}:{self.nodes != dict()}:{len(self.nodes)}"
@@ -36,7 +39,12 @@ class Segment(RealtimeMacroImplementation):
         # Default processing
         self.set_using(self.name, base_reg="R8")
         self.load_macro("EB0EB", base="R9")
-        # Get the data from line after removing CVS and empty lines.
+        # Ensure file is present for cloud objects
+        if self.source == config.CLOUD and not os.path.exists(self.file_name):
+            # noinspection PyPackageRequirements
+            from google.cloud.storage import Client
+            blob = Client().bucket(config.BUCKET).blob(self.blob_name)
+            blob.download_to_filename(self.file_name)
         file = File(self.file_name)
         self.lst_macros = file.macros
         # Create a list of Line objects
@@ -183,10 +191,11 @@ class _SegmentCollection:
 
     def __init__(self):
         self.segments: Dict = dict()  # Dictionary of Segment. Segment name is the key.
-        self.init_segments(self.ASM_FOLDER_NAME, self.ASM_EXT)
-        self.init_segments(self.LST_FOLDER_NAME, self.LST_EXT)
+        self.init_segments(self.ASM_FOLDER_NAME, self.ASM_EXT, config.ASM)
+        self.init_segments(self.LST_FOLDER_NAME, self.LST_EXT, config.LST)
+        self.init_all_from_cloud()
 
-    def init_segments(self, folder_name: str, extensions: set):
+    def init_segments(self, folder_name: str, extensions: set, file_type: str):
         for file_name in os.listdir(folder_name):
             if len(file_name) < 6 or file_name[-4:].lower() not in extensions:
                 continue
@@ -194,8 +203,30 @@ class _SegmentCollection:
             if seg_name in self.segments:
                 continue
             file_name = os.path.join(folder_name, file_name)
-            self.segments[seg_name] = Segment(seg_name, file_name)
+            self.segments[seg_name]: Segment = Segment(seg_name, file_name)
+            self.segments[seg_name].file_type = file_type
         return
+
+    def init_all_from_cloud(self):
+        if not config.CI_CLOUD_STORAGE:
+            return
+        # noinspection PyPackageRequirements
+        from google.cloud.storage import Client
+        blobs = Client().list_blobs(config.BUCKET)
+        for blob in blobs:
+            self.init_from_cloud(blob.name)
+        return
+
+    def init_from_cloud(self, blob_name: str):
+        seg_name = blob_name[:4].upper()
+        if seg_name in self.segments:
+            return
+        filename = os.path.join(config.DOWNLOAD_PATH, blob_name)
+        segment = Segment(seg_name, filename)
+        segment.file_type = config.LST
+        segment.source = config.CLOUD
+        segment.blob_name = blob_name
+        self.segments[seg_name] = segment
 
 
 segments = _SegmentCollection().segments

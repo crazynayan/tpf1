@@ -20,6 +20,12 @@ class Config:
     # Used by flask
     SECRET_KEY = os.environ.get("SECRET_KEY") or b64encode(os.urandom(24)).decode()
 
+    # Used by segment
+    CI_CLOUD_STORAGE = os.environ.get("CI_CLOUD_STORAGE") == "use"
+    ASM, LST, LOCAL, CLOUD = "asm", "lst", "local", "cloud"
+    DOWNLOAD_PATH = os.path.join(os.path.abspath(os.sep), "tmp")
+    BUCKET = "tpf-listings"
+
     # Used by utils
     REG_INVALID: str = "??"
     REG: Dict[str, List[str]] = {

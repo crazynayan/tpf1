@@ -5,14 +5,7 @@ from p4_execution.ex5_execute import TpfServer
 
 
 class SegmentTest(unittest.TestCase):
-    NUMBER_OF_FILES: int = 131
     SEG_NAME: str = "IGR1"
-
-    def test_files(self):
-        self.assertTrue("TS02" in segments)
-        self.assertTrue("TS01" in segments)
-        self.assertFalse("EB0EB" in segments)
-        self.assertEqual(self.NUMBER_OF_FILES, len(segments), "Update number of files in SegmentTest")
 
     def test_segment(self):
         self.maxDiff = None
