@@ -26,4 +26,5 @@ def make_shell_context():
         "TpfServer": TpfServer,
         "User": User,
         "create_user": create_user,
+        "client": tpf1_app.test_client(),
     }

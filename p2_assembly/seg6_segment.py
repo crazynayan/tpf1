@@ -219,7 +219,7 @@ class _SegmentCollection:
 
     def init_from_cloud(self, blob_name: str):
         seg_name = blob_name[:4].upper()
-        if seg_name in self.segments:
+        if seg_name in self.segments and self.segments[seg_name].source == config.LOCAL:
             return
         filename = os.path.join(config.DOWNLOAD_PATH, blob_name)
         segment = Segment(seg_name, filename)
@@ -229,4 +229,5 @@ class _SegmentCollection:
         self.segments[seg_name] = segment
 
 
-segments = _SegmentCollection().segments
+seg_collection = _SegmentCollection()
+segments = seg_collection.segments

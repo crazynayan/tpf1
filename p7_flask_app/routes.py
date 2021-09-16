@@ -4,10 +4,11 @@ from urllib.parse import unquote
 
 from flask import Response, jsonify, request, g
 
+from config import config
 from p1_utils.errors import AssemblyError
 from p2_assembly.mac0_generic import LabelReference
 from p2_assembly.mac2_data_macro import macros
-from p2_assembly.seg6_segment import segments
+from p2_assembly.seg6_segment import segments, seg_collection
 from p3_db.test_data import TestData
 from p3_db.test_data_elements import Pnr, Tpfdf, FixedFile, PnrOutput
 from p4_execution.ex5_execute import TpfServer
@@ -376,6 +377,46 @@ def segment_list() -> Response:
         attribute["blob_name"] = segment.blob_name
     response_dict: Dict[str, List[str]] = {"segments": seg_list, "attributes": attributes}
     return jsonify(response_dict)
+
+
+@tpf1_app.route("/segments/upload", methods=["POST"])
+def segment_upload() -> Response:
+    response = {
+        "error": True,
+        "message": str(),
+        "warning": str()
+    }
+    payload = request.get_json()
+    blob_name = payload["blob_name"] if "blob_name" in payload else str()
+    if not blob_name:
+        response["message"] = "No filename specified"
+        return jsonify(response)
+    blob_name = blob_name.lower()
+    from google.cloud.storage import Client
+    blob = Client().bucket(config.BUCKET).blob(blob_name)
+    if not blob.exists():
+        response["message"] = "File does NOT exists in cloud storage"
+        return jsonify(response)
+    if blob_name[-4:] != ".lst":
+        response["message"] = "Filenames should always end with .lst"
+        blob.delete()
+        return jsonify(response)
+    seg_name = blob_name[:4].upper()
+    if seg_name in segments and segments[seg_name].source == config.LOCAL:
+        response["message"] = "Cannot upload segments which are present in Local"
+        blob.delete()
+        return jsonify(response)
+    blobs = Client().list_blobs(config.BUCKET)
+    duplicate_blobs = [blob for blob in blobs if blob.name != blob_name and blob.name[:4].upper() == seg_name]
+    if duplicate_blobs:
+        duplicate_names = ", ".join([blob.name for blob in duplicate_blobs])
+        for blob in duplicate_blobs:
+            blob.delete()
+        response["warning"] = f"Earlier file with the same segment name ({duplicate_names}) deleted."
+    seg_collection.init_from_cloud(blob_name)
+    response["error"] = False
+    response["message"] = "Segment successfully added"
+    return jsonify(response)
 
 
 @tpf1_app.route("/segments/<string:seg_name>/instructions")
