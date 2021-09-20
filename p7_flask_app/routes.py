@@ -380,6 +380,7 @@ def segment_list() -> Response:
 
 
 @tpf1_app.route("/segments/upload", methods=["POST"])
+@token_auth.login_required
 def segment_upload() -> Response:
     response = {
         "error": True,
@@ -389,22 +390,22 @@ def segment_upload() -> Response:
     payload = request.get_json()
     blob_name = payload["blob_name"] if "blob_name" in payload else str()
     if not blob_name:
-        response["message"] = "No filename specified"
+        response["message"] = "No filename specified."
         return jsonify(response)
     blob_name = blob_name.lower()
     # noinspection PyPackageRequirements
     from google.cloud.storage import Client
     blob = Client().bucket(config.BUCKET).blob(blob_name)
     if not blob.exists():
-        response["message"] = "File does NOT exists in cloud storage"
+        response["message"] = "File does NOT exists in cloud storage."
         return jsonify(response)
     if blob_name[-4:] != ".lst":
-        response["message"] = "Filenames should always end with .lst"
+        response["message"] = "Filenames should always end with lst."
         blob.delete()
         return jsonify(response)
     seg_name = blob_name[:4].upper()
     if seg_collection.is_seg_local(seg_name):
-        response["message"] = "Cannot upload segments which are present in Local"
+        response["message"] = "Cannot upload segments which are present in local."
         blob.delete()
         return jsonify(response)
     blobs = Client().list_blobs(config.BUCKET)
@@ -416,26 +417,38 @@ def segment_upload() -> Response:
         response["warning"] = f"Earlier file with the same segment name ({duplicate_names}) deleted."
     seg_collection.init_from_cloud(blob_name)
     response["error"] = False
-    response["message"] = "Segment successfully added"
+    response["message"] = "Segment successfully added."
     return jsonify(response)
 
 
 @tpf1_app.route("/segments/<string:seg_name>/instructions")
 @token_auth.login_required
 def segment_instruction(seg_name: str) -> Response:
+    response = {
+        "seg_name": seg_name,
+        "error": True,
+        "message": str(),
+        "instructions": list(),
+        "not_supported": list()
+    }
     if not seg_collection.is_seg_present(seg_name):
-        return error_response(404, "Segment not found")
+        response["message"] = f"{seg_name} segment not found."
+        return jsonify(response)
+    segment = seg_collection.get_seg(seg_name)
     try:
-        seg_collection.assemble(seg_name)
+        segment.assemble()
     except AssemblyError:
-        return error_response(422, "Assembly error")
-    nodes = seg_collection.segments[seg_name].nodes
-    instructions: List[str] = [str(node) for _, node in nodes.items()]
-    instructions.sort()
-    not_supported: List[str] = [str(node) for _, node in nodes.items()
-                                if node.command not in TpfServer().supported_commands]
-    response_dict = {"seg_name": seg_name, "instructions": instructions, "not_supported": not_supported}
-    return jsonify(response_dict)
+        if segment.error_constant:
+            response["message"] = f"Error in assembling constant at {segment.error_constant}."
+        elif segment.error_line:
+            response["message"] = f"Error in assembling line: {segment.error_line}."
+        return jsonify(response)
+    response["instructions"]: List[str] = [str(node) for _, node in segment.nodes.items()]
+    response["instructions"].sort()
+    response["not_supported"]: List[str] = [str(node) for _, node in segment.nodes.items()
+                                            if node.command not in TpfServer().supported_commands]
+    response["error"] = False
+    return jsonify(response)
 
 
 @tpf1_app.route("/macros")

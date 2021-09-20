@@ -19,6 +19,8 @@ class Segment(RealtimeMacroImplementation):
         self.file_type: str = str()
         self.source: str = config.LOCAL
         self.blob_name: str = str()
+        self.error_line: str = str()
+        self.error_constant: str = str()
 
     def __repr__(self) -> str:
         return f"{self.name}:{self.nodes != dict()}:{len(self.nodes)}"
@@ -118,6 +120,7 @@ class Segment(RealtimeMacroImplementation):
             if dc.expression and dc.data_type not in {"S", "V"}:
                 dc.data = bytearray()
                 for operand in dc.expression:
+                    self.error_constant = f"{dc}:{dc.expression}"
                     try:
                         dc.data.extend(DataType(dc.data_type, input=str(self.get_value(operand))).to_bytes(dc.length))
                     except KeyError:
@@ -127,6 +130,7 @@ class Segment(RealtimeMacroImplementation):
                     except ZeroDivisionError:
                         pass
             self.data.set_constant(dc.data * dc.duplication_factor, dc.start)
+        self.error_constant = str()
         return
 
     def _assemble_instructions(self, lines: List[Line]) -> None:
@@ -134,6 +138,7 @@ class Segment(RealtimeMacroImplementation):
         self.nodes[first_line.label] = self.equ(first_line)
         prior_line: Line = first_line
         for line in lines:
+            self.error_line = line
             if self._process_assembler_directive(line):
                 continue
             if prior_line.is_fall_down:
@@ -143,6 +148,7 @@ class Segment(RealtimeMacroImplementation):
                 self.nodes[line.label] = self._command[line.command](line)
             else:
                 self.nodes[line.label] = self.key_value(line)
+        self.error_line = str()
         return
 
     def _process_assembler_directive(self, line: Line) -> bool:

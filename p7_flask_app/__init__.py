@@ -20,6 +20,7 @@ def make_shell_context():
     from p3_db.test_data import TestData
     from p4_execution.ex5_execute import TpfServer
     from p7_flask_app.auth import User
+    from config import config
     from tpf import create_user
     return {
         "TestData": TestData,
@@ -27,4 +28,5 @@ def make_shell_context():
         "User": User,
         "create_user": create_user,
         "client": tpf1_app.test_client(),
+        "config": config,
     }
