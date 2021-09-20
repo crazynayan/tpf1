@@ -192,6 +192,8 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["EOWNRC"] = self.no_operation
         self._ex["CREMC"] = self.no_operation
         self._ex["GLBLC"] = self.no_operation
+        self._ex["DLAYC"] = self.no_operation
+        self._ex["DEFRC"] = self.no_operation
         self._ex["REALTIMA"] = self.realtima
         self._ex["MALOC"] = self.maloc
 
