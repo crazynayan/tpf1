@@ -4,7 +4,7 @@ from typing import Dict, Optional, List, Tuple
 
 from config import config
 from p1_utils.data_type import DataType
-from p1_utils.errors import NotFoundInSymbolTableError, EquDataTypeHasAmpersandError
+from p1_utils.errors import NotFoundInSymbolTableError, EquDataTypeHasAmpersandError, SegmentNotFoundError
 from p1_utils.file_line import Line, File
 from p2_assembly.mac2_data_macro import macros
 from p2_assembly.seg2_ins_operand import Label
@@ -212,9 +212,11 @@ class _SegmentCollection:
             return
         # noinspection PyPackageRequirements
         from google.cloud.storage import Client
-        blobs = Client().list_blobs(config.BUCKET)
+        client = Client()
+        blobs = client.list_blobs(config.BUCKET)
         for blob in blobs:
             self.init_from_cloud(blob.name)
+        client.close()
         return
 
     def init_from_cloud(self, blob_name: str):
@@ -228,6 +230,33 @@ class _SegmentCollection:
         segment.blob_name = blob_name
         self.segments[seg_name] = segment
 
+    def is_seg_present(self, seg_name: str) -> bool:
+        if not config.CI_CLOUD_STORAGE:
+            return seg_name in self.segments
+        if seg_name in self.segments:
+            return True
+        self.init_all_from_cloud()
+        return seg_name in self.segments
+
+    def get_seg(self, seg_name) -> Optional[Segment]:
+        if not self.is_seg_present(seg_name):
+            return None
+        return self.segments[seg_name]
+
+    def assemble(self, seg_name) -> None:
+        if not self.is_seg_present(seg_name):
+            raise SegmentNotFoundError
+        self.segments[seg_name].assemble()
+
+    def get_all_segments(self) -> Dict:
+        if config.CI_CLOUD_STORAGE:
+            self.init_all_from_cloud()
+        return self.segments
+
+    def is_seg_local(self, seg_name) -> bool:
+        if not self.is_seg_present(seg_name):
+            return False
+        return self.segments[seg_name].source == config.LOCAL
+
 
 seg_collection = _SegmentCollection()
-segments = seg_collection.segments

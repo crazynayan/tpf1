@@ -10,7 +10,7 @@ from config import config
 from p1_utils.data_type import Register
 from p1_utils.errors import InvalidBaseRegError
 from p2_assembly.mac2_data_macro import macros, DataMacro
-from p2_assembly.seg6_segment import segments
+from p2_assembly.seg6_segment import seg_collection
 from p3_db.test_data_elements import Core, Pnr, Tpfdf, Output, FixedFile, PnrOutput
 
 
@@ -96,7 +96,7 @@ class TestData(FirestoreDocument):
         if "name" not in header or "seg_name" not in header:
             return False
         header["seg_name"] = header["seg_name"].upper()
-        if header["seg_name"] not in segments or not header["name"]:
+        if not seg_collection(header["seg_name"]) or not header["name"]:
             return False
         if "stop_segments" in header and any(len(segment) != 4 or not segment.isalnum()
                                              for segment in header["stop_segments"]):

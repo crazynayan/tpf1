@@ -12,7 +12,7 @@ from p2_assembly.mac0_generic import LabelReference
 from p2_assembly.mac2_data_macro import macros
 from p2_assembly.seg2_ins_operand import FieldIndex
 from p2_assembly.seg3_ins_type import InstructionType
-from p2_assembly.seg6_segment import Segment, segments
+from p2_assembly.seg6_segment import Segment, seg_collection
 from p3_db.flat_file import FlatFile
 from p3_db.pnr import Pnr
 from p3_db.stream import Stream
@@ -51,8 +51,8 @@ class State:
             self.regs.R8 = self.loaded_seg[seg_name][1]
             self.seg = self.loaded_seg[seg_name][0]
         else:
-            self.seg = segments[seg_name]
-            self.seg.assemble()
+            self.seg = seg_collection.get_seg(seg_name)
+            seg_collection.assemble(seg_name)
             self.regs.R8 = self.vm.allocate()  # Constant
             literal = self.vm.allocate()  # Literal is immediately the next frame
             self.vm.set_frame(self.seg.data.constant, self.regs.R8)
@@ -61,8 +61,8 @@ class State:
 
     def init_debug(self, seg_list: List[str]) -> None:
         for seg_name in seg_list:
-            segments[seg_name].assemble()
-            self.debug.add_trace(segments[seg_name].nodes, seg_name)
+            seg_collection.assemble(seg_name)
+            self.debug.add_trace(seg_collection.get_seg(seg_name).nodes, seg_name)
         return
 
     @staticmethod
@@ -113,7 +113,7 @@ class State:
         self._core_block(config.IMG, "D0")
 
     def run(self, seg_name: str, test_data: TestData) -> TestData:
-        if seg_name not in segments:
+        if not seg_collection.is_seg_present(seg_name):
             raise SegmentNotFoundError
         outputs = list()
         for test_data_variant in test_data.yield_variation():

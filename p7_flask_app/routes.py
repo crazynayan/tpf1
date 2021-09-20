@@ -8,7 +8,7 @@ from config import config
 from p1_utils.errors import AssemblyError
 from p2_assembly.mac0_generic import LabelReference
 from p2_assembly.mac2_data_macro import macros
-from p2_assembly.seg6_segment import segments, seg_collection
+from p2_assembly.seg6_segment import seg_collection
 from p3_db.test_data import TestData
 from p3_db.test_data_elements import Pnr, Tpfdf, FixedFile, PnrOutput
 from p4_execution.ex5_execute import TpfServer
@@ -103,7 +103,7 @@ def copy_test_data(test_data_id: str, **kwargs) -> Response:
 @test_data_required
 def run_test_data(test_data_id: str, **kwargs) -> Response:
     test_data: TestData = kwargs[test_data_id]
-    if test_data.seg_name not in segments:
+    if not seg_collection.is_seg_present(test_data.seg_name):
         return error_response(400, "Error in segment name")
     tpf_server = TpfServer()
     test_data = tpf_server.run(test_data.seg_name, test_data)
@@ -366,7 +366,7 @@ def find_field(field_name: str) -> Response:
 @tpf1_app.route("/segments")
 @token_auth.login_required
 def segment_list() -> Response:
-    seg_list: List[str] = sorted(list(segments))
+    segments: dict = seg_collection.get_all_segments()
     attributes: Dict[dict] = dict()
     for name, segment in segments.items():
         attribute = dict()
@@ -375,7 +375,7 @@ def segment_list() -> Response:
         attribute["filename"] = segment.file_name
         attribute["file_type"] = segment.file_type
         attribute["blob_name"] = segment.blob_name
-    response_dict: Dict[str, List[str]] = {"segments": seg_list, "attributes": attributes}
+    response_dict: Dict[str, List[str]] = {"segments": list(sorted(segments)), "attributes": attributes}
     return jsonify(response_dict)
 
 
@@ -392,6 +392,7 @@ def segment_upload() -> Response:
         response["message"] = "No filename specified"
         return jsonify(response)
     blob_name = blob_name.lower()
+    # noinspection PyPackageRequirements
     from google.cloud.storage import Client
     blob = Client().bucket(config.BUCKET).blob(blob_name)
     if not blob.exists():
@@ -402,7 +403,7 @@ def segment_upload() -> Response:
         blob.delete()
         return jsonify(response)
     seg_name = blob_name[:4].upper()
-    if seg_name in segments and segments[seg_name].source == config.LOCAL:
+    if seg_collection.is_seg_local(seg_name):
         response["message"] = "Cannot upload segments which are present in Local"
         blob.delete()
         return jsonify(response)
@@ -422,15 +423,16 @@ def segment_upload() -> Response:
 @tpf1_app.route("/segments/<string:seg_name>/instructions")
 @token_auth.login_required
 def segment_instruction(seg_name: str) -> Response:
-    if seg_name not in segments:
+    if not seg_collection.is_seg_present(seg_name):
         return error_response(404, "Segment not found")
     try:
-        segments[seg_name].assemble()
+        seg_collection.assemble(seg_name)
     except AssemblyError:
         return error_response(422, "Assembly error")
-    instructions: List[str] = [str(node) for _, node in segments[seg_name].nodes.items()]
+    nodes = seg_collection.segments[seg_name].nodes
+    instructions: List[str] = [str(node) for _, node in nodes.items()]
     instructions.sort()
-    not_supported: List[str] = [str(node) for _, node in segments[seg_name].nodes.items()
+    not_supported: List[str] = [str(node) for _, node in nodes.items()
                                 if node.command not in TpfServer().supported_commands]
     response_dict = {"seg_name": seg_name, "instructions": instructions, "not_supported": not_supported}
     return jsonify(response_dict)

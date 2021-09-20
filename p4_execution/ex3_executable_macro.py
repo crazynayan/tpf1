@@ -12,7 +12,6 @@ from p1_utils.ucdr import pars_to_date, date_to_pars
 from p2_assembly.mac2_data_macro import macros
 from p2_assembly.seg2_ins_operand import FieldBaseDsp
 from p2_assembly.seg5_exec_macro import KeyValue, SegmentCall
-from p2_assembly.seg6_segment import segments
 from p3_db.pnr import PnrLocator
 from p4_execution.ex1_state import State
 
@@ -142,8 +141,6 @@ class RealTimeMacro(State):
         called_seg: str = node.keys[0]
         if called_seg in self.stop_segments:
             return None
-        if called_seg not in segments:
-            raise SegmentNotFoundError
         self.fields["CE3ENTPGM"] = DataType("C", input=self.seg.name).to_bytes()
         self.call_stack.append((node.fall_down, self.seg.name))
         self._init_seg(called_seg)
@@ -153,8 +150,6 @@ class RealTimeMacro(State):
         called_seg: str = node.keys[0]
         if called_seg in self.stop_segments:
             return None
-        if called_seg not in segments:
-            raise SegmentNotFoundError
         self.fields["CE3ENTPGM"] = DataType("C", input=self.seg.name).to_bytes()
         self._init_seg(called_seg)
         return node.goes
@@ -163,8 +158,6 @@ class RealTimeMacro(State):
         called_seg: str = node.keys[0]
         if called_seg in self.stop_segments:
             return None
-        if called_seg not in segments:
-            raise SegmentNotFoundError
         self.fields["CE3ENTPGM"] = DataType("C", input=self.seg.name).to_bytes()
         del self.call_stack[:]
         self._init_seg(called_seg)
@@ -433,7 +426,6 @@ class UserDefinedMacro(State):
             byte_array = DataType("X", input=node.get_value("XVALUE")).to_bytes()
             self.vm.set_bytes(byte_array, address, len(byte_array))
         return node.fall_down
-
 
 
 class ExecutableMacro(RealTimeMacro, UserDefinedMacro):
