@@ -96,7 +96,7 @@ class TestData(FirestoreDocument):
         if "name" not in header or "seg_name" not in header:
             return False
         header["seg_name"] = header["seg_name"].upper()
-        if not seg_collection(header["seg_name"]) or not header["name"]:
+        if not seg_collection.is_seg_present(header["seg_name"]) or not header["name"]:
             return False
         if "stop_segments" in header and any(len(segment) != 4 or not segment.isalnum()
                                              for segment in header["stop_segments"]):
