@@ -147,6 +147,7 @@ class State:
     def _ex_command(self, node: InstructionType, execute_label: Optional[str] = None) -> str:
         seg_name = self.seg.seg_name
         if node.command not in self._ex:
+            self.debug.hit(node, node.label, seg_name)
             raise NotImplementedExecutionError(node)
         label = self._ex[node.command](node)
         next_label = str() if execute_label else label
