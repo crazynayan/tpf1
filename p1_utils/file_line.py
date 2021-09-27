@@ -123,7 +123,7 @@ class Line:
         self.continuation: bool = False
         self.quote_continuation: bool = False
         self.next_line_comment: bool = False
-        self.index: Optional[int] = None
+        self.index: int = 0
 
     @classmethod
     def from_line(cls, file_line: str, continuing: bool = False, quote_continuing: bool = False,

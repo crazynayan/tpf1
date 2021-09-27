@@ -4,7 +4,8 @@ from typing import Dict, Optional, List, Tuple
 
 from config import config
 from p1_utils.data_type import DataType
-from p1_utils.errors import NotFoundInSymbolTableError, EquDataTypeHasAmpersandError, SegmentNotFoundError
+from p1_utils.errors import NotFoundInSymbolTableError, EquDataTypeHasAmpersandError, SegmentNotFoundError, \
+    AssemblyError
 from p1_utils.file_line import Line, File
 from p2_assembly.mac2_data_macro import macros
 from p2_assembly.seg2_ins_operand import Label
@@ -252,7 +253,13 @@ class _SegmentCollection:
     def assemble(self, seg_name) -> None:
         if not self.is_seg_present(seg_name):
             raise SegmentNotFoundError
-        self.segments[seg_name].assemble()
+        seg: Segment = self.segments[seg_name]
+        try:
+            seg.assemble()
+        except AssemblyError:
+            seg.nodes[seg.root_label()] = seg.key_value(Line.from_line(
+                f"{seg.root_label()} ASSEMBLY_ERROR STOP_EXECUTION"))
+        return
 
     def get_all_segments(self) -> Dict:
         if config.CI_CLOUD_STORAGE:
