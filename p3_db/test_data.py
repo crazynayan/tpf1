@@ -104,7 +104,7 @@ class TestData(FirestoreDocument):
         return True
 
     def _validate_and_update_variation(self, item_dict: dict, input_type: str) -> bool:
-        variation_types = {"core": self.cores, "pnr": self.pnr, "tpfdf": self.tpfdf, "file": self.fixed_files}
+        variation_types: dict = {"core": self.cores, "pnr": self.pnr, "tpfdf": self.tpfdf, "file": self.fixed_files}
         if input_type not in variation_types:
             return False
         max_variation = max(item.variation for item in variation_types[input_type]) \
@@ -189,6 +189,46 @@ class TestData(FirestoreDocument):
         field_byte = core.create_field_byte(field_dict, persistence)
         return field_byte
 
+    def create_heap(self, body: dict, persistence: bool = True) -> dict:
+        response: dict = {"error": True, "message": str()}
+        if set(body) != {"heap_name", "hex_data", "variation", "variation_name"}:
+            response["message"] = "Only 4 fields allowed (heapa_name, hex_data, variation and variation_name) " \
+                                  "and all are mandatory."
+            return response
+        if not body["heap_name"] or not isinstance(body["heap_name"], str):
+            response["message"] = "Invalid HEAPA name. It cannot be empty and must be a string."
+            return response
+        if not self._validate_and_update_variation(body, "core"):
+            response["message"] = "Invalid variation"
+            return response
+        # noinspection PyBroadException
+        try:
+            b64decode(body["hex_data"])
+        except Exception:
+            response["message"] = "Invalid Hex Data. Hex data should be binary data encoded in base 64."
+            return response
+        core_to_create: Core = Core()
+        core_to_create.heap_name = body["heap_name"].upper()
+        core_to_create.hex_data = body["hex_data"]
+        core_to_create.variation = body["variation"]
+        core_to_create.variation_name = body["variation_name"]
+        core_to_update: Core = next((core for core in self.cores if core.heap_name == core_to_create.heap_name and
+                                     core.variation == core_to_create.variation), None)
+        if core_to_update:
+            core_to_update.hex_data = core_to_create.hex_data
+            if persistence:
+                core_to_update.save()
+            response["message"] = f"Core with heap name {core_to_create.heap_name} updated successfully."
+        else:
+            if persistence:
+                core_to_create.create()
+            self.cores.append(core_to_create)
+            if persistence:
+                self.save()
+            response["message"] = f"Core with heap name {core_to_create.heap_name} created successfully."
+        response["error"] = False
+        return response
+
     def delete_field_byte(self, macro_name: str, field_name: str) -> dict:
         core: Core = next((core for core in self.cores if core.macro_name == macro_name), None)
         if not core:
@@ -201,6 +241,21 @@ class TestData(FirestoreDocument):
             self.save()
             core.delete(cascade=True)
         return field_byte
+
+    def delete_heap(self, heap_name: str, variation: int, persistence: bool = True) -> dict:
+        response: dict = {"error": True, "message": str()}
+        core: Core = next((core for core in self.cores if core.heap_name == heap_name.upper()
+                           and core.variation == variation), None)
+        if not core:
+            response["message"] = f"Heap named {heap_name} not found for variation {variation}."
+            return response
+        self.cores.remove(core)
+        if persistence:
+            self.save()
+            core.delete()
+        response["message"] = f"Heap named {heap_name} for variation {variation} successfully deleted."
+        response["error"] = False
+        return response
 
     def add_reg(self, reg_dict: dict) -> bool:
         if "reg" not in reg_dict or not Register(reg_dict["reg"]).is_valid():

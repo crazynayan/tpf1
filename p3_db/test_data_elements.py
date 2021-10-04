@@ -18,6 +18,8 @@ class Core(FirestoreDocument):
         self.variation: int = 0
         self.field_data: List[dict] = list()
         self.variation_name: str = str()
+        self.heap_name: str = str()
+        self.hex_data: str = str()
 
     def __repr__(self):
         return self.macro_name
