@@ -216,6 +216,11 @@ class State:
         if test_data.partition:
             self.set_partition(test_data.partition)
         for core in test_data.cores:
+            if core.heap_name:
+                address: int = self.vm.allocate()
+                self.heap["old"][core.heap_name] = address
+                self.vm.set_bytes(bytearray(b64decode(core.hex_data)), address)
+                continue
             macro_name = core.macro_name.upper()
             if macro_name in config.DEFAULT_MACROS:
                 self._set_core(core.field_data, macro_name, config.DEFAULT_MACROS[macro_name])
