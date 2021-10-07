@@ -190,16 +190,37 @@ def delete_input_field(test_data_id: str, macro_name: str, field_name: str, **kw
 
 
 @tpf1_app.route("/test_data/<string:test_data_id>/input/heap", methods=["PATCH"])
+@token_auth.login_required
 @test_data_required
+@role_check_required
 def add_input_heap(test_data_id: str, **kwargs) -> Response:
     return jsonify(kwargs[test_data_id].create_heap(request.get_json()))
 
 
 @tpf1_app.route("/test_data/<string:test_data_id>/input/heap/<string:heap_name>/variations/<int:variation>",
                 methods=["DELETE"])
+@token_auth.login_required
 @test_data_required
+@role_check_required
 def delete_input_heap(test_data_id: str, heap_name: str, variation: int, **kwargs) -> Response:
     return jsonify(kwargs[test_data_id].delete_heap(heap_name, variation))
+
+
+@tpf1_app.route("/test_data/<string:test_data_id>/input/ecb_level", methods=["PATCH"])
+@token_auth.login_required
+@test_data_required
+@role_check_required
+def add_input_ecb_level(test_data_id: str, **kwargs) -> Response:
+    return jsonify(kwargs[test_data_id].create_ecb_level(request.get_json()))
+
+
+@tpf1_app.route("/test_data/<string:test_data_id>/input/ecb_level/<string:ecb_level>/variations/<int:variation>",
+                methods=["DELETE"])
+@token_auth.login_required
+@test_data_required
+@role_check_required
+def delete_input_ecb_level(test_data_id: str, ecb_level: str, variation: int, **kwargs) -> Response:
+    return jsonify(kwargs[test_data_id].delete_ecb_level(ecb_level, variation))
 
 
 @tpf1_app.route("/test_data/<string:test_data_id>/input/regs", methods=["PATCH"])

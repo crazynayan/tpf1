@@ -221,6 +221,19 @@ class State:
                 self.heap["old"][core.heap_name] = address
                 self.vm.set_bytes(bytearray(b64decode(core.hex_data)), address)
                 continue
+            if core.ecb_level:
+                address: int = self.vm.allocate()
+                self._core_block(address, core.ecb_level)
+                if core.hex_data:
+                    self.vm.set_bytes(bytearray(b64decode(core.hex_data)), address)
+                elif core.field_data:
+                    field_byte_array: Dict[str, bytearray] = self._field_data_to_bytearray(core.field_data)
+                    seg = seg_collection.get_seg(core.seg_name.upper())
+                    seg.assemble()
+                    for field, byte_array in field_byte_array.items():
+                        address_to_update = seg.evaluate(field.upper()) + address
+                        self.vm.set_bytes(byte_array, address_to_update, len(byte_array))
+                continue
             macro_name = core.macro_name.upper()
             if macro_name in config.DEFAULT_MACROS:
                 self._set_core(core.field_data, macro_name, config.DEFAULT_MACROS[macro_name])

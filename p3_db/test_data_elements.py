@@ -20,6 +20,8 @@ class Core(FirestoreDocument):
         self.variation_name: str = str()
         self.heap_name: str = str()
         self.hex_data: str = str()
+        self.ecb_level: str = str()
+        self.seg_name: str = str()
 
     def __repr__(self):
         return self.macro_name
