@@ -8,10 +8,12 @@ from firestore_ci import FirestoreDocument
 import p3_db.pnr as db_pnr
 from config import config
 from p1_utils.data_type import Register
-from p1_utils.errors import InvalidBaseRegError, AssemblyError
+from p1_utils.errors import InvalidBaseRegError
 from p2_assembly.mac2_data_macro import macros, DataMacro
-from p2_assembly.seg6_segment import seg_collection, Segment
+from p2_assembly.seg6_segment import seg_collection
 from p3_db.test_data_elements import Core, Pnr, Tpfdf, Output, FixedFile, PnrOutput
+from p3_db.test_data_validators import validate_hex_data_with_field_data, validate_hex_data, \
+    validate_seg_name_and_field_data
 
 
 class TestData(FirestoreDocument):
@@ -229,6 +231,39 @@ class TestData(FirestoreDocument):
         response["error"] = False
         return response
 
+    def update_ecb_level(self, ecb_level: str, variation: int, body: dict, persistence: bool = True):
+        response: dict = {"error": True, "message": str(), "error_fields": dict()}
+        core_to_update: Core = next((core for core in self.cores if core.variation == variation and
+                                     core.ecb_level == ecb_level), None)
+        if not core_to_update:
+            response["message"] = f"ECB level {ecb_level} not found for variation {variation}."
+            return response
+        if set(body) != {"hex_data", "field_data", "seg_name"}:
+            response["message"] = "Only 3 fields allowed (hex_data, field_data and seg_name) and all are mandatory."
+            return response
+        errors: dict = response["error_fields"]
+        new_errors: dict = validate_hex_data_with_field_data(body)
+        response["error_fields"] = {**errors, **new_errors}
+        if new_errors:
+            return response
+        new_errors, hex_data = validate_hex_data(body["hex_data"])
+        response["error_fields"] = {**errors, **new_errors}
+        if new_errors:
+            return response
+        new_errors, field_data = validate_seg_name_and_field_data(body)
+        response["error_fields"] = {**errors, **new_errors}
+        if response["error_fields"]:
+            return response
+        core_to_update.hex_data = hex_data
+        core_to_update.seg_name = body["seg_name"]
+        core_to_update.field_data = field_data
+        core_to_update.original_field_data = body["field_data"]
+        if persistence:
+            core_to_update.save()
+        response["message"] = f"Core with ECB level {ecb_level} updated successfully."
+        response["error"] = False
+        return response
+
     def create_ecb_level(self, body: dict, persistence: bool = True) -> dict:
         response: dict = {"error": True, "message": str(), "error_fields": dict()}
         errors: dict = response["error_fields"]
@@ -240,71 +275,20 @@ class TestData(FirestoreDocument):
             errors["ecb_level"] = "Invalid ECB level. Level should be between 0 to F."
         if not self._validate_and_update_variation(body, "core"):
             errors["variation"] = "Invalid variation"
-        hex_data = b64encode(bytes.fromhex("")).decode()
-        if body["hex_data"]:
-            if body["seg_name"] or body["field_data"]:
-                if body["seg_name"]:
-                    errors["seg_name"] = "Seg name should be left blank when hex data is provided."
-                if body["field_data"]:
-                    errors["field_data"] = "Field data should be left blank when hex data is provided."
-                errors["hex_data"] = "Hex data should be left blank when either seg name or fields are provided."
-                return response
-            if not isinstance(body["hex_data"], str):
-                errors["hex_data"] = "Hex data should be a string."
-                return response
-            hex_data = "".join(char.upper() for char in body["hex_data"] if char != " ")
-            if not all(char.isdigit() or char in ("A", "B", "C", "D", "E", "F", " ") for char in hex_data):
-                errors["hex_data"] = "Hex characters can only be 0-F. Only spaces allowed."
-                return response
-            if len(hex_data) % 2 != 0:
-                errors["hex_data"] = "The length of hex characters should be even."
-                return response
-            hex_data = b64encode(bytes.fromhex(hex_data)).decode()
-        field_data = list()
-        if body["field_data"]:
-            if not body["seg_name"]:
-                errors["seg_name"] = "Segment name required when field data is specified."
-            if not isinstance(body["field_data"], str):
-                errors["field_data"] = "Invalid format of field data. It must be a string."
-            else:
-                for field_data_str in body["field_data"].split(","):
-                    if field_data_str.count(":") != 1:
-                        errors["field_data"] = f"Include a colon : to separate field and data - {field_data_str}."
-                        break
-                    field = field_data_str.split(":")[0].strip().upper()
-                    data = field_data_str.split(":")[1].strip().upper()
-                    data = "".join(char.upper() for char in data if char != " ")
-                    if not all(char.isdigit() or char in ("A", "B", "C", "D", "E", "F", " ") for char in data):
-                        errors["field_data"] = "Hex characters can only be 0-F. Only spaces allowed."
-                        break
-                    if len(data) % 2 != 0:
-                        errors["field_data"] = "The length of hex characters should be even."
-                        break
-                    field_dict = {"field": field, "data": b64encode(bytes.fromhex(data)).decode()}
-                    field_data.append(field_dict)
-        if body["seg_name"]:
-            if not body["field_data"]:
-                errors["field_data"] = "Field data is required when seg name is provided."
-            if not isinstance(body["seg_name"], str) or len(body["seg_name"]) != 4:
-                errors["seg_name"] = "Invalid segment name. Seg name must be a string of 4 characters."
-                return response
-            seg: Segment = seg_collection.get_seg(body["seg_name"])
-            if not seg:
-                errors["seg_name"] = f"{body['seg_name']} not found."
-            elif seg.file_type != config.LST:
-                errors["seg_name"] = f"{body['seg_name']} is not a listing."
-            else:
-                try:
-                    seg.assemble()
-                except AssemblyError:
-                    errors["seg_name"] = "Error in assembling segment."
-            if "seg_name" in errors or "field_data" in errors:
-                return response
-            for field_dict in field_data:
-                if not seg.check(field_dict["field"]):
-                    errors["field_data"] = f"Field {field_dict['field']} not found."
-                    break
-        if errors:
+        elif "ecb_level" not in errors:
+            if any(core.variation == body["variation"] and core.ecb_level == body["ecb_level"] for core in self.cores):
+                errors["ecb_level"] = f"ECB level {body['ecb_level']} already exists for variation {body['variation']}."
+        new_errors: dict = validate_hex_data_with_field_data(body)
+        response["error_fields"] = {**errors, **new_errors}
+        if new_errors:
+            return response
+        new_errors, hex_data = validate_hex_data(body["hex_data"])
+        response["error_fields"] = {**errors, **new_errors}
+        if new_errors:
+            return response
+        new_errors, field_data = validate_seg_name_and_field_data(body)
+        response["error_fields"] = {**errors, **new_errors}
+        if response["error_fields"]:
             return response
         core_to_create: Core = Core()
         core_to_create.ecb_level = body["ecb_level"].upper()
@@ -313,22 +297,13 @@ class TestData(FirestoreDocument):
         core_to_create.variation_name = body["variation_name"]
         core_to_create.seg_name = body["seg_name"]
         core_to_create.field_data = field_data
-        core_to_update: Core = next((core for core in self.cores if core.ecb_level == core_to_create.ecb_level and
-                                     core.variation == core_to_create.variation), None)
-        if core_to_update:
-            core_to_update.hex_data = core_to_create.hex_data
-            core_to_update.seg_name = core_to_create.seg_name
-            core_to_update.field_data = core_to_create.field_data
-            if persistence:
-                core_to_update.save()
-            response["message"] = f"Core with ECB level {core_to_create.ecb_level} updated successfully."
-        else:
-            if persistence:
-                core_to_create.create()
-            self.cores.append(core_to_create)
-            if persistence:
-                self.save()
-            response["message"] = f"Core with ECB level {core_to_create.ecb_level} created successfully."
+        core_to_create.original_field_data = body["field_data"]
+        if persistence:
+            core_to_create.create()
+        self.cores.append(core_to_create)
+        if persistence:
+            self.save()
+        response["message"] = f"Core with ECB level {core_to_create.ecb_level} created successfully."
         response["error"] = False
         return response
 

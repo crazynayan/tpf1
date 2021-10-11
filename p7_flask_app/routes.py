@@ -215,6 +215,15 @@ def add_input_ecb_level(test_data_id: str, **kwargs) -> Response:
 
 
 @tpf1_app.route("/test_data/<string:test_data_id>/input/ecb_level/<string:ecb_level>/variations/<int:variation>",
+                methods=["PATCH"])
+@token_auth.login_required
+@test_data_required
+@role_check_required
+def update_input_ecb_level(test_data_id: str, ecb_level: str, variation: int, **kwargs) -> Response:
+    return jsonify(kwargs[test_data_id].update_ecb_level(ecb_level, variation, request.get_json()))
+
+
+@tpf1_app.route("/test_data/<string:test_data_id>/input/ecb_level/<string:ecb_level>/variations/<int:variation>",
                 methods=["DELETE"])
 @token_auth.login_required
 @test_data_required

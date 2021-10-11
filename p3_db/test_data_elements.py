@@ -17,6 +17,7 @@ class Core(FirestoreDocument):
         self.base_reg: str = str()
         self.variation: int = 0
         self.field_data: List[dict] = list()
+        self.original_field_data: str = str()
         self.variation_name: str = str()
         self.heap_name: str = str()
         self.hex_data: str = str()
