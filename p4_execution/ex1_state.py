@@ -21,6 +21,7 @@ from p3_db.test_data_elements import Output
 from p3_db.tpfdf import Tpfdf
 from p4_execution.debug import Debug
 from p4_execution.ex0_regs_store import Registers, Storage
+from p4_execution.trace import TraceList, TraceData
 
 
 class State:
@@ -40,6 +41,8 @@ class State:
         self.tpfdf_ref: Dict[str, int] = dict()
         self.errors: Set[str] = set()
         self.debug: Debug = Debug()
+        self.trace_list: TraceList = TraceList()
+        self.trace_data: TraceData = TraceData()
         self.fields: dict = {"CE3ENTPGM": bytearray()}
         self.stop_segments: List[str] = list()
 
@@ -63,6 +66,7 @@ class State:
         for seg_name in seg_list:
             seg_collection.assemble(seg_name)
             self.debug.add_trace(seg_collection.get_seg(seg_name).nodes, seg_name)
+        self.trace_list.seg_list = [seg_name for seg_name in seg_list]
         return
 
     @staticmethod
@@ -146,12 +150,14 @@ class State:
 
     def _ex_command(self, node: InstructionType, execute_label: Optional[str] = None) -> str:
         seg_name = self.seg.seg_name
+        self.trace_data = TraceData()
         if node.command not in self._ex:
             self.debug.hit(node, node.label, seg_name)
             raise NotImplementedExecutionError(node)
         label = self._ex[node.command](node)
         next_label = str() if execute_label else label
         self.debug.hit(node, next_label, seg_name)
+        self.trace_list.hit(self.trace_data, node, seg_name)
         return label
 
     def set_number_cc(self, number: int) -> None:
@@ -337,6 +343,7 @@ class State:
         if output.debug:
             output.debug = self.debug.get_traces(hit=True)
             output.debug_missed = self.debug.get_traces(hit=False)
+            output.traces = self.trace_list.get_traces()
         for core in output.cores:
             macro_name = core.macro_name.upper()
             if macro_name in config.DEFAULT_MACROS:

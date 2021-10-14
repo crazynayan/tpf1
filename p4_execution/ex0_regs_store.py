@@ -1,3 +1,4 @@
+from copy import copy
 from typing import Union, Optional, Tuple, Dict
 
 from config import config
@@ -80,8 +81,9 @@ class Registers:
             value -= config.REG_MAX64 + 1
         setattr(self, str(reg), value)
 
-    def set_bytes_from_mask(self, byte_array: bytearray, reg: Union[Register, str], mask: int) -> None:
+    def set_bytes_from_mask(self, bytes: bytearray, reg: Union[Register, str], mask: int) -> None:
         reg_bytes = self.get_bytes(reg)
+        byte_array = copy(bytes)
         if len(byte_array) < bin(mask).count('1'):
             raise MaskError
         try:
@@ -240,3 +242,6 @@ class Storage:
 
     def valid_address(self, address: int) -> int:
         return address if self.base_key(address) in self.frames else self.allocate()
+
+    def is_address_valid(self, address: int) -> bool:
+        return self.base_key(address) in self.frames

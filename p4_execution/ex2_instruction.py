@@ -1,4 +1,5 @@
 from copy import deepcopy
+from typing import List
 
 from config import config
 from p1_utils.data_type import DataType, Register, PDataType
@@ -13,18 +14,23 @@ class LoadStore(State):
     def load_register(self, node: RegisterRegister) -> str:
         value = self.regs.get_value(node.reg2)
         self.regs.set_value(value, node.reg1)
+        self.trace_data.set_signed_value1(value)
         return node.fall_down
 
     def load_test_register(self, node: RegisterRegister) -> str:
         value = self.regs.get_value(node.reg2)
         self.regs.set_value(value, node.reg1)
         self.set_number_cc(value)
+        self.trace_data.set_signed_value1(value)
         return node.fall_down
 
     def load_fullword(self, node: RegisterFieldIndex) -> str:
         address = self.regs.get_address(node.field.base, node.field.dsp, node.field.index)
         value = self.vm.get_value(address, 4)
         self.regs.set_value(value, node.reg)
+        self.trace_data.set_signed_value1(value)
+        if self.vm.is_address_valid(value):
+            self.trace_data.set_reg_pointer(self.vm.get_value(value))
         return node.fall_down
 
     def load_grande(self, node: RegisterFieldIndex) -> str:
@@ -36,12 +42,16 @@ class LoadStore(State):
     def load_address(self, node: RegisterFieldIndex) -> str:
         address = self.regs.get_address(node.field.base, node.field.dsp, node.field.index)
         self.regs.set_value(address, node.reg)
+        self.trace_data.set_signed_value1(address)
+        if self.vm.is_address_valid(address):
+            self.trace_data.set_reg_pointer(self.vm.get_value(address))
         return node.fall_down
 
     def store_fullword(self, node: RegisterFieldIndex) -> str:
         address = self.regs.get_address(node.field.base, node.field.dsp, node.field.index)
         value = self.regs.get_value(node.reg)
         self.vm.set_value(value, address, 4)
+        self.trace_data.set_signed_value1(value)
         return node.fall_down
 
     def store_grande(self, node: RegisterFieldIndex) -> str:
@@ -54,41 +64,48 @@ class LoadStore(State):
         address = self.regs.get_address(node.field.base, node.field.dsp, node.field.index)
         value = self.vm.get_value(address, 2)
         self.regs.set_value(value, node.reg)
+        self.trace_data.set_signed_value1(value)
         return node.fall_down
 
     def load_halfword_immediate(self, node: RegisterData) -> str:
         self.regs.set_value(node.data, node.reg)
+        self.trace_data.set_signed_value1(node.data)
         return node.fall_down
 
     def store_halfword(self, node: RegisterFieldIndex) -> str:
         address = self.regs.get_address(node.field.base, node.field.dsp, node.field.index)
         value = self.regs.get_value(node.reg)
         self.vm.set_value(value, address, 2)
+        self.trace_data.set_signed_value1(value)
         return node.fall_down
 
     def insert_character(self, node: RegisterFieldIndex) -> str:
         address = self.regs.get_address(node.field.base, node.field.dsp, node.field.index)
-        byte = self.vm.get_bytes(address)
+        byte: bytearray = self.vm.get_bytes(address)
         self.regs.set_bytes_from_mask(byte, node.reg, 0b0001)
+        self.trace_data.set_byte_array1(byte)
         return node.fall_down
 
     def insert_character_mask(self, node: RegisterDataField) -> str:
         address = self.regs.get_address(node.field.base, node.field.dsp)
-        byte = self.vm.get_bytes(address, bin(node.data).count('1'))
+        byte: bytearray = self.vm.get_bytes(address, bin(node.data).count('1'))
         self.regs.set_bytes_from_mask(byte, node.reg, node.data)
         self.set_number_cc(DataType('F', bytes=byte).value)
+        self.trace_data.set_byte_array1(byte)
         return node.fall_down
 
     def store_character(self, node: RegisterFieldIndex) -> str:
         address = self.regs.get_address(node.field.base, node.field.dsp, node.field.index)
         byte = self.regs.get_bytes_from_mask(node.reg, 0b0001)
         self.vm.set_bytes(byte, address)
+        self.trace_data.set_byte_array1(byte)
         return node.fall_down
 
     def store_character_mask(self, node: RegisterDataField) -> str:
         address = self.regs.get_address(node.field.base, node.field.dsp)
         byte = self.regs.get_bytes_from_mask(node.reg, node.data)
         self.vm.set_bytes(byte, address, bin(node.data).count('1'))
+        self.trace_data.set_byte_array1(byte)
         return node.fall_down
 
     # noinspection DuplicatedCode
@@ -215,9 +232,12 @@ class MoveLogicControl(State):
     def move_character(self, node: FieldLenField) -> str:
         source_address = self.regs.get_address(node.field.base, node.field.dsp)
         target_address = self.regs.get_address(node.field_len.base, node.field_len.dsp)
+        byte_list: List[int] = list()
         for index in range(node.field_len.length + 1):
             byte = self.vm.get_byte(source_address + index)
             self.vm.set_byte(byte, target_address + index)
+            byte_list.append(byte)
+        self.trace_data.set_byte_array1(bytearray(byte_list))
         return node.fall_down
 
     def move_character_long(self, node: RegisterRegister) -> str:
@@ -269,6 +289,7 @@ class MoveLogicControl(State):
     def move_immediate(self, node: FieldData) -> str:
         address = self.regs.get_address(node.field.base, node.field.dsp)
         self.vm.set_value(node.data, address, 1)
+        self.trace_data.set_signed_value1(node.data)
         return node.fall_down
 
     def branch(self, node: BranchCondition) -> str:
@@ -327,15 +348,20 @@ class CompareLogical(State):
     def compare_logical_character(self, node: FieldLenField) -> str:
         source_address = self.regs.get_address(node.field.base, node.field.dsp)
         target_address = self.regs.get_address(node.field_len.base, node.field_len.dsp)
-        source_value = self.vm.get_unsigned_value(source_address, node.field_len.length + 1)
-        target_value = self.vm.get_unsigned_value(target_address, node.field_len.length + 1)
+        length = node.field_len.length + 1
+        source_value = self.vm.get_unsigned_value(source_address, length)
+        target_value = self.vm.get_unsigned_value(target_address, length)
         self.set_number_cc(target_value - source_value)
+        self.trace_data.set_unsigned_value1(target_value, length)
+        self.trace_data.set_unsigned_value2(source_value, length)
         return node.fall_down
 
     def compare_logical_immediate(self, node: FieldData) -> str:
         address = self.regs.get_address(node.field.base, node.field.dsp)
         value = self.vm.get_unsigned_value(address, 1)
         self.set_number_cc(value - node.data)
+        self.trace_data.set_unsigned_value1(value, 1)
+        self.trace_data.set_unsigned_value2(node.data, 1)
         return node.fall_down
 
     def compare_halfword(self, node: RegisterFieldIndex) -> str:
@@ -343,11 +369,15 @@ class CompareLogical(State):
         value = self.vm.get_value(address, 2)
         reg_value = self.regs.get_value(node.reg)
         self.set_number_cc(reg_value - value)
+        self.trace_data.set_signed_value1(reg_value)
+        self.trace_data.set_signed_value2(value)
         return node.fall_down
 
     def compare_halfword_immediate(self, node: RegisterData) -> str:
         reg_value = self.regs.get_value(node.reg)
         self.set_number_cc(reg_value - node.data)
+        self.trace_data.set_signed_value1(reg_value)
+        self.trace_data.set_signed_value2(node.data)
         return node.fall_down
 
     def compare_fullword(self, node: RegisterFieldIndex) -> str:
@@ -355,12 +385,16 @@ class CompareLogical(State):
         value = self.vm.get_value(address, 4)
         reg_value = self.regs.get_value(node.reg)
         self.set_number_cc(reg_value - value)
+        self.trace_data.set_signed_value1(reg_value)
+        self.trace_data.set_signed_value2(value)
         return node.fall_down
 
     def compare_register(self, node: RegisterRegister) -> str:
         reg_value1 = self.regs.get_value(node.reg1)
         reg_value2 = self.regs.get_value(node.reg2)
         self.set_number_cc(reg_value1 - reg_value2)
+        self.trace_data.set_signed_value1(reg_value1)
+        self.trace_data.set_signed_value2(reg_value2)
         return node.fall_down
 
     def compare_logical_character_mask(self, node: RegisterDataField) -> str:
@@ -486,6 +520,8 @@ class LogicalUsefulConversion(State):
             self.cc = 3
         else:
             self.cc = 1
+        self.trace_data.set_unsigned_value1(self.vm.get_byte(address), 1)
+        self.trace_data.set_unsigned_value2(node.bits.value, 1)
         return node.fall_down
 
     def execute(self, node: RegisterFieldIndex) -> str:
