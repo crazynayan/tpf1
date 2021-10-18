@@ -12,7 +12,8 @@ from p1_utils.errors import InvalidBaseRegError
 from p2_assembly.mac2_data_macro import macros, DataMacro
 from p2_assembly.seg6_segment import seg_collection
 from p3_db.test_data_elements import Core, Pnr, Tpfdf, Output, FixedFile, PnrOutput
-from p3_db.test_data_validators import get_response_body_for_hex_and_field_data, create_core_for_hex_and_field_data
+from p3_db.test_data_validators import get_response_body_for_hex_and_field_data, create_core_for_hex_and_field_data, \
+    get_response_body_for_macro, create_core
 
 
 class TestData(FirestoreDocument):
@@ -190,6 +191,84 @@ class TestData(FirestoreDocument):
         field_byte = core.create_field_byte(field_dict, persistence)
         return field_byte
 
+    def delete_field_byte(self, macro_name: str, field_name: str) -> dict:
+        core: Core = next((core for core in self.cores if core.macro_name == macro_name), None)
+        if not core:
+            return dict()
+        field_byte = core.delete_field_byte(field_name)
+        if not field_byte:
+            return dict()
+        if not core.field_data:
+            self.cores.remove(core)
+            self.save()
+            core.delete(cascade=True)
+        return field_byte
+
+    def create_macro(self, body: dict, persistence: bool = True) -> dict:
+        response: dict = {"error": True, "message": str(), "error_fields": dict()}
+        if set(body) != {"macro_name", "variation", "variation_name", "field_data"}:
+            response["message"] = "Only 4 fields allowed (macro_name, variation, variation_name and field_data."
+            return response
+        if body["macro_name"] not in config.DEFAULT_MACROS:
+            response["error_fields"]["macro_name"] = f"Invalid macro. Macro can only be from " \
+                                                     f"{''.join(config.DEFAULT_MACROS)}."
+        if not self._validate_and_update_variation(body, "core"):
+            response["error_fields"]["variation"] = "Invalid variation."
+        elif "macro_name" not in response["error_fields"]:
+            if any(core.variation == body["variation"] and core.macro_name == body["macro_name"]
+                   for core in self.cores):
+                response["error_fields"]["macro_name"] = f"Macro {body['macro_name']} already exists for " \
+                                                         f"variation {body['variation']}."
+        updated_response, updated_body = get_response_body_for_macro(response, body, body["macro_name"])
+        if updated_response["error_fields"]:
+            return updated_response
+        core_to_create: Core = create_core(updated_body)
+        core_to_create.macro_name = body["macro_name"].upper()
+        if persistence:
+            core_to_create.create()
+        self.cores.append(core_to_create)
+        if persistence:
+            self.save()
+        response["message"] = f"Core with macro {core_to_create.macro_name} created successfully."
+        response["error"] = False
+        return response
+
+    def update_macro(self, macro_name: str, variation: int, body: dict, persistence: bool = True):
+        response: dict = {"error": True, "message": str(), "error_fields": dict()}
+        core_to_update: Core = next((core for core in self.cores if core.variation == variation and
+                                     core.macro_name == macro_name), None)
+        if not core_to_update:
+            response["message"] = f"Macro {macro_name} not found for variation {variation}."
+            return response
+        if set(body) != {"field_data"}:
+            response["message"] = "Only field_data allowed and it is mandatory."
+            return response
+        updated_response, updated_body = get_response_body_for_macro(response, body, macro_name)
+        if updated_response["error_fields"]:
+            return updated_response
+        core_to_update.field_data = updated_body["field_data"]
+        core_to_update.original_field_data = updated_body["original_field_data"]
+        if persistence:
+            core_to_update.save()
+        response["message"] = f"Core with macro {macro_name} updated successfully."
+        response["error"] = False
+        return response
+
+    def delete_macro(self, macro_name: str, variation: int, persistence: bool = True) -> dict:
+        response: dict = {"error": True, "message": str()}
+        core: Core = next((core for core in self.cores if core.macro_name == macro_name.upper()
+                           and core.variation == variation), None)
+        if not core:
+            response["message"] = f"Macro {macro_name} not found for variation {variation}."
+            return response
+        self.cores.remove(core)
+        if persistence:
+            self.save()
+            core.delete()
+        response["message"] = f"Macro {macro_name} for variation {variation} successfully deleted."
+        response["error"] = False
+        return response
+
     def create_heap(self, body: dict, persistence: bool = True) -> dict:
         response: dict = {"error": True, "message": str(), "error_fields": dict()}
         if set(body) != {"heap_name", "hex_data", "variation", "variation_name", "field_data", "seg_name"}:
@@ -242,26 +321,18 @@ class TestData(FirestoreDocument):
         response["error"] = False
         return response
 
-    def update_ecb_level(self, ecb_level: str, variation: int, body: dict, persistence: bool = True):
-        response: dict = {"error": True, "message": str(), "error_fields": dict()}
-        core_to_update: Core = next((core for core in self.cores if core.variation == variation and
-                                     core.ecb_level == ecb_level), None)
-        if not core_to_update:
-            response["message"] = f"ECB level {ecb_level} not found for variation {variation}."
+    def delete_heap(self, heap_name: str, variation: int, persistence: bool = True) -> dict:
+        response: dict = {"error": True, "message": str()}
+        core: Core = next((core for core in self.cores if core.heap_name == heap_name.upper()
+                           and core.variation == variation), None)
+        if not core:
+            response["message"] = f"Heap {heap_name} not found for variation {variation}."
             return response
-        if set(body) != {"hex_data", "field_data", "seg_name"}:
-            response["message"] = "Only 3 fields allowed (hex_data, field_data and seg_name) and all are mandatory."
-            return response
-        updated_response, updated_body = get_response_body_for_hex_and_field_data(response, body)
-        if updated_response["error_fields"]:
-            return updated_response
-        core_to_update.hex_data = updated_body["hex_data"]
-        core_to_update.seg_name = updated_body["seg_name"]
-        core_to_update.field_data = updated_body["field_data"]
-        core_to_update.original_field_data = updated_body["original_field_data"]
+        self.cores.remove(core)
         if persistence:
-            core_to_update.save()
-        response["message"] = f"Core with ECB level {ecb_level} updated successfully."
+            self.save()
+            core.delete()
+        response["message"] = f"Heap {heap_name} for variation {variation} successfully deleted."
         response["error"] = False
         return response
 
@@ -293,31 +364,26 @@ class TestData(FirestoreDocument):
         response["error"] = False
         return response
 
-    def delete_field_byte(self, macro_name: str, field_name: str) -> dict:
-        core: Core = next((core for core in self.cores if core.macro_name == macro_name), None)
-        if not core:
-            return dict()
-        field_byte = core.delete_field_byte(field_name)
-        if not field_byte:
-            return dict()
-        if not core.field_data:
-            self.cores.remove(core)
-            self.save()
-            core.delete(cascade=True)
-        return field_byte
-
-    def delete_heap(self, heap_name: str, variation: int, persistence: bool = True) -> dict:
-        response: dict = {"error": True, "message": str()}
-        core: Core = next((core for core in self.cores if core.heap_name == heap_name.upper()
-                           and core.variation == variation), None)
-        if not core:
-            response["message"] = f"Heap named {heap_name} not found for variation {variation}."
+    def update_ecb_level(self, ecb_level: str, variation: int, body: dict, persistence: bool = True):
+        response: dict = {"error": True, "message": str(), "error_fields": dict()}
+        core_to_update: Core = next((core for core in self.cores if core.variation == variation and
+                                     core.ecb_level == ecb_level), None)
+        if not core_to_update:
+            response["message"] = f"ECB level {ecb_level} not found for variation {variation}."
             return response
-        self.cores.remove(core)
+        if set(body) != {"hex_data", "field_data", "seg_name"}:
+            response["message"] = "Only 3 fields allowed (hex_data, field_data and seg_name) and all are mandatory."
+            return response
+        updated_response, updated_body = get_response_body_for_hex_and_field_data(response, body)
+        if updated_response["error_fields"]:
+            return updated_response
+        core_to_update.hex_data = updated_body["hex_data"]
+        core_to_update.seg_name = updated_body["seg_name"]
+        core_to_update.field_data = updated_body["field_data"]
+        core_to_update.original_field_data = updated_body["original_field_data"]
         if persistence:
-            self.save()
-            core.delete()
-        response["message"] = f"Heap named {heap_name} for variation {variation} successfully deleted."
+            core_to_update.save()
+        response["message"] = f"Core with ECB level {ecb_level} updated successfully."
         response["error"] = False
         return response
 

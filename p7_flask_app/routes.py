@@ -189,6 +189,32 @@ def delete_input_field(test_data_id: str, macro_name: str, field_name: str, **kw
     return jsonify(field_byte)
 
 
+@tpf1_app.route("/test_data/<string:test_data_id>/input/macro", methods=["PATCH"])
+@token_auth.login_required
+@test_data_required
+@role_check_required
+def add_input_macro(test_data_id: str, **kwargs) -> Response:
+    return jsonify(kwargs[test_data_id].create_macro(request.get_json()))
+
+
+@tpf1_app.route("/test_data/<string:test_data_id>/input/macro/<string:macro_name>/variations/<int:variation>",
+                methods=["PATCH"])
+@token_auth.login_required
+@test_data_required
+@role_check_required
+def update_input_macro(test_data_id: str, macro_name: str, variation: int, **kwargs) -> Response:
+    return jsonify(kwargs[test_data_id].update_macro(macro_name, variation, request.get_json()))
+
+
+@tpf1_app.route("/test_data/<string:test_data_id>/input/macro/<string:macro_name>/variations/<int:variation>",
+                methods=["DELETE"])
+@token_auth.login_required
+@test_data_required
+@role_check_required
+def delete_input_macro(test_data_id: str, macro_name: str, variation: int, **kwargs) -> Response:
+    return jsonify(kwargs[test_data_id].delete_macro(macro_name, variation))
+
+
 @tpf1_app.route("/test_data/<string:test_data_id>/input/heap", methods=["PATCH"])
 @token_auth.login_required
 @test_data_required
