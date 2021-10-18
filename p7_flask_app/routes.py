@@ -198,6 +198,15 @@ def add_input_heap(test_data_id: str, **kwargs) -> Response:
 
 
 @tpf1_app.route("/test_data/<string:test_data_id>/input/heap/<string:heap_name>/variations/<int:variation>",
+                methods=["PATCH"])
+@token_auth.login_required
+@test_data_required
+@role_check_required
+def update_input_heap(test_data_id: str, heap_name: str, variation: int, **kwargs) -> Response:
+    return jsonify(kwargs[test_data_id].update_heap(heap_name, variation, request.get_json()))
+
+
+@tpf1_app.route("/test_data/<string:test_data_id>/input/heap/<string:heap_name>/variations/<int:variation>",
                 methods=["DELETE"])
 @token_auth.login_required
 @test_data_required

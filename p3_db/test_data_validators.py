@@ -1,9 +1,11 @@
 from base64 import b64encode
+from copy import copy
 from typing import Tuple
 
 from config import config
 from p1_utils.errors import AssemblyError
 from p2_assembly.seg6_segment import Segment, seg_collection
+from p3_db.test_data_elements import Core
 
 
 def validate_hex_data_with_field_data(body: dict) -> dict:
@@ -27,7 +29,7 @@ def validate_hex_data(input_hex_data: str) -> Tuple[dict, str]:
         errors["hex_data"] = "Hex data should be a string."
         return errors, hex_data
     hex_data = "".join(char.upper() for char in input_hex_data if char != " ")
-    if not all(char.isdigit() or char in ("A", "B", "C", "D", "E", "F", " ") for char in hex_data):
+    if not all(char.isdigit() or char in ("A", "B", "C", "D", "E", "F") for char in hex_data):
         errors["hex_data"] = "Hex characters can only be 0-F. Only spaces allowed."
         return errors, hex_data
     if len(hex_data) % 2 != 0:
@@ -54,10 +56,10 @@ def validate_seg_name_and_field_data(body: dict) -> Tuple[dict, list]:
             data = field_data_str.split(":")[1].strip().upper()
             data = "".join(char.upper() for char in data if char != " ")
             if not all(char.isdigit() or char in ("A", "B", "C", "D", "E", "F", " ") for char in data):
-                errors["field_data"] = "Hex characters can only be 0-F. Only spaces allowed."
+                errors["field_data"] = f"{field}: Hex characters can only be 0-F. Only spaces allowed."
                 break
             if len(data) % 2 != 0:
-                errors["field_data"] = "The length of hex characters should be even."
+                errors["field_data"] = f"{field}: The length of hex characters should be even."
                 break
             field_dict = {"field": field, "data": b64encode(bytes.fromhex(data)).decode()}
             field_data.append(field_dict)
@@ -84,3 +86,33 @@ def validate_seg_name_and_field_data(body: dict) -> Tuple[dict, list]:
                 errors["field_data"] = f"Field {field_dict['field']} not found."
                 break
     return errors, field_data
+
+
+def get_response_body_for_hex_and_field_data(input_response: dict, input_body: dict) -> Tuple[dict, dict]:
+    response = copy(input_response)
+    body = copy(input_body)
+    new_errors: dict = validate_hex_data_with_field_data(body)
+    response["error_fields"] = {**response["error_fields"], **new_errors}
+    if new_errors:
+        return response, body
+    new_errors, hex_data = validate_hex_data(body["hex_data"])
+    response["error_fields"] = {**response["error_fields"], **new_errors}
+    body["hex_data"] = hex_data
+    if new_errors:
+        return response, body
+    new_errors, field_data = validate_seg_name_and_field_data(body)
+    response["error_fields"] = {**response["error_fields"], **new_errors}
+    body["original_field_data"] = body["field_data"]
+    body["field_data"] = field_data
+    return response, body
+
+
+def create_core_for_hex_and_field_data(body: dict) -> Core:
+    core_to_create: Core = Core()
+    core_to_create.hex_data = body["hex_data"]
+    core_to_create.variation = body["variation"]
+    core_to_create.variation_name = body["variation_name"]
+    core_to_create.seg_name = body["seg_name"]
+    core_to_create.field_data = body["field_data"]
+    core_to_create.original_field_data = body["original_field_data"]
+    return core_to_create

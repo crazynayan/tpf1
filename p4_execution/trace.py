@@ -26,8 +26,8 @@ class TraceData:
     def set_reg_pointer(self, value: int):
         self.reg_pointer = f"{value & config.REG_MAX:08X}"
 
-    def set_byte_array1(self, bytes: bytearray):
-        self.read1 = bytes.hex().upper()
+    def set_byte_array1(self, byte_array: bytearray):
+        self.read1 = byte_array.hex().upper()
 
 
 class TraceItem:

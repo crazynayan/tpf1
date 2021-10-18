@@ -12,8 +12,7 @@ from p1_utils.errors import InvalidBaseRegError
 from p2_assembly.mac2_data_macro import macros, DataMacro
 from p2_assembly.seg6_segment import seg_collection
 from p3_db.test_data_elements import Core, Pnr, Tpfdf, Output, FixedFile, PnrOutput
-from p3_db.test_data_validators import validate_hex_data_with_field_data, validate_hex_data, \
-    validate_seg_name_and_field_data
+from p3_db.test_data_validators import get_response_body_for_hex_and_field_data, create_core_for_hex_and_field_data
 
 
 class TestData(FirestoreDocument):
@@ -192,42 +191,54 @@ class TestData(FirestoreDocument):
         return field_byte
 
     def create_heap(self, body: dict, persistence: bool = True) -> dict:
-        response: dict = {"error": True, "message": str()}
-        if set(body) != {"heap_name", "hex_data", "variation", "variation_name"}:
-            response["message"] = "Only 4 fields allowed (heapa_name, hex_data, variation and variation_name) " \
-                                  "and all are mandatory."
+        response: dict = {"error": True, "message": str(), "error_fields": dict()}
+        if set(body) != {"heap_name", "hex_data", "variation", "variation_name", "field_data", "seg_name"}:
+            response["message"] = "Only 6 fields allowed (heap_name, hex_data, variation, variation_name, " \
+                                  "field_data and seg_name) and all are mandatory."
             return response
-        if not body["heap_name"] or not isinstance(body["heap_name"], str):
-            response["message"] = "Invalid HEAPA name. It cannot be empty and must be a string."
-            return response
+        if not body["heap_name"] or not isinstance(body["heap_name"], str) or not body["heap_name"].isalnum():
+            response["error_fields"]["heap_name"] = "Invalid heap name. It must be an alphanumeric string."
         if not self._validate_and_update_variation(body, "core"):
-            response["message"] = "Invalid variation"
-            return response
-        # noinspection PyBroadException
-        try:
-            b64decode(body["hex_data"])
-        except Exception:
-            response["message"] = "Invalid Hex Data. Hex data should be binary data encoded in base 64."
-            return response
-        core_to_create: Core = Core()
+            response["error_fields"]["variation"] = "Invalid variation"
+        elif "heap_name" not in response["error_fields"]:
+            if any(core.variation == body["variation"] and core.heap_name == body["heap_name"].upper()
+                   for core in self.cores):
+                response["error_fields"]["heap_name"] = f"Heap {body['heap_name']} already exists for " \
+                                                        f"variation {body['variation']}."
+        updated_response, updated_body = get_response_body_for_hex_and_field_data(response, body)
+        if updated_response["error_fields"]:
+            return updated_response
+        core_to_create: Core = create_core_for_hex_and_field_data(updated_body)
         core_to_create.heap_name = body["heap_name"].upper()
-        core_to_create.hex_data = body["hex_data"]
-        core_to_create.variation = body["variation"]
-        core_to_create.variation_name = body["variation_name"]
-        core_to_update: Core = next((core for core in self.cores if core.heap_name == core_to_create.heap_name and
-                                     core.variation == core_to_create.variation), None)
-        if core_to_update:
-            core_to_update.hex_data = core_to_create.hex_data
-            if persistence:
-                core_to_update.save()
-            response["message"] = f"Core with heap name {core_to_create.heap_name} updated successfully."
-        else:
-            if persistence:
-                core_to_create.create()
-            self.cores.append(core_to_create)
-            if persistence:
-                self.save()
-            response["message"] = f"Core with heap name {core_to_create.heap_name} created successfully."
+        if persistence:
+            core_to_create.create()
+        self.cores.append(core_to_create)
+        if persistence:
+            self.save()
+        response["message"] = f"Core with heap name {core_to_create.ecb_level} created successfully."
+        response["error"] = False
+        return response
+
+    def update_heap(self, heap_name: str, variation: int, body: dict, persistence: bool = True):
+        response: dict = {"error": True, "message": str(), "error_fields": dict()}
+        core_to_update: Core = next((core for core in self.cores if core.variation == variation and
+                                     core.heap_name == heap_name), None)
+        if not core_to_update:
+            response["message"] = f"Heap {heap_name} not found for variation {variation}."
+            return response
+        if set(body) != {"hex_data", "field_data", "seg_name"}:
+            response["message"] = "Only 3 fields allowed (hex_data, field_data and seg_name) and all are mandatory."
+            return response
+        updated_response, updated_body = get_response_body_for_hex_and_field_data(response, body)
+        if updated_response["error_fields"]:
+            return updated_response
+        core_to_update.hex_data = updated_body["hex_data"]
+        core_to_update.seg_name = updated_body["seg_name"]
+        core_to_update.field_data = updated_body["field_data"]
+        core_to_update.original_field_data = updated_body["original_field_data"]
+        if persistence:
+            core_to_update.save()
+        response["message"] = f"Core with heap {heap_name} updated successfully."
         response["error"] = False
         return response
 
@@ -241,23 +252,13 @@ class TestData(FirestoreDocument):
         if set(body) != {"hex_data", "field_data", "seg_name"}:
             response["message"] = "Only 3 fields allowed (hex_data, field_data and seg_name) and all are mandatory."
             return response
-        errors: dict = response["error_fields"]
-        new_errors: dict = validate_hex_data_with_field_data(body)
-        response["error_fields"] = {**errors, **new_errors}
-        if new_errors:
-            return response
-        new_errors, hex_data = validate_hex_data(body["hex_data"])
-        response["error_fields"] = {**errors, **new_errors}
-        if new_errors:
-            return response
-        new_errors, field_data = validate_seg_name_and_field_data(body)
-        response["error_fields"] = {**errors, **new_errors}
-        if response["error_fields"]:
-            return response
-        core_to_update.hex_data = hex_data
-        core_to_update.seg_name = body["seg_name"]
-        core_to_update.field_data = field_data
-        core_to_update.original_field_data = body["field_data"]
+        updated_response, updated_body = get_response_body_for_hex_and_field_data(response, body)
+        if updated_response["error_fields"]:
+            return updated_response
+        core_to_update.hex_data = updated_body["hex_data"]
+        core_to_update.seg_name = updated_body["seg_name"]
+        core_to_update.field_data = updated_body["field_data"]
+        core_to_update.original_field_data = updated_body["original_field_data"]
         if persistence:
             core_to_update.save()
         response["message"] = f"Core with ECB level {ecb_level} updated successfully."
@@ -266,38 +267,23 @@ class TestData(FirestoreDocument):
 
     def create_ecb_level(self, body: dict, persistence: bool = True) -> dict:
         response: dict = {"error": True, "message": str(), "error_fields": dict()}
-        errors: dict = response["error_fields"]
         if set(body) != {"ecb_level", "hex_data", "variation", "variation_name", "field_data", "seg_name"}:
             response["message"] = "Only 6 fields allowed (ecb_level, hex_data, variation, variation_name, " \
                                   "field_data and seg_name) and all are mandatory."
             return response
         if body["ecb_level"] not in config.ECB_LEVELS:
-            errors["ecb_level"] = "Invalid ECB level. Level should be between 0 to F."
+            response["error_fields"]["ecb_level"] = "Invalid ECB level. Level should be between 0 to F."
         if not self._validate_and_update_variation(body, "core"):
-            errors["variation"] = "Invalid variation"
-        elif "ecb_level" not in errors:
+            response["error_fields"]["variation"] = "Invalid variation"
+        elif "ecb_level" not in response["error_fields"]:
             if any(core.variation == body["variation"] and core.ecb_level == body["ecb_level"] for core in self.cores):
-                errors["ecb_level"] = f"ECB level {body['ecb_level']} already exists for variation {body['variation']}."
-        new_errors: dict = validate_hex_data_with_field_data(body)
-        response["error_fields"] = {**errors, **new_errors}
-        if new_errors:
-            return response
-        new_errors, hex_data = validate_hex_data(body["hex_data"])
-        response["error_fields"] = {**errors, **new_errors}
-        if new_errors:
-            return response
-        new_errors, field_data = validate_seg_name_and_field_data(body)
-        response["error_fields"] = {**errors, **new_errors}
-        if response["error_fields"]:
-            return response
-        core_to_create: Core = Core()
+                response["error_fields"]["ecb_level"] = f"ECB level {body['ecb_level']} already exists for " \
+                                                        f"variation {body['variation']}."
+        updated_response, updated_body = get_response_body_for_hex_and_field_data(response, body)
+        if updated_response["error_fields"]:
+            return updated_response
+        core_to_create: Core = create_core_for_hex_and_field_data(updated_body)
         core_to_create.ecb_level = body["ecb_level"].upper()
-        core_to_create.hex_data = hex_data
-        core_to_create.variation = body["variation"]
-        core_to_create.variation_name = body["variation_name"]
-        core_to_create.seg_name = body["seg_name"]
-        core_to_create.field_data = field_data
-        core_to_create.original_field_data = body["field_data"]
         if persistence:
             core_to_create.create()
         self.cores.append(core_to_create)
