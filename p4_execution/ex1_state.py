@@ -17,7 +17,7 @@ from p3_db.flat_file import FlatFile
 from p3_db.pnr import Pnr
 from p3_db.stream import Stream
 from p3_db.test_data import TestData
-from p3_db.test_data_elements import Output
+from p3_db.test_data_elements import Output, Core
 from p3_db.tpfdf import Tpfdf
 from p4_execution.debug import Debug
 from p4_execution.ex0_regs_store import Registers, Storage
@@ -225,24 +225,15 @@ class State:
             if core.heap_name:
                 address: int = self.vm.allocate()
                 self.heap["old"][core.heap_name] = address
-                self.vm.set_bytes(bytearray(b64decode(core.hex_data)), address)
-                continue
-            if core.ecb_level:
+                self._set_from_core_hex_and_field_data(core, address)
+            elif core.ecb_level:
                 address: int = self.vm.allocate()
                 self._core_block(address, core.ecb_level)
-                if core.hex_data:
-                    self.vm.set_bytes(bytearray(b64decode(core.hex_data)), address)
-                elif core.field_data:
-                    field_byte_array: Dict[str, bytearray] = self._field_data_to_bytearray(core.field_data)
-                    seg = seg_collection.get_seg(core.seg_name.upper())
-                    seg.assemble()
-                    for field, byte_array in field_byte_array.items():
-                        address_to_update = seg.evaluate(field.upper()) + address
-                        self.vm.set_bytes(byte_array, address_to_update, len(byte_array))
-                continue
-            macro_name = core.macro_name.upper()
-            if macro_name in config.DEFAULT_MACROS:
-                self._set_core(core.field_data, macro_name, config.DEFAULT_MACROS[macro_name])
+                self._set_from_core_hex_and_field_data(core, address)
+            elif core.macro_name:
+                macro_name = core.macro_name.upper()
+                if macro_name in config.DEFAULT_MACROS:
+                    self._set_core(core.field_data, macro_name, config.DEFAULT_MACROS[macro_name])
         for reg, value in test_data.regs.items():
             self.regs.set_value(value, reg)
         Pnr.init_db()
@@ -259,6 +250,19 @@ class State:
             lrec_data = self._field_data_to_bytearray(lrec.field_data)
             Tpfdf.add(lrec_data, lrec.key, lrec.macro_name)
         self._capture_file(test_data)
+        return
+
+    def _set_from_core_hex_and_field_data(self, core: Core, address: int):
+        if core.hex_data:
+            byte_array: bytearray = bytearray(b64decode(core.hex_data))
+            self.vm.set_bytes(byte_array, address, len(byte_array))
+        elif core.field_data:
+            field_byte_array: Dict[str, bytearray] = self._field_data_to_bytearray(core.field_data)
+            seg = seg_collection.get_seg(core.seg_name.upper())
+            seg.assemble()
+            for field, byte_array in field_byte_array.items():
+                address_to_update = seg.evaluate(field.upper()) + address
+                self.vm.set_bytes(byte_array, address_to_update, len(byte_array))
         return
 
     def _capture_file(self, test_data: TestData):
