@@ -11,14 +11,21 @@ class File:
         line: Optional[str] = next((line for line in lines if line[50:].strip().split()[0] == word), None)
         return line
 
-    def __init__(self, filename: str):
-        self.lines: List[str] = list()
-        self.macros: Dict[str, list] = dict()  # Macro names -> Listing generated macros
-        # Open the file
+    @staticmethod
+    def open_file(filename) -> List[str]:
         try:
             with open(filename, "r", errors="replace") as file:
                 lines = file.readlines()
         except FileNotFoundError:
+            return list()
+        return lines
+
+    def __init__(self, filename: str):
+        self.lines: List[str] = list()
+        self.macros: Dict[str, list] = dict()  # Macro names -> Listing generated macros
+        # Open the file
+        lines = self.open_file(filename)
+        if not lines:
             return
         # Check for listing
         if filename[-4:] == ".lst":
