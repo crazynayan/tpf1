@@ -47,6 +47,7 @@ class Config:
                            "EQU", "DS", "DC", "EJECT", "SPACE", "PRINT", "BEGIN", "DROP", "DATAS"}
     DIRECTIVE_SECOND_PASS: Set[str] = {"PUSH", "USING", "POP", "DROP", "DATAS"}
     DIRECTIVE_NODE: Set[str] = {"EQU", "DS"}
+    DIRECTIVE_IGNORE_LABEL: Set[str] = DIRECTIVE - DIRECTIVE_NODE - {"DC"}
     INSTRUCTION_LEN_DEFAULT: int = 4
     INSTRUCTION_LEN_2: Set[str] = {"BCTR", "BR", "LR", "LTR", "AR", "SR", "BER", "BNER", "BHR", "BNHR", "BLR", "BNLR",
                                    "BMR", "BNMR", "BPR", "BNPR", "BCR", "BOR", "BNOR", "BZR", "BNZR", "NOPR", "LPR",
