@@ -23,6 +23,7 @@ def make_shell_context():
     from config import config
     from tpf import create_user
     from p2_assembly.seg8_listing import create_listing_commands
+    from p1_utils.file_line import File
     return {
         "TestData": TestData,
         "TpfServer": TpfServer,
@@ -31,4 +32,5 @@ def make_shell_context():
         "client": tpf1_app.test_client(),
         "config": config,
         "create_listing_commands": create_listing_commands,
+        "File": File,
     }
