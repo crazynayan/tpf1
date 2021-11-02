@@ -131,6 +131,8 @@ class Line:
         self.quote_continuation: bool = False
         self.next_line_comment: bool = False
         self.index: int = 0
+        self.dsp: int = -1
+        self.node_exception: bool = False
 
     @classmethod
     def from_line(cls, file_line: str, continuing: bool = False, quote_continuing: bool = False,
