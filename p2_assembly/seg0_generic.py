@@ -65,6 +65,8 @@ class SegmentGeneric(DataMacroImplementation):
         if not reg.is_valid():
             raise UsingInvalidError
         using_name = next((name for name, using_reg in self._using.items() if using_reg.reg == reg.reg), None)
+        if reg.reg == "R8" and using_name is not None:  # Do not set R8 (to fix issue of listing using overriding)
+            return
         if override and using_name is not None:
             del self._using[using_name]
         self._using[dsect] = reg
@@ -80,17 +82,12 @@ class SegmentGeneric(DataMacroImplementation):
         name = self.get_macro_name(base)
         if not name:
             return None
-        if name == self.seg_name or name in macros:
-            indexed_data = self._index if name == self.seg_name else macros[name].indexed_data
-            index_label = name + str(dsp)
-            if index_label not in indexed_data:
-                return None
-            matches = indexed_data[index_label]
-            field = min(matches, key=lambda item: abs(item[1] - length))[0]
-        else:
-            matches = {label: label_ref for label, label_ref in self.all_labels.items()
-                       if label_ref.dsp == dsp and label_ref.name == name}
-            field = min(matches, key=lambda label: abs(matches[label].length - length)) if matches else None
+        indexed_data = self._index if name == self.seg_name else macros[name].indexed_data
+        index_label = name + str(dsp)
+        if index_label not in indexed_data:
+            return None
+        matches = indexed_data[index_label]
+        field = min(matches, key=lambda item: abs(item[1] - length))[0]
         return field
 
     def is_branch(self, label: str) -> bool:
