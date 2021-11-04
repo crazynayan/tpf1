@@ -39,6 +39,24 @@ class DirectiveImplementation(SegmentGeneric):
             self.lookup(line.label).set_branch()
         return
 
+    def ds_dc_lst(self, line: Line) -> int:
+        operands = line.split_operands()
+        ds_dc: Dc = self._get_dc(operands[0])
+        if line.command == "DC":
+            self.dc_list.append(ds_dc)
+            if len(operands) > 1:
+                for operand in operands[1:]:
+                    self.dc_list.append(self._get_dc(operand))
+        return ds_dc.length
+
+    def equ_lst(self, line: Line) -> int:
+        operands = line.split_operands()
+        if len(operands) > 1 and operands[1]:
+            length = self.get_value(operands[1])
+        else:
+            length = 1
+        return length
+
     def equ(self, line: Line) -> None:
         super().equ(line)
         if self.lookup(line.label).dsp == self._location_counter and self.name == self.seg_name:
@@ -51,7 +69,7 @@ class DirectiveImplementation(SegmentGeneric):
         self.name = line.label
         super().dsect(line)
 
-    def csect(self, line) -> None:
+    def csect(self, _) -> None:
         self.name = self.seg_name
         if not self._counters:
             self._location_counter, self._max_counter = 0, 0
