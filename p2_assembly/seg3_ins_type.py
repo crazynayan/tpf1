@@ -14,7 +14,7 @@ class InstructionGeneric:
         self.fall_down: Optional[str] = None
 
     def __repr__(self) -> str:
-        return f"{self.index:04}:{self.label}:{self.command}"
+        return f"{self.index:6}:{self.label}:{self.command}"
 
     @property
     def next_labels(self) -> Set[str]:

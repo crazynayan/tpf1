@@ -33,7 +33,7 @@ class TraceData:
 class TraceItem:
     def __init__(self, trace_data: TraceData, node: InstructionType, seg_name: str):
         self.data: TraceData = trace_data
-        self.instruction: str = str(node)[5:]
+        self.instruction: str = str(node)[7:]
         self.seg_name: str = seg_name
 
 
