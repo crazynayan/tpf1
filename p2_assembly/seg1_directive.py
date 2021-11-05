@@ -41,6 +41,8 @@ class DirectiveImplementation(SegmentGeneric):
 
     def ds_dc_lst(self, line: Line) -> int:
         operands = line.split_operands()
+        if line.label:
+            self._location_counter = self.evaluate(line.label)
         ds_dc: Dc = self._get_dc(operands[0])
         if line.command == "DC":
             self.dc_list.append(ds_dc)
