@@ -10,6 +10,7 @@ from p1_utils.file_line import Line, File
 from p2_assembly.mac2_data_macro import macros
 from p2_assembly.seg2_ins_operand import Label
 from p2_assembly.seg5_exec_macro import RealtimeMacroImplementation
+from p2_assembly.seg8_listing import LstCmd, create_listing_commands, get_lines_from_listing_commands
 
 
 class Segment(RealtimeMacroImplementation):
@@ -41,7 +42,89 @@ class Segment(RealtimeMacroImplementation):
             return
         # Default processing
         self.set_using(self.name, base_reg="R8")
+        if self.file_type == config.ASM:
+            lines = self._assemble_asm()
+        else:
+            lines = self._assemble_lst()
+        # Update index of each line
+        if self.file_type == config.ASM:
+            lines = self._update_index(lines)
+        # Generate constants
+        self._generate_constants()
+        # Second pass - Assemble instructions and populates nodes.
+        self._assemble_instructions(lines)
+        return
+
+    def _assemble_asm(self) -> List[Line]:
         self.load_macro("EB0EB", base="R9")
+        file = File(self.file_name)
+        # Create a list of Line objects
+        lines = Line.from_file(file.lines)
+        # Load inline data macro and DSECT
+        prior_label: Label = Label(self.root_label())
+        for line in lines:
+            if line.command in macros:
+                self.load_macro_from_line(line)
+                continue
+            if line.is_first_pass:
+                self._command[line.command](line)
+            if line.is_assembler_directive and not self.is_branch(line.label):
+                continue
+            if line.label:
+                prior_label: Label = Label(line.label)
+            else:
+                prior_label.index += 1
+                line.label = str(prior_label)
+            if not line.is_assembler_directive:
+                length = line.instruction_length
+                self.add_label(line.label, self._location_counter, length, self.name)
+                self._symbol_table[line.label].set_branch()
+                self._location_counter += length
+        return lines
+
+    def _assemble_lst(self):
+        # Ensure file is present for cloud objects
+        if self.source == config.CLOUD and not os.path.exists(self.file_name):
+            # noinspection PyPackageRequirements
+            from google.cloud.storage import Client
+            blob = Client().bucket(config.BUCKET).blob(self.blob_name)
+            blob.download_to_filename(self.file_name)
+        file: File = File(self.file_name)
+        listing_commands: List[LstCmd] = create_listing_commands(self.seg_name, file.open_file(self.file_name))
+        lines: List[Line] = get_lines_from_listing_commands(listing_commands)
+        prior_label: Label = Label(self.root_label())
+        dsect_name = self.seg_name
+        for line in lines:
+            if line.command in config.DIRECTIVE_IGNORE_LABEL:
+                if line.command == "DSECT":
+                    dsect_name = line.label
+                elif line.command == "CSECT":
+                    dsect_name = self.seg_name
+                continue
+            if line.node_exception or dsect_name != self.seg_name:
+                if line.label:  # Only add it in the symbol table. Do not create the node for the same
+                    self.add_label(line.label, line.dsp, 0, dsect_name)
+                continue
+            if line.label:
+                prior_label: Label = Label(line.label)
+            else:
+                prior_label.index += 1
+                line.label = str(prior_label)
+            self.add_label(line.label, line.dsp, 0, dsect_name)
+            self.all_labels[line.label].set_branch()
+        for line in lines:
+            if not line.label or line.command in config.DIRECTIVE_IGNORE_LABEL:
+                continue
+            if line.command in {"DS", "DC"}:
+                length = self.ds_dc_lst(line)
+            elif line.command == "EQU":
+                length = self.equ_lst(line)
+            else:
+                length = 1
+            self.all_labels[line.label].length = length
+        return lines
+
+    def _assemble_lst_v1(self) -> List[Line]:
         # Ensure file is present for cloud objects
         if self.source == config.CLOUD and not os.path.exists(self.file_name):
             # noinspection PyPackageRequirements
@@ -52,18 +135,6 @@ class Segment(RealtimeMacroImplementation):
         self.lst_macros = file.macros
         # Create a list of Line objects
         lines = Line.from_file(file.lines)
-        # First pass - Build Symbol Table and generate constants.
-        self._build_symbol_table(lines)
-        # Update index of each line
-        lines = self._update_index(lines)
-        # Generate constants
-        self._generate_constants()
-        # Second pass - Assemble instructions and populates nodes.
-        self._assemble_instructions(lines)
-        return
-
-    def _build_symbol_table(self, lines: List[Line]) -> None:
-        prior_label: Label = Label(self.root_label())
         self.equ(self.root_line)
         # First pass for listings
         second_list: List[Tuple[Line, int]] = list()
@@ -89,16 +160,14 @@ class Segment(RealtimeMacroImplementation):
                 self._command[line.command](line)
             except NotFoundInSymbolTableError:
                 raise NotFoundInSymbolTableError(line)
-        # Load inline symbols
+        # Load inline labels from DSECT and set USING
+        prior_label: Label = Label(self.root_label())
         for line in lines:
             if line.command in self.lst_macros:
                 reg: Optional[str] = self.key_value(line).get_value("REG")
                 if not reg:
                     continue
                 self.set_using(dsect=line.command, base_reg=reg)
-                continue
-            if line.command in macros:
-                self.load_macro_from_line(line)
                 continue
             if line.is_first_pass:
                 self._command[line.command](line)
@@ -114,7 +183,7 @@ class Segment(RealtimeMacroImplementation):
                 self.add_label(line.label, self._location_counter, length, self.name)
                 self._symbol_table[line.label].set_branch()
                 self._location_counter += length
-        return
+        return lines
 
     def _generate_constants(self) -> None:
         for dc in self.dc_list:
@@ -128,8 +197,6 @@ class Segment(RealtimeMacroImplementation):
                         raise NotFoundInSymbolTableError(f"{operand}=={dc}=={dc.expression}")
                     except NotFoundInSymbolTableError:
                         raise NotFoundInSymbolTableError(f"{operand}=={dc}=={dc.expression}")
-                    except ZeroDivisionError:
-                        pass
             self.data.set_constant(dc.data * dc.duplication_factor, dc.start)
         self.error_constant = str()
         return
@@ -153,6 +220,24 @@ class Segment(RealtimeMacroImplementation):
         return
 
     def _process_assembler_directive(self, line: Line) -> bool:
+        if self.file_type == config.LST:
+            return self._process_assembler_directive_lst(line)
+        else:
+            return self._process_assembler_directive_asm(line)
+
+    def _process_assembler_directive_lst(self, line: Line) -> bool:
+        # return True -> skip creating node.
+        # return False -> continue creating the node.
+        if not line.is_assembler_directive and not line.node_exception:
+            return False
+        if line.create_node_for_directive and self.is_branch(line.label):
+            return False
+        if line.command in config.DIRECTIVE_SECOND_PASS - {"DATAS"}:
+            # Second pass assembler directive like USING, PUSH, POP
+            self._command[line.command](line)
+        return True
+
+    def _process_assembler_directive_asm(self, line: Line) -> bool:
         # return True -> skip creating node.
         # return False -> continue creating the node.
         if line.is_sw00sr:
@@ -165,12 +250,11 @@ class Segment(RealtimeMacroImplementation):
             return True
         if line.create_node_for_directive and self.is_branch(line.label):
             return False
-        if line.is_first_pass:
-            return True
         if not line.is_assembler_directive:
             return False
-        # Second pass assembler directive like USING, PUSH, POP
-        self._command[line.command](line)
+        if not line.is_first_pass:
+            # Second pass assembler directive like USING, PUSH, POP
+            self._command[line.command](line)
         return True
 
     @staticmethod
