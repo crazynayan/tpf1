@@ -1,9 +1,6 @@
 from enum import Enum, auto
 from typing import List, Optional
 
-from p1_utils.file_line import File
-from p2_assembly.seg6_segment import seg_collection, Segment
-
 
 class Continuation(Enum):
     NO_CONTINUATION = auto()
@@ -16,10 +13,7 @@ class Continuation(Enum):
 class ListingLine:
 
     def __init__(self):
-        super().__init__()
-        # stmt: 6 digit id from listing with leading spaces. For continuing lines, it will have the same id followed by
-        # a dot and 3 digit index with leading zeroes. Cannot be empty.
-        self.stmt: str = str()
+        self.stmt: str = str()  # stmt: 6 digit id from listing with leading spaces. Continuing lines will be blank.
         self.line: str = str()  # The complete line from the listing. Cannot be empty.
         self.source_stmt: str = str()  # Only for generated line. Empty for normal line.
         self.label: str = str()
@@ -79,12 +73,6 @@ class ListingLine:
                 if label_end_index is None:
                     return
                 self.label = self.line[50:label_end_index].upper()
-                if self.line[1:9] != 8 * " ":
-                    self.dsp = int(self.line[1:9], 16)
-                elif self.line[25:33] != 8 * " ":
-                    self.dsp = int(self.line[25:33], 16)
-                else:
-                    self.dsp = -1
             else:
                 label_end_index = 51
             command_start_index = self.get_index_to_char_start(label_end_index)
@@ -94,6 +82,12 @@ class ListingLine:
             if command_end_index is None:
                 command_end_index = 121
             self.command = self.line[command_start_index:command_end_index].upper()
+            if self.line[1:9] != 8 * " ":
+                self.dsp = int(self.line[1:9], 16)
+            elif self.command == "EQU" and self.line[25:33] != 8 * " ":
+                self.dsp = int(self.line[25:33], 16)
+            else:
+                self.dsp = -1
         else:
             command_end_index = 51
         if prev_line_typ in (Continuation.DIRECT, Continuation.IN_QUOTES):
@@ -110,7 +104,7 @@ class ListingLine:
                 break
             chars.append(char)
             if char == "'":
-                if not in_quotes and prev_char in {" ", ",", "="}:
+                if not in_quotes and prev_char in {" ", ",", "=", "C"}:
                     in_quotes = True
                 elif in_quotes:
                     in_quotes = False
@@ -127,12 +121,7 @@ class ListingLine:
         self.operand = "".join(chars).upper()
 
 
-def create_listing_lines(seg_name: str) -> List[ListingLine]:
-    seg: Segment = seg_collection.get_seg(seg_name)
-    if not seg:
-        print(f"{seg_name} not found.")
-        return list()
-    lines = File.open_file(seg.file_name)
+def create_listing_lines(seg_name: str, lines: List[str]) -> List[ListingLine]:
     listing_lines: List[ListingLine] = list()
     source_stmt: str = str()
     continuing_comment: bool = False
@@ -148,15 +137,18 @@ def create_listing_lines(seg_name: str) -> List[ListingLine]:
             continue
         if listing_line.is_comment or continuing_comment:
             continuing_comment = True if listing_line.is_continuation else False
+        if listing_line.is_comment or continuing_comment:
             continue
-        # Setup label, command and operands for continuation lines
+        # Setup label, command and operands
         listing_line.set_label_command_operand(prev_continuation_type)
+        # Skip code between MACRO and MEND
         if listing_line.command == "MACRO":
             macro_mend_skip = True
         if macro_mend_skip:
             if listing_line.command == "MEND":
                 macro_mend_skip = False
             continue
+        # Merge operands of continuing list
         if main_line:
             main_line.operand += listing_line.operand
         if listing_line.is_continuation:
@@ -173,4 +165,12 @@ def create_listing_lines(seg_name: str) -> List[ListingLine]:
             source_stmt = listing_line.stmt
         if listing_line.stmt:
             listing_lines.append(listing_line)
+    # Second pass to update lines that do NOT have dsp.
+    for index, lst_line in enumerate(listing_lines):
+        if lst_line.dsp != -1:
+            continue
+        next_line = next((line for line in listing_lines[index:] if line.dsp != -1), None)
+        if not next_line:
+            continue
+        lst_line.dsp = next_line.dsp
     return listing_lines
