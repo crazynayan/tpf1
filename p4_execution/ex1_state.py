@@ -88,22 +88,34 @@ class State:
             ce1ct = self.get_ecb_address(f"D{level}", "CE1CT")
             self.vm.set_value(1, ce1ct + 1, 1)
 
+    def _evaluate_global(self, name: str) -> int:
+        if self.seg.file_type == config.ASM:
+            return macros["GLOBAL"].evaluate(name)
+        if self.seg.check(name):
+            return self.seg.evaluate(name)
+        return macros["GLOBAL"].evaluate(name)
+
     def _init_globals(self) -> None:
+        if self.seg.file_type == config.LST:
+            ce1gla = self.seg.evaluate("CE1GLA") if self.seg.check("CE1GLA") else 0x300
+            ce1gly = self.seg.evaluate("CE1GLY") if self.seg.check("CE1GLY") else 0x304
+            self.vm.set_value(config.GLOBAL, self.regs.R9 + ce1gla)
+            self.vm.set_value(config.GLOBAL, self.regs.R9 + ce1gly)
         for global_name in ("@MH00C", "@APCIB"):
-            address = config.GLOBAL + macros["GLOBAL"].evaluate(global_name)
+            address = config.GLOBAL + self._evaluate_global(global_name)
             self.vm.set_value(self.vm.allocate(), address)
-        haalc = config.GLOBAL + macros["GLOBAL"].evaluate("@HAALC")
+        haalc = config.GLOBAL + self._evaluate_global("@HAALC")
         self.vm.set_bytes(bytearray([0xC1, 0xC1]), haalc, 2)
-        u1dmo = config.GLOBAL + macros["GLOBAL"].evaluate("@U1DMO")
+        u1dmo = config.GLOBAL + self._evaluate_global("@U1DMO")
         now = datetime.utcnow()
         today = datetime(year=now.year, month=now.month, day=now.day)
         pars_today = (today - config.PARS_DAY_1).days
         self.vm.set_value(pars_today, u1dmo, 2)
-        tjord = config.GLOBAL + macros["GLOBAL"].evaluate("@TJORD")
+        tjord = config.GLOBAL + self._evaluate_global("@TJORD")
         self.vm.set_value(0x00088EDC, tjord)
-        multi_host = config.GLOBAL + macros["GLOBAL"].evaluate("@MHSTC")
+        multi_host = config.GLOBAL + self._evaluate_global("@MHSTC")
         self.vm.set_value(config.MULTI_HOST, multi_host)
-        u1tym = config.GLOBAL + macros["GLOBAL"].evaluate("@U1TYM")
+        u1tym = config.GLOBAL + self._evaluate_global("@U1TYM")
         time: str = f"{now.hour:02}{now.minute:02}"
         time_bytes: bytearray = DataType("C", input=time).to_bytes()
         self.vm.set_bytes(time_bytes, u1tym, len(time_bytes))
@@ -174,7 +186,7 @@ class State:
     def set_partition(self, partition: str) -> None:
         if partition not in config.PARTITION:
             raise PartitionError
-        haalc = config.GLOBAL + macros["GLOBAL"].evaluate("@HAALC")
+        haalc = config.GLOBAL + self._evaluate_global("@HAALC")
         ce1uid = config.ECB + macros["EB0EB"].evaluate("CE1$UID")
         self.vm.set_bytes(DataType("C", input=partition).to_bytes(), haalc, 2)
         self.vm.set_value(config.PARTITION[partition], ce1uid, 1)
