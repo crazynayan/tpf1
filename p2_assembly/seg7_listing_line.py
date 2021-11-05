@@ -38,6 +38,22 @@ class ListingLine:
     def is_generated(self) -> bool:
         return len(self.line) > 49 and self.line[49] == "+"
 
+    @property
+    def is_loc_present(self) -> bool:
+        return self.line[1:9] != 8 * " "
+
+    @property
+    def loc(self) -> int:
+        return int(self.line[1:9], 16) if self.is_loc_present else -1
+
+    @property
+    def is_addr1_present(self) -> bool:
+        return self.line[25:33] != 8 * " "
+
+    @property
+    def addr1(self) -> int:
+        return int(self.line[25:33], 16) if self.is_addr1_present else -1
+
     def is_valid_assembler(self, seg_name) -> bool:
         if not self.line.strip():
             return False
@@ -82,12 +98,9 @@ class ListingLine:
             if command_end_index is None:
                 command_end_index = 121
             self.command = self.line[command_start_index:command_end_index].upper()
-            if self.line[1:9] != 8 * " ":
-                self.dsp = int(self.line[1:9], 16)
-            elif self.command == "EQU" and self.line[25:33] != 8 * " ":
-                self.dsp = int(self.line[25:33], 16)
-            else:
-                self.dsp = -1
+            self.dsp = self.loc
+            if self.dsp == -1:
+                self.dsp = self.addr1
         else:
             command_end_index = 51
         if prev_line_typ in (Continuation.DIRECT, Continuation.IN_QUOTES):
@@ -104,7 +117,7 @@ class ListingLine:
                 break
             chars.append(char)
             if char == "'":
-                if not in_quotes and prev_char in {" ", ",", "=", "C"}:
+                if not in_quotes and prev_char != "L":
                     in_quotes = True
                 elif in_quotes:
                     in_quotes = False
@@ -131,6 +144,7 @@ def create_listing_lines(seg_name: str, lines: List[str]) -> List[ListingLine]:
     for line in lines:
         listing_line = ListingLine()
         listing_line.set_line_stmt(line)
+        # Reject invalid lines and comments
         if not listing_line.is_valid_assembler(seg_name):
             continue
         if not listing_line.stmt and not main_line:
@@ -163,7 +177,9 @@ def create_listing_lines(seg_name: str, lines: List[str]) -> List[ListingLine]:
             listing_line.source_stmt = source_stmt
         elif listing_line.stmt:
             source_stmt = listing_line.stmt
-        if listing_line.stmt:
+        if listing_line.command in {"USING", "MUST"} and listing_line.dsp == -1:
+            continue
+        if listing_line.stmt and listing_line.command:
             listing_lines.append(listing_line)
     # Second pass to update lines that do NOT have dsp.
     for index, lst_line in enumerate(listing_lines):
