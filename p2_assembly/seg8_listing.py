@@ -49,13 +49,17 @@ def create_listing_command(listing_line: ListingLine, seg_name) -> LstCmd:
     return listing_command
 
 
+def split_operand(operand: str) -> list:
+    return re.split("[,'=()+-]", operand)
+
+
 def create_listing_commands(seg_name: str, lines: List[str]) -> List[LstCmd]:
     listing_lines: List[ListingLine] = create_listing_lines(seg_name, lines)
     if not listing_lines:
         return list()
     equ_ds: set = {"EQU", "DS"}
     exec_macro_commands: set = {"GLOBZ"}  # Init with commands that require generated code
-    ibm_cmds: set = {"DETAC", "FINIS"}
+    ibm_cmds: set = {"DETAC", "FINIS", "FLIPC", "ATTAC"}
     exec_macro_ignored_commands: set = {"DS", "GFLDA", "ORG", "GL0AT", "GL0BP", "GL0BQ", "REGVAL", "SYSEQ", "REGEQ",
                                         "GL0BA", "GL0BB", "GL0BC", "GL0BD", "GL0BE", "GL0BF", "GL0BG", "GL0BY"}
     # Initialize the different type of source stmt
@@ -74,7 +78,7 @@ def create_listing_commands(seg_name: str, lines: List[str]) -> List[LstCmd]:
                                      if not line.source_stmt
                                      and line.stmt not in exec_macro_source_stmt
                                      and not line.command.startswith("=")]
-    source_labels: set = {label for cmd in source_commands for label in re.split("[,=()+-]", cmd.operand) if label}
+    source_labels: set = {label for cmd in source_commands for label in split_operand(cmd.operand) if label}
     # Exec cmds = Exec cmds that have been expanded - Ignored Exec cmds - EQU/DS cmds that are not used
     non_equ_ds_exec_commands: List[LstCmd] = [create_listing_command(line, seg_name) for line in listing_lines
                                               if line.source_stmt and line.source_stmt in exec_macro_source_stmt
@@ -84,7 +88,7 @@ def create_listing_commands(seg_name: str, lines: List[str]) -> List[LstCmd]:
                                           if line.source_stmt and line.source_stmt in exec_macro_source_stmt
                                           and line.command in equ_ds and line.label in source_labels]
     exec_commands: List[LstCmd] = non_equ_ds_exec_commands + equ_ds_exec_commands
-    exec_labels: set = {label for cmd in exec_commands for label in re.split("[,=()+-]", cmd.operand) if label}
+    exec_labels: set = {label for cmd in exec_commands for label in split_operand(cmd.operand) if label}
     source_exec_labels: set = source_labels.union(exec_labels)
     # Data cmds = Generated USING,DSECT,CSECT + Generated EQU, DS that are used in source or exec cmds.
     using_ds_data_cmds: List[LstCmd] = [create_listing_command(line, seg_name) for line in listing_lines
@@ -113,7 +117,7 @@ def create_listing_commands(seg_name: str, lines: List[str]) -> List[LstCmd]:
         if cmd.command in node_exception_cmds:
             cmd.node_exception = True
     directive_plus_ignored_cmds: set = config.DIRECTIVE.union({"DSHDR", "REGVAL", "REGEQ", "#UEXIT", "#LEVL",
-                                                               "#URTRN"})
+                                                               "#URTRN", "IFL0DF", "DFGDS", "DFTDC"})
     for source_stmt in data_macro_source_stmt:
         exec_lines: List[str] = list()
         ignore_inside_dsect: bool = False
@@ -128,7 +132,7 @@ def create_listing_commands(seg_name: str, lines: List[str]) -> List[LstCmd]:
         if not exec_lines:
             cmd = next(cmd for cmd in listing_commands if cmd.stmt == source_stmt)
             cmd.node_exception = True
-    #     elif source_stmt == " 15378":
+    #     elif source_stmt == " 15669":
     #         print(exec_lines)
     # with open(f"tmp/{seg_name}-extract.txt", "w") as fh:
     #     fh.writelines(f"{str(line)}\n" for line in listing_commands)
