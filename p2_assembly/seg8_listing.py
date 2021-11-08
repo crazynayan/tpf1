@@ -110,8 +110,8 @@ def create_listing_commands(seg_name: str, lines: List[str]) -> List[LstCmd]:
                 cmd.node_exception = True
         elif cmd.stmt in data_macro_source_stmt:
             cmd.node_exception = True
-    with open(f"tmp/{seg_name}-extract.txt", "w") as fh:
-        fh.writelines(f"{str(line)}\n" for line in listing_commands)
+    # with open(f"tmp/{seg_name}-extract.txt", "w") as fh:
+    #     fh.writelines(f"{str(line)}\n" for line in listing_commands)
     return listing_commands
 
 
