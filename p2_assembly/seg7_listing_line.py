@@ -43,6 +43,10 @@ class ListingLine:
         return self.line[1:9] != 8 * " "
 
     @property
+    def is_machine_code(self) -> bool:
+        return self.is_loc_present and self.line[10:12] != 2 * " "
+
+    @property
     def loc(self) -> int:
         return int(self.line[1:9], 16) if self.is_loc_present else -1
 
@@ -177,16 +181,10 @@ def create_listing_lines(seg_name: str, lines: List[str]) -> List[ListingLine]:
             listing_line.source_stmt = source_stmt
         elif listing_line.stmt:
             source_stmt = listing_line.stmt
-        if listing_line.command in {"USING", "MUST"} and listing_line.dsp == -1:
-            continue
         if listing_line.stmt and listing_line.command:
             listing_lines.append(listing_line)
-    # Second pass to update lines that do NOT have dsp.
-    for index, lst_line in enumerate(listing_lines):
-        if lst_line.dsp != -1:
-            continue
-        next_line = next((line for line in listing_lines[index:] if line.dsp != -1), None)
-        if not next_line:
-            continue
-        lst_line.dsp = next_line.dsp
+    # Second pass to remove lines that do NOT have dsp.
+    listing_lines = [line for line in listing_lines if not line.is_generated
+                     or (line.dsp != -1 and line.command not in {"ORG"})
+                     or (line.command in {"PUSH", "POP"} and line.operand == "USING")]
     return listing_lines
