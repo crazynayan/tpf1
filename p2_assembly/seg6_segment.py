@@ -98,6 +98,7 @@ class Segment(RealtimeMacroImplementation):
             if line.command in config.DIRECTIVE_IGNORE_LABEL:
                 if line.command == "DSECT":
                     dsect_name = line.label
+                    self.add_label(dsect_name, 0, 1, dsect_name)
                 elif line.command == "CSECT":
                     dsect_name = self.seg_name
                 continue
