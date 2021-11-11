@@ -59,7 +59,10 @@ def create_listing_commands(seg_name: str, lines: List[str]) -> List[LstCmd]:
     if not listing_lines:
         return list()
     equ_ds: set = {"EQU", "DS"}
-    exec_macro_commands: set = {"GLOBZ"}  # Init with commands that require generated code
+    # Init with commands that require generated code
+    exec_macro_commands: set = {"GLOBZ", "#IF", "#ELSE", "#", "#EIF", "#ELIF", "#GOTO", "#LOCA", "#PERF", "#SUBR",
+                                "#ESUB", "#EIFM"}
+    # Init with commands that will never be expanded (IBM TPF specific executable macro)
     ibm_cmds: set = {"DETAC", "FINIS", "FLIPC", "ATTAC", "ENTNC"}
     # Initialize the different type of source stmt
     ibm_source_stmt: set = {line.stmt for line in listing_lines if line.command in ibm_cmds and not line.source_stmt}
