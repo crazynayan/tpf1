@@ -41,7 +41,6 @@ class SegmentGeneric(DataMacroImplementation):
         self.data_macro: Set[str] = set()  # Set of data macro names which are already loaded.
         self.data: Data = Data()
         self.dc_list: List[Dc] = list()
-        self.lst_macros: Dict[str, List] = dict()  # All listing generated macro lines
 
     def root_label(self, name: Optional[str] = None) -> str:
         return "$$" + self.seg_name + "$$" if name is None else "$$" + name + "$$"

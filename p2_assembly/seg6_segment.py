@@ -1,11 +1,10 @@
 import os
 import re
-from typing import Dict, Optional, List, Tuple
+from typing import Dict, Optional, List
 
 from config import config
 from p1_utils.data_type import DataType
-from p1_utils.errors import NotFoundInSymbolTableError, EquDataTypeHasAmpersandError, SegmentNotFoundError, \
-    AssemblyError
+from p1_utils.errors import NotFoundInSymbolTableError, SegmentNotFoundError, AssemblyError
 from p1_utils.file_line import Line, File
 from p2_assembly.mac2_data_macro import macros
 from p2_assembly.seg2_ins_operand import Label
@@ -125,67 +124,6 @@ class Segment(RealtimeMacroImplementation):
             self.all_labels[line.label].length = length
         return lines
 
-    def _assemble_lst_v1(self) -> List[Line]:
-        # Ensure file is present for cloud objects
-        if self.source == config.CLOUD and not os.path.exists(self.file_name):
-            # noinspection PyPackageRequirements
-            from google.cloud.storage import Client
-            blob = Client().bucket(config.BUCKET).blob(self.blob_name)
-            blob.download_to_filename(self.file_name)
-        file = File(self.file_name)
-        self.lst_macros = file.macros
-        # Create a list of Line objects
-        lines = Line.from_file(file.lines)
-        self.equ(self.root_line)
-        # First pass for listings
-        second_list: List[Tuple[Line, int]] = list()
-        for macro_name, macro_lines in self.lst_macros.items():
-            lines_list = Line.from_file(macro_lines)
-            line = Line.from_line(f"{macro_name} EQU *")
-            lines_list.insert(0, line)
-            for line in lines_list:
-                if line.command not in {"DS", "EQU", "ORG", "DSECT", "DC", "CSECT"}:
-                    continue
-                try:
-                    self._command[line.command](line)
-                except EquDataTypeHasAmpersandError:
-                    pass
-                except NotFoundInSymbolTableError:
-                    second_list.append((line, self._location_counter))
-        # Second pass
-        for line, location_counter in second_list:
-            if line.command not in {"EQU", "DS"}:
-                continue
-            self._location_counter = location_counter
-            try:
-                self._command[line.command](line)
-            except NotFoundInSymbolTableError:
-                raise NotFoundInSymbolTableError(line)
-        # Load inline labels from DSECT and set USING
-        prior_label: Label = Label(self.root_label())
-        for line in lines:
-            if line.command in self.lst_macros:
-                reg: Optional[str] = self.key_value(line).get_value("REG")
-                if not reg:
-                    continue
-                self.set_using(dsect=line.command, base_reg=reg)
-                continue
-            if line.is_first_pass:
-                self._command[line.command](line)
-            if line.is_assembler_directive and not self.is_branch(line.label):
-                continue
-            if line.label:
-                prior_label: Label = Label(line.label)
-            else:
-                prior_label.index += 1
-                line.label = str(prior_label)
-            if not line.is_assembler_directive:
-                length = line.instruction_length
-                self.add_label(line.label, self._location_counter, length, self.name)
-                self._symbol_table[line.label].set_branch()
-                self._location_counter += length
-        return lines
-
     def _generate_constants(self) -> None:
         for dc in self.dc_list:
             if dc.expression and dc.data_type not in {"S", "V"}:
@@ -246,8 +184,6 @@ class Segment(RealtimeMacroImplementation):
             return False
         if line.command in macros:
             self.load_macro_from_line(line)
-            return True
-        if line.command in self.lst_macros:
             return True
         if line.create_node_for_directive and self.is_branch(line.label):
             return False

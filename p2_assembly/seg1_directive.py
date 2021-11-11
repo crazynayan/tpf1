@@ -111,10 +111,6 @@ class DirectiveImplementation(SegmentGeneric):
         suffix: Optional[str] = operands[1] if operands[1] else None
         try:
             for operand in operands[2:]:
-                macro_name = operand + suffix if suffix else operand
-                if macro_name in self.lst_macros:
-                    self.set_using(dsect=macro_name, base_reg=operands[0], override=False)
-                    continue
                 if operand not in macros:
                     raise UsingInvalidError(line)
                 self.load_macro(operand, base=operands[0], suffix=suffix, override=False)

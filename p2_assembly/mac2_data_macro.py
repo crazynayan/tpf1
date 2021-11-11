@@ -9,12 +9,10 @@ from p2_assembly.mac1_implementation import DataMacroImplementation
 
 
 class DataMacro(DataMacroImplementation):
-    def __init__(self, name: str, filename: str = None, default_macros: Dict[str, LabelReference] = None,
-                 macro_lines: List[str] = None):
+    def __init__(self, name: str, filename: str = None, default_macros: Dict[str, LabelReference] = None):
         super().__init__(name)
         self.file_name: str = filename if filename else str()
         self.default_macros: Dict[str, LabelReference] = default_macros if default_macros else dict()
-        self.macro_lines: List[str] = macro_lines if macro_lines else list()
 
     def __repr__(self) -> str:
         return f"{self.name} ({len(self._symbol_table)})"
@@ -36,7 +34,7 @@ class DataMacro(DataMacroImplementation):
         # Load default macros
         self._symbol_table = {**self.all_labels, **self.default_macros}
         # Create a list of Line objects from file or listing
-        file_lines = self.macro_lines if self.macro_lines else File(self.file_name).lines
+        file_lines = File(self.file_name).lines
         lines = Line.from_file(file_lines)
         # Remove suffix like &CG1 from label and only keep the accepted commands.
         lines = [line.remove_suffix() for line in lines if line.command in self._command]
@@ -107,4 +105,3 @@ class _DataMacroCollection:
 _collection = _DataMacroCollection()
 macros = _collection.macros
 indexed_macros = _collection.indexed_labels
-default_macros = _collection.default_macros
