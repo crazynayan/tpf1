@@ -118,6 +118,7 @@ class InstructionImplementation(InstructionOperand):
         self._command["BAS"] = self.reg_branch
         self._command["BAL"] = self.reg_branch
         self._command["JAS"] = self.reg_branch
+        self._command["BRAS"] = self.reg_branch
         self._command["BCT"] = self.reg_branch
         self._command["JCT"] = self.reg_branch
         self._command["BXH"] = self.reg_reg_branch
@@ -141,6 +142,7 @@ class InstructionImplementation(InstructionOperand):
         self._command["BL"] = self.branch_mnemonic
         self._command["BNL"] = self.branch_mnemonic
         self._command["JC"] = self.branch_condition
+        self._command["BRC"] = self.branch_condition
         self._command["J"] = self.branch_mnemonic
         self._command["JNOP"] = self.branch_mnemonic
         self._command["JZ"] = self.branch_mnemonic
