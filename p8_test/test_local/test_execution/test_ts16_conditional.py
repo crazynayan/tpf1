@@ -11,7 +11,6 @@ class Conditional(unittest.TestCase):
         self.test_data.add_all_regs()
         ecb_fields = ["EBW015", "EBW016", "EBW010", "EBW011", "EBW012", "EBW013", ("EBW020", 4), ("EBW024", 4)]
         self.test_data.add_fields(ecb_fields, "EB0EB")
-        self.test_data.output.debug = ["TS16"]
 
     def test_ts16_1(self):
         # Default state is 1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 7.1.1, 7.2.1, 7.3.1, 7.4.1

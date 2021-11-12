@@ -63,9 +63,6 @@ class State:
             self.loaded_seg[seg_name] = (self.seg, self.regs.R8)
 
     def init_debug(self, seg_list: List[str]) -> None:
-        for seg_name in seg_list:
-            seg_collection.assemble(seg_name)
-            self.debug.add_trace(seg_collection.get_seg(seg_name).nodes, seg_name)
         self.trace_list.seg_list = [seg_name for seg_name in seg_list]
         return
 
@@ -160,15 +157,12 @@ class State:
         output_test_data.outputs = outputs
         return output_test_data
 
-    def _ex_command(self, node: InstructionType, execute_label: Optional[str] = None) -> str:
+    def _ex_command(self, node: InstructionType) -> str:
         seg_name = self.seg.seg_name
         self.trace_data = TraceData()
         if node.command not in self._ex:
-            self.debug.hit(node, node.label, seg_name)
             raise NotImplementedExecutionError(node)
         label = self._ex[node.command](node)
-        next_label = str() if execute_label else label
-        self.debug.hit(node, next_label, seg_name)
         self.trace_list.hit(self.trace_data, node, seg_name)
         return label
 
@@ -357,8 +351,7 @@ class State:
         output.last_line = last_node.label
         output.last_node = str(last_node)
         if output.debug:
-            output.debug = self.debug.get_traces(hit=True)
-            output.debug_missed = self.debug.get_traces(hit=False)
+            output.debug = list()
             output.traces = self.trace_list.get_traces()
         for core in output.cores:
             macro_name = core.macro_name.upper()

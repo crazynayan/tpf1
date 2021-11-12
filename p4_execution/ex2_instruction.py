@@ -534,22 +534,22 @@ class LogicalUsefulConversion(State):
         exec_node = deepcopy(exec_node)
         if isinstance(exec_node, FieldLenField):
             exec_node.field_len.length |= value
-            self._ex_command(exec_node, node.fall_down)
+            self._ex_command(exec_node)
         elif isinstance(exec_node, FieldLenFieldLen):
             value1 = value >> 4
             exec_node.field_len1.length |= value1
             value2 = value & 0x0F
             exec_node.field_len2.length |= value2
-            self._ex_command(exec_node, node.fall_down)
+            self._ex_command(exec_node)
         elif isinstance(exec_node, FieldData):
             exec_node.data |= value
-            self._ex_command(exec_node, node.fall_down)
+            self._ex_command(exec_node)
         elif isinstance(exec_node, FieldBits):
             value |= exec_node.bits.value
             exec_node.bits.set_value(value)
-            self._ex_command(exec_node, node.fall_down)
+            self._ex_command(exec_node)
         elif value == 0:
-            self._ex_command(exec_node, node.fall_down)
+            self._ex_command(exec_node)
         else:
             raise ExExecutionError
         return node.fall_down
