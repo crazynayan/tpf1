@@ -13,8 +13,9 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
 
         # S03 - Load & Store
         self._ex["LR"] = self.load_register
+        self._ex["LPR"] = self.load_positive_register
+        self._ex["LNR"] = self.load_negative_register
         self._ex["LTR"] = self.load_test_register
-        # LPR, LNR - Not in ETA5
         # LCR - Not in ETA5
         self._ex["L"] = self.load_fullword
         self._ex["ST"] = self.store_fullword
@@ -231,7 +232,9 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["FINWC"] = self.finwc
         self._ex["FIWHC"] = self.finwc
         # FINHC
-        # FILNC, FILEC, FILUC, GETFC, SONIC
+        # FILEC, FILUC, GETFC, SONIC
+        self._ex["FILNC"] = self.no_operation
+        self._ex["WAITC"] = self.no_operation
 
         # User defined Db Macros
         self._ex["PDCRE"] = self.no_operation
