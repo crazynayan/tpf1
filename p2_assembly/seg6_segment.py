@@ -43,15 +43,16 @@ class Segment(RealtimeMacroImplementation):
         self.set_using(self.name, base_reg="R8")
         if self.file_type == config.ASM:
             lines = self._assemble_asm()
+            lines = self._update_index(lines)
         else:
             lines = self._assemble_lst()
-        # Update index of each line
-        if self.file_type == config.ASM:
-            lines = self._update_index(lines)
-        # Generate constants
-        self._generate_constants()
-        # Second pass - Assemble instructions and populates nodes.
-        self._assemble_instructions(lines)
+        try:
+            # Generate constants
+            self._generate_constants()
+            # Second pass - Assemble instructions and populates nodes.
+            self._assemble_instructions(lines)
+        except AssemblyError:
+            self.nodes = dict()
         return
 
     def _assemble_asm(self) -> List[Line]:
@@ -126,7 +127,7 @@ class Segment(RealtimeMacroImplementation):
 
     def _generate_constants(self) -> None:
         for dc in self.dc_list:
-            if dc.expression and dc.data_type not in {"S", "V"}:
+            if dc.expression and dc.data_type not in {"V"}:
                 dc.data = bytearray()
                 for operand in dc.expression:
                     self.error_constant = f"{dc}:{dc.expression}"

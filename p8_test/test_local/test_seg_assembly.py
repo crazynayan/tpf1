@@ -1,6 +1,5 @@
 import unittest
 
-from p1_utils.errors import AssemblyError
 from p2_assembly.seg6_segment import seg_collection, Segment
 from p4_execution.ex5_execute import TpfServer
 
@@ -11,10 +10,9 @@ class SegmentTest(unittest.TestCase):
     def test_segment(self):
         self.maxDiff = None
         seg: Segment = seg_collection.get_seg(self.SEG_NAME)
-        try:
-            seg.assemble()
-        except AssemblyError:
-            self.assertFalse(True, msg=seg.error_line)
+        seg.assemble()
+        self.assertEqual(str(), seg.error_line)
+        self.assertEqual(str(), seg.error_constant)
         unknown = [str(node)[:60] for _, node in seg.nodes.items() if
                    node.command not in TpfServer().supported_commands]
         # all_nodes = [str(node) for _, node in seg.nodes.items()]

@@ -5,7 +5,6 @@ from urllib.parse import unquote
 from flask import Response, jsonify, request, g
 
 from config import config
-from p1_utils.errors import AssemblyError
 from p2_assembly.mac0_generic import LabelReference
 from p2_assembly.mac2_data_macro import macros
 from p2_assembly.seg6_segment import seg_collection
@@ -513,13 +512,12 @@ def segment_instruction(seg_name: str) -> Response:
         response["message"] = f"{seg_name} segment not found."
         return jsonify(response)
     segment = seg_collection.get_seg(seg_name)
-    try:
-        segment.assemble()
-    except AssemblyError:
-        if segment.error_constant:
-            response["message"] = f"Error in assembling constant at {segment.error_constant}."
-        elif segment.error_line:
-            response["message"] = f"Error in assembling line: {segment.error_line}."
+    segment.assemble()
+    if segment.error_constant:
+        response["message"] = f"Error in assembling constant at {segment.error_constant}."
+        return jsonify(response)
+    elif segment.error_line:
+        response["message"] = f"Error in assembling line: {segment.error_line}."
         return jsonify(response)
     response["instructions"]: List[str] = [str(node) for _, node in segment.nodes.items()]
     response["instructions"].sort()
