@@ -7,7 +7,7 @@ from config import config
 from p1_utils.data_type import DataType, Register
 from p1_utils.errors import SegmentNotFoundError, EcbLevelFormatError, InvalidBaseRegError, TpfdfError, \
     PartitionError, FileItemSpecificationError, PoolFileSpecificationError, BaseAddressError, ExecutionError, \
-    TPFServerMemoryError, LevtaExecutionError, NotImplementedExecutionError
+    TPFServerMemoryError, LevtaExecutionError, NotImplementedExecutionError, BctExecutionError
 from p2_assembly.mac0_generic import LabelReference
 from p2_assembly.mac2_data_macro import macros
 from p2_assembly.seg2_ins_operand import FieldIndex
@@ -198,6 +198,8 @@ class State:
             return field.name
         dsp = self.regs.get_address(field.index, field.dsp)
         label = self.seg.get_field_name(Register("R8"), dsp, config.INSTRUCTION_LEN_DEFAULT)
+        if not self.seg.is_branch(label):
+            raise BctExecutionError
         return label
 
     def _core_block(self, address: int, level: str, block_type: Optional[str] = None) -> None:

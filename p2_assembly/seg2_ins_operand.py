@@ -4,7 +4,7 @@ from typing import Optional, List
 from config import config
 from p1_utils.data_type import Register
 from p1_utils.errors import RegisterInvalidError, FieldDspInvalidError, FieldLengthInvalidError, BitsInvalidError, \
-    RegisterIndexInvalidError, BranchInvalidError
+    RegisterIndexInvalidError
 from p2_assembly.mac0_generic import LabelReference
 from p2_assembly.seg1_directive import DirectiveImplementation
 
@@ -232,6 +232,4 @@ class InstructionOperand(DirectiveImplementation):
 
     def get_branch(self, operand: str) -> FieldIndex:
         field = self.field_index(operand)
-        if not self.is_branch(field.name):
-            raise BranchInvalidError
         return field
