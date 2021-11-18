@@ -150,9 +150,12 @@ class InstructionOperand(DirectiveImplementation):
         if operand.startswith('='):
             label_ref = self._literal(operand[1:])
             return FieldBaseDsp(label_ref.label, self.get_base(self.name), label_ref.dsp)
-        operand1, operand2, error = self.split_operand(operand)
+        try:
+            operand1, operand2, error = self.split_operand(operand)
+        except StopIteration:
+            raise FieldLengthInvalidError(operand)
         if error:
-            raise FieldLengthInvalidError
+            raise FieldLengthInvalidError(operand)
         if operand2:
             return self._get_field_by_base_dsp(base=operand2, dsp=operand1)
         return self._get_field_by_name(operand1)
@@ -184,7 +187,10 @@ class InstructionOperand(DirectiveImplementation):
         elif not operand3:
             # Note: In TPF these types are with no base but with index register set.
             # In our tool we have flipped this. So there would be no index but the base would be present.
-            if operand1.isdigit() or set("+-*").intersection(operand1):
+            if operand1.endswith("+"):
+                # Base_dsp Q44REG1+(R1*4)
+                field: FieldBaseDsp = self._get_field_by_name(name=operand1 + operand2)
+            elif operand1.isdigit() or set("+-*").intersection(operand1):
                 # Base_dsp 34(R5) or expression with base EBW008-EBW000(R9)
                 field: FieldBaseDsp = self._get_field_by_base_dsp(base=operand2, dsp=operand1)
             else:
