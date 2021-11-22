@@ -45,8 +45,9 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["D"] = self.divide_fullword
         self._ex["DR"] = self.divide_register
         self._ex["SRDA"] = self.shift_right_double_algebraic
+        self._ex["SLA"] = self.shift_left_algebraic
         # MH, M, MR - Not in ETA5
-        # SLA, SRA, SLDA - Not in ETA5
+        # SRA, SLDA - Not in ETA5
 
         # S05 - Move Store & Logic Control
         self._ex["MVC"] = self.move_character
@@ -81,6 +82,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["BNH"] = self.branch
         self._ex["BL"] = self.branch
         self._ex["BNL"] = self.branch
+        self._ex["BC"] = self.branch
         self._ex["JC"] = self.branch
         self._ex["BRC"] = self.branch
         self._ex["J"] = self.branch
@@ -232,7 +234,8 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["FINWC"] = self.finwc
         self._ex["FIWHC"] = self.finwc
         # FINHC
-        # FILEC, FILUC, GETFC, SONIC
+        # FILUC, GETFC, SONIC
+        self._ex["FILEC"] = self.no_operation
         self._ex["FILNC"] = self.no_operation
         self._ex["WAITC"] = self.no_operation
 
