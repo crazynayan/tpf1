@@ -48,7 +48,10 @@ class ListingLine:
 
     @property
     def loc(self) -> int:
-        return int(self.line[1:9], 16) if self.is_loc_present else -1
+        try:
+            return int(self.line[1:9], 16) if self.is_loc_present else -1
+        except ValueError:
+            return -1
 
     @property
     def is_addr1_present(self) -> bool:
@@ -56,7 +59,10 @@ class ListingLine:
 
     @property
     def addr1(self) -> int:
-        return int(self.line[25:33], 16) if self.is_addr1_present else -1
+        try:
+            return int(self.line[25:33], 16) if self.is_addr1_present else -1
+        except ValueError:
+            return -1
 
     def is_valid_assembler(self, seg_name) -> bool:
         if not self.line.strip():
