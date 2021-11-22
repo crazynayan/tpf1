@@ -118,7 +118,7 @@ class Config:
     ET_CLASS_COUNTER: int = 0
     ET_TEST_CLASS_COUNT: int = 22
     # Change 4CC1 to 4E2F to 4F9C to 5109 i.e. 20Oct19 to 20Oct20 to 20Oct21 to 20Oct22 (every year after 20NOV)
-    PARS_DATE: str = "4F9C"
+    PARS_DATE: str = "5109"
 
 
 config = Config()
