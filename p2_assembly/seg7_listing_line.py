@@ -189,8 +189,17 @@ def create_listing_lines(seg_name: str, lines: List[str]) -> List[ListingLine]:
             source_stmt = listing_line.stmt
         if listing_line.stmt and listing_line.command:
             listing_lines.append(listing_line)
-    # Second pass to remove lines that do NOT have dsp.
+    # Second pass to remove generated lines that do NOT have dsp.
     listing_lines = [line for line in listing_lines if not line.is_generated
                      or (line.dsp != -1 and line.command not in {"ORG"})
                      or (line.command in {"PUSH", "POP"} and line.operand == "USING")]
+    # Third pass to update the dsp of source line with labels on executable macros
+    for source_line in listing_lines:
+        if source_line.is_generated or not source_line.label or source_line.dsp != -1:
+            continue
+        next_line = next((line for line in listing_lines if line.source_stmt == source_line.stmt
+                          and line.is_machine_code), None)
+        if not next_line:
+            continue
+        source_line.dsp = next_line.dsp
     return listing_lines
