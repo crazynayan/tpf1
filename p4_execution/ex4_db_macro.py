@@ -211,6 +211,8 @@ class RealTimeDbMacro(State):
 
     def finwc(self, node: KeyValue) -> str:
         level = node.keys[0]
+        success_label = node.get_value("SUCCESS") or node.fall_down
+        error_label = node.get_value("ERROR") or node.keys[1] if not node.get_value("SUCCESS") else node.fall_down
         # GETCC equivalent process
         address = self.vm.allocate()
         self._core_block(address, level)
@@ -222,9 +224,9 @@ class RealTimeDbMacro(State):
         # Move the data in the work block
         data = FlatFile.get_record(record_id, file_address)
         if data is None or self.is_error(node.label):
-            return node.keys[1]
+            return error_label
         self.vm.set_bytes(data, address, len(data))
-        return node.fall_down
+        return success_label
 
     def face(self, node: InstructionGeneric) -> str:
         ordinal = self.regs.R0

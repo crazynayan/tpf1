@@ -1,5 +1,6 @@
 import re
-from typing import List
+from copy import copy
+from typing import List, Optional
 
 from firestore_ci import FirestoreDocument
 
@@ -114,9 +115,28 @@ def create_listing_commands(seg_name: str, lines: List[str]) -> List[LstCmd]:
                 cmd.node_exception = True
         elif cmd.stmt in data_macro_source_stmt:
             cmd.node_exception = True
+    # Replace SVC with macro calls
+    updated_lst_cmds: List[LstCmd] = list()
+    macro_cmd: Optional[LstCmd] = None
+    svc_cmds: set = {"FINWC", "FIWHC"}
+    for cmd in listing_commands:
+        if cmd.command == "SVC" and cmd.operand in svc_cmds:
+            macro_cmd = copy(cmd)
+            macro_cmd.command = cmd.operand
+            macro_cmd.operand = str()
+            continue
+        if not macro_cmd:
+            updated_lst_cmds.append(cmd)
+        elif cmd.command == "DC" and cmd.operand.startswith("AL1(D"):
+            macro_cmd.operand = cmd.operand[4:6]
+        elif cmd.command == "BRC":
+            macro_cmd.operand += ",SUCCESS=" if cmd.operand.startswith("15-7") else ",ERROR="
+            macro_cmd.operand += cmd.operand.split(",")[1]
+            updated_lst_cmds.append(macro_cmd)
+            macro_cmd = None
     # with open(f"tmp/{seg_name}-extract.txt", "w") as fh:
-    #     fh.writelines(f"{str(line)}\n" for line in listing_commands)
-    return listing_commands
+    #     fh.writelines(f"{str(line)}\n" for line in updated_lst_cmds)
+    return updated_lst_cmds
 
 
 def create_line(listing_command: LstCmd) -> Line:
