@@ -6,6 +6,7 @@ from p1_utils.data_type import Register
 from p1_utils.errors import RegisterInvalidError, FieldDspInvalidError, FieldLengthInvalidError, BitsInvalidError, \
     RegisterIndexInvalidError
 from p2_assembly.mac0_generic import LabelReference
+from p2_assembly.mac1_implementation import Dc
 from p2_assembly.seg1_directive import DirectiveImplementation
 
 
@@ -139,11 +140,14 @@ class InstructionOperand(DirectiveImplementation):
         return FieldBaseDsp(name, base, dsp)
 
     def _literal(self, operand: str) -> LabelReference:
-        literal = self._get_dc(operand, literal=True)
+        literal: Dc = self._get_dc(operand, literal=True)
         dsp = self.data.next_literal + config.F4K
         self.data.literal.extend(literal.data * literal.duplication_factor)
         label = f"L{Label.SEPARATOR * 2}{dsp:05X}"
         label_ref = self.add_label(label, dsp, literal.length, self.name)
+        literal.start = dsp
+        literal.label = label
+        self.literal_list.append(literal)
         return label_ref
 
     def field_base_dsp(self, operand: str) -> FieldBaseDsp:

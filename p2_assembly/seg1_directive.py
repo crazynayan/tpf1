@@ -30,6 +30,7 @@ class DirectiveImplementation(SegmentGeneric):
 
     def dc(self, line: Line) -> None:
         dc_list: List[Dc] = super().ds(line)
+        dc_list[0].label = line.label if line.label else str()
         self.dc_list.extend(dc_list)
         return
 
@@ -45,6 +46,7 @@ class DirectiveImplementation(SegmentGeneric):
             self._location_counter = self.evaluate(line.label)
         ds_dc: Dc = self._get_dc(operands[0])
         if line.command == "DC":
+            ds_dc.label = line.label if line.label else str()
             self.dc_list.append(ds_dc)
             if len(operands) > 1:
                 for operand in operands[1:]:

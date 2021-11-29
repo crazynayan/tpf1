@@ -519,6 +519,12 @@ def segment_instruction(seg_name: str) -> Response:
     elif segment.error_line:
         response["message"] = f"Error in assembling line: {segment.error_line}."
         return jsonify(response)
+    response["constants"]: List[dict] = [{"label": dc.label, "length": dc.length, "dsp": f"{dc.start:03X}",
+                                          "data": (dc.data * dc.duplication_factor).hex().upper(), } for dc in
+                                         segment.dc_list]
+    response["literals"]: List[dict] = [{"label": dc.label, "length": dc.length, "dsp": f"{dc.start:03X}",
+                                         "data": (dc.data * dc.duplication_factor).hex().upper(), } for dc in
+                                        segment.literal_list]
     response["instructions"]: List[str] = [str(node) for _, node in segment.nodes.items()]
     response["instructions"].sort()
     response["not_supported"]: List[str] = [str(node) for _, node in segment.nodes.items()

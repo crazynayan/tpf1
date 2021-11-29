@@ -17,6 +17,7 @@ class Dc:
         self.start: int = start
         self.data: Optional[bytearray] = data
         self.expression: List[str] = expression
+        self.label: str = str()
 
     def __repr__(self) -> str:
         return f"{self.duplication_factor}:{self.data_type}:L{self.length}:S{self.start}" \
