@@ -55,7 +55,9 @@ class State:
             self.seg = self.loaded_seg[seg_name][0]
         else:
             self.seg = seg_collection.get_seg(seg_name)
-            seg_collection.assemble(seg_name)
+            if not self.seg:
+                raise SegmentNotFoundError
+            self.seg.assemble()
             self.regs.R8 = self.vm.allocate()  # Constant
             literal = self.vm.allocate()  # Literal is immediately the next frame
             self.vm.set_frame(self.seg.data.constant, self.regs.R8)
