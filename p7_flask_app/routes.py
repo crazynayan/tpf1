@@ -1,8 +1,10 @@
 from functools import wraps
-from typing import Dict, List
+from typing import Dict, List, Optional
 from urllib.parse import unquote
 
 from flask import Response, jsonify, request, g
+# noinspection PyPackageRequirements
+from google.cloud.storage import Client
 
 from config import config
 from p2_assembly.mac0_generic import LabelReference
@@ -456,6 +458,12 @@ def segment_list() -> Response:
     return jsonify(response_dict)
 
 
+def close_jsonify(response: dict, client: Optional[Client] = None):
+    if client:
+        client.close()
+    return jsonify(response)
+
+
 @tpf1_app.route("/segments/upload", methods=["POST"])
 @token_auth.login_required
 def segment_upload() -> Response:
@@ -468,24 +476,23 @@ def segment_upload() -> Response:
     blob_name = payload["blob_name"] if "blob_name" in payload else str()
     if not blob_name:
         response["message"] = "No filename specified."
-        return jsonify(response)
+        return close_jsonify(response)
     blob_name = blob_name.lower()
-    # noinspection PyPackageRequirements
-    from google.cloud.storage import Client
-    blob = Client().bucket(config.BUCKET).blob(blob_name)
+    client = Client()
+    blob = client.bucket(config.BUCKET).blob(blob_name)
     if not blob.exists():
         response["message"] = "File does NOT exists in cloud storage."
-        return jsonify(response)
+        return close_jsonify(response, client)
     if blob_name[-4:] != ".lst":
         response["message"] = "Filenames should always end with lst."
         blob.delete()
-        return jsonify(response)
+        return close_jsonify(response, client)
     seg_name = blob_name[:4].upper()
     if seg_collection.is_seg_local(seg_name):
         response["message"] = "Cannot upload segments which are present in local."
         blob.delete()
-        return jsonify(response)
-    blobs = Client().list_blobs(config.BUCKET)
+        return close_jsonify(response, client)
+    blobs = client.list_blobs(config.BUCKET)
     duplicate_blobs = [blob for blob in blobs if blob.name != blob_name and blob.name[:4].upper() == seg_name]
     if duplicate_blobs:
         duplicate_names = ", ".join([blob.name for blob in duplicate_blobs])
@@ -495,7 +502,7 @@ def segment_upload() -> Response:
     seg_collection.init_from_cloud(blob_name)
     response["error"] = False
     response["message"] = "Segment successfully added."
-    return jsonify(response)
+    return close_jsonify(response, client)
 
 
 @tpf1_app.route("/segments/<string:seg_name>/instructions")
