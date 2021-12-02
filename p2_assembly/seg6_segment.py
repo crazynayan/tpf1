@@ -4,12 +4,12 @@ from typing import Dict, Optional, List
 
 from config import config
 from p1_utils.data_type import DataType
-from p1_utils.errors import NotFoundInSymbolTableError, SegmentNotFoundError, AssemblyError
+from p1_utils.errors import NotFoundInSymbolTableError, AssemblyError
 from p1_utils.file_line import Line, File
 from p2_assembly.mac2_data_macro import macros
 from p2_assembly.seg2_ins_operand import Label
 from p2_assembly.seg5_exec_macro import RealtimeMacroImplementation
-from p2_assembly.seg8_listing import LstCmd, create_listing_commands, get_lines_from_listing_commands
+from p2_assembly.seg8_listing import LstCmd, get_lines_from_listing_commands, get_or_create_lst_cmds
 
 
 class Segment(RealtimeMacroImplementation):
@@ -53,6 +53,8 @@ class Segment(RealtimeMacroImplementation):
             self._assemble_instructions(lines)
         except AssemblyError:
             self.nodes = dict()
+            if self.file_type == config.LST:
+                LstCmd.objects.filter_by(seg_name=self.seg_name).delete(workers=100)
         return
 
     def _assemble_asm(self) -> List[Line]:
@@ -83,14 +85,8 @@ class Segment(RealtimeMacroImplementation):
         return lines
 
     def _assemble_lst(self):
-        # Ensure file is present for cloud objects
-        if self.source == config.CLOUD and not os.path.exists(self.file_name):
-            # noinspection PyPackageRequirements
-            from google.cloud.storage import Client
-            blob = Client().bucket(config.BUCKET).blob(self.blob_name)
-            blob.download_to_filename(self.file_name)
-        file: File = File(self.file_name)
-        listing_commands: List[LstCmd] = create_listing_commands(self.seg_name, file.open_file(self.file_name))
+        blob_name = self.blob_name if self.source == config.CLOUD else str()
+        listing_commands: List[LstCmd] = get_or_create_lst_cmds(self.seg_name, self.file_name, blob_name)
         lines: List[Line] = get_lines_from_listing_commands(listing_commands)
         prior_label: Label = Label(self.root_label())
         dsect_name = self.seg_name
@@ -113,6 +109,7 @@ class Segment(RealtimeMacroImplementation):
                 line.label = str(prior_label)
             self.add_label(line.label, line.dsp, 0, dsect_name)
             self.all_labels[line.label].set_branch()
+        # Update the length of labels in EQU, DS and DC
         for line in lines:
             if not line.label or line.command in config.DIRECTIVE_IGNORE_LABEL:
                 continue
@@ -271,17 +268,6 @@ class _SegmentCollection:
         if not self.is_seg_present(seg_name):
             return None
         return self.segments[seg_name]
-
-    def assemble(self, seg_name) -> None:
-        if not self.is_seg_present(seg_name):
-            raise SegmentNotFoundError
-        seg: Segment = self.segments[seg_name]
-        try:
-            seg.assemble()
-        except AssemblyError:
-            seg.nodes[seg.root_label()] = seg.key_value(Line.from_line(
-                f"{seg.root_label()} ASSEMBLY_ERROR STOP_EXECUTION"))
-        return
 
     def get_all_segments(self) -> Dict:
         if config.CI_CLOUD_STORAGE:

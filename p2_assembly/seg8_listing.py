@@ -1,10 +1,12 @@
+import os
 import re
 from copy import copy
 from typing import List, Optional
 
 from firestore_ci import FirestoreDocument
 
-from p1_utils.file_line import Line
+from config import config
+from p1_utils.file_line import Line, File
 from p2_assembly.seg7_listing_line import ListingLine, create_listing_lines
 
 
@@ -152,3 +154,21 @@ def create_line(listing_command: LstCmd) -> Line:
 
 def get_lines_from_listing_commands(listing_commands: List[LstCmd]) -> List[Line]:
     return [create_line(command) for command in listing_commands]
+
+
+def get_or_create_lst_cmds(seg_name: str, filename: str, blob_name: str) -> List[LstCmd]:
+    lst_cmds: List[LstCmd] = LstCmd.objects.filter_by(seg_name=seg_name).order_by("stmt").get()
+    if lst_cmds:
+        return lst_cmds
+    # Ensure file is present for cloud objects
+    if blob_name and not os.path.exists(filename):
+        # noinspection PyPackageRequirements
+        from google.cloud.storage import Client
+        client = Client()
+        blob = client.bucket(config.BUCKET).blob(blob_name)
+        blob.download_to_filename(filename)
+        client.close()
+    lines: List[str] = File.open_file(filename)
+    listing_commands: List[LstCmd] = create_listing_commands(seg_name, lines)
+    LstCmd.objects.create_all(LstCmd.objects.to_dicts(listing_commands))
+    return listing_commands
