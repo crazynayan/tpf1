@@ -24,7 +24,12 @@ class Config:
     CI_CLOUD_STORAGE = os.environ.get("CI_CLOUD_STORAGE") == "use"
     ASM, LST, LOCAL, CLOUD = "asm", "lst", "local", "cloud"
     DOWNLOAD_PATH = os.path.join(os.path.abspath(os.sep), "tmp")
+    ROOT_DIR: str = os.path.dirname(os.path.abspath(__file__))
     BUCKET = "tpf-listings"
+    ASM_EXT = {".asm", ".txt"}
+    ASM_FOLDER_NAME = os.path.join("p0_source", "asm")
+    LST_EXT = {".lst"}
+    LST_FOLDER_NAME = os.path.join("p0_source", "lst")
 
     # Used by utils
     REG_INVALID: str = "??"
@@ -59,7 +64,6 @@ class Config:
     NO_FALL_DOWN: Set[str] = {"BR", "ENTNC", "B", "J", "SENDA", "ENTDC", "EXITC", "BACKC"}
 
     # Used by assembly
-    ROOT_DIR: str = os.path.dirname(os.path.abspath(__file__))
     MASK: Dict[str, int] = {"BR": 15, "B": 15, "J": 15, "BAS": 15, "JAS": 15, "BE": 8, "BNE": 7, "BH": 2, "BNH": 13,
                             "BL": 4, "BNL": 11, "BM": 4, "BNM": 11, "BP": 2, "BNP": 13, "BCRY": 3, "BO": 1, "BNO": 14,
                             "BZ": 8, "BNZ": 7, "JE": 8, "JNE": 7, "JH": 2, "JNH": 13, "JL": 4, "JNL": 11, "JM": 4,

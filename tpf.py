@@ -1,5 +1,11 @@
 import os
 from base64 import b64encode
+from typing import List
+
+from config import config
+from p2_assembly.seg6_segment import Segment
+from p2_assembly.seg9_collection import SegLst, read_folder, get_segment, read_cloud
+from p4_execution.ex5_execute import TpfServer
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "google-cloud-tokyo.json"
 
@@ -28,3 +34,36 @@ def create_user(email: str, initial: str):
     user.save()
     print(f"User {user.email} created with initial {user.initial}. Your password is {password}")
     return
+
+
+def get_seg_lst(segment: Segment) -> SegLst:
+    seg_lst = SegLst()
+    seg_lst.seg_name = segment.seg_name
+    seg_lst.filename = segment.file_name
+    seg_lst.file_type = segment.file_type
+    seg_lst.source = segment.source
+    seg_lst.blob_name = segment.blob_name
+    segment.assemble()
+    seg_lst.error_line = str(segment.error_line)
+    seg_lst.error_constant = segment.error_constant
+    seg_lst.loc = len(segment.nodes)
+    unsupported_nodes = [node for _, node in segment.nodes.items()
+                         if node.command not in TpfServer().supported_commands]
+    seg_lst.error_count = len(unsupported_nodes)
+    seg_lst.error_cmds = list({node.command for node in unsupported_nodes})
+    return seg_lst
+
+
+def init_seg_lst():
+    SegLst.objects.delete()
+    seg_to_create: List[SegLst] = list()
+    for seg_name, filename in read_folder(config.ASM_FOLDER_NAME, config.ASM_EXT):
+        segment = get_segment(seg_name, filename, config.ASM, config.LOCAL)
+        seg_to_create.append(get_seg_lst(segment))
+    for seg_name, filename in read_folder(config.LST_FOLDER_NAME, config.LST_EXT):
+        segment = get_segment(seg_name, filename, config.LST, config.LOCAL)
+        seg_to_create.append(get_seg_lst(segment))
+    for blob_name, filename in read_cloud():
+        segment = get_segment(blob_name[:4].upper(), filename, config.LST, config.CLOUD, blob_name)
+        seg_to_create.append(get_seg_lst(segment))
+    SegLst.objects.create_all(SegLst.objects.to_dicts(seg_to_create))

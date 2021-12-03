@@ -13,7 +13,7 @@ COPY p3_db p3_db
 COPY p4_execution p4_execution
 COPY p7_flask_app p7_flask_app
 COPY p8_test p8_test
-COPY config.py google-cloud-tokyo.json google-cloud.json ./
+COPY config.py google-cloud-tokyo.json tpf.py ./
 
 # Dev database
 # ENV GOOGLE_APPLICATION_CREDENTIALS google-cloud.json

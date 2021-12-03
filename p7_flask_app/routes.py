@@ -9,13 +9,15 @@ from google.cloud.storage import Client
 from config import config
 from p2_assembly.mac0_generic import LabelReference
 from p2_assembly.mac2_data_macro import macros
-from p2_assembly.seg9_collection import seg_collection
+from p2_assembly.seg8_listing import LstCmd
+from p2_assembly.seg9_collection import seg_collection, SegLst
 from p3_db.test_data import TestData
 from p3_db.test_data_elements import Pnr, Tpfdf, FixedFile, PnrOutput
 from p4_execution.ex5_execute import TpfServer
 from p7_flask_app import tpf1_app
 from p7_flask_app.auth import token_auth, User
 from p7_flask_app.errors import error_response
+from tpf import get_seg_lst
 
 
 def test_data_required(func):
@@ -445,16 +447,13 @@ def find_field(field_name: str) -> Response:
 @tpf1_app.route("/segments")
 @token_auth.login_required
 def segment_list() -> Response:
-    segments: dict = seg_collection.get_all_segments()
-    attributes: Dict[dict] = dict()
-    for name, segment in segments.items():
-        attribute = dict()
-        attributes[name] = attribute
-        attribute["source"] = segment.source
-        attribute["filename"] = segment.file_name
-        attribute["file_type"] = segment.file_type
-        attribute["blob_name"] = segment.blob_name
-    response_dict: Dict[str, List[str]] = {"segments": list(sorted(segments)), "attributes": attributes}
+    seg_lst: List[SegLst] = SegLst.objects.order_by("seg_name").get()
+    attributes: Dict[str, dict] = dict()
+    for seg in seg_lst:
+        attributes[seg.seg_name] = seg.doc_to_dict()
+        attributes[seg.seg_name]["execution_percentage"] = seg.execution_percentage
+        attributes[seg.seg_name]["assembly_error"] = seg.assembly_error
+    response_dict: Dict[str, List[str]] = {"segments": [seg.seg_name for seg in seg_lst], "attributes": attributes}
     return jsonify(response_dict)
 
 
@@ -500,8 +499,16 @@ def segment_upload() -> Response:
             blob.delete()
         response["warning"] = f"Earlier file with the same segment name ({duplicate_names}) deleted."
     seg_collection.init_from_cloud(blob_name)
+    segment = seg_collection.get_seg(seg_name)
+    LstCmd.objects.filter_by(seg_name=seg_name).delete()
+    SegLst.objects.filter_by(seg_name=seg_name).delete()
+    seg: SegLst = get_seg_lst(segment)
+    seg.create()
+    if seg.assembly_error:
+        response["message"] = f"Segment successfully added but assembly error on the instruction {seg.assembly_error}."
+    else:
+        response["message"] = f"Segment successfully added. Tool can execute {seg.execution_percentage} of code."
     response["error"] = False
-    response["message"] = "Segment successfully added."
     return close_jsonify(response, client)
 
 

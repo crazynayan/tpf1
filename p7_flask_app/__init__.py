@@ -17,11 +17,12 @@ tpf1_app.register_blueprint(api_bp, url_prefix="/api")
 
 @tpf1_app.shell_context_processor
 def make_shell_context():
+    from p2_assembly.seg9_collection import SegLst
     from p3_db.test_data import TestData
     from p4_execution.ex5_execute import TpfServer
     from p7_flask_app.auth import User
     from config import config
-    from tpf import create_user
+    from tpf import create_user, init_seg_lst
     from p2_assembly.seg8_listing import create_listing_commands
     from p1_utils.file_line import File
     return {
@@ -33,4 +34,6 @@ def make_shell_context():
         "config": config,
         "create_listing_commands": create_listing_commands,
         "File": File,
+        "init_seg_lst": init_seg_lst,
+        "SegLst": SegLst,
     }
