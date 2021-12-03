@@ -10,7 +10,7 @@ from config import config
 from p1_utils.data_type import Register
 from p1_utils.errors import InvalidBaseRegError
 from p2_assembly.mac2_data_macro import macros, DataMacro
-from p2_assembly.seg6_segment import seg_collection
+from p2_assembly.seg9_collection import seg_collection
 from p3_db.test_data_elements import Core, Pnr, Tpfdf, Output, FixedFile, PnrOutput
 from p3_db.test_data_validators import get_response_body_for_hex_and_field_data, create_core_for_hex_and_field_data, \
     get_response_body_for_macro, create_core

@@ -3,7 +3,8 @@ import unittest
 from p1_utils.errors import FieldLengthInvalidError, RegisterInvalidError, NotFoundInSymbolTableError, \
     BitsInvalidError, FieldDspInvalidError
 from p1_utils.file_line import Line
-from p2_assembly.seg6_segment import Segment, seg_collection
+from p2_assembly.seg6_segment import Segment
+from p2_assembly.seg9_collection import seg_collection
 
 
 class FieldBits(unittest.TestCase):

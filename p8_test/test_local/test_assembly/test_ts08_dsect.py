@@ -1,6 +1,7 @@
 import unittest
 
-from p2_assembly.seg6_segment import seg_collection, Segment
+from p2_assembly.seg6_segment import Segment
+from p2_assembly.seg9_collection import seg_collection
 
 
 class Dsect(unittest.TestCase):

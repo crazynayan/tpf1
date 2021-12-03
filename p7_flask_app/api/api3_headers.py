@@ -1,6 +1,6 @@
 from typing import List
 
-from p2_assembly.seg6_segment import seg_collection
+from p2_assembly.seg9_collection import seg_collection
 from p7_flask_app.api.api0_constants import SEG_NAME, ErrorMsg, NAME, TYPE, Types, NEW_NAME
 from p7_flask_app.api.api1_models import TestData
 from p7_flask_app.api.api2_validators import validate_empty_str, get_test_data

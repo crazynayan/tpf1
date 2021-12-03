@@ -2,7 +2,8 @@ import unittest
 
 from p1_utils.errors import RegisterInvalidError
 from p1_utils.file_line import Line
-from p2_assembly.seg6_segment import seg_collection, Segment
+from p2_assembly.seg6_segment import Segment
+from p2_assembly.seg9_collection import seg_collection
 
 
 class Subroutine(unittest.TestCase):

@@ -6,7 +6,7 @@ import p3_db.pnr as db_pnr
 from config import config
 from p1_utils.data_type import Register
 from p2_assembly.mac2_data_macro import macros
-from p2_assembly.seg6_segment import seg_collection
+from p2_assembly.seg9_collection import seg_collection
 
 
 class Core(FirestoreDocument):

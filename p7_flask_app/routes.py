@@ -9,7 +9,7 @@ from google.cloud.storage import Client
 from config import config
 from p2_assembly.mac0_generic import LabelReference
 from p2_assembly.mac2_data_macro import macros
-from p2_assembly.seg6_segment import seg_collection
+from p2_assembly.seg9_collection import seg_collection
 from p3_db.test_data import TestData
 from p3_db.test_data_elements import Pnr, Tpfdf, FixedFile, PnrOutput
 from p4_execution.ex5_execute import TpfServer

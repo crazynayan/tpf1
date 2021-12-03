@@ -12,7 +12,8 @@ from p2_assembly.mac0_generic import LabelReference
 from p2_assembly.mac2_data_macro import macros
 from p2_assembly.seg2_ins_operand import FieldIndex
 from p2_assembly.seg3_ins_type import InstructionType
-from p2_assembly.seg6_segment import Segment, seg_collection
+from p2_assembly.seg6_segment import Segment
+from p2_assembly.seg9_collection import seg_collection
 from p3_db.flat_file import FlatFile
 from p3_db.pnr import Pnr
 from p3_db.stream import Stream

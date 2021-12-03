@@ -3,7 +3,8 @@ import unittest
 from config import config
 from p2_assembly.seg3_ins_type import RegisterData
 from p2_assembly.seg5_exec_macro import KeyValue
-from p2_assembly.seg6_segment import seg_collection, Segment
+from p2_assembly.seg6_segment import Segment
+from p2_assembly.seg9_collection import seg_collection
 
 
 class KeyValueTest(unittest.TestCase):

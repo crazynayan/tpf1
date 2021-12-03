@@ -1,7 +1,7 @@
 import unittest
 
 from p1_utils.data_type import DataType
-from p2_assembly.seg6_segment import seg_collection
+from p2_assembly.seg9_collection import seg_collection
 from p4_execution.ex5_execute import TpfServer
 from p8_test.test_local import TestDataUTS
 

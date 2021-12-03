@@ -5,7 +5,8 @@ from typing import Tuple
 from config import config
 from p1_utils.errors import AssemblyError
 from p2_assembly.mac2_data_macro import DataMacro, macros
-from p2_assembly.seg6_segment import Segment, seg_collection
+from p2_assembly.seg6_segment import Segment
+from p2_assembly.seg9_collection import seg_collection
 from p3_db.test_data_elements import Core
 
 
