@@ -1,5 +1,5 @@
 from functools import wraps
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 from urllib.parse import unquote
 
 from flask import Response, jsonify, request, g
@@ -534,11 +534,13 @@ def segment_instruction(seg_name: str) -> Response:
         response["message"] = f"Error in assembling line: {segment.error_line}."
         return jsonify(response)
     response["constants"]: List[dict] = [{"label": dc.label, "length": dc.length, "dsp": f"{dc.start:03X}",
-                                          "data": (dc.data * dc.duplication_factor).hex().upper(), } for dc in
-                                         segment.dc_list]
+                                          "data": (dc.data * dc.duplication_factor).hex().upper()
+                                          if dc.duplication_factor else str(), }
+                                         for dc in segment.dc_list]
     response["literals"]: List[dict] = [{"label": dc.label, "length": dc.length, "dsp": f"{dc.start:03X}",
-                                         "data": (dc.data * dc.duplication_factor).hex().upper(), } for dc in
-                                        segment.literal_list]
+                                         "data": (dc.data * dc.duplication_factor).hex().upper()
+                                         if dc.duplication_factor else str(), }
+                                        for dc in segment.literal_list]
     response["instructions"]: List[str] = [str(node) for _, node in segment.nodes.items()]
     response["instructions"].sort()
     response["not_supported"]: List[str] = [str(node) for _, node in segment.nodes.items()
@@ -565,3 +567,19 @@ def macro_symbol_table(macro_name: str) -> Response:
                     if label_ref.name == macro_name]
     response_dict = {"macro_name": macro_name, "symbol_table": symbol_table}
     return jsonify(response_dict)
+
+
+@tpf1_app.route("/unsupported_instructions")
+@token_auth.login_required
+def unsupported_instructions() -> Response:
+    seg_lst: List[SegLst] = SegLst.objects.filter("error_cmds", ">", list()).filter_by(file_type=config.LST).get()
+    unsupported_commands: List[List[Union[str, List]]] = list()
+    for seg in seg_lst:
+        for command in seg.error_cmds:
+            cmd_seg_lst: List = next((cmd_seg for cmd_seg in unsupported_commands if cmd_seg[0] == command), None)
+            if not cmd_seg_lst:
+                unsupported_commands.append([command, [seg.seg_name]])
+                continue
+            cmd_seg_lst[1].append(seg.seg_name)
+    unsupported_commands.sort()
+    return jsonify({"unsupported_instructions": unsupported_commands})
