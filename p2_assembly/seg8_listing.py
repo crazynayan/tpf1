@@ -136,9 +136,17 @@ def create_listing_commands(seg_name: str, lines: List[str]) -> List[LstCmd]:
             macro_cmd.operand += cmd.operand.split(",")[1]
             updated_lst_cmds.append(macro_cmd)
             macro_cmd = None
-    # with open(f"tmp/{seg_name}-extract.txt", "w") as fh:
-    #     fh.writelines(f"{str(line)}\n" for line in updated_lst_cmds)
     return updated_lst_cmds
+
+
+def write_tmp_output(seg_name: str):
+    lst_cmds: List[LstCmd] = LstCmd.objects.filter_by(seg_name=seg_name).order_by("stmt").get()
+    if not lst_cmds:
+        print("Segment not found or not assembled yet.")
+        return
+    with open(f"tmp/{seg_name}-extract.txt", "w") as fh:
+        fh.writelines(f"{str(line)}\n" for line in lst_cmds)
+    print("Seg extract saved in tmp directory")
 
 
 def create_line(listing_command: LstCmd) -> Line:
