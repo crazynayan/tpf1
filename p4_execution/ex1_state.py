@@ -138,7 +138,7 @@ class State:
             label = self.seg.root_label()
             node: InstructionType = self.seg.nodes[label]
             try:
-                for _ in range(10000000):
+                for _ in range(10000):
                     label = self._ex_command(node)
                     if label is None:
                         break
