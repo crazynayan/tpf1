@@ -193,9 +193,9 @@ def create_listing_lines(seg_name: str, lines: List[str]) -> List[ListingLine]:
     listing_lines = [line for line in listing_lines if not line.is_generated
                      or (line.dsp != -1 and line.command not in {"ORG"})
                      or (line.command in {"PUSH", "POP"} and line.operand == "USING")]
-    # Third pass to update the dsp of source line with labels on executable macros
+    # Third pass to update the dsp of source line on executable macros
     for source_line in listing_lines:
-        if source_line.is_generated or not source_line.label or source_line.dsp != -1:
+        if source_line.is_generated or source_line.dsp != -1:
             continue
         next_line = next((line for line in listing_lines if line.source_stmt == source_line.stmt
                           and line.is_machine_code), None)
