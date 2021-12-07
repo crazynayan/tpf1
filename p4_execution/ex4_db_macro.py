@@ -156,6 +156,9 @@ class UserDefinedDbMacro(State):
         return node.fall_down
 
     def pdmod(self, node: KeyValue) -> str:
+        # Skip PDMOD functions for Renumbering Itin segments
+        if node.get_value("FIELD") == "ITINERARY" and node.get_value("ACTION") == "RENUM":
+            return node.fall_down
         # Get the base of PD0WRK
         pd0_base = self._pd0_base(node)
         if pd0_base == 0:
