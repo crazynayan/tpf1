@@ -87,12 +87,13 @@ class _SegmentCollection:
         self.segments[seg.seg_name]: Segment = get_segment(seg.seg_name, seg.filename, seg.file_type, seg.source,
                                                            seg.blob_name)
 
-    def init_from_cloud(self, blob_name: str):
+    def init_from_cloud(self, blob_name: str) -> str:
         seg_name = blob_name[:4].upper()
         if seg_name in self.segments and self.segments[seg_name].source == config.LOCAL:
-            return
+            return str()
         filename = os.path.join(config.DOWNLOAD_PATH, blob_name)
         self.segments[seg_name] = get_segment(seg_name, filename, config.LST, config.CLOUD, blob_name)
+        return seg_name
 
     def is_seg_present(self, seg_name: str) -> bool:
         if not config.CI_CLOUD_STORAGE:

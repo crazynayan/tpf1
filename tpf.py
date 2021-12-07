@@ -1,10 +1,11 @@
 import os
 from base64 import b64encode
-from typing import List
+from typing import List, Optional
 
 from config import config
 from p2_assembly.seg6_segment import Segment
-from p2_assembly.seg9_collection import SegLst, read_folder, get_segment, read_cloud
+from p2_assembly.seg8_listing import LstCmd
+from p2_assembly.seg9_collection import SegLst, read_folder, get_segment, read_cloud, seg_collection
 from p4_execution.ex5_execute import TpfServer
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "google-cloud-tokyo.json"
@@ -67,3 +68,15 @@ def init_seg_lst():
         segment = get_segment(blob_name[:4].upper(), filename, config.LST, config.CLOUD, blob_name)
         seg_to_create.append(get_seg_lst(segment))
     SegLst.objects.create_all(SegLst.objects.to_dicts(seg_to_create))
+
+
+def reset_seg_assembly(blob_name: str) -> Optional[SegLst]:
+    seg_name = seg_collection.init_from_cloud(blob_name)
+    LstCmd.objects.filter_by(seg_name=seg_name).delete()
+    SegLst.objects.filter_by(seg_name=seg_name).delete()
+    segment = seg_collection.get_seg(seg_name)
+    if not segment:
+        return None
+    seg: SegLst = get_seg_lst(segment)
+    seg.create()
+    return seg

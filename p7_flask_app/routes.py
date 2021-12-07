@@ -9,7 +9,6 @@ from google.cloud.storage import Client
 from config import config
 from p2_assembly.mac0_generic import LabelReference
 from p2_assembly.mac2_data_macro import macros
-from p2_assembly.seg8_listing import LstCmd
 from p2_assembly.seg9_collection import seg_collection, SegLst
 from p3_db.test_data import TestData
 from p3_db.test_data_elements import Pnr, Tpfdf, FixedFile, PnrOutput
@@ -17,7 +16,7 @@ from p4_execution.ex5_execute import TpfServer
 from p7_flask_app import tpf1_app
 from p7_flask_app.auth import token_auth, User
 from p7_flask_app.errors import error_response
-from tpf import get_seg_lst
+from tpf import reset_seg_assembly
 
 
 def test_data_required(func):
@@ -102,7 +101,6 @@ def copy_test_data(test_data_id: str, **kwargs) -> Response:
 
 
 @tpf1_app.route("/test_data/<string:test_data_id>/run")
-@token_auth.login_required
 @test_data_required
 def run_test_data(test_data_id: str, **kwargs) -> Response:
     test_data: TestData = kwargs[test_data_id]
@@ -498,12 +496,7 @@ def segment_upload() -> Response:
         for blob in duplicate_blobs:
             blob.delete()
         response["warning"] = f"Earlier file with the same segment name ({duplicate_names}) deleted."
-    seg_collection.init_from_cloud(blob_name)
-    segment = seg_collection.get_seg(seg_name)
-    LstCmd.objects.filter_by(seg_name=seg_name).delete()
-    SegLst.objects.filter_by(seg_name=seg_name).delete()
-    seg: SegLst = get_seg_lst(segment)
-    seg.create()
+    seg: SegLst = reset_seg_assembly(blob_name)
     if seg.assembly_error:
         response["message"] = f"Segment successfully added but assembly error on the instruction {seg.assembly_error}."
     else:
