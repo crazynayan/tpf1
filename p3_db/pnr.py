@@ -2,7 +2,7 @@ from typing import List, Dict, Union, Tuple, Optional
 
 from config import config
 from p1_utils.data_type import DataType
-from p1_utils.errors import PnrElementError, PnrLocatorNotFoundError
+from p1_utils.errors import PnrElementError, PnrLocatorNotFoundError, NotFoundInSymbolTableError
 from p2_assembly.mac2_data_macro import macros
 from p3_db.stream import Stream
 
@@ -44,6 +44,7 @@ def load_pdequ():
             continue
         pdequ[label] = label_ref.dsp
     return pdequ
+
 
 class Pnr:
     DB: List[Dict[str, Union[str, List[Dict[str, bytearray]]]]] = [{"id": config.AAAPNR, "doc": list()}]
@@ -169,7 +170,12 @@ class Pnr:
             lrec.data.extend(Pnr.STD_PREFIX_BYTES[:])
             lrec.data.extend(attribute.std_fix)
             lrec.data.extend(attribute.std_var)
-        lrec.data.extend(Stream(macros[attribute.macro_name]).to_bytes(byte_array))
+        try:
+            data_bytes = Stream(macros[attribute.macro_name]).to_bytes(byte_array)
+            lrec.data.extend(data_bytes)
+        except NotFoundInSymbolTableError:
+            data_bytes = Stream(macros["PR001W"]).to_bytes(byte_array)
+            lrec.data = data_bytes
         pnr_doc.append(lrec.to_dict())
 
 
