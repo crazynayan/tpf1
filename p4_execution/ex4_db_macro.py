@@ -165,6 +165,8 @@ class UserDefinedDbMacro(State):
             raise TPFServerMemoryError
 
         # Get the key and pnr locator
+        self.seg.load_macro("PR001W")
+        self.seg.load_macro("PD0WRK")
         pd0_in_dfkey: int = self.seg.evaluate("PD0_IN_DFKEY")
         key_number: int = self.vm.get_byte(pd0_base + pd0_in_dfkey)
         key = f"{key_number:02X}"
