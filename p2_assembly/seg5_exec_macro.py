@@ -55,6 +55,9 @@ class KeyValue(InstructionGeneric):
             value = [sub_key_value[0] for sub_key_value in value]
         return value
 
+    def get_original_value(self, key: str):
+        return next((key_value[1] for key_value in self._operands if key_value[0] == key), None)
+
     def get_sub_value(self, key: str, sub_key: str) -> Union[Optional[str], FieldBaseDsp]:
         return next((sub_key_value[1] for key_value in self.sub_key_value for sub_key_value in key_value[1]
                      if key_value[0] == key and sub_key_value[0] == sub_key), None)
@@ -67,6 +70,10 @@ class KeyValue(InstructionGeneric):
     def set_value(self, value: FieldBaseDsp, original_value: str, key: str) -> None:
         self._operands.remove((key, original_value))
         self._operands.append((key, value))
+
+    def set_key_value_list(self, key_value_list: list, original_key_value_list: list, key) -> None:
+        self._operands.remove((key, original_key_value_list))
+        self._operands.append((key, key_value_list))
 
 
 class SegmentCall(KeyValue):
@@ -87,6 +94,7 @@ class RealtimeMacroImplementation(InstructionImplementation):
         self._command["FACE"] = self.instruction_generic
         self._command["PNAMC"] = self.pnamc
         self._command["DBRED"] = self.dbred
+        self._command["PDRED"] = self.pdred
         self._command["DBADD"] = self.dbadd
         self._command["TSTWK24"] = self.executable_data_macro
         self._command["SONIC"] = self.executable_data_macro
@@ -143,6 +151,24 @@ class RealtimeMacroImplementation(InstructionImplementation):
             field: FieldBaseDsp = self.field_base_dsp(field_name)
             dbred_key.set_sub_value(field, field_name, key_n, "S")
         return dbred_key
+
+    def pdred(self, line: Line) -> KeyValue:
+        pdred_key = self.key_value(line)
+        for key_number in range(1, 7):
+            key_n = f"SEARCH{key_number}"
+            search_value = pdred_key.get_original_value(key_n)
+            if search_value is None:
+                break
+            if not isinstance(search_value, list) or len(search_value) != 2 or search_value[0][0] != "ITMNBR":
+                continue
+            field_name = search_value[1][0]
+            if not self.check(field_name):
+                continue
+            field: FieldBaseDsp = self.field_base_dsp(field_name)
+            updated_search_value = [("ITMNBR", None), (field, None)]
+            pdred_key.set_key_value_list(key_value_list=updated_search_value, original_key_value_list=search_value,
+                                         key=key_n)
+        return pdred_key
 
     def dbadd(self, line: Line) -> KeyValue:
         dbadd_key: KeyValue = self.key_value(line)

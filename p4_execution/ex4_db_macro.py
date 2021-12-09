@@ -119,6 +119,14 @@ class UserDefinedDbMacro(State):
                     length = self.vm.get_unsigned_value(base_address, 1)
                     char_bytes = self.vm.get_bytes(base_address + 1, length)
                     starts_with = DataType("X", bytes=char_bytes).decode
+            elif search[0] == "ITMNBR":
+                if len(search) != 2:
+                    raise PdredSearchError
+                if isinstance(search[1], FieldBaseDsp):
+                    # noinspection PyTypeChecker
+                    field: FieldBaseDsp = search[1]
+                    item_number = self.vm.get_value(self.regs.get_unsigned_value(field.base) + field.dsp,
+                                                    self.seg.lookup(field.name).length)
 
         # Get the data
         pnr_locator = self._get_pnr_locator()
@@ -128,6 +136,8 @@ class UserDefinedDbMacro(State):
         else:
             data, item_number = Pnr.get_pnr_data(pnr_locator, key, item_number, packed=packed, starts_with=starts_with)
             self.vm.set_value(item_number, pd0_base + pd0_mc_cin.dsp, pd0_mc_cin.length)
+            pd0_c_inum: LabelReference = self.seg.lookup("PD0_C_INUM")
+            self.vm.set_value(item_number, pd0_base + pd0_c_inum.dsp, pd0_c_inum.length)
 
         # NOTFOUND & last item
         if data is None:

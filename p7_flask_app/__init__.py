@@ -25,6 +25,7 @@ def make_shell_context():
     from p3_db.test_data import TestData
     from p4_execution.ex5_execute import TpfServer
     from p7_flask_app.auth import User
+    from p7_flask_app import routes
     return {
         "TestData": TestData,
         "TpfServer": TpfServer,
@@ -39,4 +40,5 @@ def make_shell_context():
         "write_tmp_output": write_tmp_output,
         "reset_seg_assembly": reset_seg_assembly,
         "seg_collection": seg_collection,
+        "routes": routes,
     }
