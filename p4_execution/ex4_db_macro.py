@@ -41,15 +41,8 @@ class UserDefinedDbMacro(State):
         pnr_ordinal = self.vm.get_value(aaa_address + self.seg.evaluate("WA0PWR"))
         return PnrLocator.to_locator(pnr_ordinal)
 
-    def pdcls(self, node: KeyValue) -> str:
-        pd0_base = self._pd0_base(node)
-        self.vm.init(pd0_base)
-        return node.fall_down
-
-    def pdred(self, node: KeyValue) -> str:
-        # Get the key from FIELD= or INDEX=
+    def _get_key(self, node: KeyValue) -> Tuple[str, int]:
         self.seg.load_macro("PDEQU")
-        self.seg.load_macro("PD0WRK")
         field_value = node.get_value("FIELD")
         if isinstance(field_value, list):
             if field_value[0] != "INDEX":
@@ -65,12 +58,43 @@ class UserDefinedDbMacro(State):
             key_label = key_label + "_K"
         elif isinstance(field_value, str):
             key_label = f"#PD_{field_value}_K"
+        elif field_value is None:
+            return str(), 0
         else:
             raise PdredFieldError(node)
         try:
             key_number = self.seg.evaluate(key_label)
             key = f"{key_number:2X}"
         except NotFoundInSymbolTableError:
+            raise PdredFieldError(node)
+        return key, key_number
+
+    def _get_item_number(self, node: KeyValue) -> int:
+        item_number = 0
+        for index in range(1, 7):
+            search = node.get_value(f"SEARCH{index}")
+            if search is None:
+                break
+            if search[0] != "ITMNBR":
+                continue
+            if len(search) != 2:
+                raise PdredSearchError
+            if isinstance(search[1], FieldBaseDsp):
+                # noinspection PyTypeChecker
+                field: FieldBaseDsp = search[1]
+                item_number = self.vm.get_value(self.regs.get_unsigned_value(field.base) + field.dsp,
+                                                self.seg.lookup(field.name).length)
+        return item_number
+
+    def pdcls(self, node: KeyValue) -> str:
+        pd0_base = self._pd0_base(node)
+        self.vm.init(pd0_base)
+        return node.fall_down
+
+    def pdred(self, node: KeyValue) -> str:
+        self.seg.load_macro("PD0WRK")
+        key, key_number = self._get_key(node)
+        if not key:
             raise PdredFieldError(node)
 
         # ERROR=
@@ -119,14 +143,9 @@ class UserDefinedDbMacro(State):
                     length = self.vm.get_unsigned_value(base_address, 1)
                     char_bytes = self.vm.get_bytes(base_address + 1, length)
                     starts_with = DataType("X", bytes=char_bytes).decode
-            elif search[0] == "ITMNBR":
-                if len(search) != 2:
-                    raise PdredSearchError
-                if isinstance(search[1], FieldBaseDsp):
-                    # noinspection PyTypeChecker
-                    field: FieldBaseDsp = search[1]
-                    item_number = self.vm.get_value(self.regs.get_unsigned_value(field.base) + field.dsp,
-                                                    self.seg.lookup(field.name).length)
+
+        # Get the item number from SEARCH-n
+        item_number = self._get_item_number(node) or item_number
 
         # Get the data
         pnr_locator = self._get_pnr_locator()
@@ -156,6 +175,10 @@ class UserDefinedDbMacro(State):
         if len(data) > pd0_itm.length:
             raise PdredPd0Error
         self.vm.set_bytes(data, pd0_base + pd0_itm.dsp, len(data))
+        if packed:  # Only packed is coded. For unpacked the PD0_C_ILEN overwrites the fix header.
+            pd0_len: LabelReference = self.seg.lookup("PD0_P_LLEN")
+            self.vm.set_bytes(byte_array=DataType("H", input=len(data)).to_bytes(pd0_len.length),
+                              address=pd0_base + pd0_len.dsp, length=pd0_len.length)
         pd0_rt_adr_value = pd0_base + pd0_itm.dsp
         if node.get_value("POINT") == "YES":
             attribute = Pnr.get_attribute_by_key(key)
@@ -180,13 +203,21 @@ class UserDefinedDbMacro(State):
         pd0_in_dfkey: int = self.seg.evaluate("PD0_IN_DFKEY")
         key_number: int = self.vm.get_byte(pd0_base + pd0_in_dfkey)
         key = f"{key_number:02X}"
+        pdmod_key, pdmod_key_number = self._get_key(node)
+        if pdmod_key:
+            key, key_number = pdmod_key, pdmod_key_number
         pnr_locator = self._get_pnr_locator()
 
         # Get the data
         packed = node.get_value("FORMATIN") == "PACKED"
-        pd0_itm: int = self.seg.evaluate("PD0_P_DATA") if packed else self.seg.evaluate("PD0_C_ITM")
-        end_dsp = self.seg.evaluate(f"PR00E{key}")
-        data = self.vm.get_bytes(pd0_base + pd0_itm, end_dsp)
+        if packed:
+            override = node.get_value("OVERRIDE")
+            override = override if isinstance(override, list) else list()
+            input_label = "PD0_IN_DATA" if "MODIFY" in override else "PD0_P_DATA"
+        else:
+            input_label = "PD0_C_ITM"
+        pd0_itm: int = self.seg.evaluate(input_label)
+        data = self.vm.get_bytes(pd0_base + pd0_itm, 300)
 
         # Get the item number
         if key == "20":
@@ -194,6 +225,7 @@ class UserDefinedDbMacro(State):
         else:
             pd0_mc_cin: LabelReference = self.seg.lookup("PD0_MC_CIN")
             item_number = self.vm.get_value(pd0_base + pd0_mc_cin.dsp, pd0_mc_cin.length)
+        item_number = self._get_item_number(node) or item_number
 
         # Replace
         Pnr.replace_pnr_data(data=data, pnr_locator=pnr_locator, key=key, item_number=item_number, packed=packed)
