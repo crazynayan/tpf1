@@ -9,14 +9,11 @@ class Et2Test(TestDebug):
 
     def _setup_output_pnr_header(self) -> None:
         pnr_dict: dict = {
+            "locator": str(),
             "key": HEADER,
-            "field_len": {
-                "PR00_20_PTY": 0,
-                "PR00_20_TIM": 0,
-                "PR00_20_DUT": 0,
-            },
+            "field_item_len": "PR00_20_PTY, PR00_20_TIM, PR00_20_DUT",
         }
-        self.test_data.create_pnr_output(pnr_output_dict=pnr_dict, persistence=False)
+        self.test_data.create_pnr_output(body=pnr_dict, persistence=False)
 
     def _setup_input_itin(self) -> None:
         itin_input = [

@@ -13,7 +13,7 @@ from p2_assembly.mac2_data_macro import macros, DataMacro
 from p2_assembly.seg9_collection import seg_collection
 from p3_db.test_data_elements import Core, Pnr, Tpfdf, Output, FixedFile, PnrOutput
 from p3_db.test_data_validators import get_response_body_for_hex_and_field_data, create_core_for_hex_and_field_data, \
-    get_response_body_for_macro, create_core
+    get_response_body_for_macro, create_core, validate_field_item_len
 
 
 class TestData(FirestoreDocument):
@@ -440,21 +440,74 @@ class TestData(FirestoreDocument):
             self.save()
         return pnr
 
-    def create_pnr_output(self, pnr_output_dict: dict, persistence: bool = True) -> Optional[PnrOutput]:
-        if not {"field_len", "key"}.issubset(pnr_output_dict):
-            return None
-        if not pnr_output_dict["field_len"] or not isinstance(pnr_output_dict["field_len"], dict):
-            return None
-        if db_pnr.Pnr.get_attribute_by_name(pnr_output_dict["key"]) is None:
-            return None
-        if persistence:
-            pnr_output: PnrOutput = PnrOutput.create_from_dict(pnr_output_dict)
-        else:
-            pnr_output: PnrOutput = PnrOutput.dict_to_doc(pnr_output_dict)
+    def create_pnr_output(self, body: dict, persistence: bool = True) -> dict:
+        response: dict = {"error": True, "message": str(), "error_fields": dict()}
+        if set(body) != {"key", "locator", "field_item_len"}:
+            response["message"] = "Only 3 fields allowed (key, locator, field_item_len) and all are mandatory."
+            return response
+        if db_pnr.Pnr.get_attribute_by_name(body["key"]) is None:
+            response["error_fields"]["key"] = "Invalid PNR key."
+        if not isinstance(body["locator"], str) or \
+                (body["locator"] and (len(body["locator"]) != 6 or not body["locator"].isalnum())):
+            response["error_fields"]["locator"] = "PNR Locator needs to be 6 character alpha numeric string."
+        if response["error_fields"]:
+            return response
+        pnr_output = PnrOutput()
+        pnr_output.key = body["key"]
+        pnr_output.locator = body["locator"].upper() if body["locator"] else config.AAAPNR
+        if any(output.key == pnr_output.key and output.locator == pnr_output.locator
+               for output in self.output.pnr_outputs):
+            response["error_fields"]["key"] = f"PNR key {pnr_output.key.upper()} already exists for " \
+                                              f"locator {pnr_output.locator}."
+            return response
+        error, field_item_len = validate_field_item_len(body["field_item_len"])
+        if error:
+            response["error_fields"]["field_item_len"] = error
+            return response
+        pnr_output.field_item_len = field_item_len
+        pnr_output.original_field_item_len = body["field_item_len"].strip().upper()
         self.output.pnr_outputs.append(pnr_output)
         if persistence:
+            pnr_output.create()
             self.output.save()
-        return pnr_output
+        response["message"] = f"PNR Output for key {body['key'].upper()} created successfully."
+        response["error"] = False
+        return response
+
+    def update_pnr_output(self, pnr_output_id: str, body: dict, persistence: bool = True):
+        response: dict = {"error": True, "message": str(), "error_fields": dict()}
+        pnr_output: PnrOutput = next((output for output in self.output.pnr_outputs if output.id == pnr_output_id), None)
+        if not pnr_output:
+            response["message"] = f"PNR Output with id {pnr_output_id} not found."
+            return response
+        if set(body) != {"field_item_len"}:
+            response["message"] = "Only 1 fields allowed (field_item_len) and it is mandatory."
+            return response
+        error, field_item_len = validate_field_item_len(body["field_item_len"])
+        if error:
+            response["error_fields"]["field_item_len"] = error
+            return response
+        pnr_output.field_item_len = field_item_len
+        pnr_output.original_field_item_len = body["field_item_len"].strip().upper()
+        if persistence:
+            pnr_output.save()
+        response["message"] = f"PNR Output updated successfully."
+        response["error"] = False
+        return response
+
+    def delete_pnr_output(self, pnr_output_id: str, persistence: bool = True) -> dict:
+        response: dict = {"error": True, "message": str()}
+        pnr_output: PnrOutput = next((output for output in self.output.pnr_outputs if output.id == pnr_output_id), None)
+        if not pnr_output:
+            response["message"] = f"PNR Output with id {pnr_output_id} not found."
+            return response
+        self.output.pnr_outputs.remove(pnr_output)
+        if persistence:
+            self.output.save()
+            pnr_output.delete()
+        response["message"] = f"PNR Output deleted successfully."
+        response["error"] = False
+        return response
 
     def delete_pnr_element(self, pnr_id: str) -> Optional[Pnr]:
         pnr: Pnr = next((pnr for pnr in self.pnr if pnr.id == pnr_id), None)
@@ -464,16 +517,6 @@ class TestData(FirestoreDocument):
         self.pnr.remove(pnr)
         self.save()
         pnr.delete(cascade=True)
-        return copy_pnr
-
-    def delete_pnr_output(self, pnr_id: str) -> Optional[PnrOutput]:
-        pnr_output: PnrOutput = next((pnr for pnr in self.output.pnr_outputs if pnr.id == pnr_id), None)
-        if not pnr_output:
-            return None
-        copy_pnr = deepcopy(pnr_output)
-        self.output.pnr_outputs.remove(pnr_output)
-        self.save()
-        pnr_output.delete(cascade=True)
         return copy_pnr
 
     def create_pnr_field_data(self, pnr_id: str, core_dict: dict, persistence=True) -> Optional[Pnr]:

@@ -381,27 +381,23 @@ class State:
     def _capture_output_pnr(output: Output) -> None:
         for pnr_output in output.pnr_outputs:
             key = Pnr.get_attribute_by_name(pnr_output.key).key
-            item_number = pnr_output.position
             pnr_locator = config.AAAPNR if not pnr_output.locator else pnr_output.locator
-            data = Pnr.get_pnr_data(pnr_locator=pnr_locator, key=key, item_number=item_number, packed=True)
-            pnr_data: bytearray = data[0]
-            if not pnr_data:
-                continue
-            for field, length in pnr_output.field_len.items():
-                if not macros["PR001W"].check(field):
-                    continue
-                label_ref: LabelReference = macros["PR001W"].lookup(field)
-                if not isinstance(length, int):
-                    continue
-                field_len: int = length if length > 0 else label_ref.length
-                start: int = label_ref.dsp
-                end: int = start + field_len
-                if len(pnr_data) < end:
-                    continue
+            for field_item_len in pnr_output.field_item_len:
+                field = field_item_len["field"]
+                item_number = field_item_len["item_number"]
+                length = field_item_len["length"]
                 field_byte = dict()
-                field_byte["field"] = field
-                field_byte["data"] = b64encode(pnr_data[start:end]).decode()
                 pnr_output.field_data.append(field_byte)
+                field_byte["field_text"] = f"{field} #{item_number}"
+                field_byte["field"] = field
+                data = Pnr.get_pnr_data(pnr_locator=pnr_locator, key=key, item_number=item_number, packed=True)
+                pnr_data: bytearray = data[0]
+                if not pnr_data:
+                    field_byte["data"] = str()
+                    continue
+                start: int = macros["PR001W"].evaluate(field)
+                end: int = start + length
+                field_byte["data"] = b64encode(pnr_data[start:end]).decode()
         return
 
     def _capture_core(self, field_data: List[dict], macro_name: str, base_address: int) -> None:

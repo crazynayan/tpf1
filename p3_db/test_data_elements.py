@@ -125,6 +125,8 @@ class PnrOutput(FirestoreDocument):
         self.field_data: List[dict] = list()
         self.position: int = 1
         self.field_len: Dict[str, int] = dict()
+        self.field_item_len: List[dict] = list()
+        self.original_field_item_len: str = str()
 
 
 PnrOutput.init("pnr_outputs")

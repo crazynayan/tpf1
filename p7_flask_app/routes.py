@@ -11,7 +11,7 @@ from p2_assembly.mac0_generic import LabelReference
 from p2_assembly.mac2_data_macro import macros
 from p2_assembly.seg9_collection import seg_collection, SegLst
 from p3_db.test_data import TestData
-from p3_db.test_data_elements import Pnr, Tpfdf, FixedFile, PnrOutput
+from p3_db.test_data_elements import Pnr, Tpfdf, FixedFile
 from p4_execution.ex5_execute import TpfServer
 from p7_flask_app import tpf1_app
 from p7_flask_app.auth import token_auth, User
@@ -304,10 +304,15 @@ def add_input_pnr(test_data_id: str, **kwargs) -> Response:
 @test_data_required
 @role_check_required
 def add_pnr_output(test_data_id: str, **kwargs) -> Response:
-    pnr: PnrOutput = kwargs[test_data_id].create_pnr_output(request.get_json())
-    if not pnr:
-        return error_response(400, "Error in adding PNR Output")
-    return jsonify(pnr.cascade_to_dict())
+    return jsonify(kwargs[test_data_id].create_pnr_output(request.get_json()))
+
+
+@tpf1_app.route("/test_data/<string:test_data_id>/output/pnr/<string:pnr_output_id>", methods=["PATCH"])
+@token_auth.login_required
+@test_data_required
+@role_check_required
+def update_pnr_output(test_data_id: str, pnr_output_id: str, **kwargs) -> Response:
+    return jsonify(kwargs[test_data_id].update_pnr_output(pnr_output_id, request.get_json()))
 
 
 @tpf1_app.route("/test_data/<string:test_data_id>/output/pnr/<string:pnr_output_id>", methods=["DELETE"])
@@ -315,10 +320,7 @@ def add_pnr_output(test_data_id: str, **kwargs) -> Response:
 @test_data_required
 @role_check_required
 def delete_pnr_output(test_data_id: str, pnr_output_id: str, **kwargs) -> Response:
-    pnr: PnrOutput = kwargs[test_data_id].delete_pnr_output(pnr_output_id)
-    if not pnr:
-        return error_response(400, "Error in deleting PNR")
-    return jsonify(pnr.cascade_to_dict())
+    return jsonify(kwargs[test_data_id].delete_pnr_output(pnr_output_id))
 
 
 @tpf1_app.route("/test_data/<string:test_data_id>/input/pnr/<string:pnr_id>/fields", methods=["PATCH"])
