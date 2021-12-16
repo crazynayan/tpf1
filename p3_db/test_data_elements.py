@@ -77,9 +77,13 @@ class Pnr(FirestoreDocument):
         self.field_data: List[dict] = list()
         self.variation: int = 0
         self.variation_name: str = str()
+        self.field_data_item: List[dict] = list()
+        self.original_field_data_item: str = str()
+        self.original_text: str = str()
+        self.text: List[str] = list()
 
     def __repr__(self):
-        return f"{self.locator}:{self.variation}:{self.key}:{self.data}:{len(self.field_data)}"
+        return f"{self.locator}:{self.variation}:{self.key}:T={len(self.text)}:FDI={len(self.field_data)}"
 
     @classmethod
     def validate(cls, pnr_dict: dict) -> bool:

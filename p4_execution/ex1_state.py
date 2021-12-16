@@ -1,6 +1,7 @@
 from base64 import b64encode, b64decode
 from copy import deepcopy
 from datetime import datetime
+from itertools import groupby
 from typing import Callable, Optional, Tuple, Dict, List, Set
 
 from config import config
@@ -250,9 +251,17 @@ class State:
         Pnr.init_db()
         for pnr in test_data.pnr:
             pnr_locator = pnr.locator if pnr.locator else config.AAAPNR
-            if pnr.data:
+            if pnr.text:
+                for pnr_text in pnr.text:
+                    Pnr.add_from_data(pnr_text, pnr.key, pnr_locator)
+            elif pnr.field_data_item:
+                pnr.field_data_item.sort(key=lambda item: item["item_number"])
+                for _, field_group in groupby(pnr.field_data_item, key=lambda item: item["item_number"]):
+                    pnr_field_bytes: dict = self._field_data_to_bytearray(list(field_group))
+                    Pnr.add_from_byte_array(pnr_field_bytes, pnr.key, pnr_locator)
+            elif pnr.data:
                 Pnr.add_from_data(pnr.data, pnr.key, pnr_locator)
-            else:
+            elif pnr.field_data:
                 Pnr.add_from_byte_array(self._field_data_to_bytearray(pnr.field_data), pnr.key, pnr_locator)
         Tpfdf.init_db()
         for lrec in test_data.tpfdf:

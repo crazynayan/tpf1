@@ -13,7 +13,8 @@ from p2_assembly.mac2_data_macro import macros, DataMacro
 from p2_assembly.seg9_collection import seg_collection
 from p3_db.test_data_elements import Core, Pnr, Tpfdf, Output, FixedFile, PnrOutput
 from p3_db.test_data_validators import get_response_body_for_hex_and_field_data, create_core_for_hex_and_field_data, \
-    get_response_body_for_macro, create_core, validate_field_item_len
+    get_response_body_for_macro, create_core, validate_field_item_len, validate_and_update_pnr_locator_key, \
+    validate_and_update_pnr_text_with_field
 
 
 class TestData(FirestoreDocument):
@@ -345,7 +346,7 @@ class TestData(FirestoreDocument):
         if body["ecb_level"] not in config.ECB_LEVELS:
             response["error_fields"]["ecb_level"] = "Invalid ECB level. Level should be between 0 to F."
         if not self._validate_and_update_variation(body, "core"):
-            response["error_fields"]["variation"] = "Invalid variation"
+            response["error_fields"]["variation"] = "Invalid variation."
         elif "ecb_level" not in response["error_fields"]:
             if any(core.variation == body["variation"] and core.ecb_level == body["ecb_level"] for core in self.cores):
                 response["error_fields"]["ecb_level"] = f"ECB level {body['ecb_level']} already exists for " \
@@ -439,6 +440,73 @@ class TestData(FirestoreDocument):
         if persistence:
             self.save()
         return pnr
+
+    def create_pnr_input(self, body: dict, persistence: bool = True) -> dict:
+        response: dict = {"error": True, "message": str(), "error_fields": dict()}
+        if set(body) != {"variation", "variation_name", "key", "locator", "text", "field_data_item"}:
+            response["message"] = "Only 6 fields allowed (variation, variation_name, key, locator, text, " \
+                                  "field_data_item) and all are mandatory."
+            return response
+        if not self._validate_and_update_variation(body, "pnr"):
+            response["error_fields"]["variation"] = "Invalid variation."
+        errors = validate_and_update_pnr_locator_key(body)
+        if response["error_fields"] or errors:
+            response["error_fields"] = {**response["error_fields"], **errors}
+            return response
+        if any(pnr.key == body["key"] and pnr.locator == body["locator"] and pnr.variation == body["variation"]
+               for pnr in self.pnr):
+            response["error_fields"]["key"] = f"PNR key {body['key'].upper()} already exists for " \
+                                              f"locator {body['locator']}."
+            return response
+        errors = validate_and_update_pnr_text_with_field(body)
+        if errors:
+            response["error_fields"] = errors
+            return response
+        pnr_input: Pnr = Pnr.dict_to_doc(body)
+        self.pnr.append(pnr_input)
+        if persistence:
+            pnr_input.create()
+            self.save()
+        response["message"] = f"PNR element for key {body['key'].upper()} created successfully."
+        response["error"] = False
+        return response
+
+    def update_pnr_input(self, pnr_input_id: str, body: dict, persistence: bool = True):
+        response: dict = {"error": True, "message": str(), "error_fields": dict()}
+        pnr_input: Pnr = next((pnr for pnr in self.pnr if pnr.id == pnr_input_id), None)
+        if not pnr_input:
+            response["message"] = f"PNR Input with id {pnr_input_id} not found."
+            return response
+        if set(body) != {"text", "field_data_item"}:
+            response["message"] = "Only 2 fields allowed (text, field_data_item) and they are mandatory."
+            return response
+        errors = validate_and_update_pnr_text_with_field(body)
+        if errors:
+            response["error_fields"] = errors
+            return response
+        pnr_input.text = body["text"]
+        pnr_input.original_text = body["original_text"]
+        pnr_input.field_data_item = body["field_data_item"]
+        pnr_input.original_field_data_item = body["original_field_data_item"]
+        if persistence:
+            pnr_input.save()
+        response["message"] = f"PNR Input updated successfully."
+        response["error"] = False
+        return response
+
+    def delete_pnr_input(self, pnr_input_id: str, persistence: bool = True) -> dict:
+        response: dict = {"error": True, "message": str()}
+        pnr_input: Pnr = next((pnr for pnr in self.pnr if pnr.id == pnr_input_id), None)
+        if not pnr_input:
+            response["message"] = f"PNR Input with id {pnr_input_id} not found."
+            return response
+        self.pnr.remove(pnr_input)
+        if persistence:
+            self.save()
+            pnr_input.delete()
+        response["message"] = f"PNR Input deleted successfully."
+        response["error"] = False
+        return response
 
     def create_pnr_output(self, body: dict, persistence: bool = True) -> dict:
         response: dict = {"error": True, "message": str(), "error_fields": dict()}

@@ -75,6 +75,17 @@ class Pnr:
         cls.DB = [{"id": config.AAAPNR, "doc": list()}]
         cls.add_from_byte_array(byte_array={"PR00_20_SID": bytearray([0x00])}, key=HEADER, locator=config.AAAPNR)
 
+    @classmethod
+    def load_macros(cls):
+        for attribute in Pnr.ATTRIBUTES:
+            macros[attribute.macro_name].load()
+        return
+
+    @classmethod
+    def check_field(cls, field_name) -> bool:
+        pnr_macros: set = {attribute.macro_name for attribute in Pnr.ATTRIBUTES}
+        return any(macros[macro].check(field_name) for macro in pnr_macros)
+
     @staticmethod
     def get_pnr_data(pnr_locator: str, key: str, item_number: int, packed: bool = False,
                      starts_with: Optional[str] = None) -> Tuple[Optional[bytearray], int]:
@@ -198,3 +209,7 @@ class PnrLocator:
             locator = PnrLocator.VALID[ordinal % PnrLocator.LEN_OF_VALID] + locator
             ordinal //= PnrLocator.LEN_OF_VALID
         return locator
+
+    @staticmethod
+    def is_valid(locator: str) -> bool:
+        return isinstance(locator, str) and (not locator or len(locator) == 6 and locator.isalpha())

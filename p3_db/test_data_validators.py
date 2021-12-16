@@ -7,6 +7,7 @@ from p1_utils.errors import AssemblyError
 from p2_assembly.mac2_data_macro import DataMacro, macros
 from p2_assembly.seg6_segment import Segment
 from p2_assembly.seg9_collection import seg_collection
+from p3_db.pnr import Pnr as PnrDb, PnrLocator
 from p3_db.test_data_elements import Core
 
 
@@ -22,20 +23,20 @@ def validate_hex_data_with_field_data(body: dict) -> dict:
     return errors
 
 
-def validate_hex_data(input_hex_data: str) -> Tuple[dict, str]:
-    errors = dict()
+def validate_hex_data(input_hex_data: str) -> Tuple[str, str]:
+    errors = str()
     hex_data = str()
     if not input_hex_data:
         return errors, hex_data
     if not isinstance(input_hex_data, str):
-        errors["hex_data"] = "Hex data should be a string."
+        errors = "Hex data should be a string."
         return errors, hex_data
     hex_data = "".join(char.upper() for char in input_hex_data if char != " ")
     if not all(char.isdigit() or char in ("A", "B", "C", "D", "E", "F") for char in hex_data):
-        errors["hex_data"] = "Hex characters can only be 0-F. Only spaces allowed."
+        errors = "Hex characters can only be 0-F. Only spaces allowed."
         return errors, hex_data
     if len(hex_data) % 2 != 0:
-        errors["hex_data"] = "The length of hex characters should be even."
+        errors = "The length of hex characters should be even."
         return errors, hex_data
     hex_data = b64encode(bytes.fromhex(hex_data)).decode()
     return errors, hex_data
@@ -50,14 +51,11 @@ def get_updated_field_data(body: dict) -> Tuple[dict, list]:
             break
         field = field_data_str.split(":")[0].strip().upper()
         data = field_data_str.split(":")[1].strip().upper()
-        data = "".join(char.upper() for char in data if char != " ")
-        if not all(char.isdigit() or char in ("A", "B", "C", "D", "E", "F", " ") for char in data):
-            errors["field_data"] = f"{field}: Hex characters can only be 0-F. Only spaces allowed."
+        error, data = validate_hex_data(data)
+        if error:
+            errors["field_data"] = f"{field}: {error}"
             break
-        if len(data) % 2 != 0:
-            errors["field_data"] = f"{field}: The length of hex characters should be even."
-            break
-        field_dict = {"field": field, "data": b64encode(bytes.fromhex(data)).decode()}
+        field_dict = {"field": field, "data": data}
         field_data.append(field_dict)
     return errors, field_data
 
@@ -105,11 +103,11 @@ def get_response_body_for_hex_and_field_data(input_response: dict, input_body: d
     response["error_fields"] = {**response["error_fields"], **errors}
     if errors:
         return response, body
-    errors, hex_data = validate_hex_data(body["hex_data"])
-    response["error_fields"] = {**response["error_fields"], **errors}
-    body["hex_data"] = hex_data
-    if errors:
+    error, hex_data = validate_hex_data(body["hex_data"])
+    if error:
+        response["error_fields"] = {**response["error_fields"], **{"hex_data": error}}
         return response, body
+    body["hex_data"] = hex_data
     errors, field_data = validate_seg_name_and_field_data(body)
     response["error_fields"] = {**response["error_fields"], **errors}
     body["original_field_data"] = body["field_data"]
@@ -193,6 +191,92 @@ def validate_field_item_len(field_item_str: str) -> Tuple[str, List[dict]]:
         if len(field_array) > 3:
             return f"Only 2 attributes allowed for {field}.", field_item_list
     return str(), field_item_list
+
+
+def validate_pnr_field(field_name: str) -> str:
+    if not field_name:
+        return "There should a PNR field between colons."
+    if not PnrDb.check_field(field_name):
+        return f"{field_name}: This is not a valid PNR field name."
+    return str()
+
+
+def validate_and_update_pnr_text_with_field(body: dict) -> dict:
+    errors = dict()
+    body["original_text"] = str()
+    body["original_field_data_item"] = str()
+    if not body["text"] and not body["field_data_item"]:
+        errors["text"] = "Either PNR item text or PNR field data is required."
+        errors["field_data_item"] = "Either PNR field data or PNR item text is required."
+    elif body["text"] and body["field_data_item"]:
+        errors["text"] = "PNR text should be left blank when PNR field data is provided."
+    else:
+        if not isinstance(body["text"], str):
+            errors["text"] = "PNR item text should be string."
+        if not isinstance(body["field_data_item"], str):
+            errors["field_data_item"] = "PNR field data should be string"
+    if errors:
+        return errors
+    if body["text"]:
+        pnr_texts: list = [text.strip() for text in body["text"].split(",")]
+        if any(not text for text in pnr_texts):
+            errors["text"] = "There should be some PNR item text between commas."
+            return errors
+        if len(pnr_texts) > 20:
+            errors["text"] = "Only a max of 20 PNR items can be added."
+            return errors
+        body["original_text"] = body["text"].strip().upper()
+        body["text"] = pnr_texts
+        return errors
+    pnr_field_list: list = [field.strip().upper() for field in body["field_data_item"].split(",")]
+    if any(not field for field in pnr_field_list):
+        errors["field_data_item"] = "There should be a PNR field data item between commas."
+        return errors
+    body["original_field_data_item"] = body["field_data_item"].strip().upper()
+    body["field_data_item"] = list()
+    PnrDb.load_macros()
+    prior_item_number: int = 0
+    for pnr_field in pnr_field_list:
+        field_data_item: list = [f_d_i.strip() for f_d_i in pnr_field.split(":")]
+        field = field_data_item[0]
+        error = validate_pnr_field(field)
+        if error:
+            errors["field_data_item"] = error
+            break
+        if len(field_data_item) != 3:
+            errors["field_data_item"] = f"{field}: The format is Field:Data:Item and all 3 are required."
+            break
+        data, item = field_data_item[1], field_data_item[2]
+        if not data or not item:
+            errors["field_data_item"] = f"{field}: The format is Field:Data:Item and all 3 are required."
+            break
+        error, data = validate_hex_data(field_data_item[1])
+        if error:
+            errors["field_data_item"] = f"{field}: {error}"
+            break
+        if not item.startswith("I") or len(item) < 2 or not item[1:].isdigit():
+            errors["field_data_item"] = f"{field}: Item number should start with I followed by a number."
+            break
+        item_number: int = int(item[1:])
+        if item_number > 20:
+            errors["field_data_item"] = f"{field}: Only a max of 20 PNR items allowed."
+            break
+        if item_number - prior_item_number not in (0, 1) or item_number == 0:
+            errors["field_data_item"] = f"{field}: Item number is out of sequence."
+            break
+        prior_item_number = item_number
+        body["field_data_item"].append({"field": field, "data": data, "item_number": item_number})
+    return errors
+
+
+def validate_and_update_pnr_locator_key(body: dict) -> dict:
+    errors = dict()
+    if not PnrLocator.is_valid(body["locator"]):
+        errors["locator"] = "PNR Locator needs to be 6 character alpha string."
+    if PnrDb.get_attribute_by_name(body["key"]) is None:
+        errors["key"] = "Invalid PNR key."
+    body["locator"] = config.AAAPNR if not body["locator"] else body["locator"].upper()
+    return errors
 
 
 def create_core_for_hex_and_field_data(body: dict) -> Core:

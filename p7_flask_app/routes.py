@@ -11,7 +11,7 @@ from p2_assembly.mac0_generic import LabelReference
 from p2_assembly.mac2_data_macro import macros
 from p2_assembly.seg9_collection import seg_collection, SegLst
 from p3_db.test_data import TestData
-from p3_db.test_data_elements import Pnr, Tpfdf, FixedFile
+from p3_db.test_data_elements import Tpfdf, FixedFile
 from p4_execution.ex5_execute import TpfServer
 from p7_flask_app import tpf1_app
 from p7_flask_app.auth import token_auth, User
@@ -288,17 +288,6 @@ def delete_input_regs(test_data_id: str, reg: str, **kwargs) -> Response:
     return jsonify({"test_data_id": test_data_id})
 
 
-@tpf1_app.route("/test_data/<string:test_data_id>/input/pnr", methods=["PATCH"])
-@token_auth.login_required
-@test_data_required
-@role_check_required
-def add_input_pnr(test_data_id: str, **kwargs) -> Response:
-    pnr: Pnr = kwargs[test_data_id].create_pnr_element(request.get_json())
-    if not pnr:
-        return error_response(400, "Error in adding PNR element")
-    return jsonify(pnr.cascade_to_dict())
-
-
 @tpf1_app.route("/test_data/<string:test_data_id>/output/pnr", methods=["PATCH"])
 @token_auth.login_required
 @test_data_required
@@ -323,26 +312,28 @@ def delete_pnr_output(test_data_id: str, pnr_output_id: str, **kwargs) -> Respon
     return jsonify(kwargs[test_data_id].delete_pnr_output(pnr_output_id))
 
 
-@tpf1_app.route("/test_data/<string:test_data_id>/input/pnr/<string:pnr_id>/fields", methods=["PATCH"])
+@tpf1_app.route("/test_data/<string:test_data_id>/input/pnr", methods=["PATCH"])
 @token_auth.login_required
 @test_data_required
 @role_check_required
-def add_pnr_fields(test_data_id: str, pnr_id: str, **kwargs) -> Response:
-    pnr: Pnr = kwargs[test_data_id].create_pnr_field_data(pnr_id, request.get_json())
-    if not pnr:
-        return error_response(400, "Error in adding PNR field")
-    return jsonify(pnr.cascade_to_dict())
+def add_pnr_input(test_data_id: str, **kwargs) -> Response:
+    return jsonify(kwargs[test_data_id].create_pnr_input(request.get_json()))
 
 
-@tpf1_app.route("/test_data/<string:test_data_id>/input/pnr/<string:pnr_id>", methods=["DELETE"])
+@tpf1_app.route("/test_data/<string:test_data_id>/input/pnr/<string:pnr_input_id>", methods=["PATCH"])
 @token_auth.login_required
 @test_data_required
 @role_check_required
-def delete_pnr_element(test_data_id: str, pnr_id: str, **kwargs) -> Response:
-    pnr: Pnr = kwargs[test_data_id].delete_pnr_element(pnr_id)
-    if not pnr:
-        return error_response(400, "Error in deleting PNR")
-    return jsonify(pnr.cascade_to_dict())
+def update_pnr_input(test_data_id: str, pnr_input_id: str, **kwargs) -> Response:
+    return jsonify(kwargs[test_data_id].update_pnr_input(pnr_input_id, request.get_json()))
+
+
+@tpf1_app.route("/test_data/<string:test_data_id>/input/pnr/<string:pnr_input_id>", methods=["DELETE"])
+@token_auth.login_required
+@test_data_required
+@role_check_required
+def delete_pnr_input(test_data_id: str, pnr_input_id: str, **kwargs) -> Response:
+    return jsonify(kwargs[test_data_id].delete_pnr_input(pnr_input_id))
 
 
 @tpf1_app.route("/test_data/<string:test_data_id>/input/tpfdf", methods=["PATCH"])
