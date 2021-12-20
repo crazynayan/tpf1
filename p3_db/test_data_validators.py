@@ -1,6 +1,6 @@
 from base64 import b64encode
 from copy import copy
-from typing import Tuple, List
+from typing import Tuple
 
 from config import config
 from p1_utils.errors import AssemblyError
@@ -141,62 +141,68 @@ def get_response_body_for_macro(input_response: dict, input_body: dict, macro_na
 def validate_output_attribute(attribute: str, field: str) -> Tuple[str, str, int]:
     attr = attribute.strip()
     if len(attr) < 2:
-        return f"Attribute should be at least 2 char for {field}.", str(), int()
+        return f"{field}: Attribute should be of at least 2 char.", str(), int()
     if attr[0] not in {"I", "L"}:
-        return f"Attribute should be I (item number) or L (length) for {field}.", str(), int()
+        return f"{field}: Attribute should be I (item number) or L (length).", str(), int()
     try:
         attr_value: int = int(attr[1:])
     except ValueError:
-        return f"Attribute value should be a number for attribute {attr[0]} in {field}.", str(), int()
+        return f"{field}: Attribute value should be a number for attribute {attr[0]}.", str(), int()
     if not 1 <= attr_value <= 20:
-        return f"Attribute value should be between 1 and 20 for attribute {attr[0]} in {field}.", str(), int()
+        return f"{field}: Attribute value should be between 1 and 20 for attribute {attr[0]}.", str(), int()
     attr_key = "item_number" if attr[0] == "I" else "length"
     return str(), attr_key, attr_value
 
 
-def validate_field_item_len(field_item_str: str) -> Tuple[str, List[dict]]:
-    field_item_list: List[dict] = list()
-    if not isinstance(field_item_str, str) or not field_item_str:
-        return "PNR Field details are required.", field_item_list
-    field_items: List[str] = field_item_str.strip().upper().split(",")
-    pr001w: DataMacro = macros["PR001W"]
-    pr001w.load()
-    for field_item in field_items:
-        field_item = field_item.strip()
-        if not field_item:
-            return "PNR field name must be present between commas.", field_item_list
-        field_array: list = field_item.split(":")
-        field: str = field_array[0]
-        if not field:
-            return "PNR field name must be present between colons.", field_item_list
-        if not pr001w.check(field):
-            return f"{field} not present in PR001W macro.", field_item_list
-        field_item_dict: dict = {"field": field, "length": pr001w.lookup(field).length, "item_number": 1}
-        field_item_list.append(field_item_dict)
-        if len(field_array) == 1:
-            continue
-        error, attr_key, attr_value = validate_output_attribute(field_array[1], field)
+def validate_and_update_field_item_len(body: dict) -> dict:
+    errors: dict = dict()
+    if not isinstance(body["field_item_len"], str) or not body["field_item_len"]:
+        errors["field_item_len"] = "PNR Field details are required."
+        return errors
+    pnr_field_list: list = [field.strip().upper() for field in body["field_item_len"].split(",")]
+    if any(not field for field in pnr_field_list):
+        errors["field_item_len"] = "There should be a PNR field item between commas."
+        return errors
+    body["original_field_item_len"] = body["field_item_len"].strip().upper()
+    body["field_item_len"] = list()
+    PnrDb.load_macros()
+    for field_item in pnr_field_list:
+        field_item_len: list = [f_i_l.strip() for f_i_l in field_item.split(":")]
+        field = field_item_len[0]
+        error = validate_pnr_field(field)
         if error:
-            return error, field_item_list
+            errors["field_item_len"] = error
+            break
+        field_item_dict: dict = {"field": field, "length": PnrDb.get_field_len(field), "item_number": 1}
+        body["field_item_len"].append(field_item_dict)
+        if len(field_item_len) == 1:
+            continue
+        error, attr_key, attr_value = validate_output_attribute(field_item_len[1], field)
+        if error:
+            errors["field_item_len"] = error
+            break
         field_item_dict[attr_key] = attr_value
-        if len(field_array) == 2:
+        if len(field_item_len) == 2:
             continue
         attr_key1 = attr_key
-        error, attr_key, attr_value = validate_output_attribute(field_array[2], field)
+        error, attr_key, attr_value = validate_output_attribute(field_item_len[2], field)
         if error:
-            return error, field_item_list
+            errors["field_item_len"] = error
+            break
         field_item_dict[attr_key] = attr_value
         if attr_key1 == attr_key:
-            return f"Both the attributes cannot be same for {field}.", field_item_list
-        if len(field_array) > 3:
-            return f"Only 2 attributes allowed for {field}.", field_item_list
-    return str(), field_item_list
+            errors["field_item_len"] = f"{field}: Both the attributes cannot be same."
+            break
+        if len(field_item_len) > 3:
+            errors["field_item_len"] = f"{field}: Only 2 attributes are allowed."
+            break
+    return errors
 
 
 def validate_pnr_field(field_name: str) -> str:
     if not field_name:
         return "There should a PNR field between colons."
-    if not PnrDb.check_field(field_name):
+    if not PnrDb.is_valid_field(field_name):
         return f"{field_name}: This is not a valid PNR field name."
     return str()
 
@@ -218,7 +224,7 @@ def validate_and_update_pnr_text_with_field(body: dict) -> dict:
     if errors:
         return errors
     if body["text"]:
-        pnr_texts: list = [text.strip() for text in body["text"].split(",")]
+        pnr_texts: list = [text.strip().upper() for text in body["text"].split(",")]
         if any(not text for text in pnr_texts):
             errors["text"] = "There should be some PNR item text between commas."
             return errors
@@ -275,7 +281,8 @@ def validate_and_update_pnr_locator_key(body: dict) -> dict:
         errors["locator"] = "PNR Locator needs to be 6 character alpha string."
     if PnrDb.get_attribute_by_name(body["key"]) is None:
         errors["key"] = "Invalid PNR key."
-    body["locator"] = config.AAAPNR if not body["locator"] else body["locator"].upper()
+    if not errors:
+        body["locator"] = config.AAAPNR if not body["locator"] else body["locator"].upper()
     return errors
 
 

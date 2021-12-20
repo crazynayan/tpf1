@@ -5,7 +5,6 @@ from typing import Dict, List, Optional, Union
 
 from firestore_ci import FirestoreDocument
 
-import p3_db.pnr as db_pnr
 from config import config
 from p1_utils.data_type import Register
 from p1_utils.errors import InvalidBaseRegError
@@ -13,7 +12,7 @@ from p2_assembly.mac2_data_macro import macros, DataMacro
 from p2_assembly.seg9_collection import seg_collection
 from p3_db.test_data_elements import Core, Pnr, Tpfdf, Output, FixedFile, PnrOutput
 from p3_db.test_data_validators import get_response_body_for_hex_and_field_data, create_core_for_hex_and_field_data, \
-    get_response_body_for_macro, create_core, validate_field_item_len, validate_and_update_pnr_locator_key, \
+    get_response_body_for_macro, create_core, validate_and_update_field_item_len, validate_and_update_pnr_locator_key, \
     validate_and_update_pnr_text_with_field
 
 
@@ -513,27 +512,19 @@ class TestData(FirestoreDocument):
         if set(body) != {"key", "locator", "field_item_len"}:
             response["message"] = "Only 3 fields allowed (key, locator, field_item_len) and all are mandatory."
             return response
-        if db_pnr.Pnr.get_attribute_by_name(body["key"]) is None:
-            response["error_fields"]["key"] = "Invalid PNR key."
-        if not isinstance(body["locator"], str) or \
-                (body["locator"] and (len(body["locator"]) != 6 or not body["locator"].isalnum())):
-            response["error_fields"]["locator"] = "PNR Locator needs to be 6 character alpha numeric string."
-        if response["error_fields"]:
+        errors: dict = validate_and_update_pnr_locator_key(body)
+        if errors:
+            response["error_fields"] = errors
             return response
-        pnr_output = PnrOutput()
-        pnr_output.key = body["key"]
-        pnr_output.locator = body["locator"].upper() if body["locator"] else config.AAAPNR
-        if any(output.key == pnr_output.key and output.locator == pnr_output.locator
-               for output in self.output.pnr_outputs):
-            response["error_fields"]["key"] = f"PNR key {pnr_output.key.upper()} already exists for " \
-                                              f"locator {pnr_output.locator}."
+        if any(pnr.key == body["key"] and pnr.locator == body["locator"] for pnr in self.output.pnr_outputs):
+            response["error_fields"]["key"] = f"PNR key {body['key'].upper()} already exists " \
+                                              f"for locator {body['locator']}."
             return response
-        error, field_item_len = validate_field_item_len(body["field_item_len"])
-        if error:
-            response["error_fields"]["field_item_len"] = error
+        errors: dict = validate_and_update_field_item_len(body)
+        if errors:
+            response["error_fields"] = errors
             return response
-        pnr_output.field_item_len = field_item_len
-        pnr_output.original_field_item_len = body["field_item_len"].strip().upper()
+        pnr_output: PnrOutput = PnrOutput.dict_to_doc(body)
         self.output.pnr_outputs.append(pnr_output)
         if persistence:
             pnr_output.create()
@@ -551,12 +542,12 @@ class TestData(FirestoreDocument):
         if set(body) != {"field_item_len"}:
             response["message"] = "Only 1 fields allowed (field_item_len) and it is mandatory."
             return response
-        error, field_item_len = validate_field_item_len(body["field_item_len"])
-        if error:
-            response["error_fields"]["field_item_len"] = error
+        errors: dict = validate_and_update_field_item_len(body)
+        if errors:
+            response["error_fields"] = errors
             return response
-        pnr_output.field_item_len = field_item_len
-        pnr_output.original_field_item_len = body["field_item_len"].strip().upper()
+        pnr_output.field_item_len = body["field_item_len"]
+        pnr_output.original_field_item_len = body["original_field_item_len"]
         if persistence:
             pnr_output.save()
         response["message"] = f"PNR Output updated successfully."

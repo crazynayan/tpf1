@@ -404,7 +404,7 @@ class State:
                 if not pnr_data:
                     field_byte["data"] = str()
                     continue
-                start: int = macros["PR001W"].evaluate(field)
+                start: int = Pnr.get_field_dsp(field)
                 end: int = start + length
                 field_byte["data"] = b64encode(pnr_data[start:end]).decode()
         return

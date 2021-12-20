@@ -2,7 +2,8 @@ from typing import List, Dict, Union, Tuple, Optional
 
 from config import config
 from p1_utils.data_type import DataType
-from p1_utils.errors import PnrElementError, PnrLocatorNotFoundError, NotFoundInSymbolTableError
+from p1_utils.errors import PnrElementError, PnrLocatorNotFoundError, NotFoundInSymbolTableError, TestDataError
+from p2_assembly.mac0_generic import LabelReference
 from p2_assembly.mac2_data_macro import macros
 from p3_db.stream import Stream
 
@@ -82,9 +83,27 @@ class Pnr:
         return
 
     @classmethod
-    def check_field(cls, field_name) -> bool:
+    def get_field(cls, field_name) -> Optional[LabelReference]:
         pnr_macros: set = {attribute.macro_name for attribute in Pnr.ATTRIBUTES}
-        return any(macros[macro].check(field_name) for macro in pnr_macros)
+        return next((macros[macro].lookup(field_name) for macro in pnr_macros if macros[macro].check(field_name)), None)
+
+    @classmethod
+    def is_valid_field(cls, field_name) -> bool:
+        return cls.get_field(field_name) is not None
+
+    @classmethod
+    def get_field_len(cls, field_name) -> int:
+        field: LabelReference = cls.get_field(field_name)
+        if not field:
+            raise TestDataError
+        return field.length
+
+    @classmethod
+    def get_field_dsp(cls, field_name) -> int:
+        field: LabelReference = cls.get_field(field_name)
+        if not field:
+            raise TestDataError
+        return field.dsp
 
     @staticmethod
     def get_pnr_data(pnr_locator: str, key: str, item_number: int, packed: bool = False,
