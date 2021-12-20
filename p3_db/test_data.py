@@ -11,9 +11,8 @@ from p1_utils.errors import InvalidBaseRegError
 from p2_assembly.mac2_data_macro import macros, DataMacro
 from p2_assembly.seg9_collection import seg_collection
 from p3_db.test_data_elements import Core, Pnr, Tpfdf, Output, FixedFile, PnrOutput
-from p3_db.test_data_validators import get_response_body_for_hex_and_field_data, create_core_for_hex_and_field_data, \
-    get_response_body_for_macro, create_core, validate_and_update_field_item_len, validate_and_update_pnr_locator_key, \
-    validate_and_update_pnr_text_with_field
+from p3_db.test_data_validators import validate_and_update_hex_and_field_data, validate_and_update_macro_field_data, \
+    validate_and_update_field_item_len, validate_and_update_pnr_locator_key, validate_and_update_pnr_text_with_field
 
 
 class TestData(FirestoreDocument):
@@ -210,8 +209,7 @@ class TestData(FirestoreDocument):
             response["message"] = "Only 4 fields allowed (macro_name, variation, variation_name and field_data."
             return response
         if body["macro_name"] not in config.DEFAULT_MACROS:
-            response["error_fields"]["macro_name"] = f"Invalid macro. Macro can only be from " \
-                                                     f"{''.join(config.DEFAULT_MACROS)}."
+            response["error_fields"]["macro_name"] = f"Invalid macro name. {body['macro_name']} is not a default macro."
         if not self._validate_and_update_variation(body, "core"):
             response["error_fields"]["variation"] = "Invalid variation."
         elif "macro_name" not in response["error_fields"]:
@@ -219,15 +217,16 @@ class TestData(FirestoreDocument):
                    for core in self.cores):
                 response["error_fields"]["macro_name"] = f"Macro {body['macro_name']} already exists for " \
                                                          f"variation {body['variation']}."
-        updated_response, updated_body = get_response_body_for_macro(response, body, body["macro_name"])
-        if updated_response["error_fields"]:
-            return updated_response
-        core_to_create: Core = create_core(updated_body)
-        core_to_create.macro_name = body["macro_name"].upper()
-        if persistence:
-            core_to_create.create()
+        if response["error_fields"]:
+            return response
+        errors = validate_and_update_macro_field_data(body, body["macro_name"])
+        if errors:
+            response["error_fields"] = errors
+            return response
+        core_to_create: Core = Core.dict_to_doc(body)
         self.cores.append(core_to_create)
         if persistence:
+            core_to_create.create()
             self.save()
         response["message"] = f"Core with macro {core_to_create.macro_name} created successfully."
         response["error"] = False
@@ -240,14 +239,15 @@ class TestData(FirestoreDocument):
         if not core_to_update:
             response["message"] = f"Macro {macro_name} not found for variation {variation}."
             return response
-        if set(body) != {"field_data"}:
+        if set(body) != {"field_data"} or not isinstance(body, dict):
             response["message"] = "Only field_data allowed and it is mandatory."
             return response
-        updated_response, updated_body = get_response_body_for_macro(response, body, macro_name)
-        if updated_response["error_fields"]:
-            return updated_response
-        core_to_update.field_data = updated_body["field_data"]
-        core_to_update.original_field_data = updated_body["original_field_data"]
+        errors = validate_and_update_macro_field_data(body, macro_name)
+        if errors:
+            response["error_fields"] = errors
+            return response
+        core_to_update.field_data = body["field_data"]
+        core_to_update.original_field_data = body["original_field_data"]
         if persistence:
             core_to_update.save()
         response["message"] = f"Core with macro {macro_name} updated successfully."
@@ -280,19 +280,21 @@ class TestData(FirestoreDocument):
         if not self._validate_and_update_variation(body, "core"):
             response["error_fields"]["variation"] = "Invalid variation"
         elif "heap_name" not in response["error_fields"]:
-            if any(core.variation == body["variation"] and core.heap_name == body["heap_name"].upper()
+            body["heap_name"] = body["heap_name"].strip().upper()
+            if any(core.variation == body["variation"] and core.heap_name == body["heap_name"]
                    for core in self.cores):
                 response["error_fields"]["heap_name"] = f"Heap {body['heap_name']} already exists for " \
                                                         f"variation {body['variation']}."
-        updated_response, updated_body = get_response_body_for_hex_and_field_data(response, body)
-        if updated_response["error_fields"]:
-            return updated_response
-        core_to_create: Core = create_core_for_hex_and_field_data(updated_body)
-        core_to_create.heap_name = body["heap_name"].upper()
-        if persistence:
-            core_to_create.create()
+        if response["error_fields"]:
+            return response
+        errors: dict = validate_and_update_hex_and_field_data(body)
+        if errors:
+            response["error_fields"] = errors
+            return response
+        core_to_create: Core = Core.dict_to_doc(body)
         self.cores.append(core_to_create)
         if persistence:
+            core_to_create.create()
             self.save()
         response["message"] = f"Core with heap name {core_to_create.ecb_level} created successfully."
         response["error"] = False
@@ -308,13 +310,14 @@ class TestData(FirestoreDocument):
         if set(body) != {"hex_data", "field_data", "seg_name"}:
             response["message"] = "Only 3 fields allowed (hex_data, field_data and seg_name) and all are mandatory."
             return response
-        updated_response, updated_body = get_response_body_for_hex_and_field_data(response, body)
-        if updated_response["error_fields"]:
-            return updated_response
-        core_to_update.hex_data = updated_body["hex_data"]
-        core_to_update.seg_name = updated_body["seg_name"]
-        core_to_update.field_data = updated_body["field_data"]
-        core_to_update.original_field_data = updated_body["original_field_data"]
+        errors: dict = validate_and_update_hex_and_field_data(body)
+        if errors:
+            response["error_fields"] = errors
+            return response
+        core_to_update.hex_data = body["hex_data"]
+        core_to_update.seg_name = body["seg_name"]
+        core_to_update.field_data = body["field_data"]
+        core_to_update.original_field_data = body["original_field_data"]
         if persistence:
             core_to_update.save()
         response["message"] = f"Core with heap {heap_name} updated successfully."
@@ -350,15 +353,16 @@ class TestData(FirestoreDocument):
             if any(core.variation == body["variation"] and core.ecb_level == body["ecb_level"] for core in self.cores):
                 response["error_fields"]["ecb_level"] = f"ECB level {body['ecb_level']} already exists for " \
                                                         f"variation {body['variation']}."
-        updated_response, updated_body = get_response_body_for_hex_and_field_data(response, body)
-        if updated_response["error_fields"]:
-            return updated_response
-        core_to_create: Core = create_core_for_hex_and_field_data(updated_body)
-        core_to_create.ecb_level = body["ecb_level"].upper()
-        if persistence:
-            core_to_create.create()
+        if response["error_fields"]:
+            return response
+        errors: dict = validate_and_update_hex_and_field_data(body)
+        if errors:
+            response["error_fields"] = errors
+            return response
+        core_to_create: Core = Core.dict_to_doc(body)
         self.cores.append(core_to_create)
         if persistence:
+            core_to_create.create()
             self.save()
         response["message"] = f"Core with ECB level {core_to_create.ecb_level} created successfully."
         response["error"] = False
@@ -374,13 +378,14 @@ class TestData(FirestoreDocument):
         if set(body) != {"hex_data", "field_data", "seg_name"}:
             response["message"] = "Only 3 fields allowed (hex_data, field_data and seg_name) and all are mandatory."
             return response
-        updated_response, updated_body = get_response_body_for_hex_and_field_data(response, body)
-        if updated_response["error_fields"]:
-            return updated_response
-        core_to_update.hex_data = updated_body["hex_data"]
-        core_to_update.seg_name = updated_body["seg_name"]
-        core_to_update.field_data = updated_body["field_data"]
-        core_to_update.original_field_data = updated_body["original_field_data"]
+        errors = validate_and_update_hex_and_field_data(body)
+        if errors:
+            response["error_fields"] = errors
+            return response
+        core_to_update.hex_data = body["hex_data"]
+        core_to_update.seg_name = body["seg_name"]
+        core_to_update.field_data = body["field_data"]
+        core_to_update.original_field_data = body["original_field_data"]
         if persistence:
             core_to_update.save()
         response["message"] = f"Core with ECB level {ecb_level} updated successfully."
