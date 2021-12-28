@@ -59,56 +59,32 @@ hfax_2812_gld = [
     "SSRFQTUAA2812Y20OCTDFW  ORD  0510GLD*DGHWCL RR    ",
 ]
 
-fqtv_gld = [
-    {
-        "PR00_60_FQT_CXR": b64encode(DataType("C", input="BA").to_bytes()).decode(),
-        "PR00_60_FQT_FTN": b64encode(DataType("C", input="NKE9086").to_bytes()).decode(),
-        "PR00_60_FQT_TYP": b64encode(DataType("X", input="60").to_bytes()).decode(),
-    },
-    {
-        "PR00_60_FQT_CXR": b64encode(DataType("C", input="AA").to_bytes()).decode(),
-        "PR00_60_FQT_FTN": b64encode(DataType("C", input="NKE9087").to_bytes()).decode(),
-        "PR00_60_FQT_TYP": b64encode(DataType("X", input="80").to_bytes()).decode(),  # GLD
-    },
-]
+fqtv_gld = f"""
+    PR00_60_FQT_CXR:{bytes("BA", "CP037").hex()}:I1,
+    PR00_60_FQT_FTN:{bytes("NKE9086", "CP037").hex()}:I1,
+    PR00_60_FQT_TYP:60:I1,
+    PR00_60_FQT_CXR:{bytes("AA", "CP037").hex()}:I2,
+    PR00_60_FQT_FTN:{bytes("NKE9087", "CP037").hex()}:I2,
+    PR00_60_FQT_TYP:80:I2
+"""
 
-itin_2811_2812 = [
-    {
-        "WI0ARC": b64encode(DataType("C", input="BA").to_bytes()).decode(),
-        "WI0FNB": b64encode(DataType("H", input="2812").to_bytes()).decode(),
-        "WI0DTE": b64encode(DataType("X", input=config.PARS_DATE).to_bytes()).decode(),
-        "WI0BRD": b64encode(DataType("C", input="DFW").to_bytes()).decode(),
-        "WI0OFF": b64encode(DataType("C", input="ORZ").to_bytes()).decode(),
-    },
-    {
-        "WI0ARC": b64encode(DataType("C", input="AA").to_bytes()).decode(),
-        "WI0FNB": b64encode(DataType("H", input="2811").to_bytes()).decode(),
-        "WI0DTE": b64encode(DataType("X", input=config.PARS_DATE).to_bytes()).decode(),
-        "WI0BRD": b64encode(DataType("C", input="DFW").to_bytes()).decode(),
-        "WI0OFF": b64encode(DataType("C", input="ORD").to_bytes()).decode(),
-    },
-    {
-        "WI0ARC": b64encode(DataType("C", input="AA").to_bytes()).decode(),
-        "WI0FNB": b64encode(DataType("H", input="2812").to_bytes()).decode(),
-        "WI0DTE": b64encode(DataType("X", input="4CC0").to_bytes()).decode(),
-        "WI0BRD": b64encode(DataType("C", input="DFW").to_bytes()).decode(),
-        "WI0OFF": b64encode(DataType("C", input="ORB").to_bytes()).decode(),
-    },
-    {
-        "WI0ARC": b64encode(DataType("C", input="AA").to_bytes()).decode(),
-        "WI0FNB": b64encode(DataType("H", input="2812").to_bytes()).decode(),
-        "WI0DTE": b64encode(DataType("X", input=config.PARS_DATE).to_bytes()).decode(),
-        "WI0BRD": b64encode(DataType("C", input="DFX").to_bytes()).decode(),
-        "WI0OFF": b64encode(DataType("C", input="ORC").to_bytes()).decode(),
-    },
-    {
-        "WI0ARC": b64encode(DataType("C", input="AA").to_bytes()).decode(),
-        "WI0FNB": b64encode(DataType("H", input="2812").to_bytes()).decode(),
-        "WI0DTE": b64encode(DataType("X", input=config.PARS_DATE).to_bytes()).decode(),
-        "WI0BRD": b64encode(DataType("C", input="DFW").to_bytes()).decode(),
-        "WI0OFF": b64encode(DataType("C", input="ORD").to_bytes()).decode(),
-    },
-]
+itin_2811_2812 = f"""
+    WI0ARC:{bytes("BA", "CP037").hex()}:I1, WI0FNB:{2812:04x}:I1, WI0DTE:{config.PARS_DATE}:I1, 
+    WI0BRD:{bytes("DFW", "CP037").hex()}:I1, WI0OFF:{bytes("ORZ", "CP037").hex()}:I1,
+    
+    WI0ARC:{bytes("AA", "CP037").hex()}:I2, WI0FNB:{2811:04x}:I2, WI0DTE:{config.PARS_DATE}:I2, 
+    WI0BRD:{bytes("DFW", "CP037").hex()}:I2, WI0OFF:{bytes("ORD", "CP037").hex()}:I2,
+
+    WI0ARC:{bytes("AA", "CP037").hex()}:I3, WI0FNB:{2812:04x}:I3, WI0DTE:4CC0:I3, 
+    WI0BRD:{bytes("DFW", "CP037").hex()}:I3, WI0OFF:{bytes("ORB", "CP037").hex()}:I3,
+
+    WI0ARC:{bytes("AA", "CP037").hex()}:I4, WI0FNB:{2812:04x}:I4, WI0DTE:{config.PARS_DATE}:I4, 
+    WI0BRD:{bytes("DFX", "CP037").hex()}:I4, WI0OFF:{bytes("ORC", "CP037").hex()}:I4,
+
+    WI0ARC:{bytes("AA", "CP037").hex()}:I5, WI0FNB:{2812:04x}:I5, WI0DTE:{config.PARS_DATE}:I5, 
+    WI0BRD:{bytes("DFW", "CP037").hex()}:I5, WI0OFF:{bytes("ORD", "CP037").hex()}:I5
+     
+"""
 
 tr1gaa = [
     {

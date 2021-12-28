@@ -1,6 +1,3 @@
-from base64 import b64encode
-
-from p1_utils.data_type import DataType
 from p8_test.test_local.test_eta5_execution import NameGeneral, hfax_2812_gld, fqtv_gld, itin_2811_2812, tr1gaa
 
 
@@ -11,13 +8,10 @@ class Companion(NameGeneral):
         self.test_data.add_pnr_element(["1ZAVERI"], "name")
         self.test_data.add_tpfdf(tr1gaa, "40", "TR1GAA")
         self.test_data.set_field("WA0ET6", bytes([self.wa0hfx]))
-        self.fqtv_exp_key = [
-            {
-                "PR00_60_FQT_CXR": b64encode(DataType("C", input="AA").to_bytes()).decode(),
-                "PR00_60_FQT_FTN": b64encode(DataType("C", input="NKE9088").to_bytes()).decode(),
-                "PR00_60_FQT_TYP": b64encode(DataType("X", input="60").to_bytes()).decode(),  # EXP and # KEY
-            },
-        ]
+        self.fqtv_exp_key = f"""
+            PR00_60_FQT_CXR:{bytes("AA", "CP037").hex()}:I1, 
+            PR00_60_FQT_FTN:{bytes("NKE9088", "CP037").hex()}:I1,
+            PR00_60_FQT_TYP:60:I1 """
 
     def test_fqtv_itin_match_award_not_exp_key_ETK2(self) -> None:
         self.test_data.add_pnr_element(hfax_2812_gld, "hfax")

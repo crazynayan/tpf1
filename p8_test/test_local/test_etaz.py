@@ -6,15 +6,10 @@ from p3_db.pnr import RCVD_FROM, ITIN
 from p3_db.test_data_elements import FixedFile
 from p8_test.test_local import TestDebug
 
-wi0act = f'{macros["WI0BS"].evaluate("#WI0ACT"):02X}'
-wa0tvl = f'{macros["WA0AA"].evaluate("#WA0TVL"):02X}'
-wa0sec = f'{macros["WA0AA"].evaluate("#WA0SEC"):02X}'
-itin = [
-    {
-        "WI0TYP": b64encode(DataType("X", input=wi0act).to_bytes()).decode(),
-        "WI0AAC": b64encode(DataType("C", input="GN").to_bytes()).decode(),
-    }
-]
+wi0act = f"{macros['WI0BS'].evaluate('#WI0ACT'):02X}"
+wa0tvl = f"{macros['WA0AA'].evaluate('#WA0TVL'):02X}"
+wa0sec = f"{macros['WA0AA'].evaluate('#WA0SEC'):02X}"
+itin = f"WI0TYP:{wi0act}:I1,WI0AAC:{bytes('GN', 'CP037').hex()}:I1"
 
 
 class EtazTest(TestDebug):

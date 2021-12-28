@@ -429,22 +429,6 @@ class TestData(FirestoreDocument):
         self.save()
         return True
 
-    def create_pnr_element(self, pnr_dict: dict, persistence: bool = True) -> Optional[Pnr]:
-        if not Pnr.validate(pnr_dict):
-            return None
-        if not self._validate_and_update_variation(pnr_dict, "pnr"):
-            return None
-        pnr_dict["field_data"] = list()
-        pnr_data = pnr_dict["data"].split(",")
-        pnr = None
-        for data in pnr_data:
-            pnr_dict["data"] = data.strip()
-            pnr = Pnr.create_from_dict(pnr_dict) if persistence else Pnr.dict_to_doc(pnr_dict)
-            self.pnr.append(pnr)
-        if persistence:
-            self.save()
-        return pnr
-
     def create_pnr_input(self, body: dict, persistence: bool = True) -> dict:
         response: dict = {"error": True, "message": str(), "error_fields": dict()}
         if set(body) != {"variation", "variation_name", "key", "locator", "text", "field_data_item"}:
@@ -572,47 +556,6 @@ class TestData(FirestoreDocument):
         response["message"] = f"PNR Output deleted successfully."
         response["error"] = False
         return response
-
-    def delete_pnr_element(self, pnr_id: str) -> Optional[Pnr]:
-        pnr: Pnr = next((pnr for pnr in self.pnr if pnr.id == pnr_id), None)
-        if not pnr:
-            return None
-        copy_pnr = deepcopy(pnr)
-        self.pnr.remove(pnr)
-        self.save()
-        pnr.delete(cascade=True)
-        return copy_pnr
-
-    def create_pnr_field_data(self, pnr_id: str, core_dict: dict, persistence=True) -> Optional[Pnr]:
-        pnr = next((pnr for pnr in self.pnr if pnr.id == pnr_id), None)
-        if not pnr:
-            return None
-        if not isinstance(core_dict, dict) or "macro_name" not in core_dict or "field_data" not in core_dict:
-            return None
-        if core_dict["macro_name"] not in macros:
-            return None
-        macro: DataMacro = macros[core_dict["macro_name"]]
-        macro.load()
-        if not isinstance(core_dict["field_data"], dict):
-            return None
-        for field, value in core_dict["field_data"].items():
-            if not macro.check(field):
-                return None
-            if not isinstance(value, str):
-                return None
-        for field, value in core_dict["field_data"].items():
-            field_dict = {"field": field, "data": value}
-            field_byte = next((field_byte for field_byte in pnr.field_data
-                               if field_byte["field"] == field_dict["field"]), None)
-            if not field_byte:
-                field_byte = field_dict
-                pnr.field_data.append(field_byte)
-            else:
-                field_byte["data"] = field_dict["data"]
-        pnr.data = str()
-        if persistence:
-            pnr.save()
-        return pnr
 
     def create_tpfdf_lrec(self, df_dict: dict, persistence=True) -> Optional[Tpfdf]:
         if set(df_dict) != {"key", "field_data", "macro_name", "variation", "variation_name"}:

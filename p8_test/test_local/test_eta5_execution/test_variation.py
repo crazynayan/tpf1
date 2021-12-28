@@ -51,25 +51,22 @@ class Variation(NameGeneral):
         self.test_data.set_field("WA0ET6", bytes([0x10]))
         self.test_data.add_pnr_element(["1ZAVERI"], "name")
         self.test_data.add_pnr_element(["SSRFQTUAA2812Y20OCTDFW  ORD  0510GLD*DGHWCL RR    "], "hfax")
-        self.test_data.add_pnr_field_data([{
-            "PR00_60_FQT_CXR": b64encode(DataType("C", input="AA").to_bytes()).decode(),
-            "PR00_60_FQT_FTN": b64encode(DataType("C", input="NKE9087").to_bytes()).decode(),
-            "PR00_60_FQT_TYP": b64encode(DataType("X", input="80").to_bytes()).decode(),
-        }], "fqtv", "DGHWCL")
-        self.test_data.add_pnr_field_data([{
-            "WI0ARC": b64encode(DataType("C", input="AA").to_bytes()).decode(),
-            "WI0FNB": b64encode(DataType("H", input="2812").to_bytes()).decode(),
-            "WI0DTE": b64encode(DataType("X", input="4E2F").to_bytes()).decode(),
-            "WI0BRD": b64encode(DataType("C", input="DFW").to_bytes()).decode(),
-            "WI0OFF": b64encode(DataType("C", input="ORD").to_bytes()).decode(),
-        }], "itin", "DGHWCL")
+        self.test_data.add_pnr_field_data(f"""
+            PR00_60_FQT_CXR:{bytes("AA", "CP037").hex()}:I1,
+            PR00_60_FQT_FTN:{bytes("NKE9087", "CP037").hex()}:I1,
+            PR00_60_FQT_TYP:80:I1
+        """, "fqtv", "DGHWCL")
+        self.test_data.add_pnr_field_data(f"""
+            WI0ARC:{bytes("AA", "CP037").hex()}:I1, WI0FNB:{2812:04x}:I3, WI0DTE:4E2F:I1, 
+            WI0BRD:{bytes("DFW", "CP037").hex()}:I1, WI0OFF:{bytes("ORD", "CP037").hex()}:I1
+        """, "itin", "DGHWCL")
         self.test_data.add_pnr_element(["1ZAVERI"], "name", variation=1)
         self.test_data.add_pnr_element(["SSRFQTUAA2812Y20OCTDFW  ORD  0510GLD*DGHWCL RR    "], "hfax", variation=1)
-        self.test_data.add_pnr_field_data([{
-            "PR00_60_FQT_CXR": b64encode(DataType("C", input="AA").to_bytes()).decode(),
-            "PR00_60_FQT_FTN": b64encode(DataType("C", input="NKE9087").to_bytes()).decode(),
-            "PR00_60_FQT_TYP": b64encode(DataType("X", input="40").to_bytes()).decode(),
-        }], "fqtv", "DGHWCL", variation=1)
+        self.test_data.add_pnr_field_data(f"""
+            PR00_60_FQT_CXR:{bytes("AA", "CP037").hex()}:I1,
+            PR00_60_FQT_FTN:{bytes("NKE9087", "CP037").hex()}:I1,
+            PR00_60_FQT_TYP:40:I1
+        """, "fqtv", "DGHWCL", variation=1)
         self.test_data.add_tpfdf([{
             "TR1G_40_OCC": b64encode(DataType("C", input="AA").to_bytes()).decode(),
             "TR1G_40_ACSTIERCODE": b64encode(DataType("C", input="GLD").to_bytes()).decode(),
