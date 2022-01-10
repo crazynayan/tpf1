@@ -1,5 +1,5 @@
 import re
-from typing import List, Optional, Dict
+from typing import List, Optional
 
 from config import config
 
@@ -22,7 +22,6 @@ class File:
 
     def __init__(self, filename: str):
         self.lines: List[str] = list()
-        self.macros: Dict[str, list] = dict()  # Macro names -> Listing generated macros
         # Open the file
         lines = self.open_file(filename)
         if not lines:
