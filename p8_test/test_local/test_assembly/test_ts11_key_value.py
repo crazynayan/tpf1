@@ -48,9 +48,9 @@ class KeyValueTest(unittest.TestCase):
         node: RegisterData = seg.nodes["TS110020.2"]
         self.assertEqual("LHI", node.command)
         self.assertEqual("R15", node.reg.reg)
-        self.assertEqual(config.GLOBAL, node.data)
-        self.assertEqual("GLOBAL", seg.lookup("@HAALC").name)
-        self.assertEqual("R15", seg.get_base("GLOBAL").reg)
+        self.assertEqual(config.GLOBAS, node.data)
+        self.assertEqual("GLOBAS", seg.lookup("@HAALC").name)
+        self.assertEqual("R15", seg.get_base("GLOBAS").reg)
         # DETAC D8,CHECK=NO
         node: KeyValue = seg.nodes["TS110020.3"]
         self.assertEqual("D8", node.keys[0])
