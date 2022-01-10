@@ -4,7 +4,7 @@ from p2_assembly.mac2_data_macro import DataMacro, macros
 
 
 class MacroTest(unittest.TestCase):
-    NUMBER_OF_FILES = 112
+    NUMBER_OF_FILES = 114
 
     def test_files(self):
         self.assertIn("EB0EB", macros)
@@ -307,6 +307,78 @@ class MacroTest(unittest.TestCase):
         macro_list = ["EPNRC", "PQ5CQ", "EWEWK", "APY1WA", "RC1RC", "II8NG", "CL0CL", "IA0AG", "PD1PD", "PO1PO"]
         for macro_name in macro_list:
             self._common_checks(macro_name)
+
+    def test_GLOBAS(self):
+        self._common_checks("GLOBAS")
+        self.assertEqual("GLOBAS", self.macro.lookup("@GLOBB").name)
+        self.assertEqual(0x000002A8, self.macro.lookup("@GLOBB").dsp)
+        self.assertEqual(0x000006C8, self.macro.lookup("@GLOBC").dsp)
+        self.assertEqual(0x00000AE8, self.macro.lookup("@GLOBD").dsp)
+        self.assertEqual(0x00000F08, self.macro.lookup("@GLOBE").dsp)
+        self.assertEqual(0x00000F50, self.macro.lookup("@GLOBF").dsp)
+        self.assertEqual(0x00000FE8, self.macro.lookup("@GLOBG").dsp)
+        self.assertEqual(0x00000000, self.macro.lookup("@GBLCA").dsp)
+        self.assertEqual(4, self.macro.lookup("@GBLCA").length)
+        self.assertEqual(0x00000004, self.macro.lookup("@GBLFA").dsp)
+        self.assertEqual(0x00000180, self.macro.lookup("@GKAEND").dsp)
+        self.assertEqual(0x00000004, self.macro.lookup("@FRWCNTF").dsp)
+        self.assertEqual(0x00000080, self.macro.lookup("@TTYSTC").dsp)
+        self.assertEqual(0x00000178, self.macro.lookup("@TKTC").dsp)
+        self.assertEqual(0x000002A8, self.macro.lookup("@GO1END").dsp)
+        self.assertEqual(0x000003B0, self.macro.lookup("@QCPBC").dsp)
+        self.assertEqual(0x000003DE, self.macro.lookup("@INVQBP").dsp)
+        self.assertEqual(0x000003F2, self.macro.lookup("@VITS").dsp)
+        self.assertEqual(0x00000530, self.macro.lookup("@FLIFO2").dsp)
+        self.assertEqual(0x000005D4, self.macro.lookup("@S1KRWL").dsp)
+        self.assertEqual(16, self.macro.lookup("@S1KRWL").length)
+        self.assertEqual(0x000006C8, self.macro.lookup("@GLOBCD").dsp)
+        self.assertEqual(0x00000754, self.macro.lookup("@PNRCA").dsp)
+        self.assertEqual(0x00000758, self.macro.lookup("@VFLTN").dsp)
+        self.assertEqual(0x00000799, self.macro.lookup("@MHSTAT").dsp)
+        self.assertEqual(0x00000820, self.macro.lookup("@VSTAT").dsp)
+        self.assertEqual(0x00000A48, self.macro.lookup("@MHOST").dsp)
+        self.assertEqual(0x00000AE6, self.macro.lookup("@MTVNQ").dsp)
+        self.assertEqual(0x00000AF0, self.macro.lookup("@BPJSC").dsp)
+        self.assertEqual(0x00000B16, self.macro.lookup("@ECBMAX").dsp)
+        self.assertEqual(0x00000CA6, self.macro.lookup("@OAMAX").dsp)
+        self.assertEqual(0x00000D1B, self.macro.lookup("@TJRCT").dsp)
+        self.assertEqual(0x00000F08, self.macro.lookup("@GLOBED").dsp)
+        self.assertEqual(0x00000F4D, self.macro.lookup("@NHAAC").dsp)
+        self.assertEqual(0x00000F60, self.macro.lookup("@SMRB1").dsp)
+        self.assertEqual(4, self.macro.lookup("@SMRB1").length)
+        self.assertEqual(0x00000FE5, self.macro.lookup("@SHPCC").dsp)
+        self.assertEqual(0x00000FFC, self.macro.lookup("@TRTNN").dsp)
+
+    def test_GLOBYS(self):
+        self._common_checks("GLOBYS")
+        self.assertEqual("GLOBYS", self.macro.lookup("@GLOBY").name)
+        self.assertEqual(0x00000000, self.macro.lookup("@GLOBY").dsp)
+        self.assertEqual(0x00000AC8, self.macro.lookup("@GO3END").dsp)
+        self.assertEqual(0x00000000, self.macro.lookup("@GBLCY").dsp)
+        self.assertEqual(0x00000004, self.macro.lookup("@GBLFY").dsp)
+        self.assertEqual(0x00000200, self.macro.lookup("@GKEND").dsp)
+        self.assertEqual(0x00000004, self.macro.lookup("@PN0RFCF").dsp)
+        self.assertEqual(0x000001BC, self.macro.lookup("@MSGSWIF").dsp)
+        self.assertEqual(0x000001E8, self.macro.lookup("@QV2C").dsp)
+        self.assertEqual(0x00000210, self.macro.lookup("@QOLC").dsp)
+        self.assertEqual(0x000003B0, self.macro.lookup("@TKCTC").dsp)
+        self.assertEqual(0x00000450, self.macro.lookup("@MHSTC").dsp)
+        self.assertEqual(0x000005A8, self.macro.lookup("@TOMCC").dsp)
+        self.assertEqual(0x000006D8, self.macro.lookup("@SG0CC").dsp)
+        self.assertEqual(0x00000708, self.macro.lookup("@CQTC").dsp)
+        self.assertEqual(0x00000760, self.macro.lookup("@MHTC").dsp)
+        self.assertEqual(0x00000848, self.macro.lookup("@ACSMC").dsp)
+        self.assertEqual(0x000008C0, self.macro.lookup("@GENCLC").dsp)
+        self.assertEqual(0x00000910, self.macro.lookup("@ECCC4").dsp)
+        self.assertEqual(0x00000A58, self.macro.lookup("@VIPCC").dsp)
+        self.assertEqual(0x00000AC4, self.macro.lookup("@TDWSF").dsp)
+        self.assertEqual(0x00000AC8, self.macro.lookup("@GLOBP").dsp)
+        self.assertEqual(0x00000AC8, self.macro.lookup("@GLOBW").dsp)
+        self.assertEqual(0x00000C58, self.macro.lookup("@GLOBQ").dsp)
+        self.assertEqual(0x00000AD4, self.macro.lookup("@XXVLN").dsp)
+        self.assertEqual(0x00000B38, self.macro.lookup("@TPFDFGB").dsp)
+        self.assertEqual(0x00000B80, self.macro.lookup("@RLCHS").dsp)
+        self.assertEqual(0x00000C58, self.macro.lookup("@GLOBQD").dsp)
 
 
 if __name__ == "__main__":

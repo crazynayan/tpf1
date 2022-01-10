@@ -18,6 +18,7 @@ tpf1_app.register_blueprint(api_bp, url_prefix="/api")
 @tpf1_app.shell_context_processor
 def make_shell_context():
     from config import config
+    import tpf
     from tpf import create_user, init_seg_lst, reset_seg_assembly
     from p1_utils.file_line import File
     from p2_assembly.seg8_listing import create_listing_commands, write_tmp_output
@@ -41,4 +42,5 @@ def make_shell_context():
         "reset_seg_assembly": reset_seg_assembly,
         "seg_collection": seg_collection,
         "routes": routes,
+        "tpf": tpf,
     }
