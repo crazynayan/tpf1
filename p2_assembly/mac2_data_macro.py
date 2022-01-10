@@ -68,7 +68,6 @@ class DataMacro(DataMacroImplementation):
 
 class _DataMacroCollection:
     MAC_EXT = {".mac", ".txt"}
-    MAC_FOLDER_NAME = os.path.join(config.ROOT_DIR, "p0_source", "macro")
     DEFAULT_MACROS = ("AASEQ", "SYSEQ", "SYSEQC", "EB0EB", "UATKW", "UXTEQ", "TRMEQ", "CUSTOM")
 
     def __init__(self):
@@ -78,11 +77,11 @@ class _DataMacroCollection:
         # Load default macros
         default_macros_dict: Dict[str, str] = dict()
         non_default_macros_dict: Dict[str, str] = dict()
-        for file_name in os.listdir(self.MAC_FOLDER_NAME):
+        for file_name in os.listdir(config.MAC_FOLDER_NAME):
             if len(file_name) < 6 or file_name[-4:].lower() not in self.MAC_EXT:
                 continue
             macro_name = file_name[:-4].upper()
-            file_name = os.path.join(self.MAC_FOLDER_NAME, file_name)
+            file_name = os.path.join(config.MAC_FOLDER_NAME, file_name)
             if macro_name in self.DEFAULT_MACROS:
                 default_macros_dict[macro_name] = file_name
             else:

@@ -26,6 +26,7 @@ class Config:
     DOWNLOAD_PATH = os.path.join(os.path.abspath(os.sep), "tmp")
     ROOT_DIR: str = os.path.dirname(os.path.abspath(__file__))
     BUCKET = "tpf-listings"
+    MAC_FOLDER_NAME = os.path.join("p0_source", "macro")
     ASM_EXT = {".asm", ".txt"}
     ASM_FOLDER_NAME = os.path.join("p0_source", "asm")
     LST_EXT = {".lst"}
