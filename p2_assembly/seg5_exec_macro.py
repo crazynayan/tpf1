@@ -130,13 +130,23 @@ class RealtimeMacroImplementation(InstructionImplementation):
 
     def globz(self, line: Line) -> RegisterData:
         globc = self.key_value(line)
-        reg = globc.get_value("REGR") or globc.get_value("REGS") or globc.get_value("REGC")
+        if globc.keys[0] == "REGR":
+            reg = globc.get_value("REGR")
+            macro_name = "GLOBAS"
+        elif globc.keys[0] == "REGS":
+            reg = globc.get_value("REGS")
+            macro_name = "GLOBYS"
+        elif globc.keys[0] == "REGC":
+            reg = globc.get_value("REGC")
+            macro_name = "GLOBAL"
+        else:
+            raise RegisterInvalidError(line)
         base = Register(reg)
         if not base.is_valid():
             raise RegisterInvalidError(line)
-        self.load_macro("GLOBAL", base=reg)
+        self.load_macro(macro_name, base=reg)
         line.command = "LHI"
-        return RegisterData(line, base, config.GLOBAL)
+        return RegisterData(line, base, config.DEFAULT_MACROS[macro_name])
 
     def dbred(self, line: Line) -> KeyValue:
         dbred_key = self.key_value(line)

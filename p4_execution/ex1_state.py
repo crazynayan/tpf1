@@ -10,7 +10,7 @@ from p1_utils.errors import SegmentNotFoundError, EcbLevelFormatError, InvalidBa
     PartitionError, FileItemSpecificationError, PoolFileSpecificationError, BaseAddressError, ExecutionError, \
     TPFServerMemoryError, LevtaExecutionError, NotImplementedExecutionError, BctExecutionError
 from p2_assembly.mac0_generic import LabelReference
-from p2_assembly.mac2_data_macro import macros
+from p2_assembly.mac2_data_macro import macros, get_global_ref
 from p2_assembly.seg2_ins_operand import FieldIndex
 from p2_assembly.seg3_ins_type import InstructionType
 from p2_assembly.seg6_segment import Segment
@@ -90,33 +90,32 @@ class State:
             self.vm.set_value(1, ce1ct + 1, 1)
 
     def _evaluate_global(self, name: str) -> int:
-        if self.seg.file_type == config.ASM:
-            return macros["GLOBAL"].evaluate(name)
-        if self.seg.check(name):
-            return self.seg.evaluate(name)
-        return macros["GLOBAL"].evaluate(name)
+        global_ref: LabelReference = get_global_ref(name)
+        if not global_ref:
+            raise ExecutionError
+        address = config.DEFAULT_MACROS[global_ref.name] + global_ref.dsp
+        return address
 
     def _init_globals(self) -> None:
-        if self.seg.file_type == config.LST:
-            ce1gla = self.seg.evaluate("CE1GLA") if self.seg.check("CE1GLA") else 0x300
-            ce1gly = self.seg.evaluate("CE1GLY") if self.seg.check("CE1GLY") else 0x304
-            self.vm.set_value(config.GLOBAL, self.regs.R9 + ce1gla)
-            self.vm.set_value(config.GLOBAL, self.regs.R9 + ce1gly)
+        ce1gla = self.seg.evaluate("CE1GLA") if self.seg.check("CE1GLA") else 0x300
+        ce1gly = self.seg.evaluate("CE1GLY") if self.seg.check("CE1GLY") else 0x304
+        self.vm.set_value(config.GLOBAS, self.regs.R9 + ce1gla)
+        self.vm.set_value(config.GLOBYS, self.regs.R9 + ce1gly)
         for global_name in ("@MH00C", "@APCIB"):
-            address = config.GLOBAL + self._evaluate_global(global_name)
+            address = self._evaluate_global(global_name)
             self.vm.set_value(self.vm.allocate(), address)
-        haalc = config.GLOBAL + self._evaluate_global("@HAALC")
+        haalc = self._evaluate_global("@HAALC")
         self.vm.set_bytes(bytearray([0xC1, 0xC1]), haalc, 2)
-        u1dmo = config.GLOBAL + self._evaluate_global("@U1DMO")
+        u1dmo = self._evaluate_global("@U1DMO")
         now = datetime.utcnow()
         today = datetime(year=now.year, month=now.month, day=now.day)
         pars_today = (today - config.PARS_DAY_1).days
         self.vm.set_value(pars_today, u1dmo, 2)
-        tjord = config.GLOBAL + self._evaluate_global("@TJORD")
+        tjord = self._evaluate_global("@TJORD")
         self.vm.set_value(0x00088EDC, tjord)
-        multi_host = config.GLOBAL + self._evaluate_global("@MHSTC")
+        multi_host = self._evaluate_global("@MHSTC")
         self.vm.set_value(config.MULTI_HOST, multi_host)
-        u1tym = config.GLOBAL + self._evaluate_global("@U1TYM")
+        u1tym = self._evaluate_global("@U1TYM")
         time: str = f"{now.hour:02}{now.minute:02}"
         time_bytes: bytearray = DataType("C", input=time).to_bytes()
         self.vm.set_bytes(time_bytes, u1tym, len(time_bytes))
@@ -184,14 +183,14 @@ class State:
     def set_partition(self, partition: str) -> None:
         if partition not in config.PARTITION:
             raise PartitionError
-        haalc = config.GLOBAL + self._evaluate_global("@HAALC")
+        haalc = self._evaluate_global("@HAALC")
         ce1uid = config.ECB + macros["EB0EB"].evaluate("CE1$UID")
         self.vm.set_bytes(DataType("C", input=partition).to_bytes(), haalc, 2)
         self.vm.set_value(config.PARTITION[partition], ce1uid, 1)
         # TODO Switch MH Base
 
     def get_partition(self) -> str:
-        airline_code = self.vm.get_bytes(config.GLOBAL + macros["GLOBAL"].evaluate("@HAALC"), 2)
+        airline_code = self.vm.get_bytes(self._evaluate_global("@HAALC"), 2)
         return DataType("X", bytes=airline_code).decode
 
     def is_error(self, label: str) -> bool:

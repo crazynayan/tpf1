@@ -81,9 +81,9 @@ class Registers:
             value -= config.REG_MAX64 + 1
         setattr(self, str(reg), value)
 
-    def set_bytes_from_mask(self, bytes: bytearray, reg: Union[Register, str], mask: int) -> None:
+    def set_bytes_from_mask(self, data: bytearray, reg: Union[Register, str], mask: int) -> None:
         reg_bytes = self.get_bytes(reg)
-        byte_array = copy(bytes)
+        byte_array = copy(data)
         if len(byte_array) < bin(mask).count('1'):
             raise MaskError
         try:
@@ -113,14 +113,16 @@ class Registers:
 
 class Storage:
     def __init__(self):
-        self.frames: Dict[str, bytearray] = dict()                 # Frames init with ZERO
-        self._frame: Dict[str, bytearray] = dict()                 # Frames init with ONES
+        self.frames: Dict[str, bytearray] = dict()  # Frames init with ZERO
+        self._frame: Dict[str, bytearray] = dict()  # Frames init with ONES
         self.nab: int = config.F4K << config.NIBBLE  # To ensure total 16 fixed frames
         self.allocate_fixed(config.ECB)
         self.allocate_fixed(config.GLOBAL)
         self.allocate_fixed(config.AAA)
         self.allocate_fixed(config.IMG)
         self.allocate_fixed(config.MULTI_HOST)
+        self.allocate_fixed(config.GLOBAS)
+        self.allocate_fixed(config.GLOBYS)
 
     def __repr__(self) -> str:
         return f"Storage:{len(self.frames)}"

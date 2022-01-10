@@ -92,7 +92,9 @@ class Config:
     GLOBAL: int = F4K * 2
     AAA: int = F4K * 3
     IMG: int = F4K * 4
-    MULTI_HOST: int = F4K * 5  # 11 more fixed frames are spare
+    MULTI_HOST: int = F4K * 5
+    GLOBAS: int = F4K * 6
+    GLOBYS: int = F4K * 7  # 9 more frames are spare
     ECB_LEVELS: tuple = ("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F")
     BLOCK_SIZE: Dict[str, int] = {"L0": 128, "L1": 381, "L2": 1055, "L4": 4095}
     BLOCK_TYPE: Dict[str, int] = {"L0": 0x11, "L1": 0x21, "L2": 0x31, "L4": 0x41}
@@ -113,7 +115,8 @@ class Config:
 
     # Used by test_data model and execution
     COPY_SUFFIX: str = " - Copy"
-    DEFAULT_MACROS: dict = {"EB0EB": ECB, "GLOBAL": GLOBAL, "WA0AA": AAA, "MI0MI": IMG, "MH0HM": MULTI_HOST}
+    DEFAULT_MACROS: dict = {"EB0EB": ECB, "GLOBAL": GLOBAL, "WA0AA": AAA, "MI0MI": IMG, "MH0HM": MULTI_HOST,
+                            "GLOBAS": GLOBAS, "GLOBYS": GLOBYS}
 
     # Used by test
     TEST_DEBUG: bool = False
