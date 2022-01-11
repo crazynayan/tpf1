@@ -242,6 +242,30 @@ def delete_input_heap(test_data_id: str, heap_name: str, variation: int, **kwarg
     return jsonify(kwargs[test_data_id].delete_heap(heap_name, variation))
 
 
+@tpf1_app.route("/test_data/<string:test_data_id>/input/global", methods=["PATCH"])
+@token_auth.login_required
+@test_data_required
+@role_check_required
+def add_input_global(test_data_id: str, **kwargs) -> Response:
+    return jsonify(kwargs[test_data_id].create_global(request.get_json()))
+
+
+@tpf1_app.route("/test_data/<string:test_data_id>/input/global/<string:core_id>", methods=["PATCH"])
+@token_auth.login_required
+@test_data_required
+@role_check_required
+def update_input_global(test_data_id: str, core_id: str, **kwargs) -> Response:
+    return jsonify(kwargs[test_data_id].update_global(core_id, request.get_json()))
+
+
+@tpf1_app.route("/test_data/<string:test_data_id>/input/core/<string:core_id>", methods=["DELETE"])
+@token_auth.login_required
+@test_data_required
+@role_check_required
+def delete_input_core(test_data_id: str, core_id: str, **kwargs) -> Response:
+    return jsonify(kwargs[test_data_id].delete_core(core_id))
+
+
 @tpf1_app.route("/test_data/<string:test_data_id>/input/ecb_level", methods=["PATCH"])
 @token_auth.login_required
 @test_data_required
