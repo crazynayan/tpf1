@@ -1,5 +1,5 @@
 from base64 import b64encode
-from typing import Tuple, Callable
+from typing import Tuple, Callable, Optional
 
 from config import config
 from p1_utils.errors import AssemblyError
@@ -59,6 +59,24 @@ def validate_and_update_field_data(body: dict, check_field: Callable[[str], bool
     return errors
 
 
+def validate_seg_name(body: dict) -> Tuple[dict, Optional[Segment]]:
+    errors = dict()
+    if len(body["seg_name"]) != 4:
+        errors["seg_name"] = "Invalid segment name. Seg name must of 4 characters."
+        return errors, None
+    seg: Segment = seg_collection.get_seg(body["seg_name"])
+    if not seg:
+        errors["seg_name"] = f"Segment {body['seg_name']} not found."
+    elif seg.file_type != config.LST:
+        errors["seg_name"] = f"Segment {body['seg_name']} is not a listing."
+    else:
+        try:
+            seg.assemble()
+        except AssemblyError:
+            errors["seg_name"] = f"Error in assembling segment {body['seg_name']}."
+    return errors, seg
+
+
 def validate_and_update_hex_and_field_data(body: dict) -> dict:
     errors = dict()
     if not isinstance(body["hex_data"], str):
@@ -87,21 +105,51 @@ def validate_and_update_hex_and_field_data(body: dict) -> dict:
     if body["hex_data"]:
         body["hex_data"] = hex_data
         body["original_field_data"] = str()
+        return errors  # Return with no errors
+    # Validate Seg name
+    errors, seg = validate_seg_name(body)
+    if errors:
+        return errors
+    # Validate field data
+    errors = validate_and_update_field_data(body, seg.check)
+    return errors
+
+
+def validate_and_update_global_data(body: dict) -> dict:
+    errors = dict()
+    if not isinstance(body["hex_data"], str):
+        errors["hex_data"] = "Hex data should be a string."
+    if not isinstance(body["field_data"], str):
+        errors["field_data"] = "Field data should be a string."
+    if not isinstance(body["seg_name"], str):
+        errors["seg_name"] = "Segment name should be a string."
+    if not isinstance(body["is_global_record"], bool):
+        errors["is_global_record"] = "Is global record? field should be a boolean."
+    if errors:
+        return errors
+    if not body["is_global_record"]:  # Global field
+        if not body["hex_data"]:
+            errors["hex_data"] = "Hex data is required for a global field."
+        if body["field_data"]:
+            errors["field_data"] = "Field data should be left blank for a global field."
+        if errors:
+            return errors
+        error, hex_data = validate_hex_data(body["hex_data"])
+        if error:
+            errors["hex_data"] = error
+            return errors
+        body["hex_data"] = hex_data
+        body["original_field_data"] = str()
+        return errors  # Return with no errors
+    # Global record
+    if not body["field_data"]:
+        errors["field_data"] = "Field data is required for a global record."
+    if body["hex_data"]:
+        errors["hex_data"] = "Hex data should be left blank for a global record."
+    if errors:
         return errors
     # Validate Seg name
-    if len(body["seg_name"]) != 4:
-        errors["seg_name"] = "Invalid segment name. Seg name must of 4 characters."
-        return errors
-    seg: Segment = seg_collection.get_seg(body["seg_name"])
-    if not seg:
-        errors["seg_name"] = f"Segment {body['seg_name']} not found."
-    elif seg.file_type != config.LST:
-        errors["seg_name"] = f"Segment {body['seg_name']} is not a listing."
-    else:
-        try:
-            seg.assemble()
-        except AssemblyError:
-            errors["seg_name"] = f"Error in assembling segment {body['seg_name']}."
+    errors, seg = validate_seg_name(body)
     if errors:
         return errors
     # Validate field data

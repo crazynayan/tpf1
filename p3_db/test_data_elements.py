@@ -15,7 +15,7 @@ class Core(FirestoreDocument):
         super().__init__()
         self.macro_name: str = str()
         self.base_reg: str = str()
-        self.variation: int = 0
+        self.variation: int = int()
         self.field_data: List[dict] = list()
         self.original_field_data: str = str()
         self.variation_name: str = str()
@@ -23,6 +23,8 @@ class Core(FirestoreDocument):
         self.hex_data: str = str()
         self.ecb_level: str = str()
         self.seg_name: str = str()
+        self.global_name: str = str()
+        self.is_global_record: bool = bool()
 
     def __repr__(self):
         return self.macro_name

@@ -8,11 +8,12 @@ from firestore_ci import FirestoreDocument
 from config import config
 from p1_utils.data_type import Register
 from p1_utils.errors import InvalidBaseRegError
-from p2_assembly.mac2_data_macro import macros, DataMacro
+from p2_assembly.mac2_data_macro import macros, DataMacro, get_global_ref
 from p2_assembly.seg9_collection import seg_collection
 from p3_db.test_data_elements import Core, Pnr, Tpfdf, Output, FixedFile, PnrOutput
 from p3_db.test_data_validators import validate_and_update_hex_and_field_data, validate_and_update_macro_field_data, \
-    validate_and_update_field_item_len, validate_and_update_pnr_locator_key, validate_and_update_pnr_text_with_field
+    validate_and_update_field_item_len, validate_and_update_pnr_locator_key, validate_and_update_pnr_text_with_field, \
+    validate_and_update_global_data
 
 
 class TestData(FirestoreDocument):
@@ -296,7 +297,7 @@ class TestData(FirestoreDocument):
         if persistence:
             core_to_create.create()
             self.save()
-        response["message"] = f"Core with heap name {core_to_create.ecb_level} created successfully."
+        response["message"] = f"Core with heap name {core_to_create.heap_name} created successfully."
         response["error"] = False
         return response
 
@@ -336,6 +337,39 @@ class TestData(FirestoreDocument):
             self.save()
             core.delete()
         response["message"] = f"Heap {heap_name} for variation {variation} successfully deleted."
+        response["error"] = False
+        return response
+
+    def create_global(self, body: dict, persistence: bool = True) -> dict:
+        response: dict = {"error": True, "message": str(), "error_fields": dict()}
+        if set(body) != {"global_name", "hex_data", "variation", "variation_name", "field_data", "seg_name",
+                         "is_global_record"}:
+            response["message"] = "Only 7 fields allowed (global_name, hex_data, variation, variation_name, " \
+                                  "is_global_record, field_data and seg_name) and all are mandatory."
+            return response
+        if not body["global_name"] or not isinstance(body["global_name"], str) \
+                or not get_global_ref(body["global_name"]):
+            response["error_fields"]["global_name"] = "This global name does not exists in global definitions."
+        if not self._validate_and_update_variation(body, "core"):
+            response["error_fields"]["variation"] = "Invalid variation"
+        elif "global_name" not in response["error_fields"]:
+            body["global_name"] = body["global_name"].strip().upper()
+            if any(core.variation == body["variation"] and core.heap_name == body["global_name"]
+                   for core in self.cores):
+                response["error_fields"]["global_name"] = f"Global {body['global_name']} already exists for " \
+                                                          f"variation {body['variation']}."
+        if response["error_fields"]:
+            return response
+        errors: dict = validate_and_update_global_data(body)
+        if errors:
+            response["error_fields"] = errors
+            return response
+        core_to_create: Core = Core.dict_to_doc(body)
+        self.cores.append(core_to_create)
+        if persistence:
+            core_to_create.create()
+            self.save()
+        response["message"] = f"Global with name {core_to_create.global_name} created successfully."
         response["error"] = False
         return response
 
