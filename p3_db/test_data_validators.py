@@ -142,12 +142,12 @@ def validate_and_update_global_data(body: dict) -> dict:
         body["original_field_data"] = str()
         return errors  # Return with no errors
     # Global record
-    if not body["field_data"]:
-        errors["field_data"] = "Field data is required for a global record."
     if body["hex_data"]:
         errors["hex_data"] = "Hex data should be left blank for a global record."
-    if errors:
         return errors
+    if not body["field_data"]:
+        body["original_field_data"] = str()
+        return errors  # Return with no errors
     # Validate Seg name
     errors, seg = validate_seg_name(body)
     if errors:
