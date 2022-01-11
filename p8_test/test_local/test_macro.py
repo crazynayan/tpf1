@@ -4,7 +4,7 @@ from p2_assembly.mac2_data_macro import DataMacro, macros
 
 
 class MacroTest(unittest.TestCase):
-    NUMBER_OF_FILES = 114
+    NUMBER_OF_FILES = 115
 
     def test_files(self):
         self.assertIn("EB0EB", macros)
@@ -379,6 +379,31 @@ class MacroTest(unittest.TestCase):
         self.assertEqual(0x00000B38, self.macro.lookup("@TPFDFGB").dsp)
         self.assertEqual(0x00000B80, self.macro.lookup("@RLCHS").dsp)
         self.assertEqual(0x00000C58, self.macro.lookup("@GLOBQD").dsp)
+
+    def test_GL0BS(self):
+        self._common_checks("GL0BS")
+        self.assertEqual("GL0BS", self.macro.lookup("@@GL0SB").name)
+        self.assertEqual(0x00000000, self.macro.lookup("@@GL0SB").dsp)
+        self.assertEqual(0x0000006C, self.macro.lookup("@@SWITCH").dsp)
+        self.assertEqual(0x00000100, self.macro.lookup("@@RLCFDB").dsp)
+        self.assertEqual(0x0000015A, self.macro.lookup("@@PNRMC").dsp)
+        self.assertEqual(0x000001F2, self.macro.lookup("@@FLIFOS").dsp)
+        self.assertEqual(0x0000026A, self.macro.lookup("@@SCTRNS").dsp)
+        self.assertEqual(0x00000420, self.macro.lookup("@@GLOSCD").dsp)
+        self.assertEqual(0x000004A8, self.macro.lookup("@@SCCNT").dsp)
+        self.assertEqual(0x00000502, self.macro.lookup("@@QREST").dsp)
+        self.assertEqual(0x00000556, self.macro.lookup("@@WDHC2").dsp)
+        self.assertEqual(0x0000055C, self.macro.lookup("@@U1DMO").dsp)
+        self.assertEqual(0x0000059C, self.macro.lookup("@@U1TDP").dsp)
+        self.assertEqual(0x000005EA, self.macro.lookup("@@TTYST").dsp)
+        self.assertEqual(0x00000604, self.macro.lookup("@@AHSWT").dsp)
+        self.assertEqual(0x00000623, self.macro.lookup("@@U1DMT").dsp)
+        self.assertEqual(0x00000764, self.macro.lookup("@@INDCC").dsp)
+        self.assertEqual(0x000007FC, self.macro.lookup("@@SSGIND").dsp)
+        self.assertEqual(0x00000840, self.macro.lookup("@@GLOSDD").dsp)
+        self.assertEqual(0x00000875, self.macro.lookup("@@RBOHSM").dsp)
+        self.assertEqual(0x00000C60, self.macro.lookup("@@GLOSED").dsp)
+        self.assertEqual(0x00000C93, self.macro.lookup("@@BSPCRY").dsp)
 
 
 if __name__ == "__main__":
