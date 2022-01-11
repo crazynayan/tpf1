@@ -114,8 +114,6 @@ class State:
         today = datetime(year=now.year, month=now.month, day=now.day)
         pars_today = (today - config.PARS_DAY_1).days
         self.vm.set_value(pars_today, u1dmo, 2)
-        tjord = self._evaluate_global("@TJORD")
-        self.vm.set_value(0x00088EDC, tjord)
         multi_host = self._evaluate_global("@MHSTC")
         self.vm.set_value(config.MULTI_HOST, multi_host)
         u1tym = self._evaluate_global("@U1TYM")

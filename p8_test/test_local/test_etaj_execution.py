@@ -32,6 +32,7 @@ class EtajTest(unittest.TestCase):
         self.test_data.add_pnr_element(["BTS-B4T0/108/11-FINANCIAL SERVICES"], "group_plan")
         self.test_data.set_field("WA0POR", DataType("X", input="006F2F").to_bytes())
         self.test_data.set_field("WA0FNS", bytes([macros["WA0AA"].evaluate("#WA0TVL")]))
+        self.test_data.set_global_field("@TJORD", "00088EDC")
         self.test_data.add_all_regs()
         # Item setup
         self.iy_item = [{"field": "IY9AON", "data": b64encode(bytearray([config.ZERO] * 4)).decode()},

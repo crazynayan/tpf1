@@ -51,6 +51,7 @@ class EtazTest(TestDebug):
 
     def test_etaz_wa0lnb(self) -> None:
         self.test_data.add_fields([("EBT060", 3)], "EB0EB")
+        self.test_data.set_global_field("@TJORD", "00088EDC")
         self.test_data.set_field("WA0ET5", DataType("X", input="01").to_bytes())
         self.test_data.set_field("WA0ASC", DataType("X", input="01").to_bytes())
         self.test_data.set_field("WA0TSC", DataType("X", input="01").to_bytes())
