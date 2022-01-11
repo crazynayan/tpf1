@@ -248,6 +248,13 @@ class State:
                 macro_name = core.macro_name.upper()
                 if macro_name in config.DEFAULT_MACROS:
                     self._set_core(core.field_data, macro_name, config.DEFAULT_MACROS[macro_name])
+            elif core.global_name:
+                address: int = self._evaluate_global(core.global_name)
+                if core.is_global_record:
+                    new_address: int = self.vm.allocate()
+                    self.vm.set_value(new_address, address)
+                    address = new_address  # initialize the field_data at the new_address
+                self._set_from_core_hex_and_field_data(core, address)
         for reg, value in test_data.regs.items():
             self.regs.set_value(value, reg)
         Pnr.init_db()
