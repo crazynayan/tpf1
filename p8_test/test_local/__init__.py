@@ -1,7 +1,9 @@
 import unittest
+from base64 import b64encode
 from typing import List, Union, Dict
 
 from config import config
+from p2_assembly.mac2_data_macro import DataMacro
 from p3_db.test_data import TestData
 from p4_execution.debug import get_debug_loc, add_debug_loc, get_missed_loc
 from p4_execution.ex5_execute import TpfServer
@@ -29,6 +31,22 @@ class TestDataUTS(TestData):
             field_dict["length"] = length
             self.output.create_field_byte(macro_name, field_dict, persistence=False)
         return
+
+    def set_field(self, field_name: str, data: Union[bytearray, bytes], variation: int = 0) -> None:
+        macro_name = DataMacro.get_label_reference(field_name).name
+        field_dict = {"field": field_name, "data": b64encode(data).decode(), "variation": variation,
+                      "variation_name": str()}
+        self.create_field_byte(macro_name, field_dict, persistence=False)
+
+    def set_global_field(self, global_name: str, hex_data: str, variation: int = 0) -> None:
+        body = {"global_name": global_name, "variation": variation, "variation_name": str(), "is_global_record": False,
+                "hex_data": hex_data, "seg_name": str(), "field_data": str()}
+        self.create_global(body, persistence=False)
+
+    def set_global_record(self, global_name: str, field_data: str, seg_name: str, variation: int = 0) -> None:
+        body = {"global_name": global_name, "variation": variation, "variation_name": str(), "is_global_record": True,
+                "hex_data": str(), "seg_name": seg_name, "field_data": field_data}
+        self.create_global(body, persistence=False)
 
     def add_pnr_element(self, data_list: List[str], key: str, locator: str = None, variation: int = 0) -> None:
         body = {"key": key, "text": ",".join(data_list), "variation": variation, "variation_name": str(),

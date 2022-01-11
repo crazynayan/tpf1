@@ -1,14 +1,14 @@
-from base64 import b64decode, b64encode
+from base64 import b64decode
 from copy import deepcopy
 from itertools import product
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
 
 from firestore_ci import FirestoreDocument
 
 from config import config
 from p1_utils.data_type import Register
 from p1_utils.errors import InvalidBaseRegError
-from p2_assembly.mac2_data_macro import macros, DataMacro, get_global_ref
+from p2_assembly.mac2_data_macro import macros, get_global_ref
 from p2_assembly.seg9_collection import seg_collection
 from p3_db.test_data_elements import Core, Pnr, Tpfdf, Output, FixedFile, PnrOutput
 from p3_db.test_data_validators import validate_and_update_hex_and_field_data, validate_and_update_macro_field_data, \
@@ -57,12 +57,6 @@ class TestData(FirestoreDocument):
         if reg not in self.output.regs:
             raise InvalidBaseRegError
         return self.output.regs[reg] & config.REG_MAX
-
-    def set_field(self, field_name: str, data: Union[bytearray, bytes], variation: int = 0) -> None:
-        macro_name = DataMacro.get_label_reference(field_name).name
-        field_dict = {"field": field_name, "data": b64encode(data).decode(), "variation": variation,
-                      "variation_name": str()}
-        self.create_field_byte(macro_name, field_dict, persistence=False)
 
     def yield_variation(self):
         core_variation = max(core.variation for core in self.cores) if self.cores else 0
