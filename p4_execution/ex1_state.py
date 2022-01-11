@@ -101,12 +101,11 @@ class State:
         ce1gla = self.seg.evaluate("CE1GLA") if self.seg.check("CE1GLA") else 0x300
         ce1gly = self.seg.evaluate("CE1GLY") if self.seg.check("CE1GLY") else 0x304
         gbsbc = self._evaluate_global("@GBSBC")
+        multi_host = self._evaluate_global("@MHSTC")
         self.vm.set_value(config.GLOBAS, self.regs.R9 + ce1gla)
         self.vm.set_value(config.GLOBYS, self.regs.R9 + ce1gly)
         self.vm.set_value(config.GL0BS, gbsbc)
-        for global_name in ("@MH00C", "@APCIB"):
-            address = self._evaluate_global(global_name)
-            self.vm.set_value(self.vm.allocate(), address)
+        self.vm.set_value(config.MULTI_HOST, multi_host)
         haalc = self._evaluate_global("@HAALC")
         self.vm.set_bytes(bytearray([0xC1, 0xC1]), haalc, 2)
         u1dmo = self._evaluate_global("@U1DMO")
@@ -114,8 +113,6 @@ class State:
         today = datetime(year=now.year, month=now.month, day=now.day)
         pars_today = (today - config.PARS_DAY_1).days
         self.vm.set_value(pars_today, u1dmo, 2)
-        multi_host = self._evaluate_global("@MHSTC")
-        self.vm.set_value(config.MULTI_HOST, multi_host)
         u1tym = self._evaluate_global("@U1TYM")
         time: str = f"{now.hour:02}{now.minute:02}"
         time_bytes: bytearray = DataType("C", input=time).to_bytes()

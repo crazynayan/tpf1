@@ -49,6 +49,7 @@ class Etg1Test(TestDebug):
         self.test_data.create_fixed_file(file_dict, persistence=False)
 
     def test_etg1_tjr(self) -> None:
+        self.test_data.set_global_record("@APCIB", field_data=str(), seg_name=str())
         self.test_data.set_field("WA0ET5", DataType("X", input="01").to_bytes())
         self.test_data.set_field("WA0ASC", DataType("X", input="01").to_bytes())
         self.test_data.set_field("WA0TSC", DataType("X", input="01").to_bytes())

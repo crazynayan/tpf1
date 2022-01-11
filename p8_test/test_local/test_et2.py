@@ -7,7 +7,9 @@ from p8_test.test_local import TestDebug
 
 class Et2Test(TestDebug):
 
-    def _setup_output_pnr_header(self) -> None:
+    def setUp(self) -> None:
+        super().setUp()
+        self.test_data.set_global_record("@APCIB", field_data=str(), seg_name=str())
         pnr_dict: dict = {
             "locator": str(),
             "key": HEADER,
@@ -26,7 +28,6 @@ class Et2Test(TestDebug):
         self.test_data.add_pnr_field_data(itin_input, ITIN)
 
     def test_without_itin(self) -> None:
-        self._setup_output_pnr_header()
         self.test_data.set_field("WA0PTY", DataType("X", input="03").to_bytes())
         self.test_data.set_field("WA0POR", DataType("X", input="00017F").to_bytes())
         self.test_data.set_field("WA0ASC", DataType("X", input="01").to_bytes())
@@ -37,7 +38,6 @@ class Et2Test(TestDebug):
         self.assertEqual("0003", test_data.get_pnr_field("PR00_20_PTY"))
 
     def test_with_itin(self) -> None:
-        self._setup_output_pnr_header()
         self.test_data.set_field("WA0PTY", DataType("X", input="03").to_bytes())
         self.test_data.set_field("WA0POR", DataType("X", input="00017F").to_bytes())
         self.test_data.set_field("WA0ASC", DataType("X", input="01").to_bytes())

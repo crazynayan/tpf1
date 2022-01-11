@@ -9,7 +9,9 @@ from p8_test.test_local import TestDebug
 
 class ExaaTest(TestDebug):
 
-    def _setup_output_pnr_header(self) -> None:
+    def setUp(self) -> None:
+        super().setUp()
+        self.test_data.set_global_record("@APCIB", field_data=str(), seg_name=str())
         pnr_dict: dict = {
             "locator": str(),
             "key": HEADER,
@@ -41,7 +43,6 @@ class ExaaTest(TestDebug):
         return
 
     def test_exaa_npty_family(self) -> None:
-        self._setup_output_pnr_header()
         self.test_data.set_field("WA0ET5", DataType("X", input="01").to_bytes())
         self.test_data.set_field("WA0ASC", DataType("X", input="01").to_bytes())
         self.test_data.set_field("WA0TSC", DataType("X", input="01").to_bytes())
@@ -58,7 +59,6 @@ class ExaaTest(TestDebug):
         self.assertEqual("0007", test_data.get_pnr_field("PR00_20_PTY"))
 
     def test_exaa_npty_corporate(self) -> None:
-        self._setup_output_pnr_header()
         self.test_data.set_field("WA0ET5", DataType("X", input="01").to_bytes())
         self.test_data.set_field("WA0ASC", DataType("X", input="01").to_bytes())
         self.test_data.set_field("WA0TSC", DataType("X", input="01").to_bytes())
