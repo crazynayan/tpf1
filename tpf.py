@@ -80,3 +80,13 @@ def reset_seg_assembly(blob_name: str) -> Optional[SegLst]:
     seg: SegLst = get_seg_lst(segment)
     seg.create()
     return seg
+
+
+def init_asm_seg(filename: str):
+    seg_name: str = filename[:4].upper()
+    file_path: str = os.path.join(config.ASM_FOLDER_NAME, filename)
+    segment: Segment = get_segment(seg_name, file_path, config.ASM, config.LOCAL)
+    seg: SegLst = get_seg_lst(segment)
+    SegLst.objects.filter_by(seg_name=seg_name).delete()
+    seg.create()
+    return seg
