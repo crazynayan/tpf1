@@ -100,8 +100,10 @@ class State:
     def _init_globals(self) -> None:
         ce1gla = self.seg.evaluate("CE1GLA") if self.seg.check("CE1GLA") else 0x300
         ce1gly = self.seg.evaluate("CE1GLY") if self.seg.check("CE1GLY") else 0x304
+        gbsbc = self._evaluate_global("@GBSBC")
         self.vm.set_value(config.GLOBAS, self.regs.R9 + ce1gla)
         self.vm.set_value(config.GLOBYS, self.regs.R9 + ce1gly)
+        self.vm.set_value(config.GL0BS, gbsbc)
         for global_name in ("@MH00C", "@APCIB"):
             address = self._evaluate_global(global_name)
             self.vm.set_value(self.vm.allocate(), address)

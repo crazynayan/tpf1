@@ -89,7 +89,7 @@ class Config:
     ONES: int = 0xFF
     F4K: int = 1 << DSP_SHIFT
     ECB: int = F4K * 1
-    GLOBAL: int = F4K * 2
+    GL0BS: int = F4K * 2
     AAA: int = F4K * 3
     IMG: int = F4K * 4
     MULTI_HOST: int = F4K * 5
@@ -115,7 +115,7 @@ class Config:
 
     # Used by test_data model and execution
     COPY_SUFFIX: str = " - Copy"
-    DEFAULT_MACROS: dict = {"EB0EB": ECB, "GL0BS": GLOBAS + 0x188, "WA0AA": AAA, "MI0MI": IMG, "MH0HM": MULTI_HOST,
+    DEFAULT_MACROS: dict = {"EB0EB": ECB, "GL0BS": GL0BS, "WA0AA": AAA, "MI0MI": IMG, "MH0HM": MULTI_HOST,
                             "GLOBAS": GLOBAS, "GLOBYS": GLOBYS}
 
     # Used by test
