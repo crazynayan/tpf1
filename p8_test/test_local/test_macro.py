@@ -310,7 +310,7 @@ class MacroTest(unittest.TestCase):
 
     def test_GLOBAS(self):
         self._common_checks("GLOBAS")
-        self.assertEqual("GLOBAS", self.macro.lookup("@GLOBB").name)
+        self.assertEqual("GLOBAS", self.macro.lookup("@GLOBAS").name)
         self.assertEqual(0x000002A8, self.macro.lookup("@GLOBB").dsp)
         self.assertEqual(0x000006C8, self.macro.lookup("@GLOBC").dsp)
         self.assertEqual(0x00000AE8, self.macro.lookup("@GLOBD").dsp)
@@ -352,7 +352,7 @@ class MacroTest(unittest.TestCase):
 
     def test_GLOBYS(self):
         self._common_checks("GLOBYS")
-        self.assertEqual("GLOBYS", self.macro.lookup("@GLOBY").name)
+        self.assertEqual("GLOBYS", self.macro.lookup("@GLOBYS").name)
         self.assertEqual(0x00000000, self.macro.lookup("@GLOBY").dsp)
         self.assertEqual(0x00000AC8, self.macro.lookup("@GO3END").dsp)
         self.assertEqual(0x00000000, self.macro.lookup("@GBLCY").dsp)
@@ -383,7 +383,7 @@ class MacroTest(unittest.TestCase):
 
     def test_GL0BS(self):
         self._common_checks("GL0BS")
-        self.assertEqual("GL0BS", self.macro.lookup("@@GL0SB").name)
+        self.assertEqual("GL0BS", self.macro.lookup("@@GL0BS").name)
         self.assertEqual(0x00000000, self.macro.lookup("@@GL0SB").dsp)
         self.assertEqual(0x0000006C, self.macro.lookup("@@SWITCH").dsp)
         self.assertEqual(0x00000100, self.macro.lookup("@@RLCFDB").dsp)

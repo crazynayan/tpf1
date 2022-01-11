@@ -197,5 +197,5 @@ class DataMacroImplementation(MacroGeneric):
     def dsect(self, line: Line) -> None:
         self._location_counter = 0
         self._max_counter = 0
-        self.add_label(line.label, 0, 0, line.label)
+        self.add_label(line.label, 0, 0, self.name)
         return
