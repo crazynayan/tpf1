@@ -107,7 +107,7 @@ indexed_macros = _collection.indexed_labels
 
 
 def get_global_ref(global_name: str) -> Optional[LabelReference]:
-    global_macros = ["GLOBAS", "GLOBYS", "GLOBAL"]
+    global_macros = ["GLOBAS", "GLOBYS", "GL0BS"]
     global_macro = next((macros[macro_name] for macro_name in global_macros if macros[macro_name].check(global_name)),
                         None)
     if not global_macro:

@@ -138,7 +138,7 @@ class RealtimeMacroImplementation(InstructionImplementation):
             macro_name = "GLOBYS"
         elif globc.keys[0] == "REGC":
             reg = globc.get_value("REGC")
-            macro_name = "GLOBAL"
+            macro_name = "GL0BS"
         else:
             raise RegisterInvalidError(line)
         base = Register(reg)

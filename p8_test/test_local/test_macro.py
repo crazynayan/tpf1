@@ -4,7 +4,7 @@ from p2_assembly.mac2_data_macro import DataMacro, macros
 
 
 class MacroTest(unittest.TestCase):
-    NUMBER_OF_FILES = 115
+    NUMBER_OF_FILES = 114
 
     def test_files(self):
         self.assertIn("EB0EB", macros)
@@ -321,6 +321,7 @@ class MacroTest(unittest.TestCase):
         self.assertEqual(4, self.macro.lookup("@GBLCA").length)
         self.assertEqual(0x00000004, self.macro.lookup("@GBLFA").dsp)
         self.assertEqual(0x00000180, self.macro.lookup("@GKAEND").dsp)
+        self.assertEqual(0x00000188, self.macro.lookup("@GBSBC").dsp)
         self.assertEqual(0x00000004, self.macro.lookup("@FRWCNTF").dsp)
         self.assertEqual(0x00000080, self.macro.lookup("@TTYSTC").dsp)
         self.assertEqual(0x00000178, self.macro.lookup("@TKTC").dsp)
