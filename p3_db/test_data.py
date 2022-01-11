@@ -367,6 +367,45 @@ class TestData(FirestoreDocument):
         response["error"] = False
         return response
 
+    def update_global(self, core_id: str, body: dict, persistence: bool = True):
+        response: dict = {"error": True, "message": str(), "error_fields": dict()}
+        core_to_update: Core = next((core for core in self.cores if core.id == core_id), None)
+        if not core_to_update:
+            response["message"] = f"Core with id {core_id} not found."
+            return response
+        if set(body) != {"hex_data", "field_data", "seg_name", "is_global_record"}:
+            response["message"] = "Only 4 fields allowed (is_global_record, hex_data, field_data and seg_name) " \
+                                  "and all are mandatory."
+            return response
+        errors: dict = validate_and_update_global_data(body)
+        if errors:
+            response["error_fields"] = errors
+            return response
+        core_to_update.hex_data = body["hex_data"]
+        core_to_update.seg_name = body["seg_name"]
+        core_to_update.field_data = body["field_data"]
+        core_to_update.original_field_data = body["original_field_data"]
+        core_to_update.is_global_record = body["is_global_record"]
+        if persistence:
+            core_to_update.save()
+        response["message"] = f"Core with global {core_to_update.global_name} updated successfully."
+        response["error"] = False
+        return response
+
+    def delete_core(self, core_id: str, persistence: bool = True) -> dict:
+        response: dict = {"error": True, "message": str()}
+        core: Core = next((core for core in self.cores if core.id == core_id), None)
+        if not core:
+            response["message"] = f"Core with id {core_id} not found."
+            return response
+        self.cores.remove(core)
+        if persistence:
+            self.save()
+            core.delete()
+        response["message"] = f"Core with id {core_id} successfully deleted."
+        response["error"] = False
+        return response
+
     def create_ecb_level(self, body: dict, persistence: bool = True) -> dict:
         response: dict = {"error": True, "message": str(), "error_fields": dict()}
         if set(body) != {"ecb_level", "hex_data", "variation", "variation_name", "field_data", "seg_name"}:

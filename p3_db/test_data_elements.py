@@ -27,7 +27,7 @@ class Core(FirestoreDocument):
         self.is_global_record: bool = bool()
 
     def __repr__(self):
-        return self.macro_name
+        return self.macro_name or self.ecb_level or self.heap_name or self.global_name
 
     @staticmethod
     def validate_field_dict(macro_name: str, field_dict: dict) -> bool:
