@@ -8,9 +8,10 @@ from config import config
 from p1_utils.data_type import DataType, Register
 from p1_utils.errors import SegmentNotFoundError, EcbLevelFormatError, InvalidBaseRegError, TpfdfError, \
     PartitionError, FileItemSpecificationError, PoolFileSpecificationError, BaseAddressError, ExecutionError, \
-    TPFServerMemoryError, LevtaExecutionError, NotImplementedExecutionError, BctExecutionError
+    TPFServerMemoryError, LevtaExecutionError, NotImplementedExecutionError, BctExecutionError, \
+    NotFoundInSymbolTableError
 from p2_assembly.mac0_generic import LabelReference
-from p2_assembly.mac2_data_macro import macros, get_global_ref
+from p2_assembly.mac2_data_macro import macros, get_global_address
 from p2_assembly.seg2_ins_operand import FieldIndex
 from p2_assembly.seg3_ins_type import InstructionType
 from p2_assembly.seg6_segment import Segment
@@ -89,12 +90,12 @@ class State:
             ce1ct = self.get_ecb_address(f"D{level}", "CE1CT")
             self.vm.set_value(1, ce1ct + 1, 1)
 
-    def _evaluate_global(self, name: str) -> int:
-        global_ref: LabelReference = get_global_ref(name)
-        if not global_ref:
+    @staticmethod
+    def _evaluate_global(name: str) -> int:
+        try:
+            return get_global_address(name)
+        except NotFoundInSymbolTableError:
             raise ExecutionError
-        address = config.DEFAULT_MACROS[global_ref.name] + global_ref.dsp
-        return address
 
     def _init_globals(self) -> None:
         ce1gla = self.seg.evaluate("CE1GLA") if self.seg.check("CE1GLA") else 0x300

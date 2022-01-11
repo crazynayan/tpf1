@@ -113,3 +113,11 @@ def get_global_ref(global_name: str) -> Optional[LabelReference]:
     if not global_macro:
         return None
     return global_macro.lookup(global_name)
+
+
+def get_global_address(global_name: str) -> int:
+    global_ref: LabelReference = get_global_ref(global_name)
+    if not global_ref:
+        raise NotFoundInSymbolTableError
+    address = config.DEFAULT_MACROS[global_ref.name] + global_ref.dsp
+    return address
