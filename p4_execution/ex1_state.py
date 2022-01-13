@@ -48,11 +48,13 @@ class State:
         self.trace_data: TraceData = TraceData()
         self.fields: dict = {"CE3ENTPGM": bytearray()}
         self.stop_segments: List[str] = list()
+        self.instruction_counter: int = 0
 
     def __repr__(self) -> str:
         return f"State:{self.seg}:{self.regs}:{self.vm}"
 
     def _init_seg(self, seg_name: str) -> None:
+        self.instruction_counter = 0
         if seg_name in self.loaded_seg:
             self.regs.R8 = self.loaded_seg[seg_name][1]
             self.seg = self.loaded_seg[seg_name][0]
@@ -136,11 +138,12 @@ class State:
             label = self.seg.root_label()
             node: InstructionType = self.seg.nodes[label]
             try:
-                for _ in range(10000):
+                while self.instruction_counter < 2000:
                     label = self._ex_command(node)
                     if label is None:
                         break
                     node = self.seg.nodes[label]
+                    self.instruction_counter += 1
                 if label is not None:
                     self.dumps.append("000010")
                     self.messages.append("INFINITE LOOP ERROR")
