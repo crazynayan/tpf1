@@ -140,8 +140,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["NR"] = self.and_register
         self._ex["XR"] = self.xor_register
         self._ex["N"] = self.and_fullword
-        # O - Not in ETA5
-        # X - Not in ETA5
+        self._ex["O"] = self.or_fullword
         self._ex["NC"] = self.and_character
         self._ex["OC"] = self.or_character
         self._ex["XC"] = self.xor_character

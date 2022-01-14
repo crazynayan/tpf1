@@ -459,28 +459,36 @@ class CompareLogical(State):
 class LogicalUsefulConversion(State):
     def or_register(self, node: RegisterRegister) -> str:
         value = self.regs.get_value(node.reg1)
+        self.trace_data.set_unsigned_value2(value, 4)
         value |= self.regs.get_value(node.reg2)
+        self.trace_data.set_unsigned_value1(value, 4)
         self.regs.set_value(value, node.reg1)
         self.set_zero_cc(value)
         return node.fall_down
 
     def and_register(self, node: RegisterRegister) -> str:
         value = self.regs.get_value(node.reg1)
+        self.trace_data.set_unsigned_value2(value, 4)
         value &= self.regs.get_value(node.reg2)
+        self.trace_data.set_unsigned_value1(value, 4)
         self.regs.set_value(value, node.reg1)
         self.set_zero_cc(value)
         return node.fall_down
 
     def xor_register(self, node: RegisterRegister) -> str:
         value = self.regs.get_value(node.reg1)
+        self.trace_data.set_unsigned_value2(value, 4)
         value ^= self.regs.get_value(node.reg2)
+        self.trace_data.set_unsigned_value1(value, 4)
         self.regs.set_value(value, node.reg1)
         self.set_zero_cc(value)
         return node.fall_down
 
     def xor_grande_register(self, node: RegisterRegister) -> str:
         value = self.regs.get_value(node.reg1)
+        self.trace_data.set_unsigned_value2(value, 8)
         value ^= self.regs.get_value(node.reg2)
+        self.trace_data.set_unsigned_value1(value, 8)
         self.regs.set_value64(value, node.reg1)
         self.set_zero_cc(value)
         return node.fall_down
@@ -488,7 +496,19 @@ class LogicalUsefulConversion(State):
     def and_fullword(self, node: RegisterFieldIndex) -> str:
         address = self.regs.get_address(node.field.base, node.field.dsp, node.field.index)
         value = self.vm.get_value(address)
+        self.trace_data.set_unsigned_value2(value, 4)
         value &= self.regs.get_value(node.reg)
+        self.trace_data.set_unsigned_value1(value, 4)
+        self.regs.set_value(value, node.reg)
+        self.set_zero_cc(value)
+        return node.fall_down
+
+    def or_fullword(self, node: RegisterFieldIndex) -> str:
+        address = self.regs.get_address(node.field.base, node.field.dsp, node.field.index)
+        value = self.vm.get_value(address)
+        self.trace_data.set_unsigned_value2(value, 4)
+        value |= self.regs.get_value(node.reg)
+        self.trace_data.set_unsigned_value1(value, 4)
         self.regs.set_value(value, node.reg)
         self.set_zero_cc(value)
         return node.fall_down
@@ -496,42 +516,57 @@ class LogicalUsefulConversion(State):
     def xor_character(self, node: FieldLenField) -> str:
         source_address = self.regs.get_address(node.field.base, node.field.dsp)
         target_address = self.regs.get_address(node.field_len.base, node.field_len.dsp)
+        byte_list: List[int] = list()
         for index in range(node.field_len.length + 1):
             byte = self.vm.get_byte(source_address + index) ^ self.vm.get_byte(target_address + index)
             self.vm.set_byte(byte, target_address + index)
+            byte_list.append(byte)
+        self.trace_data.set_byte_array1(bytearray(byte_list))
         self.set_zero_cc(self.vm.get_value(target_address, node.field_len.length + 1))
         return node.fall_down
 
     def or_character(self, node: FieldLenField) -> str:
         source_address = self.regs.get_address(node.field.base, node.field.dsp)
         target_address = self.regs.get_address(node.field_len.base, node.field_len.dsp)
+        byte_list: List[int] = list()
         for index in range(node.field_len.length + 1):
             target_byte = self.vm.get_byte(target_address + index)
             byte = self.vm.get_byte(source_address + index) | target_byte
             if byte != target_byte:
                 self.vm.set_byte(byte, target_address + index)
+            byte_list.append(byte)
+        self.trace_data.set_byte_array1(bytearray(byte_list))
         self.set_zero_cc(self.vm.get_value(target_address, node.field_len.length + 1))
         return node.fall_down
 
     def and_character(self, node: FieldLenField) -> str:
         source_address = self.regs.get_address(node.field.base, node.field.dsp)
         target_address = self.regs.get_address(node.field_len.base, node.field_len.dsp)
+        byte_list: List[int] = list()
         for index in range(node.field_len.length + 1):
             byte = self.vm.get_byte(source_address + index) & self.vm.get_byte(target_address + index)
             self.vm.set_byte(byte, target_address + index)
+            byte_list.append(byte)
+        self.trace_data.set_byte_array1(bytearray(byte_list))
         self.set_zero_cc(self.vm.get_value(target_address, node.field_len.length + 1))
         return node.fall_down
 
     def or_immediate(self, node: FieldBits) -> str:
         address = self.regs.get_address(node.field.base, node.field.dsp)
         self.vm.or_bit(address, node.bits.value)
-        self.set_zero_cc(self.vm.get_value(address, 1))
+        value = self.vm.get_byte(address)
+        self.trace_data.set_unsigned_value1(value, 1)
+        self.trace_data.set_unsigned_value2(node.bits.value, 1)
+        self.set_zero_cc(value)
         return node.fall_down
 
     def and_immediate(self, node: FieldBits) -> str:
         address = self.regs.get_address(node.field.base, node.field.dsp)
         self.vm.and_bit(address, node.bits.value)
-        self.set_zero_cc(self.vm.get_value(address, 1))
+        value = self.vm.get_byte(address)
+        self.trace_data.set_unsigned_value1(value, 1)
+        self.trace_data.set_unsigned_value2(node.bits.value, 1)
+        self.set_zero_cc(value)
         return node.fall_down
 
     def test_mask(self, node: FieldBits) -> str:
