@@ -164,7 +164,8 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         # CP
         self._ex["TP"] = self.tp
         self._ex["TR"] = self.tr
-        # ED, EDMK, TRT, STCK
+        self._ex["TRT"] = self.trt
+        # ED, EDMK, STCK
 
         # S09 - All new z/TPF instruction
         self._ex["LG"] = self.load_grande
