@@ -255,6 +255,12 @@ class ArithmeticShiftAlgebraic(State):
         self.regs.set_value(value, node.reg)
         return node.fall_down
 
+    def shift_right_algebraic(self, node: RegisterFieldIndex):
+        factor = self.regs.get_address(node.field.base, node.field.dsp) & 0x3F
+        value = self.regs.get_value(node.reg) >> factor
+        self.regs.set_value(value, node.reg)
+        return node.fall_down
+
 
 class MoveLogicControl(State):
     def move_character(self, node: FieldLenField) -> str:

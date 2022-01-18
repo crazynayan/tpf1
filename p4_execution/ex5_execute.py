@@ -47,6 +47,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["DR"] = self.divide_register
         self._ex["SRDA"] = self.shift_right_double_algebraic
         self._ex["SLA"] = self.shift_left_algebraic
+        self._ex["SRA"] = self.shift_right_algebraic
         # SRA, SLDA - Not in ETA5
 
         # S05 - Move Store & Logic Control
