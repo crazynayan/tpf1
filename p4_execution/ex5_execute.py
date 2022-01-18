@@ -48,7 +48,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["SRDA"] = self.shift_right_double_algebraic
         self._ex["SLA"] = self.shift_left_algebraic
         self._ex["SRA"] = self.shift_right_algebraic
-        # SRA, SLDA - Not in ETA5
+        # SLDA - Not in ETA5
 
         # S05 - Move Store & Logic Control
         self._ex["MVC"] = self.move_character
@@ -166,7 +166,8 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["TP"] = self.tp
         self._ex["TR"] = self.tr
         self._ex["TRT"] = self.trt
-        # ED, EDMK, STCK
+        self._ex["STCK"] = self.stck
+        # ED, EDMK
 
         # S09 - All new z/TPF instruction
         self._ex["LG"] = self.load_grande

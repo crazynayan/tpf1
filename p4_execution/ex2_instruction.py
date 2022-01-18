@@ -1,4 +1,5 @@
 from copy import deepcopy
+from datetime import datetime, timedelta
 from typing import List
 
 from config import config
@@ -6,7 +7,7 @@ from p1_utils.data_type import DataType, Register, PDataType
 from p1_utils.errors import PackExecutionError, BctExecutionError, ExExecutionError
 from p2_assembly.seg3_ins_type import RegisterRegister, RegisterFieldIndex, RegisterData, RegisterDataField, \
     RegisterRegisterField, FieldLenField, FieldData, BranchCondition, RegisterBranch, BranchConditionRegister, \
-    FieldBits, FieldLenFieldLen, FieldSingle, RegisterRegisterBranch
+    FieldBits, FieldLenFieldLen, FieldSingle, RegisterRegisterBranch, FieldSingleBaseDsp
 from p4_execution.ex1_state import State
 
 
@@ -748,6 +749,18 @@ class DecimalArithmeticComplex(State):
                 self.regs.set_bytes_from_mask(bytearray([byte]), "R2", 0b0001)
                 return node.fall_down
         self.cc = 0
+        return node.fall_down
+
+    def stck(self, node: FieldSingleBaseDsp) -> str:
+        current_time: datetime = datetime.now()
+        start_time: datetime = datetime(year=1936, month=2, day=7, hour=0, minute=28, second=16)
+        difference: timedelta = current_time - start_time
+        seconds = difference.days * 60 * 60 * 24 + difference.seconds
+        microseconds = seconds * 10 ** 6 + difference.microseconds
+        value = microseconds * 2 ** 12
+        address = self.regs.get_value(node.field.base) + node.field.dsp
+        byte_value = bytearray(int.to_bytes(value, length=8, byteorder="big"))
+        self.vm.set_bytes(byte_value, address, length=8)
         return node.fall_down
 
 

@@ -1,4 +1,5 @@
 import unittest
+from datetime import datetime, timedelta
 
 from config import config
 from p1_utils.data_type import DataType
@@ -76,6 +77,17 @@ class NonConditional2(unittest.TestCase):
         self.test_data.set_field("EBX000", bytes([0x01]))
         test_data = self.tpf_server.run("TS15", self.test_data)
         self.assertEqual(-7, test_data.output.regs["R7"])
+
+    def test_ts15_stck(self):
+        self.test_data.set_field("EBX000", bytes([0x01]))
+        test_data = self.tpf_server.run("TS15", self.test_data)
+        current_time: datetime = datetime.now()
+        start_time: datetime = datetime(year=1936, month=2, day=7, hour=0, minute=28, second=16)
+        difference: timedelta = current_time - start_time
+        seconds = difference.days * 60 * 60 * 24 + difference.seconds
+        seconds = int(seconds // 1.048576)
+        seconds_set = {f"{seconds:08X}", f"{seconds + 1:08X}"}
+        self.assertIn(test_data.get_field("EBW040")[:8], seconds_set)
 
 
 if __name__ == "__main__":
