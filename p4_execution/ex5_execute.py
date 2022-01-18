@@ -40,13 +40,13 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["S"] = self.subtract_fullword
         self._ex["SH"] = self.subtract_halfword
         self._ex["M"] = self.multiply_fullword
+        self._ex["MR"] = self.multiply_register
         self._ex["MH"] = self.multiply_halfword
         self._ex["MHI"] = self.multiply_halfword_immediate
         self._ex["D"] = self.divide_fullword
         self._ex["DR"] = self.divide_register
         self._ex["SRDA"] = self.shift_right_double_algebraic
         self._ex["SLA"] = self.shift_left_algebraic
-        # MH, M, MR - Not in ETA5
         # SRA, SLDA - Not in ETA5
 
         # S05 - Move Store & Logic Control

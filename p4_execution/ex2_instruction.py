@@ -205,6 +205,12 @@ class ArithmeticShiftAlgebraic(State):
         self.regs.set_double_value(value, node.reg)
         return node.fall_down
 
+    def multiply_register(self, node: RegisterRegister) -> str:
+        odd_reg = self.regs.next_reg(node.reg1)
+        value = self.regs.get_value(odd_reg) * self.regs.get_value(node.reg2)
+        self.regs.set_double_value(value, node.reg1)
+        return node.fall_down
+
     def multiply_halfword(self, node: RegisterFieldIndex) -> str:
         address = self.regs.get_address(node.field.base, node.field.dsp, node.field.index)
         value = self.regs.get_value(node.reg) * self.vm.get_value(address, 2)

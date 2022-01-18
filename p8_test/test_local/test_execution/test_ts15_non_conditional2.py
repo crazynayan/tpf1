@@ -66,6 +66,12 @@ class NonConditional2(unittest.TestCase):
         self.assertEqual(macros["EB0EB"].evaluate("EBW037") + config.ECB, test_data.output.regs["R1"])
         self.assertEqual(0x000000FF, test_data.output.regs["R2"])
 
+    def test_ts15_mr(self):
+        self.test_data.set_field("EBX000", bytes([0x01]))
+        test_data = self.tpf_server.run("TS15", self.test_data)
+        self.assertEqual(0, test_data.output.regs["R4"])
+        self.assertEqual(27 * 34, test_data.output.regs["R5"])
+
 
 if __name__ == "__main__":
     unittest.main()
