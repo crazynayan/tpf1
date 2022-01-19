@@ -7,7 +7,7 @@ from p1_utils.canned import UI2CNN
 from p1_utils.data_type import DataType, Register
 from p1_utils.errors import HeapaExecutionError, RegisterInvalidError, DumpExecutionError, MhinfExecutionError, \
     PrimaExecutionError, McpckExecutionError, SegmentNotFoundError, NotImplementedExecutionError, \
-    UserDefinedMacroExecutionError, TPFServerMemoryError
+    UserDefinedMacroExecutionError, TPFServerMemoryError, UcdrError
 from p1_utils.ucdr import pars_to_date, date_to_pars
 from p2_assembly.mac2_data_macro import macros
 from p2_assembly.seg2_ins_operand import FieldBaseDsp
@@ -333,6 +333,17 @@ class UserDefinedMacro(State):
     def pnrua(self, node: KeyValue) -> str:
         # Ensure PNRUA always return an error by setting R0 to 1
         self.regs.set_value(1, "R0")
+        return node.fall_down
+
+    def date_macro(self, node: KeyValue) -> str:
+        pars_reg: str = node.get_value("PARS")
+        if not pars_reg or not Register(pars_reg).is_valid():
+            raise UcdrError
+        pars_value: int = self.regs.get_value(pars_reg)
+        pars_bytes: bytearray = pars_to_date(pars_value, full_year=True)
+        field: FieldBaseDsp = node.get_value("OK")
+        address: int = self.regs.get_value(field.base.reg) + field.dsp
+        self.vm.set_bytes(pars_bytes, address, len(pars_bytes))
         return node.fall_down
 
     def pars_date(self, node: KeyValue) -> str:

@@ -93,6 +93,7 @@ class RealtimeMacroImplementation(InstructionImplementation):
         self._command["GLOBZ"] = self.globz
         self._command["FACE"] = self.instruction_generic
         self._command["PNAMC"] = self.pnamc
+        self._command["DATE"] = self.date_macro
         self._command["DBRED"] = self.dbred
         self._command["PDRED"] = self.pdred
         self._command["PDMOD"] = self.pdred
@@ -202,6 +203,14 @@ class RealtimeMacroImplementation(InstructionImplementation):
             raise AssemblyError(line)
         pnamc_key_value.set_value(self.field_base_dsp(field_name), field_name, "FIELD")
         return pnamc_key_value
+
+    def date_macro(self, line: Line) -> KeyValue:
+        date_key_value = self.key_value(line)
+        field_name = date_key_value.get_value("OK")
+        if not field_name:
+            raise AssemblyError(line)
+        date_key_value.set_value(self.field_base_dsp(field_name), field_name, "OK")
+        return date_key_value
 
     def load_macro_from_line(self, line: Line) -> None:
         macro_key_value: KeyValue = self.key_value(line)
