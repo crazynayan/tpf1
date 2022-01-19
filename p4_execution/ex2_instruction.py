@@ -34,6 +34,14 @@ class LoadStore(State):
         self.trace_data.set_signed_value1(value)
         return node.fall_down
 
+    def load_complement_register(self, node: RegisterRegister) -> str:
+        value = self.regs.get_value(node.reg2)
+        value = value * -1
+        self.regs.set_value(value, node.reg1)
+        self.set_number_cc(value)
+        self.trace_data.set_signed_value1(value)
+        return node.fall_down
+
     def load_test_register(self, node: RegisterRegister) -> str:
         value = self.regs.get_value(node.reg2)
         self.regs.set_value(value, node.reg1)

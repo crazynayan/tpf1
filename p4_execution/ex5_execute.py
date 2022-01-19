@@ -16,7 +16,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["LPR"] = self.load_positive_register
         self._ex["LNR"] = self.load_negative_register
         self._ex["LTR"] = self.load_test_register
-        # LCR - Not in ETA5
+        self._ex["LCR"] = self.load_complement_register
         self._ex["L"] = self.load_fullword
         self._ex["ST"] = self.store_fullword
         self._ex["LA"] = self.load_address
