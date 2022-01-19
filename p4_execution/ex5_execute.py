@@ -61,7 +61,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["JCT"] = self.branch_on_count
         self._ex["BCTR"] = self.branch_on_count_register
         self._ex["BXLE"] = self.branch_on_index_low_or_equal
-        # BXH
+        self._ex["BXH"] = self.branch_on_index_high
         self._ex["BAS"] = self.branch_and_save
         self._ex["BAL"] = self.branch_and_save
         self._ex["JAS"] = self.branch_and_save

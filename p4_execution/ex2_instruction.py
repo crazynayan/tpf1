@@ -380,9 +380,20 @@ class MoveLogicControl(State):
     def branch_on_index_low_or_equal(self, node: RegisterRegisterBranch) -> str:
         increment: Register = node.reg2
         comparator: Register = node.reg2.get_next_register() if node.reg2.is_even() else node.reg2
+        compare_value: int = self.regs.get_value(comparator)
         sum_value: int = self.regs.get_value(node.reg1) + self.regs.get_value(increment)
         self.regs.set_value(sum_value, node.reg1)
-        if sum_value <= self.regs.get_value(comparator):
+        if sum_value <= compare_value:
+            return self.index_to_label(node.branch)
+        return node.fall_down
+
+    def branch_on_index_high(self, node: RegisterRegisterBranch) -> str:
+        increment: Register = node.reg2
+        comparator: Register = node.reg2.get_next_register() if node.reg2.is_even() else node.reg2
+        compare_value: int = self.regs.get_value(comparator)
+        sum_value: int = self.regs.get_value(node.reg1) + self.regs.get_value(increment)
+        self.regs.set_value(sum_value, node.reg1)
+        if sum_value > compare_value:
             return self.index_to_label(node.branch)
         return node.fall_down
 

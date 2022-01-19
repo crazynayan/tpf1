@@ -73,12 +73,14 @@ class NonConditional2(unittest.TestCase):
         self.assertEqual(0, test_data.output.regs["R4"])
         self.assertEqual(27 * 34, test_data.output.regs["R5"])
 
-    def test_ts15_sra_lcr(self):
+    def test_ts15_sra_lcr_bxh(self):
         self.test_data.set_field("EBX000", bytes([0x01]))
         test_data = self.tpf_server.run("TS15", self.test_data)
-        self.assertEqual(-7, test_data.output.regs["R7"])
-        self.assertEqual(7, test_data.output.regs["R10"])
-        self.assertEqual(-7, test_data.output.regs["R11"])
+        self.assertEqual(-7, test_data.output.regs["R7"])  # SRA
+        self.assertEqual(7, test_data.output.regs["R10"])  # LCR
+        self.assertEqual(-7, test_data.output.regs["R11"])  # LCR
+        self.assertEqual(6, test_data.output.regs["R13"])  # BXH
+        self.assertEqual(3, test_data.output.regs["R15"])  # BXH
 
     def test_ts15_stck(self):
         self.test_data.set_field("EBX000", bytes([0x01]))
