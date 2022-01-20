@@ -124,6 +124,8 @@ class Pnr:
             data = data_list[item_number - 1]
             data = data[len(Pnr.STD_PREFIX_BYTES) + len(attribute.std_fix):] if not packed else data
             if starts_with is None:
+                if packed and attribute.name == RCVD_FROM:
+                    data = data[len(attribute.std_var):]
                 return data, item_number
             elif data[start: start + len(starts_with)] == starts_with:
                 return data, item_number
