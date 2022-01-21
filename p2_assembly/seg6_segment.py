@@ -99,7 +99,7 @@ class Segment(RealtimeMacroImplementation):
                 continue
             if line.node_exception or dsect_name != self.seg_name:
                 if line.label:  # Only add it in the symbol table. Do not create the node for the same
-                    self.add_label(line.label, line.dsp, 0, dsect_name)
+                    self.add_label(line.label, line.dsp, 0, dsect_name, based=dsect_name != self.seg_name)
                 continue
             if line.label:
                 prior_label: Label = Label(line.label)
