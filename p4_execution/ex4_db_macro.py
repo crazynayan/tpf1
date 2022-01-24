@@ -54,15 +54,14 @@ class UserDefinedDbMacro(State):
             key_label = Pnr.get_pdequ_label("index", index_value)
             if not key_label:
                 raise PdredFieldError(node)
-            key_label = key_label + "_K"
         elif isinstance(field_value, str):
-            key_label = f"#PD_{field_value}_K"
+            key_label = f"#PD_{field_value}"
         elif field_value is None:
             return str(), 0
         else:
             raise PdredFieldError(node)
         try:
-            key_number = self.seg.evaluate(key_label)
+            key_number = Pnr.PDEQU[key_label]["key"]
             key = f"{key_number:2X}"
         except NotFoundInSymbolTableError:
             raise PdredFieldError(node)
@@ -202,7 +201,6 @@ class UserDefinedDbMacro(State):
         node.add_key("WORKAREA", ["LEV", level])
         start: str = node.get_value("START")
         node.add_key("SEARCH1", ["START", f"'{start}'"])
-        node.add_key("FORMATOUT", "UNPACKED")
         return self.pdred(node, locaa=True)
 
     def pdmod(self, node: KeyValue) -> str:
