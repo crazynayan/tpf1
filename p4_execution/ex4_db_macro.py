@@ -51,9 +51,8 @@ class UserDefinedDbMacro(State):
             if not index_reg.is_valid():
                 raise PdredFieldError(node)
             index_value = self.regs.get_unsigned_value(index_reg)
-            try:
-                key_label = next(label for label, value in Pnr.PDEQU.items() if value == index_value)
-            except StopIteration:
+            key_label = Pnr.get_pdequ_label("index", index_value)
+            if not key_label:
                 raise PdredFieldError(node)
             key_label = key_label + "_K"
         elif isinstance(field_value, str):
@@ -91,7 +90,7 @@ class UserDefinedDbMacro(State):
         self.vm.init(pd0_base)
         return node.fall_down
 
-    def pdred(self, node: KeyValue) -> str:
+    def pdred(self, node: KeyValue, locaa=False) -> str:
         self.seg.load_macro("PD0WRK")
         key, key_number = self._get_key(node)
         if not key:
@@ -170,10 +169,14 @@ class UserDefinedDbMacro(State):
             self.vm.or_bit(pd0_base + pd0_rt_id1.dsp, last_item_bit)
 
         # Update the data in PD0WRK
+        if locaa and self.seg.check("ITMLOC"):
+            self.vm.set_bytes(data, pd0_base + self.seg.evaluate("ITMLOC"), len(data))
+            return node.fall_down
         pd0_itm: LabelReference = self.seg.lookup("PD0_P_DATA") if packed else self.seg.lookup("PD0_C_ITM")
         pd0_rt_adr: LabelReference = self.seg.lookup("PD0_RT_ADR")
         if len(data) > pd0_itm.length:
             raise PdredPd0Error
+
         self.vm.set_bytes(data, pd0_base + pd0_itm.dsp, len(data))
         if packed:  # Only packed is coded. For unpacked the PD0_C_ILEN overwrites the fix header.
             pd0_len: LabelReference = self.seg.lookup("PD0_P_LLEN")
@@ -187,6 +190,20 @@ class UserDefinedDbMacro(State):
             pd0_rt_adr_value += len(attribute.std_var)
         self.vm.set_value(pd0_rt_adr_value, pd0_base + pd0_rt_adr.dsp, pd0_rt_adr.length)
         return node.fall_down
+
+    def locaa(self, node: KeyValue) -> str:
+        designator: int = self.regs.get_bytes_from_mask("R0", 0b1000)[0]
+        field_label: str = Pnr.get_pdequ_label("designator", designator)
+        if not field_label:
+            raise PdredFieldError(node)
+        field = field_label[4:]
+        node.add_key("FIELD", field)
+        level: str = node.get_value("LEVEL")
+        node.add_key("WORKAREA", ["LEV", level])
+        start: str = node.get_value("START")
+        node.add_key("SEARCH1", ["START", f"'{start}'"])
+        node.add_key("FORMATOUT", "UNPACKED")
+        return self.pdred(node, locaa=True)
 
     def pdmod(self, node: KeyValue) -> str:
         # Skip PDMOD functions for Renumbering Itin segments

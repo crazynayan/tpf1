@@ -84,7 +84,7 @@ class EtajTest(unittest.TestCase):
     def test_finwc_fail(self) -> None:
         self.iy_item[0]["data"] = b64encode(DataType("X", input="00006F2F").to_bytes()).decode()
         self._tjr_setup()
-        self.test_data.errors.append("$$ETAJ$$.35")
+        self.test_data.errors.append("$$ETAJ$$.47")
         test_data = self.tpf_server.run("TS21", self.test_data)
         self.assertEqual("ETAJ500.1", test_data.output.last_line)
         self.assertIn("0140F1", test_data.output.dumps)

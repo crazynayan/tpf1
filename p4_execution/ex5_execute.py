@@ -245,6 +245,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         # User defined Db Macros
         self._ex["PDCRE"] = self.no_operation
         self._ex["PDRED"] = self.pdred
+        self._ex["LOCAA"] = self.locaa
         self._ex["PDCLS"] = self.pdcls
         self._ex["PDMOD"] = self.pdmod
         self._ex["PDADD"] = self.no_operation

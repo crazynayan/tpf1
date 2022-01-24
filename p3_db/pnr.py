@@ -39,18 +39,24 @@ class PnrLrec:
 def load_pdequ():
     pdequ = dict()
     for label, label_ref in macros["PDEQU"].all_labels.items():
-        if not label.startswith("#PD_"):
+        if not label.startswith("#PD_") or label == "#PD_MAX_PD_ITEMS":
             continue
-        if label.endswith("_K") or label.endswith("_D"):
-            continue
-        pdequ[label] = label_ref.dsp
+        field = label[:-2] if label.endswith("_K") or label.endswith("_D") else label
+        if field not in pdequ:
+            pdequ[field] = dict()
+        if label.endswith("_K"):
+            pdequ[field]["key"] = label_ref.dsp
+        elif label.endswith("_D"):
+            pdequ[field]["designator"] = label_ref.dsp
+        else:
+            pdequ[field]["index"] = label_ref.dsp
     return pdequ
 
 
 class Pnr:
     DB: List[Dict[str, Union[str, List[Dict[str, bytearray]]]]] = [{"id": config.AAAPNR, "doc": list()}]
     STD_PREFIX_BYTES = bytearray([0x00] * 0x14)
-    PDEQU: Dict[str, int] = load_pdequ()
+    PDEQU: Dict[str, Dict[str, int]] = load_pdequ()
     ATTRIBUTES = [
         PnrAttribute(NAME, "50", std_var=bytearray([0x00, 0x00, 0x02, 0x00])),
         PnrAttribute(HFAX, "84", std_fix=bytearray([0x00] * 0x08), std_var=bytearray([0x02, 0x01])),
@@ -209,6 +215,12 @@ class Pnr:
             data_bytes = Stream(macros["PR001W"]).to_bytes(byte_array)
             lrec.data = data_bytes
         pnr_doc.append(lrec.to_dict())
+
+    @classmethod
+    def get_pdequ_label(cls, idk: str, value: int) -> str:
+        if idk not in {"index", "designator", "key"}:
+            return str()
+        return next((label for label, idk_dict in cls.PDEQU.items() if idk_dict[idk] == value), str())
 
 
 class PnrLocator:

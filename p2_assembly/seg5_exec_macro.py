@@ -75,6 +75,9 @@ class KeyValue(InstructionGeneric):
         self._operands.remove((key, original_key_value_list))
         self._operands.append((key, key_value_list))
 
+    def add_key(self, key: str, value: Union[str, list]):
+        self._operands.append((key, value))
+
 
 class SegmentCall(KeyValue):
 
