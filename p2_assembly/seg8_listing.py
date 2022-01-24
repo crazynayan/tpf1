@@ -1,4 +1,5 @@
 import os
+import pickle
 import re
 from copy import copy
 from typing import List, Optional
@@ -164,7 +165,20 @@ def get_lines_from_listing_commands(listing_commands: List[LstCmd]) -> List[Line
     return [create_line(command) for command in listing_commands]
 
 
+def get_from_lxp(filename: str) -> List[LstCmd]:
+    try:
+        with open(filename, "rb") as file:
+            lst_cmds = pickle.load(file)
+    except FileNotFoundError:
+        lst_cmds = list()
+    return lst_cmds
+
+
 def get_or_create_lst_cmds(seg_name: str, filename: str, blob_name: str) -> List[LstCmd]:
+    if not config.CI_CLOUD_STORAGE:
+        lst_cmds_from_lxp: List[LstCmd] = get_from_lxp(filename)
+        lst_cmds_from_lxp.sort(key=lambda item: item.stmt)
+        return lst_cmds_from_lxp
     lst_cmds: List[LstCmd] = LstCmd.objects.filter_by(seg_name=seg_name).order_by("stmt").get()
     if lst_cmds:
         return lst_cmds

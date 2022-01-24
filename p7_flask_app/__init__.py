@@ -21,7 +21,7 @@ def make_shell_context():
     import tpf
     from tpf import create_user, init_seg_lst, reset_seg_assembly
     from p1_utils.file_line import File
-    from p2_assembly.seg8_listing import create_listing_commands, write_tmp_output
+    from p2_assembly.seg8_listing import create_listing_commands, write_tmp_output, LstCmd
     from p2_assembly.seg9_collection import SegLst, seg_collection
     from p3_db.test_data import TestData
     from p4_execution.ex5_execute import TpfServer
@@ -38,6 +38,7 @@ def make_shell_context():
         "File": File,
         "init_seg_lst": init_seg_lst,
         "SegLst": SegLst,
+        "LstCmd": LstCmd,
         "write_tmp_output": write_tmp_output,
         "reset_seg_assembly": reset_seg_assembly,
         "seg_collection": seg_collection,

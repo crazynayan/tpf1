@@ -72,11 +72,13 @@ def init_seg_lst():
 
 def reset_seg_assembly(blob_name: str) -> Optional[SegLst]:
     seg_name = seg_collection.init_from_cloud(blob_name)
-    LstCmd.objects.filter_by(seg_name=seg_name).delete()
-    SegLst.objects.filter_by(seg_name=seg_name).delete()
+    if not seg_name:
+        seg_name = blob_name[:4].upper()
     segment = seg_collection.get_seg(seg_name)
     if not segment:
         return None
+    LstCmd.objects.filter_by(seg_name=seg_name).delete()
+    SegLst.objects.filter_by(seg_name=seg_name).delete()
     seg: SegLst = get_seg_lst(segment)
     seg.create()
     return seg

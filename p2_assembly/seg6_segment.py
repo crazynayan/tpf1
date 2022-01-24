@@ -156,10 +156,10 @@ class Segment(RealtimeMacroImplementation):
         return
 
     def _process_assembler_directive(self, line: Line) -> bool:
-        if self.file_type == config.LST:
-            return self._process_assembler_directive_lst(line)
-        else:
+        if self.file_type == config.ASM:
             return self._process_assembler_directive_asm(line)
+        else:
+            return self._process_assembler_directive_lst(line)
 
     def _process_assembler_directive_lst(self, line: Line) -> bool:
         # return True -> skip creating node.

@@ -22,7 +22,7 @@ class Config:
 
     # Used by segment
     CI_CLOUD_STORAGE = os.environ.get("CI_CLOUD_STORAGE") == "use"
-    ASM, LST, LOCAL, CLOUD = "asm", "lst", "local", "cloud"
+    ASM, LST, LXP, LOCAL, CLOUD = "asm", "lst", "lxp", "local", "cloud"
     DOWNLOAD_PATH = os.path.join(os.path.abspath(os.sep), "tmp")
     ROOT_DIR: str = os.path.dirname(os.path.abspath(__file__))
     BUCKET = "tpf-listings"
@@ -31,6 +31,8 @@ class Config:
     ASM_FOLDER_NAME = os.path.join("p0_source", "asm")
     LST_EXT = {".lst"}
     LST_FOLDER_NAME = os.path.join("p0_source", "lst")
+    LXP_EXT = {".lxp"}
+    LXP_FOLDER_NAME = os.path.join("p0_source", "lxp")
 
     # Used by utils
     REG_INVALID: str = "??"
