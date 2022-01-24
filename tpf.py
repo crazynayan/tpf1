@@ -2,14 +2,15 @@ import os
 from base64 import b64encode
 from typing import List, Optional
 
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "google-cloud-tokyo.json"
+# noinspection PyPackageRequirements
+from google.cloud.storage import Client
+
 from config import config
 from p2_assembly.seg6_segment import Segment
-from p2_assembly.seg8_listing import LstCmd
+from p2_assembly.seg8_listing import LstCmd, create_lxp
 from p2_assembly.seg9_collection import SegLst, read_folder, get_segment, read_cloud, seg_collection
 from p4_execution.ex5_execute import TpfServer
-
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "google-cloud-tokyo.json"
-
 from p7_flask_app.auth import User
 
 
@@ -79,7 +80,7 @@ def reset_seg_assembly(blob_name: str) -> Optional[SegLst]:
         return None
     LstCmd.objects.filter_by(seg_name=seg_name).delete()
     SegLst.objects.filter_by(seg_name=seg_name).delete()
-    seg: SegLst = get_seg_lst(segment)
+    seg: SegLst = get_seg_lst(segment)  # Assemble the segment and create LstCmd
     seg.create()
     return seg
 
@@ -92,3 +93,38 @@ def init_asm_seg(filename: str):
     SegLst.objects.filter_by(seg_name=seg_name).delete()
     seg.create()
     return seg
+
+
+def migrate_to_lst(seg_name: str):
+    source_path = os.path.join(config.ASM_FOLDER_NAME, f"{seg_name}.asm")
+    target_path = os.path.join("tmp", f"{seg_name}.asm")
+    if os.path.isfile(source_path):
+        if not os.path.isfile(target_path):
+            os.rename(source_path, target_path)
+            print(f"{seg_name} removed from asm source folder.")
+    elif not os.path.isfile(target_path):
+        print(f"{seg_name}.asm not found.")
+        return
+    # Upload listing
+    filename = f"{seg_name}99.lst"
+    source_path = f"/home/nayan/Downloads/{filename}"
+    if not os.path.isfile(source_path):
+        print(f"Listing of {seg_name} not found in Downloads directory.")
+        return
+    client = Client()
+    blob = client.bucket(config.BUCKET).blob(filename)
+    blob.upload_from_filename(source_path)
+    client.close()
+    print(f"{filename} uploaded to Google Cloud Storage.")
+    # Generate Listing Commands
+    seg = reset_seg_assembly(filename)
+    if not seg:
+        print("Error in generating listing commands.")
+        return
+    print(f"{seg_name} listing commands generated and filed.")
+    # Create LXP
+    if not create_lxp(seg_name):
+        print("Error in creating lxp.")
+        return
+    print(f"{seg_name} lxp generated and saved.")
+    return

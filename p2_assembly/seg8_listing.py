@@ -174,9 +174,18 @@ def get_from_lxp(filename: str) -> List[LstCmd]:
     return lst_cmds
 
 
+def create_lxp(seg_name: str) -> bool:
+    lst_cmds: List[LstCmd] = LstCmd.objects.filter_by(seg_name=seg_name.upper()).order_by("stmt").get()
+    if not lst_cmds:
+        return False
+    with open(f"{config.LXP_FOLDER_NAME}/{seg_name.lower()}.lxp", "wb") as file:
+        pickle.dump(lst_cmds, file)
+    return True
+
+
 def get_or_create_lst_cmds(seg_name: str, filename: str, blob_name: str) -> List[LstCmd]:
-    if not config.CI_CLOUD_STORAGE:
-        lst_cmds_from_lxp: List[LstCmd] = get_from_lxp(filename)
+    lst_cmds_from_lxp: List[LstCmd] = get_from_lxp(filename)
+    if lst_cmds_from_lxp:
         lst_cmds_from_lxp.sort(key=lambda item: item.stmt)
         return lst_cmds_from_lxp
     lst_cmds: List[LstCmd] = LstCmd.objects.filter_by(seg_name=seg_name).order_by("stmt").get()

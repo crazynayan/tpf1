@@ -2,6 +2,7 @@ from flask import Flask
 from flask_cors import CORS
 
 from config import Config
+from p2_assembly.seg8_listing import create_lxp
 
 tpf1_app = Flask(__name__)
 tpf1_app.config.from_object(Config)
@@ -41,6 +42,7 @@ def make_shell_context():
         "LstCmd": LstCmd,
         "write_tmp_output": write_tmp_output,
         "reset_seg_assembly": reset_seg_assembly,
+        "create_lxp": create_lxp,
         "seg_collection": seg_collection,
         "routes": routes,
         "tpf": tpf,
