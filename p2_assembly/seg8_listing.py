@@ -169,6 +169,7 @@ def get_from_lxp(filename: str) -> List[LstCmd]:
     try:
         with open(filename, "rb") as file:
             lst_cmds = pickle.load(file)
+        lst_cmds.sort(key=lambda item: item.stmt)
     except FileNotFoundError:
         lst_cmds = list()
     return lst_cmds
@@ -178,7 +179,7 @@ def create_lxp(seg_name: str) -> bool:
     lst_cmds: List[LstCmd] = LstCmd.objects.filter_by(seg_name=seg_name.upper()).order_by("stmt").get()
     if not lst_cmds:
         return False
-    with open(f"{config.LXP_FOLDER_NAME}/{seg_name.lower()}.lxp", "wb") as file:
+    with open(f"{config.LXP_FOLDER_NAME}/{seg_name.lower()}.{config.LXP}", "wb") as file:
         pickle.dump(lst_cmds, file)
     return True
 
@@ -186,7 +187,6 @@ def create_lxp(seg_name: str) -> bool:
 def get_or_create_lst_cmds(seg_name: str, filename: str, blob_name: str) -> List[LstCmd]:
     lst_cmds_from_lxp: List[LstCmd] = get_from_lxp(filename)
     if lst_cmds_from_lxp:
-        lst_cmds_from_lxp.sort(key=lambda item: item.stmt)
         return lst_cmds_from_lxp
     lst_cmds: List[LstCmd] = LstCmd.objects.filter_by(seg_name=seg_name).order_by("stmt").get()
     if lst_cmds:

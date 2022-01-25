@@ -28,11 +28,11 @@ class Config:
     BUCKET = "tpf-listings"
     MAC_FOLDER_NAME = os.path.join("p0_source", "macro")
     ASM_EXT = {".asm", ".txt"}
-    ASM_FOLDER_NAME = os.path.join("p0_source", "asm")
+    ASM_FOLDER_NAME = os.path.join("p0_source", ASM)
     LST_EXT = {".lst"}
-    LST_FOLDER_NAME = os.path.join("p0_source", "lst")
+    LST_FOLDER_NAME = os.path.join("p0_source", LST)
     LXP_EXT = {".lxp"}
-    LXP_FOLDER_NAME = os.path.join("p0_source", "lxp")
+    LXP_FOLDER_NAME = os.path.join("p0_source", LXP)
 
     # Used by utils
     REG_INVALID: str = "??"
