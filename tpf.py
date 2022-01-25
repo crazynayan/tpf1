@@ -59,15 +59,18 @@ def get_seg_lst(segment: Segment) -> SegLst:
 def init_seg_lst():
     SegLst.objects.delete()
     seg_to_create: List[SegLst] = list()
+    lxp_set: set = set()
     for seg_name, filename in read_folder(config.ASM_FOLDER_NAME, config.ASM_EXT):
         segment = get_segment(seg_name, filename, config.ASM, config.LOCAL)
         seg_to_create.append(get_seg_lst(segment))
-    for seg_name, filename in read_folder(config.LST_FOLDER_NAME, config.LST_EXT):
+    for seg_name, filename in read_folder(config.LXP_FOLDER_NAME, config.LXP_EXT):
         segment = get_segment(seg_name, filename, config.LST, config.LOCAL)
         seg_to_create.append(get_seg_lst(segment))
+        lxp_set.add(seg_name)
     for blob_name, filename in read_cloud():
         segment = get_segment(blob_name[:4].upper(), filename, config.LST, config.CLOUD, blob_name)
-        seg_to_create.append(get_seg_lst(segment))
+        if segment.seg_name not in lxp_set:
+            seg_to_create.append(get_seg_lst(segment))
     SegLst.objects.create_all(SegLst.objects.to_dicts(seg_to_create))
 
 
