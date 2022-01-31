@@ -175,13 +175,14 @@ def get_from_lxp(filename: str) -> List[LstCmd]:
     return lst_cmds
 
 
-def create_lxp(seg_name: str) -> bool:
+def create_lxp(seg_name: str) -> str:
     lst_cmds: List[LstCmd] = LstCmd.objects.filter_by(seg_name=seg_name.upper()).order_by("stmt").get()
     if not lst_cmds:
-        return False
-    with open(f"{config.LXP_FOLDER_NAME}/{seg_name.lower()}.{config.LXP}", "wb") as file:
+        return str()
+    filename = f"{config.LXP_FOLDER_NAME}/{seg_name.lower()}.{config.LXP}"
+    with open(filename, "wb") as file:
         pickle.dump(lst_cmds, file)
-    return True
+    return filename
 
 
 def get_or_create_lst_cmds(seg_name: str, filename: str, blob_name: str) -> List[LstCmd]:

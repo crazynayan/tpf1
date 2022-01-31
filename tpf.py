@@ -126,8 +126,15 @@ def migrate_to_lst(seg_name: str):
         return
     print(f"{seg_name} listing commands generated and filed.")
     # Create LXP
-    if not create_lxp(seg_name):
+    filename = create_lxp(seg_name)
+    if not filename:
         print("Error in creating lxp.")
         return
+    seg_lst: SegLst = SegLst.objects.filter_by(seg_name=seg_name.upper()).first()
+    if not seg_lst:
+        print("Error in updating lxp filename.")
+        return
+    seg_lst.filename = filename
+    seg_lst.save()
     print(f"{seg_name} lxp generated and saved.")
     return
