@@ -24,6 +24,7 @@ class Eta1Test(TestDebug):
         self.assertIn("RESTRICTED" + 40 * " ", self.output.messages)
 
     def test_eta1_e_no_error(self):
+        self.test_data.set_global_record("@PDTPC", field_data=str(), seg_name=str())
         self.test_data.set_field("MI0ACC", DataType("C", input="E").to_bytes())
         self.test_data.set_field("WA0FNS", DataType("X", input="10").to_bytes())
         self.test_data.set_field("WA0UB4", DataType("X", input="08").to_bytes())
