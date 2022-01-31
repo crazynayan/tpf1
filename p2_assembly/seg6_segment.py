@@ -119,6 +119,8 @@ class Segment(RealtimeMacroImplementation):
             else:
                 length = 1
             self.all_labels[line.label].length = length
+            if line.command == "EQU" and self.all_labels[line.label].based:
+                self.all_labels[line.label].based = self.is_based(line.operand)
         return lines
 
     def _generate_constants(self) -> None:
