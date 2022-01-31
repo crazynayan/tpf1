@@ -104,7 +104,9 @@ def migrate_to_lst(seg_name: str):
     if os.path.isfile(source_path):
         if not os.path.isfile(target_path):
             os.rename(source_path, target_path)
-            print(f"{seg_name} removed from asm source folder.")
+        else:
+            os.remove(source_path)
+        print(f"{seg_name} removed from asm source folder.")
     elif not os.path.isfile(target_path):
         print(f"{seg_name}.asm not found.")
         return
@@ -120,21 +122,21 @@ def migrate_to_lst(seg_name: str):
     client.close()
     print(f"{filename} uploaded to Google Cloud Storage.")
     # Generate Listing Commands
-    seg = reset_seg_assembly(filename)
+    seg: Segment = seg_collection.from_asm_to_lst(seg_name, filename)
     if not seg:
-        print("Error in generating listing commands.")
+        print("Error in creating a segment object.")
         return
+    LstCmd.objects.filter_by(seg_name=seg.seg_name).delete()
+    seg_lst: SegLst = get_seg_lst(seg)  # Assemble the segment and create LstCmd
     print(f"{seg_name} listing commands generated and filed.")
     # Create LXP
-    filename = create_lxp(seg_name)
+    filename = create_lxp(seg_name)  # From LstCmd
     if not filename:
         print("Error in creating lxp.")
-        return
-    seg_lst: SegLst = SegLst.objects.filter_by(seg_name=seg_name.upper()).first()
-    if not seg_lst:
-        print("Error in updating lxp filename.")
-        return
-    seg_lst.filename = filename
-    seg_lst.save()
-    print(f"{seg_name} lxp generated and saved.")
+    else:
+        print(f"{seg_name} lxp generated and saved.")
+        seg_lst.filename = filename
+        seg_lst.source = config.LOCAL
+    SegLst.objects.filter_by(seg_name=seg.seg_name).delete()
+    seg_lst.create()
     return

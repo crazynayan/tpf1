@@ -96,6 +96,15 @@ class _SegmentCollection:
         self.segments[seg_name] = get_segment(seg_name, filename, config.LST, config.CLOUD, blob_name)
         return seg_name
 
+    def from_asm_to_lst(self, seg_name, blob_name) -> Optional[Segment]:
+        seg_key = seg_name.upper()
+        asm_seg: Segment = self.get_seg(seg_key)
+        if not asm_seg:
+            return None
+        filename = os.path.join(config.DOWNLOAD_PATH, blob_name)
+        self.segments[seg_key] = get_segment(seg_key, filename, config.LST, config.CLOUD, blob_name)
+        return self.segments[seg_key]
+
     def is_seg_present(self, seg_name: str) -> bool:
         if not config.CI_CLOUD_STORAGE:
             return seg_name in self.segments
