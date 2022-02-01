@@ -43,10 +43,13 @@ class TestData(FirestoreDocument):
                           if field_data["field"] == field_name)
         return b64decode(field_data["data"]).hex().upper()
 
-    def get_pnr_field(self, field_name: str, core_variation: int = 0, pnr_variation: int = 0, tpfdf_variation: int = 0):
+    def get_pnr_field(self, field_name: str, core_variation: int = 0, pnr_variation: int = 0, tpfdf_variation: int = 0,
+                      item_number: int = 1):
         output = self.get_output(core_variation, pnr_variation, tpfdf_variation)
-        field_data = next(field_data for pnr_output in output.pnr_outputs for field_data in pnr_output.field_data
+        pnr_output = next(pnr_output for pnr_output in output.pnr_outputs for field_data in pnr_output.field_data
                           if field_data["field"] == field_name)
+        field_text = f"{field_name} #{item_number}"
+        field_data = next(field_data for field_data in pnr_output.field_data if field_data["field_text"] == field_text)
         return b64decode(field_data["data"]).hex().upper()
 
     def get_output(self, core_variation: int = 0, pnr_variation: int = 0, tpfdf_variation: int = 0) -> Output:
