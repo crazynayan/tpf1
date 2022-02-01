@@ -83,6 +83,7 @@ class TestDebug(unittest.TestCase):
         self.test_data = TestDataUTS()
         self.test_data.output.debug = self.SEGMENTS if config.TEST_DEBUG else list()
         self.output = None
+        self.test_data.set_global_record("@PDTPC", field_data=str(), seg_name=str())
 
     def tearDown(self) -> None:
         if not config.TEST_DEBUG:
