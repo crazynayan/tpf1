@@ -215,12 +215,12 @@ class RealtimeMacroImplementation(InstructionImplementation):
         date_key_value.set_value(self.field_base_dsp(field_name), field_name, "OK")
         return date_key_value
 
-    def load_macro_from_line(self, line: Line) -> None:
+    def load_macro_from_line(self, line: Line, using: bool) -> None:
         macro_key_value: KeyValue = self.key_value(line)
         macro_name = line.command
         reg = macro_key_value.get_value("REG")
         suffix = macro_key_value.get_value("SUFFIX")
-        self.load_macro(macro_name, reg, suffix)
+        self.load_macro(macro_name, reg, suffix, using)
         return
 
     def executable_data_macro(self, line: Line) -> KeyValue:

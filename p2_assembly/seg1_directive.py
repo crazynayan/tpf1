@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import List, Optional
 
 from p1_utils.data_type import Register
@@ -85,7 +86,7 @@ class DirectiveImplementation(SegmentGeneric):
         self._location_counter = 8
 
     def push(self, _) -> None:
-        self._using_stack.append(self._using.copy())
+        self._using_stack.append(deepcopy(self._using))
 
     def pop(self, _) -> None:
         self._using = self._using_stack.pop()
@@ -96,8 +97,7 @@ class DirectiveImplementation(SegmentGeneric):
         if any(not register.is_valid() for register in registers):
             raise DropInvalidError(line)
         for drop_register in registers:
-            self._using = {macro_name: register for macro_name, register in self._using.items()
-                           if register.reg != drop_register.reg}
+            self._using[drop_register.value] = list()
 
     def using(self, line: Line) -> None:
         operands = line.split_operands()
@@ -115,7 +115,7 @@ class DirectiveImplementation(SegmentGeneric):
             for operand in operands[2:]:
                 if operand not in macros:
                     raise UsingInvalidError(line)
-                self.load_macro(operand, base=operands[0], suffix=suffix, override=False)
+                self.load_macro(operand, base=operands[0], suffix=suffix)
         except UsingInvalidError:
             raise UsingInvalidError(line)
         return

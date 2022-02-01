@@ -346,6 +346,12 @@ class Register:
             return Register("R0")
         return Register(config.REGISTERS[self.value + 1])
 
+    @classmethod
+    def from_index(cls, index: int) -> "Register":
+        if not (0 <= index < len(config.REGISTERS)):
+            return cls("INVALID")
+        return cls(config.REGISTERS[index])
+
     @property
     def value(self) -> int:
         return config.REGISTERS.index(self.reg)

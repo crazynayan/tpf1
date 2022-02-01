@@ -65,7 +65,7 @@ class Segment(RealtimeMacroImplementation):
         prior_label: Label = Label(self.root_label())
         for line in lines:
             if line.command in macros:
-                self.load_macro_from_line(line)
+                self.load_macro_from_line(line, using=False)
                 continue
             if line.is_first_pass:
                 self._command[line.command](line)
@@ -182,7 +182,7 @@ class Segment(RealtimeMacroImplementation):
             self.load_macro("SW00SR", "R3")
             return False
         if line.command in macros:
-            self.load_macro_from_line(line)
+            self.load_macro_from_line(line, using=True)
             return True
         if line.create_node_for_directive and self.is_branch(line.label):
             return False
