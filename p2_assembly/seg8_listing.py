@@ -170,7 +170,7 @@ def get_from_lxp(filename: str) -> List[LstCmd]:
         with open(filename, "rb") as file:
             lst_cmds = pickle.load(file)
         lst_cmds.sort(key=lambda item: item.stmt)
-    except FileNotFoundError:
+    except (FileNotFoundError, pickle.UnpicklingError):
         lst_cmds = list()
     return lst_cmds
 
