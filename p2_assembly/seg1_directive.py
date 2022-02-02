@@ -101,10 +101,9 @@ class DirectiveImplementation(SegmentGeneric):
 
     def using(self, line: Line) -> None:
         operands = line.split_operands()
-        if len(operands) != 2:
-            raise UsingInvalidError
         dsect_name = self.name if operands[0] == '*' else operands[0]
-        self.set_using(dsect_name, base_reg=operands[1])
+        for index in range(1, len(operands)):
+            self.set_using(dsect_name, base_reg=operands[index])
 
     def datas(self, line: Line) -> None:
         operands = line.split_operands()

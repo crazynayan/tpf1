@@ -65,12 +65,6 @@ class SegmentGeneric(DataMacroImplementation):
         if not reg.is_valid():
             raise UsingInvalidError
         self._using[reg.value].append(dsect)
-        # using_name = next((name for name, using_reg in self._using.items() if using_reg.reg == reg.reg), None)
-        # if reg.reg == "R8" and using_name is not None:  # Do not set R8 (to fix issue of listing using overriding)
-        #     return
-        # if override and using_name is not None:
-        #     del self._using[using_name]
-        # self._using[dsect] = reg
 
     def get_macro_name(self, base: Register) -> Optional[str]:
         using_reg_list = self._using[base.value]
