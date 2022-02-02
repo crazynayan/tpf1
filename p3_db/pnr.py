@@ -38,6 +38,7 @@ class PnrLrec:
 
 def load_pdequ():
     pdequ = dict()
+    macros["PDEQU"].load()
     for label, label_ref in macros["PDEQU"].all_labels.items():
         if not label.startswith("#PD_") or label == "#PD_MAX_PD_ITEMS":
             continue

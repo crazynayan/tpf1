@@ -95,10 +95,12 @@ class _DataMacroCollection:
         # Initialize non default macros
         for macro_name, file_name in non_default_macros_dict.items():
             self.macros[macro_name] = DataMacro(name=macro_name, filename=file_name, default_macros=self.default_macros)
+        # for macro_name in config.DEFAULT_MACROS:
+        #     self.macros[macro_name].load()
         for macro_name, data_macro in self.macros.items():
             data_macro.load()
-            self.indexed_labels = {**self.indexed_labels,
-                                   **{label: label_ref.name for label, label_ref in data_macro.all_labels.items()}}
+            # self.indexed_labels = {**self.indexed_labels,
+            #                        **{label: label_ref.name for label, label_ref in data_macro.all_labels.items()}}
 
 
 _collection = _DataMacroCollection()

@@ -6,6 +6,7 @@ from p3_db.pnr import RCVD_FROM, ITIN
 from p3_db.test_data_elements import FixedFile
 from p8_test.test_local import TestDebug
 
+macros["WI0BS"].load()
 wi0act = f"{macros['WI0BS'].evaluate('#WI0ACT'):02X}"
 wa0tvl = f"{macros['WA0AA'].evaluate('#WA0TVL'):02X}"
 wa0sec = f"{macros['WA0AA'].evaluate('#WA0SEC'):02X}"
