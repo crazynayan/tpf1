@@ -68,7 +68,7 @@ def create_listing_commands(seg_name: str, lines: List[str]) -> List[LstCmd]:
                                 "#ESUB", "#EIFM", "#DO", "#EDO", "#EXEC", "#STPH", "#CAST", "#CASE", "#ECAS",
                                 "#EXIF", "#OREL", "#DOEX", "#ELOP"}
     # Init with commands that will never be expanded (IBM TPF specific executable macro)
-    ibm_cmds: set = {"DETAC", "FINIS", "FLIPC", "ATTAC", "ENTNC"}
+    ibm_cmds: set = {"DETAC", "FINIS", "FLIPC", "ATTAC", "ENTNC", "ENTDC"}
     # Initialize the different type of source stmt
     ibm_source_stmt: set = {line.stmt for line in listing_lines if line.command in ibm_cmds and not line.source_stmt}
     exec_macro_source_stmt: set = {line.stmt for line in listing_lines if line.command in exec_macro_commands
