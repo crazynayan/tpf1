@@ -421,5 +421,8 @@ class State:
             field: LabelReference = macros[macro_name].lookup(field_byte["field"].upper())
             address = field.dsp + base_address
             length = field_byte["length"] if field_byte["length"] > 0 else field.length
-            field_byte["data"] = b64encode(self.vm.get_bytes(address, length)).decode()
+            try:
+                field_byte["data"] = b64encode(self.vm.get_bytes(address, length)).decode()
+            except BaseAddressError:
+                field_byte["data"] = str()
         return
