@@ -18,6 +18,15 @@ class ExaaTest(TestDebug):
             "field_item_len": "PR00_20_PTY, PR00_20_TIM, PR00_20_DUT",
         }
         self.test_data.create_pnr_output(body=pnr_dict, persistence=False)
+        heap_body: dict = {
+            "heap_name": "TP5TI",
+            "hex_data": str(),
+            "field_data": str(),
+            "seg_name": str(),
+            "variation": 0,
+            "variation_name": str()
+        }
+        self.test_data.create_heap(heap_body, persistence=False)
 
     def _mini_tjr_setup(self, tj2qaa) -> None:
         fixed_file = FixedFile()
@@ -48,14 +57,14 @@ class ExaaTest(TestDebug):
         self.test_data.set_field("WA0TSC", DataType("X", input="01").to_bytes())
         self.test_data.set_field("WA0POR", DataType("X", input="00017F").to_bytes())
         self.test_data.set_field("WA0FNS", DataType("X", input="10").to_bytes())
+        self.test_data.set_field("WA0PTY", DataType("X", input="07").to_bytes())
         self.test_data.add_pnr_element(["3ZAVERI/NAYAN/PURVI/SANAY", "4SHAH"], NAME)
         self.test_data.add_pnr_element(["NAYAN"], RCVD_FROM)
         self.test_data.add_pnr_element(["123456"], PHONE)
         self._mini_tjr_setup("00")
-        test_data = self.tpf_server.run("ETA1", self.test_data)
+        test_data = self.tpf_server.run("EWA1", self.test_data)
         self.output = test_data.output
         self.assertEqual(self.IGR1_END, self.output.last_line, f"{self.output.last_node}--{self.output.dumps}")
-        self.assertIn("OK", self.output.messages[0], self.output.debug)
         self.assertEqual("0007", test_data.get_pnr_field("PR00_20_PTY"))
 
     def test_exaa_npty_corporate(self) -> None:
@@ -64,12 +73,12 @@ class ExaaTest(TestDebug):
         self.test_data.set_field("WA0TSC", DataType("X", input="01").to_bytes())
         self.test_data.set_field("WA0POR", DataType("X", input="00017F").to_bytes())
         self.test_data.set_field("WA0FNS", DataType("X", input="10").to_bytes())
+        self.test_data.set_field("WA0PTY", DataType("X", input="09").to_bytes())
         self.test_data.add_pnr_element(["C/6TOURS", "4SHAH", "I/3BABY"], NAME)
         self.test_data.add_pnr_element(["NAYAN"], RCVD_FROM)
         self.test_data.add_pnr_element(["123456"], PHONE)
         self._mini_tjr_setup("00")
-        test_data = self.tpf_server.run("ETA1", self.test_data)
+        test_data = self.tpf_server.run("EWA1", self.test_data)
         self.output = test_data.output
         self.assertEqual(self.IGR1_END, self.output.last_line, f"{self.output.last_node}--{self.output.dumps}")
-        self.assertIn("OK", self.output.messages[0], self.output.debug)
         self.assertEqual("0009", test_data.get_pnr_field("PR00_20_PTY"))
