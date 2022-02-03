@@ -15,6 +15,15 @@ class Et2Test(TestDebug):
             "key": HEADER,
             "field_item_len": "PR00_20_PTY, PR00_20_TIM, PR00_20_DUT",
         }
+        heap_body: dict = {
+            "heap_name": "TP5TI",
+            "hex_data": str(),
+            "field_data": str(),
+            "seg_name": str(),
+            "variation": 0,
+            "variation_name": str()
+        }
+        self.test_data.create_heap(heap_body, persistence=False)
         self.test_data.create_pnr_output(body=pnr_dict, persistence=False)
 
     def _setup_input_itin(self) -> None:
