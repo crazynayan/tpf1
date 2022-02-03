@@ -59,9 +59,10 @@ class Etg1Test(TestDebug):
         self.test_data.add_pnr_element(["NAYAN"], RCVD_FROM)
         self.test_data.add_pnr_element(["123456"], PHONE)
         self._mini_tjr_setup("00")
+        self.test_data.stop_segments = ["EWA1"]
         test_data = self.tpf_server.run("ETA1", self.test_data)
         self.output = test_data.output
-        self.assertEqual(self.IGR1_END, self.output.last_line, f"{self.output.last_node}--{self.output.dumps}")
+        self.assertEqual("ETGE0250.1", self.output.last_line, f"{self.output.last_node}--{self.output.dumps}")
         self.assertIn("OK", self.output.messages[0], self.output.debug)
 
     def test_etg1_insurance_no_main_tjr(self) -> None:
