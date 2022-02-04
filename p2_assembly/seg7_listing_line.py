@@ -71,6 +71,8 @@ class ListingLine:
             return False
         if len(self.line) > 15 and self.line[11:15] == seg_name:
             return False
+        if len(self.line) < 27:
+            return False
         return True
 
     def set_line_stmt(self, line) -> None:
