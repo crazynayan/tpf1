@@ -106,7 +106,7 @@ class Segment(RealtimeMacroImplementation):
             else:
                 prior_label.index += 1
                 line.label = str(prior_label)
-            self.add_label(line.label, line.dsp, 0, dsect_name)
+            self.add_label(line.label, line.dsp, line.instruction_length, dsect_name)
             self.all_labels[line.label].set_branch()
         # Update the length of labels in EQU, DS and DC
         for line in lines:
