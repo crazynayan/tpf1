@@ -76,8 +76,6 @@ def init_seg_lst():
 
 def reset_seg_assembly(blob_name: str) -> Optional[SegLst]:
     seg_name = seg_collection.init_from_cloud(blob_name)
-    if not seg_name:
-        seg_name = blob_name[:4].upper()
     segment = seg_collection.get_seg(seg_name)
     if not segment:
         return None

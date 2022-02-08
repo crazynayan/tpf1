@@ -90,8 +90,6 @@ class _SegmentCollection:
 
     def init_from_cloud(self, blob_name: str) -> str:
         seg_name = blob_name[:4].upper()
-        if seg_name in self.segments and self.segments[seg_name].source == config.LOCAL:
-            return str()
         filename = os.path.join(config.DOWNLOAD_PATH, blob_name)
         self.segments[seg_name] = get_segment(seg_name, filename, config.LST, config.CLOUD, blob_name)
         return seg_name
