@@ -30,6 +30,8 @@ class Eta6Test(TestDebug):
         self.test_data.add_pnr_element(["1ZAVERI/NAYAN"], NAME)
         self.test_data.add_pnr_element(["NAYAN"], RCVD_FROM)
         self.test_data.add_pnr_element(["123456"], PHONE)
+        self.test_data.create_ecb_level({"variation": 0, "variation_name": str(), "ecb_level": "2", "hex_data": str(),
+                                         "field_data": str(), "seg_name": str()}, persistence=False)
         test_data = self.tpf_server.run("ETA1", self.test_data)
         self.output = test_data.output
         self.assertEqual(self.FMSG_END, self.output.last_line, self.output.messages)
