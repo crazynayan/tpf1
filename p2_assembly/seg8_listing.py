@@ -68,7 +68,7 @@ def create_listing_commands(seg_name: str, lines: List[str]) -> List[LstCmd]:
                                 "#ESUB", "#EIFM", "#DO", "#EDO", "#EXEC", "#STPH", "#CAST", "#CASE", "#ECAS",
                                 "#EXIF", "#OREL", "#DOEX", "#ELOP"}
     # Init with commands that will never be expanded (IBM TPF specific executable macro)
-    ibm_cmds: set = {"DETAC", "FINIS", "FLIPC", "ATTAC", "ENTNC", "ENTDC"}
+    ibm_cmds: set = {"DETAC", "FINIS", "FLIPC", "ATTAC", "ENTNC"}
     # Initialize the different type of source stmt
     ibm_source_stmt: set = {line.stmt for line in listing_lines if line.command in ibm_cmds and not line.source_stmt}
     exec_macro_source_stmt: set = {line.stmt for line in listing_lines if line.command in exec_macro_commands
@@ -81,7 +81,10 @@ def create_listing_commands(seg_name: str, lines: List[str]) -> List[LstCmd]:
                                      if not line.source_stmt
                                      and line.stmt not in exec_macro_source_stmt
                                      and not line.command.startswith("=")]
+    # source_labels are all words in the operands of source commands
     source_labels: set = {label for cmd in source_commands for label in split_operand(cmd.operand) if label}
+    # source_branch_labels are all branch labels from the source_commands
+    source_branch_labels: set = {cmd.label for cmd in source_commands}
     # Exec cmds = Exec cmds that have been expanded - Ignored Exec cmds - EQU/DS cmds that are not used
     non_equ_exec_cmds: List[LstCmd] = [create_listing_command(line, seg_name) for line in listing_lines
                                        if line.source_stmt and line.source_stmt in exec_macro_source_stmt
@@ -97,9 +100,12 @@ def create_listing_commands(seg_name: str, lines: List[str]) -> List[LstCmd]:
     using_data_cmds: List[LstCmd] = [create_listing_command(line, seg_name) for line in listing_lines
                                      if line.source_stmt and line.source_stmt in other_source_stm
                                      and line.command in {"USING", "DSECT", "CSECT", "PUSH", "POP"}]
+    # equ_ds_data_cmds is Generated EQU, DS that are used in source or exec cmds - branch labels from source cmds
+    # This is to remove generated labels with labels in front of realtime macros.
     equ_ds_data_cmds: List[LstCmd] = [create_listing_command(line, seg_name) for line in listing_lines
                                       if line.source_stmt and line.source_stmt in other_source_stm
-                                      and line.command in equ_ds and line.label in source_exec_labels]
+                                      and line.command in equ_ds and line.label in source_exec_labels
+                                      and line.label not in source_branch_labels]
     listing_commands: List[LstCmd] = (source_commands + non_equ_exec_cmds + equ_exec_cmds + using_data_cmds
                                       + equ_ds_data_cmds)
     listing_commands.sort(key=lambda item: item.stmt)
