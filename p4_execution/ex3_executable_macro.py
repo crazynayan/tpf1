@@ -184,6 +184,14 @@ class RealTimeMacro(State):
         self.vm.set_bytes(self.fields["CE3ENTPGM"], self.regs.get_value(field.base) + field.dsp, 4)
         return node.fall_down
 
+    def cinfc(self, node: KeyValue) -> str:
+        reg_arg: str = node.get_value("REG")
+        reg: Register = Register(reg_arg)
+        if not reg.is_valid():
+            raise UserDefinedMacroExecutionError(node)
+        self.regs.set_value(0, reg)
+        return node.fall_down
+
 
 class UserDefinedMacro(State):
 

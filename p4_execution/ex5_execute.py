@@ -203,6 +203,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["DEFRC"] = self.no_operation
         self._ex["REALTIMA"] = self.realtima
         self._ex["MALOC"] = self.maloc
+        self._ex["CINFC"] = self.cinfc
 
         # SPM Macros
         self._ex["#PERF"] = self.no_operation
