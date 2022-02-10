@@ -106,8 +106,18 @@ def create_listing_commands(seg_name: str, lines: List[str]) -> List[LstCmd]:
                                       if line.source_stmt and line.source_stmt in other_source_stm
                                       and line.command in equ_ds and line.label in source_exec_labels
                                       and line.label not in source_branch_labels]
+    # equ_ds_labels are all words in the operands of equ_ds_data commands
+    equ_ds_labels: set = {label for cmd in equ_ds_data_cmds for label in split_operand(cmd.operand) if label}
+    # equ_ds_stmt are all stmt that are in generated EQU DS - This is to avoid duplicates
+    equ_ds_stmt: set = {cmd.stmt for cmd in equ_ds_data_cmds}
+    # equ_ds_extra_cmds are EQU DS definition that are used as operands in equ_ds_data_cmds
+    equ_ds_extra_cmds: List[LstCmd] = [create_listing_command(line, seg_name) for line in listing_lines
+                                       if line.source_stmt and line.source_stmt in other_source_stm
+                                       and line.command in equ_ds and line.label in equ_ds_labels
+                                       and line.label not in source_branch_labels
+                                       and line.stmt not in equ_ds_stmt]
     listing_commands: List[LstCmd] = (source_commands + non_equ_exec_cmds + equ_exec_cmds + using_data_cmds
-                                      + equ_ds_data_cmds)
+                                      + equ_ds_data_cmds + equ_ds_extra_cmds)
     listing_commands.sort(key=lambda item: item.stmt)
     # Setup node exception
     node_exception_cmds: set = {"BEGIN", "PGMID"}
