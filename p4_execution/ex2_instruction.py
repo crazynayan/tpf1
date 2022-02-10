@@ -373,6 +373,11 @@ class MoveLogicControl(State):
         if node.mask & (1 << 3 - self.cc) != 0:
             value = self.regs.get_address(node.reg) - self.regs.R8
             label = self.seg.get_field_name(Register('R8'), value, 4)
+            if label is None:
+                value += 0x078
+                label = self.seg.get_field_name(Register('R8'), value, 4)
+                if label is None:
+                    raise BctExecutionError
         else:
             label = node.fall_down
         return label
