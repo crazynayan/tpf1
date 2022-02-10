@@ -312,8 +312,6 @@ class TpfdfMacro(State):
         return node.fall_down
 
     def dbcls(self, node: KeyValue) -> str:
-        if any(key not in ["FILE", "REF"] for key in node.keys):
-            raise TpfdfExecutionError(node)
         file_value = node.get_value("FILE")
         ref_value = node.get_value("REF")
         if file_value and file_value != "PR001W":
