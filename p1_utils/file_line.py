@@ -170,6 +170,8 @@ class Line:
         # Take care L' does NOT start a quote
         if not self.operand:
             return list()
+        if not {"(", ")", "'"}.intersection(self.operand):
+            return self.operand.split(",")
         ignore_commas, in_parenthesis, in_quotes = False, False, False
         new_operand: List = list()
         prev_char: str = str()
