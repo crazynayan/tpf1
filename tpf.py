@@ -7,11 +7,25 @@ os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "google-cloud-tokyo.json"
 from google.cloud.storage import Client
 
 from config import config
+from p1_utils.data_type import DataType
+from p1_utils.ucdr import date_to_pars, pars_to_date
 from p2_assembly.seg6_segment import Segment
 from p2_assembly.seg8_listing import LstCmd, create_lxp
 from p2_assembly.seg9_collection import SegLst, read_folder, get_segment, read_cloud, seg_collection
 from p4_execution.ex5_execute import TpfServer
 from p7_flask_app.auth import User
+
+
+def to_pars(date: str):
+    date_bytes = DataType("C", input=date).to_bytes()
+    pars = date_to_pars(date_bytes)[0]
+    print(f"{pars:X}")
+
+
+def from_pars(pars: int):
+    date_bytes = pars_to_date(pars, full_year=True)
+    date = DataType("C", bytes=date_bytes).decode
+    print(date)
 
 
 def create_user(email: str, initial: str):
