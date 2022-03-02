@@ -2,7 +2,7 @@ from urllib.parse import unquote
 
 from flask import jsonify, request
 
-from p3_db.template import create_new_pnr_template, add_to_existing_pnr_template, get_templates_by_type, \
+from p3_db.template_crud import create_new_pnr_template, add_to_existing_pnr_template, get_templates_by_type, \
     get_templates_by_name, rename_template, update_pnr_template, delete_template_by_id, delete_template_by_name, \
     get_templates_by_id
 from p3_db.template_models import PNR

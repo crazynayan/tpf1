@@ -102,7 +102,7 @@ class TestData(FirestoreDocument):
             return False
         return True
 
-    def _validate_and_update_variation(self, item_dict: dict, input_type: str) -> bool:
+    def validate_and_update_variation(self, item_dict: dict, input_type: str) -> bool:
         variation_types: dict = {"core": self.cores, "pnr": self.pnr, "tpfdf": self.tpfdf, "file": self.fixed_files}
         if input_type not in variation_types:
             return False
@@ -171,7 +171,7 @@ class TestData(FirestoreDocument):
             return dict()
         if not isinstance(field_dict["data"], str) or not field_dict["data"]:
             return dict()
-        if not self._validate_and_update_variation(field_dict, "core"):
+        if not self.validate_and_update_variation(field_dict, "core"):
             return dict()
         core_dict = {"macro_name": macro_name, "variation": field_dict["variation"],
                      "variation_name": field_dict["variation_name"]}
@@ -208,7 +208,7 @@ class TestData(FirestoreDocument):
             return response
         if body["macro_name"] not in config.DEFAULT_MACROS:
             response["error_fields"]["macro_name"] = f"Invalid macro name. {body['macro_name']} is not a default macro."
-        if not self._validate_and_update_variation(body, "core"):
+        if not self.validate_and_update_variation(body, "core"):
             response["error_fields"]["variation"] = "Invalid variation."
         elif "macro_name" not in response["error_fields"]:
             if any(core.variation == body["variation"] and core.macro_name == body["macro_name"]
@@ -275,7 +275,7 @@ class TestData(FirestoreDocument):
             return response
         if not body["heap_name"] or not isinstance(body["heap_name"], str) or not body["heap_name"].isalnum():
             response["error_fields"]["heap_name"] = "Invalid heap name. It must be an alphanumeric string."
-        if not self._validate_and_update_variation(body, "core"):
+        if not self.validate_and_update_variation(body, "core"):
             response["error_fields"]["variation"] = "Invalid variation"
         elif "heap_name" not in response["error_fields"]:
             body["heap_name"] = body["heap_name"].strip().upper()
@@ -347,7 +347,7 @@ class TestData(FirestoreDocument):
         if not body["global_name"] or not isinstance(body["global_name"], str) \
                 or not get_global_ref(body["global_name"]):
             response["error_fields"]["global_name"] = "This global name does not exists in global definitions."
-        if not self._validate_and_update_variation(body, "core"):
+        if not self.validate_and_update_variation(body, "core"):
             response["error_fields"]["variation"] = "Invalid variation"
         elif "global_name" not in response["error_fields"]:
             body["global_name"] = body["global_name"].strip().upper()
@@ -417,7 +417,7 @@ class TestData(FirestoreDocument):
             return response
         if body["ecb_level"] not in config.ECB_LEVELS:
             response["error_fields"]["ecb_level"] = "Invalid ECB level. Level should be between 0 to F."
-        if not self._validate_and_update_variation(body, "core"):
+        if not self.validate_and_update_variation(body, "core"):
             response["error_fields"]["variation"] = "Invalid variation."
         elif "ecb_level" not in response["error_fields"]:
             if any(core.variation == body["variation"] and core.ecb_level == body["ecb_level"] for core in self.cores):
@@ -505,7 +505,7 @@ class TestData(FirestoreDocument):
             response["message"] = "Only 6 fields allowed (variation, variation_name, key, locator, text, " \
                                   "field_data_item) and all are mandatory."
             return response
-        if not self._validate_and_update_variation(body, "pnr"):
+        if not self.validate_and_update_variation(body, "pnr"):
             response["error_fields"]["variation"] = "Invalid variation."
         errors = validate_and_update_pnr_locator_key(body)
         if response["error_fields"] or errors:
@@ -638,7 +638,7 @@ class TestData(FirestoreDocument):
         df_macro.load()
         if not isinstance(df_dict["field_data"], dict) or not df_dict["field_data"]:
             return None
-        if not self._validate_and_update_variation(df_dict, "tpfdf"):
+        if not self.validate_and_update_variation(df_dict, "tpfdf"):
             return None
         for field, value in df_dict["field_data"].items():
             if not df_macro.check(field):
@@ -672,7 +672,7 @@ class TestData(FirestoreDocument):
     def create_fixed_file(self, file_dict: dict, persistence: bool = True) -> Optional[FixedFile]:
         if not FixedFile.validate(file_dict):
             return None
-        if not self._validate_and_update_variation(file_dict, "file"):
+        if not self.validate_and_update_variation(file_dict, "file"):
             return None
         if "pool_files" in file_dict:
             if not all(file_dict["macro_name"] == pool_file["index_macro_name"]

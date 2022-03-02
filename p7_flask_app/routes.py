@@ -10,6 +10,7 @@ from config import config
 from p2_assembly.mac0_generic import LabelReference
 from p2_assembly.mac2_data_macro import macros
 from p2_assembly.seg9_collection import seg_collection, SegLst
+from p3_db.template_merge import merge_pnr_template
 from p3_db.test_data import TestData
 from p3_db.test_data_elements import Tpfdf, FixedFile
 from p4_execution.ex5_execute import TpfServer
@@ -422,6 +423,14 @@ def delete_debug(test_data_id: str, seg_name: str, **kwargs) -> Response:
     if not kwargs[test_data_id].output.delete_debug_seg(seg_name):
         return error_response(400, "Error in deleting debug segment")
     return jsonify(kwargs[test_data_id].cascade_to_dict())
+
+
+@tpf1_app.route("/test_data/<string:test_data_id>/templates/pnr/merge", methods=["POST"])
+@token_auth.login_required
+@test_data_required
+@role_check_required
+def templates_pnr_merge(test_data_id: str, **kwargs) -> Response:
+    return jsonify(merge_pnr_template(kwargs[test_data_id], request.get_json()))
 
 
 @tpf1_app.route("/test_data/<string:test_data_id>/variations")
