@@ -152,10 +152,6 @@ class TestData(FirestoreDocument):
         return cls.objects.filter_by(name=name).first()
 
     @classmethod
-    def get_test_data(cls, test_data_id: str) -> "TestData":
-        return cls.get_by_id(test_data_id, cascade=True)
-
-    @classmethod
     def delete_test_data(cls, test_data_id: str) -> str:
         test_data: cls = cls.get_by_id(test_data_id, cascade=True)
         return test_data.delete(cascade=True) if test_data else str()
@@ -512,7 +508,7 @@ class TestData(FirestoreDocument):
             response["error_fields"] = {**response["error_fields"], **errors}
             return response
         if any(pnr.key == body["key"] and pnr.locator == body["locator"] and pnr.variation == body["variation"]
-               for pnr in self.pnr):
+               for pnr in self.pnr if not pnr.link):
             response["error_fields"]["key"] = f"PNR key {body['key'].upper()} already exists for " \
                                               f"locator {body['locator']}."
             return response

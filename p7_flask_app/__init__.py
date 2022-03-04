@@ -24,7 +24,7 @@ def make_shell_context():
     from p2_assembly.seg8_listing import create_listing_commands, write_tmp_output, LstCmd
     from p2_assembly.seg9_collection import SegLst, seg_collection
     from p3_db.test_data import TestData
-    from p3_db import template_crud, template_merge
+    from p3_db import template_crud, template_merge, test_data_get, template_models
     from p4_execution.ex5_execute import TpfServer
     from p7_flask_app.auth import User
     from p7_flask_app import routes
@@ -45,4 +45,6 @@ def make_shell_context():
         "tpf": tpf,
         "template": template_crud,
         "merge": template_merge,
+        "test_data_get": test_data_get,
+        "templates": template_models,
     }

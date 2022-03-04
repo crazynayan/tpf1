@@ -1,4 +1,4 @@
-from typing import Tuple, Optional
+from typing import Tuple, Optional, List
 
 from firestore_ci import FirestoreDocument
 
@@ -18,6 +18,7 @@ class Template(FirestoreDocument):
         self.field_data: str = str()
         self.text: str = str()
         self.locator: str = str()  # PNR locator
+        self.test_data_links: List[str] = list()
 
 
 Template.init()

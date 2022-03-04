@@ -83,6 +83,8 @@ class Pnr(FirestoreDocument):
         self.original_field_data_item: str = str()
         self.original_text: str = str()
         self.text: List[str] = list()
+        self.link: str = str()  # is the template name
+        self.link_status: str = str()  # is either active or inactive - only updated on read.
 
     def __repr__(self):
         return f"{self.locator}:{self.variation}:{self.key}:T={len(self.text)}:FDI={len(self.field_data)}"

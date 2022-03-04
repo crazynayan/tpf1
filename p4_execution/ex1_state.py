@@ -257,6 +257,8 @@ class State:
             self.regs.set_value(value, reg)
         Pnr.init_db()
         for pnr in test_data.pnr:
+            if pnr.link_status == "inactive":
+                continue
             pnr_locator = pnr.locator if pnr.locator else config.AAAPNR
             if pnr.text:
                 for pnr_text in pnr.text:

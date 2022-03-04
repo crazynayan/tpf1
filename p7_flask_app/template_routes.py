@@ -1,13 +1,16 @@
 from urllib.parse import unquote
 
-from flask import jsonify, request
+from flask import jsonify, request, Response
 
 from p3_db.template_crud import create_new_pnr_template, add_to_existing_pnr_template, get_templates_by_type, \
     get_templates_by_name, rename_template, update_pnr_template, delete_template_by_id, delete_template_by_name, \
     get_templates_by_id
+from p3_db.template_merge import merge_pnr_template, create_link_pnr_template, update_link_pnr_template, \
+    delete_link_pnr_template
 from p3_db.template_models import PNR
 from p7_flask_app import tpf1_app
 from p7_flask_app.auth import token_auth
+from p7_flask_app.route_decorators import test_data_required, role_check_required
 
 
 @tpf1_app.route("/templates/pnr/create", methods=["POST"])
@@ -63,3 +66,35 @@ def templates_delete(template_id: str):
 @token_auth.login_required
 def templates_name_delete():
     return jsonify(delete_template_by_name(request.get_json()))
+
+
+@tpf1_app.route("/test_data/<string:test_data_id>/templates/pnr/merge", methods=["POST"])
+@token_auth.login_required
+@test_data_required
+@role_check_required
+def templates_pnr_merge(test_data_id: str, **kwargs) -> Response:
+    return jsonify(merge_pnr_template(kwargs[test_data_id], request.get_json()))
+
+
+@tpf1_app.route("/test_data/<string:test_data_id>/templates/pnr/link/create", methods=["POST"])
+@token_auth.login_required
+@test_data_required
+@role_check_required
+def templates_pnr_link_create(test_data_id: str, **kwargs) -> Response:
+    return jsonify(create_link_pnr_template(kwargs[test_data_id], request.get_json()))
+
+
+@tpf1_app.route("/test_data/<string:test_data_id>/templates/pnr/link/update", methods=["POST"])
+@token_auth.login_required
+@test_data_required
+@role_check_required
+def templates_pnr_link_update(test_data_id: str, **kwargs) -> Response:
+    return jsonify(update_link_pnr_template(kwargs[test_data_id], request.get_json()))
+
+
+@tpf1_app.route("/test_data/<string:test_data_id>/templates/pnr/link/delete", methods=["POST"])
+@token_auth.login_required
+@test_data_required
+@role_check_required
+def templates_pnr_link_delete(test_data_id: str, **kwargs) -> Response:
+    return jsonify(delete_link_pnr_template(kwargs[test_data_id], request.get_json()))

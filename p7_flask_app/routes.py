@@ -1,4 +1,3 @@
-from functools import wraps
 from typing import Dict, List, Optional, Union
 from urllib.parse import unquote
 
@@ -10,38 +9,14 @@ from config import config
 from p2_assembly.mac0_generic import LabelReference
 from p2_assembly.mac2_data_macro import macros
 from p2_assembly.seg9_collection import seg_collection, SegLst
-from p3_db.template_merge import merge_pnr_template
 from p3_db.test_data import TestData
 from p3_db.test_data_elements import Tpfdf, FixedFile
 from p4_execution.ex5_execute import TpfServer
 from p7_flask_app import tpf1_app
 from p7_flask_app.auth import token_auth, User
 from p7_flask_app.errors import error_response
+from p7_flask_app.route_decorators import test_data_required, role_check_required, test_data_with_links_required
 from tpf import reset_seg_assembly
-
-
-def test_data_required(func):
-    @wraps(func)
-    def test_data_wrapper(test_data_id, *args, **kwargs):
-        test_data: TestData = TestData.get_test_data(test_data_id)
-        if not test_data:
-            return error_response(404, "Test data id not found")
-        kwargs[test_data_id] = test_data
-        return func(test_data_id, *args, **kwargs)
-
-    return test_data_wrapper
-
-
-# role_check_required should only be used after test_data_required
-def role_check_required(func):
-    @wraps(func)
-    def role_check_wrapper(test_data_id, *args, **kwargs):
-        test_data: TestData = kwargs[test_data_id]
-        if test_data.owner != g.current_user.email:
-            return error_response(403, "Insufficient privileges to perform this action")
-        return func(test_data_id, *args, **kwargs)
-
-    return role_check_wrapper
 
 
 @tpf1_app.route("/users/<string:doc_id>")
@@ -102,7 +77,7 @@ def copy_test_data(test_data_id: str, **kwargs) -> Response:
 
 
 @tpf1_app.route("/test_data/<string:test_data_id>/run")
-@test_data_required
+@test_data_with_links_required
 def run_test_data(test_data_id: str, **kwargs) -> Response:
     test_data: TestData = kwargs[test_data_id]
     if not seg_collection.is_seg_present(test_data.seg_name):
@@ -114,7 +89,7 @@ def run_test_data(test_data_id: str, **kwargs) -> Response:
 
 @tpf1_app.route("/test_data/<string:test_data_id>")
 @token_auth.login_required
-@test_data_required
+@test_data_with_links_required
 def get_test_data(test_data_id: str, **kwargs) -> Response:
     test_data: TestData = kwargs[test_data_id]
     return jsonify(test_data.cascade_to_dict())
@@ -423,14 +398,6 @@ def delete_debug(test_data_id: str, seg_name: str, **kwargs) -> Response:
     if not kwargs[test_data_id].output.delete_debug_seg(seg_name):
         return error_response(400, "Error in deleting debug segment")
     return jsonify(kwargs[test_data_id].cascade_to_dict())
-
-
-@tpf1_app.route("/test_data/<string:test_data_id>/templates/pnr/merge", methods=["POST"])
-@token_auth.login_required
-@test_data_required
-@role_check_required
-def templates_pnr_merge(test_data_id: str, **kwargs) -> Response:
-    return jsonify(merge_pnr_template(kwargs[test_data_id], request.get_json()))
 
 
 @tpf1_app.route("/test_data/<string:test_data_id>/variations")

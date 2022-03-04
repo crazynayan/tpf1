@@ -4,6 +4,9 @@ from typing import List
 from p3_db.template_models import Template, get_template_by_id
 from p3_db.template_validators import validate_and_update_new_template_name, \
     validate_and_update_existing_pnr_template_name, validate_and_update_pnr_fields, validate_template_name
+from p3_db.test_data import TestData
+from p3_db.test_data_elements import Pnr
+from p3_db.test_data_get import get_whole_test_data
 from p3_db.test_data_validators import validate_and_update_pnr_locator_key
 
 
@@ -56,6 +59,15 @@ def rename_template(body: dict) -> dict:
             return response
         for template in templates:
             template.name = body["new_name"]
+        updated_pnr_list = list()
+        for test_data_id in templates[0].test_data_links:
+            test_data: TestData = get_whole_test_data(test_data_id, link=False)
+            pnr_list: List[Pnr] = [pnr for pnr in test_data.pnr if pnr.link == body["old_name"]]
+            for pnr in pnr_list:
+                pnr.link = body["new_name"]
+            updated_pnr_list.extend(pnr_list)
+        if updated_pnr_list:
+            Pnr.objects.save_all(updated_pnr_list)
     for template in templates:
         template.description = body["description"]
     Template.objects.save_all(templates)
@@ -81,11 +93,14 @@ def delete_template_by_name(body: dict) -> dict:
     if set(body) != {"name"}:
         response["message"] = "Only 1 fields allowed (name) and it is mandatory."
         return response
-    success: str = Template.objects.filter_by(name=body["name"]).delete()
-    if not success:
+    template: Template = Template.objects.filter_by(name=body["name"]).first()
+    if not template:
         response["message"] = "No PNR template with this name found."
-        response["error_fields"]["name"] = response["message"]
         return response
+    if template.test_data_links:
+        response["message"] = "Cannot delete a template with links."
+        return response
+    Template.objects.filter_by(name=body["name"]).delete()
     response["message"] = f"Template named {body['name']} deleted successfully."
     response["error"] = False
     return response
