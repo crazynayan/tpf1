@@ -3,7 +3,8 @@ from typing import List
 
 from p3_db.template_models import Template, get_template_by_id
 from p3_db.template_validators import validate_and_update_new_template_name, \
-    validate_and_update_existing_pnr_template_name, validate_and_update_pnr_fields, validate_template_name
+    validate_and_update_existing_pnr_template_name, validate_and_update_pnr_fields, \
+    validate_and_update_template_rename_copy
 from p3_db.test_data import TestData
 from p3_db.test_data_elements import Pnr
 from p3_db.test_data_get import get_whole_test_data
@@ -38,18 +39,8 @@ def get_templates_by_id(template_id: str) -> dict:
 
 
 def rename_template(body: dict) -> dict:
-    response: dict = {"error": True, "message": str(), "error_fields": dict()}
-    if set(body) != {"old_name", "new_name", "description"}:
-        response["message"] = "Only 3 fields allowed (old_name, new_name, description) and all are mandatory."
-        return response
-    body["name"] = body["old_name"]
-    errors = validate_template_name(body)
-    if errors:
-        response["error_fields"]["old_name"] = errors["name"]
-        return response
-    templates: List[Template] = Template.objects.filter_by(name=body["old_name"]).get()
+    response, templates = validate_and_update_template_rename_copy(body)
     if not templates:
-        response["error_fields"]["old_name"] = "No template found with this name."
         return response
     if body["old_name"] != body["new_name"]:
         body["name"] = body["new_name"]
@@ -72,6 +63,33 @@ def rename_template(body: dict) -> dict:
         template.description = body["description"]
     Template.objects.save_all(templates)
     response["message"] = f"Template renamed successfully."
+    response["error"] = False
+    return response
+
+
+def copy_template(body: dict) -> dict:
+    response, templates = validate_and_update_template_rename_copy(body)
+    if not templates:
+        return response
+    body["name"] = body["new_name"]
+    errors = validate_and_update_new_template_name(body)
+    if errors:
+        response["error_fields"]["new_name"] = errors["name"]
+        return response
+    new_templates: List[Template] = list()
+    for template in templates:
+        new_template: Template = Template()
+        new_templates.append(new_template)
+        new_template.name = body["new_name"]
+        new_template.description = body["description"]
+        new_template.owner = body["owner"]
+        new_template.locator = template.locator
+        new_template.key = template.key
+        new_template.text = template.text
+        new_template.field_data = template.field_data
+        new_template.type = template.type
+    Template.objects.create_all(Template.objects.to_dicts(new_templates))
+    response["message"] = f"Template copied successfully."
     response["error"] = False
     return response
 

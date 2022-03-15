@@ -4,7 +4,7 @@ from flask import jsonify, request, Response
 
 from p3_db.template_crud import create_new_pnr_template, add_to_existing_pnr_template, get_templates_by_type, \
     get_templates_by_name, rename_template, update_pnr_template, delete_template_by_id, delete_template_by_name, \
-    get_templates_by_id
+    get_templates_by_id, copy_template
 from p3_db.template_merge import merge_pnr_template, create_link_pnr_template, update_link_pnr_template, \
     delete_link_pnr_template
 from p3_db.template_models import PNR
@@ -48,6 +48,12 @@ def templates_name_get():
 @token_auth.login_required
 def templates_rename():
     return jsonify(rename_template(request.get_json()))
+
+
+@tpf1_app.route("/templates/copy", methods=["POST"])
+@token_auth.login_required
+def templates_copy():
+    return jsonify(copy_template(request.get_json()))
 
 
 @tpf1_app.route("/templates/pnr/update", methods=["POST"])

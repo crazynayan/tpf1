@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 
 from flask import g
 
@@ -74,3 +74,19 @@ def remove_test_data_link_from_template(test_data: TestData, templates: List[Tem
         if test_data.id in template.test_data_links:
             template.test_data_links.remove(test_data.id)
     return
+
+
+def validate_and_update_template_rename_copy(body: dict) -> Tuple[dict, List[Template]]:
+    response: dict = {"error": True, "message": str(), "error_fields": dict()}
+    if set(body) != {"old_name", "new_name", "description"}:
+        response["message"] = "Only 3 fields allowed (old_name, new_name, description) and all are mandatory."
+        return response, list()
+    body["name"] = body["old_name"]
+    errors = validate_template_name(body)
+    if errors:
+        response["error_fields"]["old_name"] = errors["name"]
+        return response, list()
+    templates: List[Template] = Template.objects.filter_by(name=body["old_name"]).get()
+    if not templates:
+        response["error_fields"]["old_name"] = "No template found with this name."
+    return response, templates
