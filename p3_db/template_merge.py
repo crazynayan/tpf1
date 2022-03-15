@@ -90,6 +90,7 @@ def update_link_pnr_template(test_data: TestData, body: dict):
         response["message"] = f"Template link is the same. No changes made"
         return response
     td_pnr.link = new_template_name
+    td_pnr.locator = new_templates[0].locator
     td_pnr.save()
     for template in templates:
         if test_data.id in template.test_data_links:
