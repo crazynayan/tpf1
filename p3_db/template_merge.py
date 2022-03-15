@@ -1,6 +1,7 @@
 from typing import List, Tuple
 
 from p3_db.template_models import Template, PNR
+from p3_db.template_validators import remove_test_data_link_from_template, add_test_data_link_to_template
 from p3_db.test_data import TestData
 from p3_db.test_data_elements import Pnr
 
@@ -62,9 +63,7 @@ def create_link_pnr_template(test_data: TestData, body: dict):
     test_data.pnr.append(pnr_input)
     pnr_input.create()
     test_data.save()
-    for template in templates:
-        if test_data.id not in template.test_data_links:
-            template.test_data_links.append(test_data.id)
+    add_test_data_link_to_template(test_data, templates)
     Template.objects.save_all(templates)
     response["message"] = f"Template linked successfully."
     response["error"] = False
@@ -92,12 +91,8 @@ def update_link_pnr_template(test_data: TestData, body: dict):
     td_pnr.link = new_template_name
     td_pnr.locator = new_templates[0].locator
     td_pnr.save()
-    for template in templates:
-        if test_data.id in template.test_data_links:
-            template.test_data_links.remove(test_data.id)
-    for template in new_templates:
-        if test_data.id not in template.test_data_links:
-            template.test_data_links.append(test_data.id)
+    remove_test_data_link_from_template(test_data, templates)
+    add_test_data_link_to_template(test_data, new_templates)
     templates.extend(new_templates)
     Template.objects.save_all(templates)
     response["message"] = f"Template link updated successfully."
@@ -116,9 +111,7 @@ def delete_link_pnr_template(test_data: TestData, body: dict):
     test_data.pnr.remove(td_pnr)
     td_pnr.delete()
     test_data.save()
-    for template in templates:
-        if test_data.id in template.test_data_links:
-            template.test_data_links.remove(test_data.id)
+    remove_test_data_link_from_template(test_data, templates)
     Template.objects.save_all(templates)
     response["message"] = f"Template link deleted successfully."
     response["error"] = False

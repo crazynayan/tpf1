@@ -3,6 +3,7 @@ from typing import List
 from flask import g
 
 from p3_db.template_models import Template, PNR
+from p3_db.test_data import TestData
 from p3_db.test_data_validators import validate_and_update_pnr_text_with_field
 
 
@@ -40,6 +41,7 @@ def validate_and_update_existing_pnr_template_name(body: dict) -> dict:
     body["description"] = templates[0].description
     body["owner"] = templates[0].owner
     body["locator"] = templates[0].locator
+    body["test_data_links"] = templates[0].test_data_links
     if any(template.key == body["key"] for template in templates):
         errors["key"] = f"PNR key {body['key'].upper()} already exists for locator {body['locator']}."
     return errors
@@ -56,3 +58,19 @@ def validate_and_update_pnr_fields(body: dict) -> dict:
         errors["field_data"] = errors["field_data_item"]
         del errors["field_data_item"]
     return errors
+
+
+def add_test_data_link_to_template(test_data: TestData, templates: List[Template]):
+    for template in templates:
+        if test_data.id not in template.test_data_links:
+            template.test_data_links.append(test_data.id)
+    return
+
+
+def remove_test_data_link_from_template(test_data: TestData, templates: List[Template]):
+    if any(td_pnr for td_pnr in test_data.pnr if td_pnr.link == templates[0].name):
+        return
+    for template in templates:
+        if test_data.id in template.test_data_links:
+            template.test_data_links.remove(test_data.id)
+    return
