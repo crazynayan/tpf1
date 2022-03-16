@@ -10,6 +10,7 @@ from p1_utils.errors import SegmentNotFoundError, EcbLevelFormatError, InvalidBa
     PartitionError, FileItemSpecificationError, PoolFileSpecificationError, BaseAddressError, ExecutionError, \
     TPFServerMemoryError, LevtaExecutionError, NotImplementedExecutionError, BctExecutionError, \
     NotFoundInSymbolTableError
+from p1_utils.file_line import Line
 from p2_assembly.mac0_generic import LabelReference
 from p2_assembly.mac2_data_macro import macros, get_global_address
 from p2_assembly.seg2_ins_operand import FieldIndex
@@ -136,8 +137,11 @@ class State:
             self.init_run(seg_name)
             self._set_from_test_data(test_data_variant)
             label = self.seg.root_label()
-            node: InstructionType = self.seg.nodes[label]
+            node = self.seg.equ(Line.from_line(f"{label} EQU 0"))
             try:
+                if not self.seg.nodes:
+                    raise ExecutionError
+                node: InstructionType = self.seg.nodes[label]
                 while self.instruction_counter < 2000:
                     label = self._ex_command(node)
                     if label is None:
