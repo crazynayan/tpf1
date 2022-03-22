@@ -2,9 +2,10 @@ from typing import List, Tuple
 
 from flask import g
 
-from p3_db.template_models import Template, PNR
+from p2_assembly.mac2_data_macro import get_global_ref
+from p3_db.template_models import Template, PNR, GLOBAL
 from p3_db.test_data import TestData
-from p3_db.test_data_validators import validate_and_update_pnr_text_with_field
+from p3_db.test_data_validators import validate_and_update_pnr_text_with_field, validate_and_update_global_data
 
 
 def validate_template_name(body: dict) -> dict:
@@ -30,13 +31,19 @@ def validate_and_update_new_template_name(body: dict) -> dict:
     return errors
 
 
-def validate_and_update_existing_pnr_template_name(body: dict) -> dict:
+def validate_existing_template_name(body: dict, template_type: str) -> Tuple[dict, List[Template]]:
     errors: dict = validate_template_name(body)
     if errors:
-        return errors
-    templates: List[Template] = Template.objects.filter_by(name=body["name"], type=PNR).get()
+        return errors, list()
+    templates: List[Template] = Template.objects.filter_by(name=body["name"], type=template_type).get()
     if not templates:
         errors["name"] = "No PNR template with this name found."
+    return errors, templates
+
+
+def validate_and_update_existing_pnr_template_name(body: dict) -> dict:
+    errors, templates = validate_existing_template_name(body, PNR)
+    if errors:
         return errors
     body["description"] = templates[0].description
     body["owner"] = templates[0].owner
@@ -44,6 +51,18 @@ def validate_and_update_existing_pnr_template_name(body: dict) -> dict:
     body["test_data_links"] = templates[0].test_data_links
     if any(template.key == body["key"] for template in templates):
         errors["key"] = f"PNR key {body['key'].upper()} already exists for locator {body['locator']}."
+    return errors
+
+
+def validate_and_update_existing_global_template_name(body: dict) -> dict:
+    errors, templates = validate_existing_template_name(body, GLOBAL)
+    if errors:
+        return errors
+    body["description"] = templates[0].description
+    body["owner"] = templates[0].owner
+    body["test_data_links"] = templates[0].test_data_links
+    if any(template.global_name == body["global_name"] for template in templates):
+        errors["global_name"] = f"Global name {body['global_name']} already exists."
     return errors
 
 
@@ -57,6 +76,22 @@ def validate_and_update_pnr_fields(body: dict) -> dict:
     elif "field_data_item" in errors:
         errors["field_data"] = errors["field_data_item"]
         del errors["field_data_item"]
+    return errors
+
+
+def validate_and_update_global_fields(body: dict) -> dict:
+    errors = dict()
+    if not body["global_name"] or not isinstance(body["global_name"], str) or not get_global_ref(body["global_name"]):
+        errors["global_name"] = "This global name does not exists in global definitions."
+    else:
+        body["global_name"] = body["global_name"].strip().upper()
+    other_errors = validate_and_update_global_data(body)
+    if other_errors:
+        errors = {**errors, **other_errors}
+    else:
+        body["field_data"] = body["original_field_data"]
+        body["hex_data"] = body["original_hex_data"]
+        body["type"] = GLOBAL
     return errors
 
 

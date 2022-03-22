@@ -127,6 +127,7 @@ def validate_and_update_global_data(body: dict) -> dict:
         errors["is_global_record"] = "Is global record? field should be a boolean."
     if errors:
         return errors
+    body["original_hex_data"] = body["hex_data"].strip().upper()
     if not body["is_global_record"]:  # Global field
         if not body["hex_data"]:
             errors["hex_data"] = "Hex data is required for a global field."

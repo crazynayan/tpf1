@@ -4,10 +4,11 @@ from flask import jsonify, request, Response
 
 from p3_db.template_crud import create_new_pnr_template, add_to_existing_pnr_template, get_templates_by_type, \
     get_templates_by_name, rename_template, update_pnr_template, delete_template_by_id, delete_template_by_name, \
-    get_templates_by_id, copy_template
+    get_templates_by_id, copy_template, create_new_global_template, add_to_existing_global_template, \
+    update_global_template
 from p3_db.template_merge import merge_pnr_template, create_link_pnr_template, update_link_pnr_template, \
     delete_link_pnr_template
-from p3_db.template_models import PNR
+from p3_db.template_models import PNR, GLOBAL
 from p7_flask_app import tpf1_app
 from p7_flask_app.auth import token_auth
 from p7_flask_app.route_decorators import test_data_required, role_check_required
@@ -29,6 +30,36 @@ def templates_pnr_add():
 @token_auth.login_required
 def templates_pnr_get():
     return jsonify(get_templates_by_type(PNR))
+
+
+@tpf1_app.route("/templates/pnr/update", methods=["POST"])
+@token_auth.login_required
+def templates_pnr_update():
+    return jsonify(update_pnr_template(request.get_json()))
+
+
+@tpf1_app.route("/templates/global/create", methods=["POST"])
+@token_auth.login_required
+def templates_global_create():
+    return jsonify(create_new_global_template(request.get_json()))
+
+
+@tpf1_app.route("/templates/global/add", methods=["POST"])
+@token_auth.login_required
+def templates_global_add():
+    return jsonify(add_to_existing_global_template(request.get_json()))
+
+
+@tpf1_app.route("/templates/global", methods=["GET"])
+@token_auth.login_required
+def templates_global_get():
+    return jsonify(get_templates_by_type(GLOBAL))
+
+
+@tpf1_app.route("/templates/global/update", methods=["POST"])
+@token_auth.login_required
+def templates_global_update():
+    return jsonify(update_global_template(request.get_json()))
 
 
 @tpf1_app.route("/templates/<string:template_id>", methods=["GET"])
@@ -54,12 +85,6 @@ def templates_rename():
 @token_auth.login_required
 def templates_copy():
     return jsonify(copy_template(request.get_json()))
-
-
-@tpf1_app.route("/templates/pnr/update", methods=["POST"])
-@token_auth.login_required
-def templates_pnr_update():
-    return jsonify(update_pnr_template(request.get_json()))
 
 
 @tpf1_app.route("/templates/<string:template_id>", methods=["DELETE"])

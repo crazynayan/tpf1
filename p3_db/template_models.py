@@ -10,15 +10,23 @@ class Template(FirestoreDocument):
 
     def __init__(self):
         super().__init__()
+        # Common
         self.name: str = str()
         self.description: str = str()
         self.owner: str = str()
         self.type: str = str()
-        self.key: str = str()  # PNR key or TPFDF key
+        self.test_data_links: List[str] = list()
         self.field_data: str = str()
+        # PNR specific
+        self.key: str = str()  # PNR key or TPFDF key
         self.text: str = str()
         self.locator: str = str()  # PNR locator
-        self.test_data_links: List[str] = list()
+        # Core specific
+        self.hex_data: str = str()
+        self.seg_name: str = str()
+        # Global specific
+        self.global_name: str = str()
+        self.is_global_record: bool = bool()
 
 
 Template.init()

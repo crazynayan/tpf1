@@ -1,14 +1,16 @@
+from copy import copy
 from itertools import groupby
 from typing import List
 
 from p3_db.template_models import Template, get_template_by_id
 from p3_db.template_validators import validate_and_update_new_template_name, \
     validate_and_update_existing_pnr_template_name, validate_and_update_pnr_fields, \
-    validate_and_update_template_rename_copy
+    validate_and_update_template_rename_copy, validate_and_update_global_fields, \
+    validate_and_update_existing_global_template_name
 from p3_db.test_data import TestData
 from p3_db.test_data_elements import Pnr
 from p3_db.test_data_get import get_whole_test_data
-from p3_db.test_data_validators import validate_and_update_pnr_locator_key
+from p3_db.test_data_validators import validate_and_update_pnr_locator_key, validate_and_update_global_data
 
 
 def get_templates_by_type(template_type: str) -> List[dict]:
@@ -78,16 +80,12 @@ def copy_template(body: dict) -> dict:
         return response
     new_templates: List[Template] = list()
     for template in templates:
-        new_template: Template = Template()
-        new_templates.append(new_template)
+        new_template: Template = copy(template)
         new_template.name = body["new_name"]
         new_template.description = body["description"]
         new_template.owner = body["owner"]
-        new_template.locator = template.locator
-        new_template.key = template.key
-        new_template.text = template.text
-        new_template.field_data = template.field_data
-        new_template.type = template.type
+        new_template.test_data_links = list()
+        new_templates.append(new_template)
     Template.objects.create_all(Template.objects.to_dicts(new_templates))
     response["message"] = f"Template copied successfully."
     response["error"] = False
@@ -99,6 +97,10 @@ def delete_template_by_id(template_id: str) -> dict:
     template, error_msg = get_template_by_id(template_id)
     if error_msg:
         response["message"] = error_msg
+        return response
+    templates: List[Template] = Template.objects.filter_by(name=template.name).get()
+    if len(templates) <= 1:
+        response["message"] = "Cannot delete the last template by id. Use delete template by name."
         return response
     template.delete()
     response["message"] = f"Template element deleted successfully."
@@ -185,5 +187,67 @@ def update_pnr_template(body: dict) -> dict:
     template.field_data = body["field_data"]
     template.save()
     response["message"] = f"PNR element for key {template.key.upper()} updated successfully."
+    response["error"] = False
+    return response
+
+
+def create_new_global_template(body: dict) -> dict:
+    response: dict = {"error": True, "message": str(), "error_fields": dict()}
+    if set(body) != {"name", "description", "global_name", "hex_data", "field_data", "seg_name", "is_global_record"}:
+        response["message"] = "Only 7 fields allowed (name, description, global_name, hex_data, field_data, seg_name" \
+                              "is_global_record) and all are mandatory."
+        return response
+    errors = validate_and_update_new_template_name(body)  # Updates owner
+    if errors:
+        response["error_fields"] = errors
+    errors = validate_and_update_global_fields(body)  # This will update the template type as Global
+    if errors or response["error_fields"]:
+        response["error_fields"] = {**response["error_fields"], **errors}
+        return response
+    Template.create_from_dict(body)
+    response["message"] = f"Global template for global {body['global_name']} created successfully."
+    response["error"] = False
+    return response
+
+
+def add_to_existing_global_template(body: dict) -> dict:
+    response: dict = {"error": True, "message": str(), "error_fields": dict()}
+    if set(body) != {"name", "global_name", "hex_data", "field_data", "seg_name", "is_global_record"}:
+        response["message"] = "Only 6 fields allowed (name, global_name, hex_data, field_data, seg_name, " \
+                              "is_global_record) and all are mandatory."
+        return response
+    errors = validate_and_update_existing_global_template_name(body)
+    if errors:
+        response["error_fields"] = errors
+    errors = validate_and_update_global_fields(body)  # This will update the template type as Global
+    if errors or response["error_fields"]:
+        response["error_fields"] = {**response["error_fields"], **errors}
+        return response
+    Template.create_from_dict(body)
+    response["message"] = f"Global template for global {body['global_name']} created successfully."
+    response["error"] = False
+    return response
+
+
+def update_global_template(body: dict) -> dict:
+    response: dict = {"error": True, "message": str(), "error_fields": dict()}
+    if set(body) != {"id", "hex_data", "field_data", "seg_name", "is_global_record"}:
+        response["message"] = "Only 5 fields allowed (id, hex_data, field_data, seg_name, is_global_record) " \
+                              "and all are mandatory."
+        return response
+    template, error_msg = get_template_by_id(body["id"])
+    if error_msg:
+        response["error_fields"]["message"] = error_msg
+        return response
+    errors = validate_and_update_global_data(body)
+    if errors:
+        response["error_fields"] = errors
+        return response
+    template.hex_data = body["original_hex_data"]
+    template.field_data = body["original_field_data"]
+    template.is_global_record = body["is_global_record"]
+    template.seg_name = body["seg_name"]
+    template.save()
+    response["message"] = f"Global template for global {template.global_name} updated successfully."
     response["error"] = False
     return response
