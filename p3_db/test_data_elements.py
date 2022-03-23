@@ -25,6 +25,8 @@ class Core(FirestoreDocument):
         self.seg_name: str = str()
         self.global_name: str = str()
         self.is_global_record: bool = bool()
+        self.link: str = str()  # is the template name
+        self.link_status: str = str()  # is either active or inactive - only updated on read.
 
     def __repr__(self):
         return self.macro_name or self.ecb_level or self.heap_name or self.global_name

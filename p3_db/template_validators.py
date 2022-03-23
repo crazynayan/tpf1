@@ -102,9 +102,13 @@ def add_test_data_link_to_template(test_data: TestData, templates: List[Template
     return
 
 
-def remove_test_data_link_from_template(test_data: TestData, templates: List[Template]):
-    if any(td_pnr for td_pnr in test_data.pnr if td_pnr.link == templates[0].name):
-        return
+def remove_test_data_link_from_template(test_data: TestData, templates: List[Template], template_type: str):
+    if template_type == PNR:
+        if any(td_pnr for td_pnr in test_data.pnr if td_pnr.link == templates[0].name):
+            return
+    else:
+        if any(core for core in test_data.cores if core.link == templates[0].name):
+            return
     for template in templates:
         if test_data.id in template.test_data_links:
             template.test_data_links.remove(test_data.id)

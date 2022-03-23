@@ -238,6 +238,8 @@ class State:
         if test_data.partition:
             self.set_partition(test_data.partition)
         for core in test_data.cores:
+            if core.link_status == "inactive":
+                continue
             if core.heap_name:
                 address: int = self.vm.allocate()
                 self.heap["old"][core.heap_name] = address
