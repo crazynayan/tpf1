@@ -3,9 +3,10 @@ from typing import List, Tuple
 from flask import g
 
 from p2_assembly.mac2_data_macro import get_global_ref
-from p3_db.template_models import Template, PNR, GLOBAL
+from p3_db.template_models import Template, PNR, GLOBAL, AAA
 from p3_db.test_data import TestData
-from p3_db.test_data_validators import validate_and_update_pnr_text_with_field, validate_and_update_global_data
+from p3_db.test_data_validators import validate_and_update_pnr_text_with_field, validate_and_update_global_data, \
+    validate_and_update_macro_field_data
 
 
 def validate_template_name(body: dict) -> dict:
@@ -92,6 +93,15 @@ def validate_and_update_global_fields(body: dict) -> dict:
         body["field_data"] = body["original_field_data"]
         body["hex_data"] = body["original_hex_data"]
         body["type"] = GLOBAL
+    return errors
+
+
+def validate_and_update_aaa_fields(body: dict) -> dict:
+    errors = validate_and_update_macro_field_data(body, "WA0AA")
+    if errors:
+        return errors
+    body["field_data"] = body["original_field_data"]
+    body["type"] = AAA
     return errors
 
 

@@ -6,7 +6,7 @@ from p3_db.template_models import Template, get_template_by_id
 from p3_db.template_validators import validate_and_update_new_template_name, \
     validate_and_update_existing_pnr_template_name, validate_and_update_pnr_fields, \
     validate_and_update_template_rename_copy, validate_and_update_global_fields, \
-    validate_and_update_existing_global_template_name
+    validate_and_update_existing_global_template_name, validate_and_update_aaa_fields
 from p3_db.test_data import TestData
 from p3_db.test_data_elements import Pnr
 from p3_db.test_data_get import get_whole_test_data
@@ -23,7 +23,7 @@ def get_templates_by_type(template_type: str) -> List[dict]:
         template_list = list(template_group)
         template_dict = Template.objects.to_dicts([template_list[0]])[0]
         template_dicts.append(template_dict)
-        template_dict["all_templates"] = Template.objects.to_dicts(template_list)
+        # template_dict["all_templates"] = Template.objects.to_dicts(template_list)
         template_dict["count"] = len(template_list)
     return template_dicts
 
@@ -249,5 +249,43 @@ def update_global_template(body: dict) -> dict:
     template.seg_name = body["seg_name"]
     template.save()
     response["message"] = f"Global template for global {template.global_name} updated successfully."
+    response["error"] = False
+    return response
+
+
+def create_new_aaa_template(body: dict) -> dict:
+    response: dict = {"error": True, "message": str(), "error_fields": dict()}
+    if set(body) != {"name", "description", "field_data"}:
+        response["message"] = "Only 3 fields allowed (name, description, field_data) and all are mandatory."
+        return response
+    errors = validate_and_update_new_template_name(body)  # Updates owner
+    if errors:
+        response["error_fields"] = errors
+    errors = validate_and_update_aaa_fields(body)  # This will update the template type as AAA
+    if errors or response["error_fields"]:
+        response["error_fields"] = {**response["error_fields"], **errors}
+        return response
+    Template.create_from_dict(body)
+    response["message"] = f"AAA template created successfully."
+    response["error"] = False
+    return response
+
+
+def update_aaa_template(body: dict) -> dict:
+    response: dict = {"error": True, "message": str(), "error_fields": dict()}
+    if set(body) != {"id", "field_data"}:
+        response["message"] = "Only 2 fields allowed (id, field_data) and all are mandatory."
+        return response
+    template, error_msg = get_template_by_id(body["id"])
+    if error_msg:
+        response["error_fields"]["message"] = error_msg
+        return response
+    errors = validate_and_update_aaa_fields(body)
+    if errors:
+        response["error_fields"] = errors
+        return response
+    template.field_data = body["original_field_data"]
+    template.save()
+    response["message"] = f"AAA template updated successfully."
     response["error"] = False
     return response
