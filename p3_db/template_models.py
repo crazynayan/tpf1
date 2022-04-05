@@ -3,6 +3,7 @@ from typing import Tuple, Optional, List
 from firestore_ci import FirestoreDocument
 
 PNR, GLOBAL, AAA = "PNR", "Global", "AAA"
+AAA_MACRO_NAME = "WA0AA"
 TEMPLATE_TYPES = (PNR, GLOBAL, AAA)
 
 

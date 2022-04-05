@@ -1,9 +1,10 @@
 from typing import List
 
-from p3_db.template_models import Template, GLOBAL
+from p3_db.template_models import Template, GLOBAL, AAA, AAA_MACRO_NAME
 from p3_db.test_data import TestData
 from p3_db.test_data_elements import Pnr, Core
-from p3_db.test_data_validators import validate_and_update_pnr_text_with_field, validate_and_update_global_data
+from p3_db.test_data_validators import validate_and_update_pnr_text_with_field, validate_and_update_global_data, \
+    validate_and_update_macro_field_data
 
 
 def extract_pnr_links(test_data: TestData) -> TestData:
@@ -58,22 +59,33 @@ def extract_core_links(test_data: TestData) -> TestData:
             new_core.variation = core.variation
             new_core.variation_name = core.variation_name
             new_core.link = core.link
-            if any(not td_core.link and td_core.variation == core.variation and
-                   td_core.global_name == template.global_name for td_core in test_data.cores):
-                new_core.link_status = "inactive"
-            else:
-                new_core.link_status = "active"
-            body: dict = {"field_data": template.field_data, "hex_data": template.hex_data,
-                          "seg_name": template.seg_name}
+            body: dict = {"field_data": template.field_data}
             if template.type == GLOBAL:
+                if any(not td_core.link and td_core.variation == core.variation and
+                       td_core.global_name == template.global_name for td_core in test_data.cores):
+                    new_core.link_status = "inactive"
+                else:
+                    new_core.link_status = "active"
                 new_core.global_name = template.global_name
                 new_core.is_global_record = template.is_global_record
+                body["hex_data"] = template.hex_data
+                body["seg_name"] = template.seg_name
                 body["is_global_record"] = template.is_global_record
                 errors: dict = validate_and_update_global_data(body)
                 if errors:
                     continue
+                new_core.hex_data = body["hex_data"]
+            elif template.type == AAA:
+                new_core.macro_name = AAA_MACRO_NAME
+                if any(not td_core.link and td_core.variation == core.variation and
+                       td_core.macro_name == AAA_MACRO_NAME for td_core in test_data.cores):
+                    new_core.link_status = "inactive"
+                else:
+                    new_core.link_status = "active"
+                errors: dict = validate_and_update_macro_field_data(body, AAA_MACRO_NAME)
+                if errors:
+                    continue
             new_core.field_data = body["field_data"]
-            new_core.hex_data = body["hex_data"]
             updated_core_list.append(new_core)
     test_data.cores = [core for core in test_data.cores if not core.link]
     test_data.cores.extend(updated_core_list)

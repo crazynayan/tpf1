@@ -3,7 +3,7 @@ from typing import List, Tuple
 from flask import g
 
 from p2_assembly.mac2_data_macro import get_global_ref
-from p3_db.template_models import Template, PNR, GLOBAL, AAA
+from p3_db.template_models import Template, PNR, GLOBAL, AAA, AAA_MACRO_NAME
 from p3_db.test_data import TestData
 from p3_db.test_data_validators import validate_and_update_pnr_text_with_field, validate_and_update_global_data, \
     validate_and_update_macro_field_data
@@ -97,7 +97,7 @@ def validate_and_update_global_fields(body: dict) -> dict:
 
 
 def validate_and_update_aaa_fields(body: dict) -> dict:
-    errors = validate_and_update_macro_field_data(body, "WA0AA")
+    errors = validate_and_update_macro_field_data(body, AAA_MACRO_NAME)
     if errors:
         return errors
     body["field_data"] = body["original_field_data"]
