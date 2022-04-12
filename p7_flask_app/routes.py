@@ -11,6 +11,7 @@ from p2_assembly.mac2_data_macro import macros
 from p2_assembly.seg9_collection import seg_collection, SegLst
 from p3_db.test_data import TestData
 from p3_db.test_data_elements import Tpfdf, FixedFile
+from p3_db.test_data_get import rename_variation
 from p4_execution.ex5_execute import TpfServer
 from p7_flask_app import tpf1_app
 from p7_flask_app.auth import token_auth, User
@@ -414,6 +415,15 @@ def get_variations(test_data_id: str, **kwargs) -> Response:
     variation_list = list({frozenset(item.items()): item for item in variation_list}.values())
     variation_list.sort(key=lambda item: item["variation"])
     return jsonify({"type": variation, "variations": variation_list})
+
+
+@tpf1_app.route("/test_data/<string:test_data_id>/input/types/<string:v_type>/variations/<int:variation>",
+                methods=["POST"])
+@token_auth.login_required
+@test_data_required
+@role_check_required
+def rename_variation_by_type(test_data_id: str, v_type: str, variation: int, **kwargs) -> Response:
+    return jsonify(rename_variation(kwargs[test_data_id], variation, v_type, request.get_json()))
 
 
 @tpf1_app.route("/fields/<string:field_name>")

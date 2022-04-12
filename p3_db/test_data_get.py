@@ -2,7 +2,7 @@ from typing import List
 
 from p3_db.template_models import Template, GLOBAL, AAA, AAA_MACRO_NAME
 from p3_db.test_data import TestData
-from p3_db.test_data_elements import Pnr, Core
+from p3_db.test_data_elements import Pnr, Core, Tpfdf, FixedFile
 from p3_db.test_data_validators import validate_and_update_pnr_text_with_field, validate_and_update_global_data, \
     validate_and_update_macro_field_data
 
@@ -101,3 +101,29 @@ def get_whole_test_data(test_data_id: str, link: bool) -> TestData:
     test_data = extract_pnr_links(test_data)
     test_data = extract_core_links(test_data)
     return test_data
+
+
+def rename_variation(test_data: TestData, variation: int, v_type: str, body: dict) -> dict:
+    variation_types: dict = {"core": (test_data.cores, Core),
+                             "pnr": (test_data.pnr, Pnr),
+                             "tpfdf": (test_data.tpfdf, Tpfdf),
+                             "file": (test_data.fixed_files, FixedFile)}
+    response: dict = {"error": True, "message": str(), "error_fields": dict()}
+    if v_type not in variation_types:
+        response["message"] = f"Invalid variation type."
+        return response
+    td_elements = [td_element for td_element in variation_types[v_type][0] if td_element.variation == variation]
+    if not td_elements:
+        response["message"] = f"Variation not found in test data."
+        return response
+    if set(body) != {"new_name"} or not isinstance(body["new_name"], str):
+        response["message"] = "Only new_name allowed and it is a mandatory string."
+        return response
+    if not body["new_name"].strip():
+        body["new_name"] = f"Variation {td_elements[0].variation + 1}"
+    for td_element in td_elements:
+        td_element.variation_name = body["new_name"]
+    variation_types[v_type][1].save_all(td_elements)
+    response["error"] = False
+    response["message"] = "Variation renamed successfully."
+    return response
