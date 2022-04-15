@@ -61,29 +61,34 @@ class TestData(FirestoreDocument):
             raise InvalidBaseRegError
         return self.output.regs[reg] & config.REG_MAX
 
+    @staticmethod
+    def _get_range(variations):
+        return range(len(variations)) if variations else range(1)
+
     def yield_variation(self):
-        core_variation = max(core.variation for core in self.cores) if self.cores else 0
-        pnr_variation = max(pnr.variation for pnr in self.pnr) if self.pnr else 0
-        df_variation = max(df.variation for df in self.tpfdf) if self.tpfdf else 0
-        file_variation = max(file.variation for file in self.fixed_files) if self.fixed_files else 0
-        for variation in product(range(core_variation + 1), range(pnr_variation + 1), range(df_variation + 1),
-                                 range(file_variation + 1)):
+        core_variations = sorted(list(set(core.variation for core in self.cores)))
+        pnr_variations = sorted(list(set(pnr.variation for pnr in self.pnr)))
+        df_variations = sorted(list(set(df.variation for df in self.tpfdf)))
+        file_variations = sorted(list(set(file.variation for file in self.fixed_files)))
+        for variation in product(self._get_range(core_variations), self._get_range(pnr_variations),
+                                 self._get_range(df_variations), self._get_range(file_variations)):
             test_data = deepcopy(self)
-            test_data.cores = [core for core in test_data.cores if core.variation == variation[0]]
-            test_data.pnr = [pnr for pnr in test_data.pnr if pnr.variation == variation[1]]
-            test_data.tpfdf = [df for df in test_data.tpfdf if df.variation == variation[2]]
-            test_data.fixed_files = [file for file in test_data.fixed_files if file.variation == variation[3]]
             test_data.output.variation["core"] = variation[0]
             test_data.output.variation["pnr"] = variation[1]
             test_data.output.variation["tpfdf"] = variation[2]
             test_data.output.variation["file"] = variation[3]
-            if test_data.cores:
+            if core_variations:
+                test_data.cores = [core for core in test_data.cores if core.variation == core_variations[variation[0]]]
                 test_data.output.variation_name["core"] = test_data.cores[0].variation_name
-            if test_data.pnr:
+            if pnr_variations:
+                test_data.pnr = [pnr for pnr in test_data.pnr if pnr.variation == pnr_variations[variation[1]]]
                 test_data.output.variation_name["pnr"] = test_data.pnr[0].variation_name
-            if test_data.tpfdf:
+            if df_variations:
+                test_data.tpfdf = [df for df in test_data.tpfdf if df.variation == df_variations[variation[2]]]
                 test_data.output.variation_name["tpfdf"] = test_data.tpfdf[0].variation_name
-            if test_data.fixed_files:
+            if file_variations:
+                test_data.fixed_files = [file for file in test_data.fixed_files
+                                         if file.variation == file_variations[variation[3]]]
                 test_data.output.variation_name["file"] = test_data.fixed_files[0].variation_name
             yield test_data
         return
