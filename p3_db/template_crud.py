@@ -2,13 +2,12 @@ from copy import copy
 from itertools import groupby
 from typing import List
 
-from p3_db.template_models import Template, get_template_by_id
+from p3_db.template_models import Template, get_template_by_id, TD_REF
 from p3_db.template_validators import validate_and_update_new_template_name, \
     validate_and_update_existing_pnr_template_name, validate_and_update_pnr_fields, \
     validate_and_update_template_rename_copy, validate_and_update_global_fields, \
     validate_and_update_existing_global_template_name, validate_and_update_aaa_fields
 from p3_db.test_data import TestData
-from p3_db.test_data_elements import Pnr
 from p3_db.test_data_get import get_whole_test_data
 from p3_db.test_data_validators import validate_and_update_pnr_locator_key, validate_and_update_global_data
 
@@ -50,17 +49,19 @@ def rename_template(body: dict) -> dict:
         if errors:
             response["error_fields"]["new_name"] = errors["name"]
             return response
+        test_data_list: List[TestData] = [get_whole_test_data(test_data_id, link=False)
+                                          for test_data_id in templates[0].test_data_links]
+        if any(test_data is None for test_data in test_data_list):
+            response["error_fields"]["message"] = "Template to Test Data link corrupted."
+            return response
         for template in templates:
             template.name = body["new_name"]
-        updated_pnr_list = list()
-        for test_data_id in templates[0].test_data_links:
-            test_data: TestData = get_whole_test_data(test_data_id, link=False)
-            pnr_list: List[Pnr] = [pnr for pnr in test_data.pnr if pnr.link == body["old_name"]]
-            for pnr in pnr_list:
-                pnr.link = body["new_name"]
-            updated_pnr_list.extend(pnr_list)
-        if updated_pnr_list:
-            Pnr.objects.save_all(updated_pnr_list)
+        td_elements = [element for test_data in test_data_list for element in test_data.ref(TD_REF[templates[0].type])
+                       if element.link == body["old_name"]]
+        for td_element in td_elements:
+            td_element.link = body["new_name"]
+        if td_elements:
+            td_elements[0].__class__.objects.save_all(td_elements)
     for template in templates:
         template.description = body["description"]
     Template.objects.save_all(templates)

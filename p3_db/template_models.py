@@ -2,9 +2,16 @@ from typing import Tuple, Optional, List
 
 from firestore_ci import FirestoreDocument
 
+from p3_db.test_data import ElementType
+
 PNR, GLOBAL, AAA = "PNR", "Global", "AAA"
 AAA_MACRO_NAME = "WA0AA"
 TEMPLATE_TYPES = (PNR, GLOBAL, AAA)
+TD_REF = {
+    PNR: ElementType.PNR,
+    GLOBAL: ElementType.CORE,
+    AAA: ElementType.CORE,
+}
 
 
 class Template(FirestoreDocument):
