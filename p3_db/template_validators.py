@@ -7,6 +7,7 @@ from p3_db.template_models import Template, PNR, GLOBAL, AAA, AAA_MACRO_NAME, TD
 from p3_db.test_data import TestData
 from p3_db.test_data_validators import validate_and_update_pnr_text_with_field, validate_and_update_global_data, \
     validate_and_update_macro_field_data
+from p7_flask_app.response import StandardResponse
 
 
 def validate_template_name(body: dict) -> dict:
@@ -67,7 +68,7 @@ def validate_and_update_existing_global_template_name(body: dict) -> dict:
     return errors
 
 
-def validate_and_update_pnr_fields(body: dict) -> dict:
+def old_validate_and_update_pnr_fields(body: dict) -> dict:
     body["field_data_item"] = body["field_data"]
     errors = validate_and_update_pnr_text_with_field(body)
     if not errors:
@@ -78,6 +79,21 @@ def validate_and_update_pnr_fields(body: dict) -> dict:
         errors["field_data"] = errors["field_data_item"]
         del errors["field_data_item"]
     return errors
+
+
+def validate_and_update_pnr_fields(rsp: StandardResponse) -> None:
+    rsp.body.field_data_item = rsp.body.field_data
+    body = rsp.body.__dict__
+    errors: dict = validate_and_update_pnr_text_with_field(body)
+    if errors:
+        rsp.error = True
+        rsp.error_fields.field_data = errors.get("field_data_item", str())
+        rsp.error_fields.text = errors.get("text", str())
+        return
+    rsp.body.text = body["original_text"]
+    rsp.body.field_data = body["original_field_data_item"]
+    rsp.body.type = PNR
+    return
 
 
 def validate_and_update_global_fields(body: dict) -> dict:
