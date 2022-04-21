@@ -3,7 +3,7 @@ from typing import List, Tuple
 from flask import g
 
 from p2_assembly.mac2_data_macro import get_global_ref
-from p3_db.template_models import Template, PNR, GLOBAL, AAA, AAA_MACRO_NAME
+from p3_db.template_models import Template, PNR, GLOBAL, AAA, AAA_MACRO_NAME, TD_REF
 from p3_db.test_data import TestData
 from p3_db.test_data_validators import validate_and_update_pnr_text_with_field, validate_and_update_global_data, \
     validate_and_update_macro_field_data
@@ -112,13 +112,9 @@ def add_test_data_link_to_template(test_data: TestData, templates: List[Template
     return
 
 
-def remove_test_data_link_from_template(test_data: TestData, templates: List[Template], template_type: str):
-    if template_type == PNR:
-        if any(td_pnr for td_pnr in test_data.pnr if td_pnr.link == templates[0].name):
-            return
-    else:
-        if any(core for core in test_data.cores if core.link == templates[0].name):
-            return
+def remove_test_data_link_from_template(test_data: TestData, templates: List[Template]):
+    if any(element for element in test_data.ref(TD_REF[templates[0].type]) if element.link == templates[0].name):
+        return
     for template in templates:
         if test_data.id in template.test_data_links:
             template.test_data_links.remove(test_data.id)

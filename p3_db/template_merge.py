@@ -191,7 +191,7 @@ def update_link_pnr_template(test_data: TestData, body: dict):
     td_pnr.link = new_template_name
     td_pnr.locator = new_templates[0].locator
     td_pnr.save()
-    remove_test_data_link_from_template(test_data, templates, PNR)
+    remove_test_data_link_from_template(test_data, templates)
     add_test_data_link_to_template(test_data, new_templates)
     templates.extend(new_templates)
     Template.objects.save_all(templates)
@@ -221,7 +221,7 @@ def update_link_global_template(test_data: TestData, body: dict):
         return response
     core.link = new_template_name
     core.save()
-    remove_test_data_link_from_template(test_data, templates, GLOBAL)
+    remove_test_data_link_from_template(test_data, templates)
     add_test_data_link_to_template(test_data, new_templates)
     templates.extend(new_templates)
     Template.objects.save_all(templates)
@@ -251,7 +251,7 @@ def update_link_aaa_template(test_data: TestData, body: dict):
         return response
     core.link = new_template_name
     core.save()
-    remove_test_data_link_from_template(test_data, templates, AAA)
+    remove_test_data_link_from_template(test_data, templates)
     add_test_data_link_to_template(test_data, new_templates)
     templates.extend(new_templates)
     Template.objects.save_all(templates)
@@ -271,7 +271,7 @@ def delete_link_pnr_template(test_data: TestData, body: dict):
     test_data.pnr.remove(td_pnr)
     td_pnr.delete()
     test_data.save()
-    remove_test_data_link_from_template(test_data, templates, PNR)
+    remove_test_data_link_from_template(test_data, templates)
     Template.objects.save_all(templates)
     response["message"] = f"Template link deleted successfully."
     response["error"] = False
@@ -290,7 +290,7 @@ def delete_link_global_template(test_data: TestData, body: dict):
     test_data.cores.remove(core)
     core.delete()
     test_data.save()
-    remove_test_data_link_from_template(test_data, templates, GLOBAL)
+    remove_test_data_link_from_template(test_data, templates)
     Template.objects.save_all(templates)
     response["message"] = f"Template link deleted successfully."
     response["error"] = False
@@ -309,7 +309,7 @@ def delete_link_aaa_template(test_data: TestData, body: dict):
     test_data.cores.remove(core)
     core.delete()
     test_data.save()
-    remove_test_data_link_from_template(test_data, templates, AAA)
+    remove_test_data_link_from_template(test_data, templates)
     Template.objects.save_all(templates)
     response["message"] = f"Template link deleted successfully."
     response["error"] = False
