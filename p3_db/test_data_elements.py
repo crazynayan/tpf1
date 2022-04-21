@@ -29,7 +29,9 @@ class Core(FirestoreDocument):
         self.link_status: str = str()  # is either active or inactive - only updated on read.
 
     def __repr__(self):
-        return self.macro_name or self.ecb_level or self.heap_name or self.global_name
+        core_name = self.macro_name or self.ecb_level or self.heap_name or self.global_name
+        core_name = f"D{core_name}" if len(core_name) == 1 else core_name
+        return f"V={self.variation}:{core_name}"
 
     @staticmethod
     def validate_field_dict(macro_name: str, field_dict: dict) -> bool:
@@ -89,7 +91,7 @@ class Pnr(FirestoreDocument):
         self.link_status: str = str()  # is either active or inactive - only updated on read.
 
     def __repr__(self):
-        return f"{self.locator}:{self.variation}:{self.key}:T={len(self.text)}:FDI={len(self.field_data)}"
+        return f"V={self.variation}:L={self.locator}:K={self.key}:T={len(self.text)}:FDI={len(self.field_data)}"
 
     @classmethod
     def validate(cls, pnr_dict: dict) -> bool:

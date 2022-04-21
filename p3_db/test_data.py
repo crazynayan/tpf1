@@ -16,6 +16,16 @@ from p3_db.test_data_validators import validate_and_update_hex_and_field_data, v
     validate_and_update_global_data
 
 
+class ElementType:
+    CORE = "core"
+    PNR = "pnr"
+    FILE = "file"
+    TPFDF = "tpfdf"
+
+
+VALID_ELEMENT_TYPES = [value for key, value in ElementType.__dict__.items() if not key.startswith("__")]
+
+
 class TestData(FirestoreDocument):
 
     def __init__(self):
@@ -32,6 +42,15 @@ class TestData(FirestoreDocument):
         self.outputs: List[Output] = [Output()]
         self.partition: str = str()
         self.regs: Dict[str, int] = dict()
+
+    def ref(self, e_type: str):
+        ref: Dict[str, list] = {
+            ElementType.CORE: self.cores,
+            ElementType.PNR: self.pnr,
+            ElementType.FILE: self.fixed_files,
+            ElementType.TPFDF: self.tpfdf,
+        }
+        return ref[e_type]
 
     @property
     def output(self):
