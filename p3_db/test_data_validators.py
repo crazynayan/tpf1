@@ -61,6 +61,7 @@ def validate_and_update_field_data(body: dict, check_field: Callable[[str], bool
 
 def validate_seg_name(body: dict) -> Tuple[dict, Optional[Segment]]:
     errors = dict()
+    body["seg_name"] = body["seg_name"].upper()
     if len(body["seg_name"]) != 4:
         errors["seg_name"] = "Invalid segment name. Seg name must of 4 characters."
         return errors, None
