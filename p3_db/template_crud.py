@@ -228,11 +228,11 @@ def add_to_existing_global_template(body: dict) -> dict:
     return response
 
 
-def update_pnr_template(body: dict) -> dict:
+def update_pnr_template(template_id, body: dict) -> dict:
     rsp: StandardResponse = StandardResponse(body, RequestType.TEMPLATE_PNR_UPDATE)
     if rsp.error:
         return rsp.dict
-    template = validate_and_get_template_by_id(rsp)
+    template = validate_and_get_template_by_id(template_id, rsp)
     validate_and_update_pnr_fields(rsp)
     if rsp.error:
         return rsp.dict

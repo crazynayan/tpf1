@@ -22,46 +22,10 @@ def templates_pnr_create():
     return jsonify(create_new_pnr_template(request.get_json()))
 
 
-@tpf1_app.route("/templates/pnr/add", methods=["POST"])
-@token_auth.login_required
-def templates_pnr_add():
-    return jsonify(add_to_existing_pnr_template(request.get_json()))
-
-
-@tpf1_app.route("/templates/pnr", methods=["GET"])
-@token_auth.login_required
-def templates_pnr_get():
-    return jsonify(get_templates_by_type(PNR))
-
-
-@tpf1_app.route("/templates/pnr/update", methods=["POST"])
-@token_auth.login_required
-def templates_pnr_update():
-    return jsonify(update_pnr_template(request.get_json()))
-
-
 @tpf1_app.route("/templates/global/create", methods=["POST"])
 @token_auth.login_required
 def templates_global_create():
     return jsonify(create_new_global_template(request.get_json()))
-
-
-@tpf1_app.route("/templates/global/add", methods=["POST"])
-@token_auth.login_required
-def templates_global_add():
-    return jsonify(add_to_existing_global_template(request.get_json()))
-
-
-@tpf1_app.route("/templates/global", methods=["GET"])
-@token_auth.login_required
-def templates_global_get():
-    return jsonify(get_templates_by_type(GLOBAL))
-
-
-@tpf1_app.route("/templates/global/update", methods=["POST"])
-@token_auth.login_required
-def templates_global_update():
-    return jsonify(update_global_template(request.get_json()))
 
 
 @tpf1_app.route("/templates/aaa/create", methods=["POST"])
@@ -70,10 +34,46 @@ def templates_aaa_create():
     return jsonify(create_new_aaa_template(request.get_json()))
 
 
+@tpf1_app.route("/templates/pnr/add", methods=["POST"])
+@token_auth.login_required
+def templates_pnr_add():
+    return jsonify(add_to_existing_pnr_template(request.get_json()))
+
+
+@tpf1_app.route("/templates/global/add", methods=["POST"])
+@token_auth.login_required
+def templates_global_add():
+    return jsonify(add_to_existing_global_template(request.get_json()))
+
+
+@tpf1_app.route("/templates/pnr", methods=["GET"])
+@token_auth.login_required
+def templates_pnr_get():
+    return jsonify(get_templates_by_type(PNR))
+
+
+@tpf1_app.route("/templates/global", methods=["GET"])
+@token_auth.login_required
+def templates_global_get():
+    return jsonify(get_templates_by_type(GLOBAL))
+
+
 @tpf1_app.route("/templates/aaa", methods=["GET"])
 @token_auth.login_required
 def templates_aaa_get():
     return jsonify(get_templates_by_type(AAA))
+
+
+@tpf1_app.route("/templates/<string:template_id>/pnr/update", methods=["POST"])
+@token_auth.login_required
+def templates_pnr_update(template_id: str):
+    return jsonify(update_pnr_template(template_id, request.get_json()))
+
+
+@tpf1_app.route("/templates/global/update", methods=["POST"])
+@token_auth.login_required
+def templates_global_update():
+    return jsonify(update_global_template(request.get_json()))
 
 
 @tpf1_app.route("/templates/aaa/update", methods=["POST"])

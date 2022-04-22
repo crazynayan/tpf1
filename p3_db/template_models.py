@@ -49,16 +49,16 @@ def get_template_by_id(template_id: str) -> Tuple[Optional[Template], str]:
     return template, str()
 
 
-def validate_and_get_template_by_id(rsp: StandardResponse) -> Optional[Template]:
-    template: Template = Template.get_by_id(rsp.body.id)
+def validate_and_get_template_by_id(template_id: str, rsp: StandardResponse) -> Optional[Template]:
+    template: Template = Template.get_by_id(template_id)
     if not template:
         rsp.error = True
-        rsp.error_fields.id = "Template not found with this id."
+        rsp.error_fields.message = "Template not found with this id."
         return None
     try:
         if template.owner != g.current_user.email:
             rsp.error = True
-            rsp.error_fields.id = "Unauthorized to update this template."
+            rsp.error_fields.message = "Unauthorized to update this template."
     except RuntimeError:
         pass
     return template

@@ -5,9 +5,10 @@ from typing import Optional
 
 class RequestType:
     VARIATION = SimpleNamespace(new_name=str())
-    TEMPLATE_PNR_UPDATE = SimpleNamespace(id=str(), field_data=str(), text=str())
-    TEMPLATE_GLOBAL_UPDATE = SimpleNamespace(id=str(), field_data=str(), hex_data=str(), is_global_record=str())
-    TEMPLATE_AAA_UPDATE = SimpleNamespace(id=str(), field_data=str())
+    TEMPLATE_PNR_UPDATE = SimpleNamespace(field_data=str(), text=str())
+    TEMPLATE_GLOBAL_UPDATE = SimpleNamespace(field_data=str(), hex_data=str(), is_global_record=str())
+    TEMPLATE_AAA_UPDATE = SimpleNamespace(field_data=str())
+
 
 class StandardResponse:
 
