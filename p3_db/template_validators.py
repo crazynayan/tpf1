@@ -112,13 +112,43 @@ def validate_and_update_global_fields(body: dict) -> dict:
     return errors
 
 
-def validate_and_update_aaa_fields(body: dict) -> dict:
+def validate_and_update_global_data_template(rsp: StandardResponse) -> None:
+    body = rsp.body.__dict__
+    errors: dict = validate_and_update_global_data(body)
+    if errors:
+        rsp.error = True
+        rsp.error_fields.field_data = errors.get("field_data", str())
+        rsp.error_fields.hex_data = errors.get("hex_data", str())
+        rsp.error_fields.seg_name = errors.get("seg_name", str())
+        rsp.error_fields.is_global_record = errors.get("is_global_record", str())
+        return
+    rsp.body.hex_data = body["original_hex_data"]
+    rsp.body.field_data = body["original_field_data"]
+    rsp.body.seg_name = body["seg_name"]
+    rsp.body.is_global_record = body["is_global_record"]
+    rsp.body.type = GLOBAL
+    return
+
+
+def old_validate_and_update_aaa_fields(body: dict) -> dict:
     errors = validate_and_update_macro_field_data(body, AAA_MACRO_NAME)
     if errors:
         return errors
     body["field_data"] = body["original_field_data"]
     body["type"] = AAA
     return errors
+
+
+def validate_and_update_aaa_fields(rsp: StandardResponse) -> None:
+    body = rsp.body.__dict__
+    errors = validate_and_update_macro_field_data(body, AAA_MACRO_NAME)
+    if errors:
+        rsp.error = True
+        rsp.error_fields.field_data = errors.get("field_data", str())
+        return
+    rsp.body.field_data = body["original_field_data"]
+    rsp.body.type = AAA
+    return
 
 
 def add_test_data_link_to_template(test_data: TestData, templates: List[Template]):

@@ -70,16 +70,16 @@ def templates_pnr_update(template_id: str):
     return jsonify(update_pnr_template(template_id, request.get_json()))
 
 
-@tpf1_app.route("/templates/global/update", methods=["POST"])
+@tpf1_app.route("/templates/<string:template_id>/global/update", methods=["POST"])
 @token_auth.login_required
-def templates_global_update():
-    return jsonify(update_global_template(request.get_json()))
+def templates_global_update(template_id: str):
+    return jsonify(update_global_template(template_id, request.get_json()))
 
 
-@tpf1_app.route("/templates/aaa/update", methods=["POST"])
+@tpf1_app.route("/templates/<string:template_id>/aaa/update", methods=["POST"])
 @token_auth.login_required
-def templates_aaa_update():
-    return jsonify(update_aaa_template(request.get_json()))
+def templates_aaa_update(template_id: str):
+    return jsonify(update_aaa_template(template_id, request.get_json()))
 
 
 @tpf1_app.route("/templates/<string:template_id>", methods=["GET"])

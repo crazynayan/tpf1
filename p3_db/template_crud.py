@@ -6,10 +6,12 @@ from p3_db.template_models import Template, get_template_by_id, TD_REF, validate
 from p3_db.template_validators import validate_and_update_new_template_name, \
     validate_and_update_existing_pnr_template_name, old_validate_and_update_pnr_fields, \
     validate_and_update_template_rename_copy, validate_and_update_global_fields, \
-    validate_and_update_existing_global_template_name, validate_and_update_aaa_fields, validate_and_update_pnr_fields
+    validate_and_update_existing_global_template_name, old_validate_and_update_aaa_fields, \
+    validate_and_update_pnr_fields, \
+    validate_and_update_global_data_template, validate_and_update_aaa_fields
 from p3_db.test_data import TestData
 from p3_db.test_data_get import get_whole_test_data
-from p3_db.test_data_validators import validate_and_update_pnr_locator_key, validate_and_update_global_data
+from p3_db.test_data_validators import validate_and_update_pnr_locator_key
 from p7_flask_app.response import StandardResponse, RequestType
 
 
@@ -177,7 +179,7 @@ def create_new_aaa_template(body: dict) -> dict:
     errors = validate_and_update_new_template_name(body)  # Updates owner
     if errors:
         response["error_fields"] = errors
-    errors = validate_and_update_aaa_fields(body)  # This will update the template type as AAA
+    errors = old_validate_and_update_aaa_fields(body)  # This will update the template type as AAA
     if errors or response["error_fields"]:
         response["error_fields"] = {**response["error_fields"], **errors}
         return response
@@ -243,45 +245,32 @@ def update_pnr_template(template_id, body: dict) -> dict:
     return rsp.dict
 
 
-def update_global_template(body: dict) -> dict:
-    response: dict = {"error": True, "message": str(), "error_fields": dict()}
-    if set(body) != {"id", "hex_data", "field_data", "seg_name", "is_global_record"}:
-        response["message"] = "Only 5 fields allowed (id, hex_data, field_data, seg_name, is_global_record) " \
-                              "and all are mandatory."
-        return response
-    template, error_msg = get_template_by_id(body["id"])
-    if error_msg:
-        response["error_fields"]["message"] = error_msg
-        return response
-    errors = validate_and_update_global_data(body)
-    if errors:
-        response["error_fields"] = errors
-        return response
-    template.hex_data = body["original_hex_data"]
-    template.field_data = body["original_field_data"]
-    template.is_global_record = body["is_global_record"]
-    template.seg_name = body["seg_name"]
+def update_global_template(template_id: str, body: dict) -> dict:
+    rsp: StandardResponse = StandardResponse(body, RequestType.TEMPLATE_GLOBAL_UPDATE)
+    if rsp.error:
+        return rsp.dict
+    template = validate_and_get_template_by_id(template_id, rsp)
+    validate_and_update_global_data_template(rsp)
+    if rsp.error:
+        return rsp.dict
+    template.hex_data = rsp.body.hex_data
+    template.field_data = rsp.body.field_data
+    template.is_global_record = rsp.body.is_global_record
+    template.seg_name = rsp.body.seg_name
     template.save()
-    response["message"] = f"Global template for global {template.global_name} updated successfully."
-    response["error"] = False
-    return response
+    rsp.message = f"Global template for global {template.global_name} updated successfully."
+    return rsp.dict
 
 
-def update_aaa_template(body: dict) -> dict:
-    response: dict = {"error": True, "message": str(), "error_fields": dict()}
-    if set(body) != {"id", "field_data"}:
-        response["message"] = "Only 2 fields allowed (id, field_data) and all are mandatory."
-        return response
-    template, error_msg = get_template_by_id(body["id"])
-    if error_msg:
-        response["error_fields"]["message"] = error_msg
-        return response
-    errors = validate_and_update_aaa_fields(body)
-    if errors:
-        response["error_fields"] = errors
-        return response
-    template.field_data = body["original_field_data"]
+def update_aaa_template(template_id: str, body: dict) -> dict:
+    rsp: StandardResponse = StandardResponse(body, RequestType.TEMPLATE_AAA_UPDATE)
+    if rsp.error:
+        return rsp.dict
+    template = validate_and_get_template_by_id(template_id, rsp)
+    validate_and_update_aaa_fields(rsp)
+    if rsp.error:
+        return rsp.dict
+    template.field_data = rsp.body.field_data
     template.save()
-    response["message"] = f"AAA template updated successfully."
-    response["error"] = False
-    return response
+    rsp.message = f"AAA template updated successfully."
+    return rsp.dict
