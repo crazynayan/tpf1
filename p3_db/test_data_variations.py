@@ -2,8 +2,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from copy import deepcopy
 from typing import List
 
+from p3_db.response import StandardResponse, RequestType
 from p3_db.test_data import TestData, VALID_ELEMENT_TYPES
-from p7_flask_app.response import StandardResponse, RequestType
 
 
 def validate_and_get_variation(test_data: TestData, variation: int, v_type: str, rsp: StandardResponse) -> list:

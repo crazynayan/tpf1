@@ -8,7 +8,9 @@ class RequestType:
     TEMPLATE_PNR_UPDATE = SimpleNamespace(field_data=str(), text=str())
     TEMPLATE_GLOBAL_UPDATE = SimpleNamespace(field_data=str(), hex_data=str(), is_global_record=bool(), seg_name=str())
     TEMPLATE_AAA_UPDATE = SimpleNamespace(field_data=str())
-
+    TEMPLATE_PNR_ADD = SimpleNamespace(field_data=str(), text=str(), key=str(), name=str())
+    TEMPLATE_GLOBAL_ADD = SimpleNamespace(field_data=str(), hex_data=str(), is_global_record=bool(), seg_name=str(),
+                                          name=str(), global_name=str())
 
 class StandardResponse:
 
