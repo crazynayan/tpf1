@@ -3,14 +3,14 @@ from typing import List, Tuple
 from flask import g
 
 from p2_assembly.mac2_data_macro import get_global_ref
-from p3_db.template_models import Template, PNR, GLOBAL, AAA, AAA_MACRO_NAME, TD_REF
+from p3_db.response import StandardResponse
+from p3_db.template_models import Template, PNR, GLOBAL, AAA, AAA_MACRO_NAME, TD_REF, validate_ownership
 from p3_db.test_data import TestData
 from p3_db.test_data_validators import validate_and_update_pnr_text_with_field, validate_and_update_global_data, \
     validate_and_update_macro_field_data
-from p7_flask_app.response import StandardResponse
 
 
-def validate_template_name(body: dict) -> dict:
+def old_validate_template_name(body: dict) -> dict:
     errors: dict = dict()
     if not isinstance(body["name"], str):
         errors["name"] = "Name must be a string."
@@ -20,8 +20,15 @@ def validate_template_name(body: dict) -> dict:
     return errors
 
 
+def validate_template_name(rsp: StandardResponse) -> None:
+    if not rsp.body.name:
+        rsp.error = True
+        rsp.error_fields.name = "Name cannot be left blank."
+    return
+
+
 def validate_and_update_new_template_name(body: dict) -> dict:
-    errors: dict = validate_template_name(body)
+    errors: dict = old_validate_template_name(body)
     if errors:
         return errors
     if Template.objects.filter_by(name=body["name"]).first():
@@ -33,39 +40,44 @@ def validate_and_update_new_template_name(body: dict) -> dict:
     return errors
 
 
-def validate_existing_template_name(body: dict, template_type: str) -> Tuple[dict, List[Template]]:
-    errors: dict = validate_template_name(body)
-    if errors:
-        return errors, list()
-    templates: List[Template] = Template.objects.filter_by(name=body["name"], type=template_type).get()
+def validate_existing_template_name(rsp: StandardResponse, template_type: str) -> List[Template]:
+    validate_template_name(rsp)
+    if rsp.error:
+        return list()
+    templates: List[Template] = Template.objects.filter_by(name=rsp.body.name, type=template_type).get()
     if not templates:
-        errors["name"] = "No PNR template with this name found."
-    return errors, templates
+        rsp.error = True
+        rsp.error_fields.name = "No template with this name found."
+    return templates
 
 
-def validate_and_update_existing_pnr_template_name(body: dict) -> dict:
-    errors, templates = validate_existing_template_name(body, PNR)
-    if errors:
-        return errors
-    body["description"] = templates[0].description
-    body["owner"] = templates[0].owner
-    body["locator"] = templates[0].locator
-    body["test_data_links"] = templates[0].test_data_links
-    if any(template.key == body["key"] for template in templates):
-        errors["key"] = f"PNR key {body['key'].upper()} already exists for locator {body['locator']}."
-    return errors
+def validate_and_update_existing_pnr_template_name(rsp: StandardResponse) -> None:
+    templates = validate_existing_template_name(rsp, PNR)
+    if not templates:
+        return
+    validate_ownership(templates[0], rsp)
+    rsp.body.description = templates[0].description
+    rsp.body.owner = templates[0].owner
+    rsp.body.test_data_links = templates[0].test_data_links
+    rsp.body.locator = templates[0].locator
+    if any(template.key == rsp.body.key for template in templates):
+        rsp.error = True
+        rsp.error_fields.key = f"PNR key {rsp.body.key.upper()} already exists for locator {rsp.body.locator}."
+    return
 
 
-def validate_and_update_existing_global_template_name(body: dict) -> dict:
-    errors, templates = validate_existing_template_name(body, GLOBAL)
-    if errors:
-        return errors
-    body["description"] = templates[0].description
-    body["owner"] = templates[0].owner
-    body["test_data_links"] = templates[0].test_data_links
-    if any(template.global_name == body["global_name"] for template in templates):
-        errors["global_name"] = f"Global name {body['global_name']} already exists."
-    return errors
+def validate_and_update_existing_global_template_name(rsp: StandardResponse) -> None:
+    templates = validate_existing_template_name(rsp, GLOBAL)
+    if not templates:
+        return
+    validate_ownership(templates[0], rsp)
+    rsp.body.description = templates[0].description
+    rsp.body.owner = templates[0].owner
+    rsp.body.test_data_links = templates[0].test_data_links
+    if any(template.global_name == rsp.body.global_name for template in templates):
+        rsp.error = True
+        rsp.error_fields.global_name = f"Global name {rsp.body.global_name} already exists."
+    return
 
 
 def old_validate_and_update_pnr_fields(body: dict) -> dict:
@@ -173,7 +185,7 @@ def validate_and_update_template_rename_copy(body: dict) -> Tuple[dict, List[Tem
         response["message"] = "Only 3 fields allowed (old_name, new_name, description) and all are mandatory."
         return response, list()
     body["name"] = body["old_name"]
-    errors = validate_template_name(body)
+    errors = old_validate_template_name(body)
     if errors:
         response["error_fields"]["old_name"] = errors["name"]
         return response, list()

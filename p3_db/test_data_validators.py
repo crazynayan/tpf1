@@ -7,6 +7,7 @@ from p2_assembly.mac2_data_macro import macros
 from p2_assembly.seg6_segment import Segment
 from p2_assembly.seg9_collection import seg_collection
 from p3_db.pnr import Pnr as PnrDb, PnrLocator
+from p3_db.response import StandardResponse
 
 
 def validate_hex_data(input_hex_data: str) -> Tuple[str, str]:
@@ -314,3 +315,9 @@ def validate_and_update_pnr_locator_key(body: dict) -> dict:
     if not errors:
         body["locator"] = config.AAAPNR if not body["locator"] else body["locator"].upper()
     return errors
+
+
+def validate_pnr_key(rsp: StandardResponse) -> None:
+    if PnrDb.get_attribute_by_name(rsp.body.key) is None:
+        rsp.error_fields.key = "Invalid PNR key."
+    return

@@ -2,6 +2,7 @@ from copy import copy
 from itertools import groupby
 from typing import List
 
+from p3_db.response import StandardResponse, RequestType
 from p3_db.template_models import Template, get_template_by_id, TD_REF, validate_and_get_template_by_id
 from p3_db.template_validators import validate_and_update_new_template_name, \
     validate_and_update_existing_pnr_template_name, old_validate_and_update_pnr_fields, \
@@ -11,8 +12,7 @@ from p3_db.template_validators import validate_and_update_new_template_name, \
     validate_and_update_global_data_template, validate_and_update_aaa_fields
 from p3_db.test_data import TestData
 from p3_db.test_data_get import get_whole_test_data
-from p3_db.test_data_validators import validate_and_update_pnr_locator_key
-from p7_flask_app.response import StandardResponse, RequestType
+from p3_db.test_data_validators import validate_and_update_pnr_locator_key, validate_pnr_key
 
 
 def get_templates_by_type(template_type: str) -> List[dict]:
@@ -190,44 +190,30 @@ def create_new_aaa_template(body: dict) -> dict:
 
 
 def add_to_existing_pnr_template(body: dict) -> dict:
-    response: dict = {"error": True, "message": str(), "error_fields": dict()}
-    if set(body) != {"name", "key", "field_data", "text"}:
-        response["message"] = "Only 4 fields allowed (name, key, text, field_data) and all are mandatory."
-        return response
-    body["locator"] = str()  # This will be updated by validate_and_update_existing_pnr_template_name
-    errors = validate_and_update_pnr_locator_key(body)
-    if errors:
-        response["error_fields"] = errors
-    errors = validate_and_update_existing_pnr_template_name(body)
-    if errors:
-        response["error_fields"] = {**response["error_fields"], **errors}
-    errors = old_validate_and_update_pnr_fields(body)
-    if errors or response["error_fields"]:
-        response["error_fields"] = {**response["error_fields"], **errors}
-        return response
-    Template.create_from_dict(body)
-    response["message"] = f"PNR element for key {body['key'].upper()} created successfully."
-    response["error"] = False
-    return response
+    rsp: StandardResponse = StandardResponse(body, RequestType.TEMPLATE_PNR_ADD)
+    if rsp.error:
+        return rsp.dict
+    validate_and_update_existing_pnr_template_name(rsp)
+    validate_pnr_key(rsp)
+    validate_and_update_pnr_fields(rsp)
+    if rsp.error:
+        return rsp.dict
+    Template.create_from_dict(rsp.body.__dict__)
+    rsp.message = f"PNR element for key {rsp.body.key.upper()} created successfully."
+    return rsp.dict
 
 
 def add_to_existing_global_template(body: dict) -> dict:
-    response: dict = {"error": True, "message": str(), "error_fields": dict()}
-    if set(body) != {"name", "global_name", "hex_data", "field_data", "seg_name", "is_global_record"}:
-        response["message"] = "Only 6 fields allowed (name, global_name, hex_data, field_data, seg_name, " \
-                              "is_global_record) and all are mandatory."
-        return response
-    errors = validate_and_update_existing_global_template_name(body)
-    if errors:
-        response["error_fields"] = errors
-    errors = validate_and_update_global_fields(body)  # This will update the template type as Global
-    if errors or response["error_fields"]:
-        response["error_fields"] = {**response["error_fields"], **errors}
-        return response
-    Template.create_from_dict(body)
-    response["message"] = f"Global template for global {body['global_name']} created successfully."
-    response["error"] = False
-    return response
+    rsp: StandardResponse = StandardResponse(body, RequestType.TEMPLATE_GLOBAL_ADD)
+    if rsp.error:
+        return rsp.dict
+    validate_and_update_existing_global_template_name(rsp)
+    validate_and_update_global_data_template(rsp)
+    if rsp.error:
+        return rsp.dict
+    Template.create_from_dict(rsp.body.__dict__)
+    rsp.message = f"Global template for global {rsp.body.global_name} created successfully."
+    return rsp.dict
 
 
 def update_pnr_template(template_id, body: dict) -> dict:
