@@ -3,8 +3,8 @@ from typing import Tuple, Optional, List
 from firestore_ci import FirestoreDocument
 from flask import g
 
+from p3_db.response import StandardResponse
 from p3_db.test_data import ElementType
-from p7_flask_app.response import StandardResponse
 
 PNR, GLOBAL, AAA = "PNR", "Global", "AAA"
 AAA_MACRO_NAME = "WA0AA"
@@ -53,12 +53,16 @@ def validate_and_get_template_by_id(template_id: str, rsp: StandardResponse) -> 
     template: Template = Template.get_by_id(template_id)
     if not template:
         rsp.error = True
-        rsp.error_fields.message = "Template not found with this id."
+        rsp.message = "Template not found with this id."
         return None
+    validate_ownership(template, rsp)
+    return template
+
+
+def validate_ownership(template: Template, rsp: StandardResponse) -> None:
     try:
         if template.owner != g.current_user.email:
             rsp.error = True
-            rsp.error_fields.message = "Unauthorized to update this template."
+            rsp.message = "Unauthorized to update this template."
     except RuntimeError:
         pass
-    return template
