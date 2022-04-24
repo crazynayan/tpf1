@@ -1,4 +1,4 @@
-from typing import Tuple, Optional, List
+from typing import Optional, List
 
 from firestore_ci import FirestoreDocument
 from flask import g
@@ -42,15 +42,13 @@ class Template(FirestoreDocument):
 Template.init()
 
 
-def get_template_by_id(template_id: str) -> Tuple[Optional[Template], str]:
+def get_template_by_id(template_id: str) -> Optional[Template]:
     template: Template = Template.get_by_id(template_id)
-    if not template:
-        return None, "Template not found with this id."
-    return template, str()
+    return template
 
 
 def validate_and_get_template_by_id(template_id: str, rsp: StandardResponse) -> Optional[Template]:
-    template: Template = Template.get_by_id(template_id)
+    template: Template = get_template_by_id(template_id)
     if not template:
         rsp.error = True
         rsp.message = "Template not found with this id."

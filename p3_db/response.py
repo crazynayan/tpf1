@@ -11,6 +11,14 @@ class RequestType:
     TEMPLATE_PNR_ADD = SimpleNamespace(field_data=str(), text=str(), key=str(), name=str())
     TEMPLATE_GLOBAL_ADD = SimpleNamespace(field_data=str(), hex_data=str(), is_global_record=bool(), seg_name=str(),
                                           name=str(), global_name=str())
+    TEMPLATE_PNR_CREATE = SimpleNamespace(field_data=str(), text=str(), key=str(), name=str(), locator=str(),
+                                          description=str())
+    TEMPLATE_GLOBAL_CREATE = SimpleNamespace(field_data=str(), hex_data=str(), is_global_record=bool(), seg_name=str(),
+                                             name=str(), global_name=str(), description=str())
+    TEMPLATE_AAA_CREATE = SimpleNamespace(name=str(), description=str(), field_data=str())
+    TEMPLATE_RENAME_COPY = SimpleNamespace(old_name=str(), new_name=str(), description=str())
+    TEMPLATE_DELETE = SimpleNamespace(name=str())
+
 
 class StandardResponse:
 
@@ -27,7 +35,10 @@ class StandardResponse:
             return
         valid_fields: set = set(request_type.__dict__)
         if set(body) != valid_fields:
-            self.message = f"Invalid request. Only {', '.join([field for field in valid_fields])} field(s) allowed."
+            count = len(valid_fields)
+            field_list = ", ".join([field for field in valid_fields])
+            self.message = f"Invalid request. Only 1 field ({field_list}) allowed and it is mandatory." if count == 1 \
+                else f"Invalid request. Only {count} fields ({field_list}) allowed and they are mandatory."
             self.error = True
             return
         for field, value in body.items():

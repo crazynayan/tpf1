@@ -321,3 +321,12 @@ def validate_pnr_key(rsp: StandardResponse) -> None:
     if PnrDb.get_attribute_by_name(rsp.body.key) is None:
         rsp.error_fields.key = "Invalid PNR key."
     return
+
+
+def validate_and_update_pnr_locator(rsp: StandardResponse) -> None:
+    if not PnrLocator.is_valid(rsp.body.locator):
+        rsp.error = True
+        rsp.error_fields.locator = "PNR Locator needs to be 6 character alpha string."
+        return
+    rsp.body.locator = config.AAAPNR if not rsp.body.locator else rsp.body.locator.upper()
+    return
