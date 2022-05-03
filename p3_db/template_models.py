@@ -14,6 +14,8 @@ TD_REF = {
     GLOBAL: ElementType.CORE,
     AAA: ElementType.CORE,
 }
+MERGE, LINK_CREATE, LINK_UPDATE, LINK_DELETE = "merge", "link", "link_update", "link_delete"
+MERGE_LINK_ACTIONS = (MERGE, LINK_CREATE, LINK_UPDATE, LINK_DELETE)
 
 
 class Template(FirestoreDocument):

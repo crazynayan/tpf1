@@ -18,6 +18,9 @@ class RequestType:
     TEMPLATE_AAA_CREATE = SimpleNamespace(name=str(), description=str(), field_data=str())
     TEMPLATE_RENAME_COPY = SimpleNamespace(old_name=str(), new_name=str(), description=str())
     TEMPLATE_DELETE = SimpleNamespace(name=str())
+    TEMPLATE_MERGE_LINK = SimpleNamespace(variation=int(), variation_name=str(), template_name=str())
+    TEMPLATE_LINK_UPDATE = SimpleNamespace(variation=int(), new_template_name=str(), template_name=str())
+    TEMPLATE_LINK_DELETE = SimpleNamespace(variation=int(), template_name=str())
 
 
 class StandardResponse:
