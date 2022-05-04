@@ -59,6 +59,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         # MVO
         self._ex["BCT"] = self.branch_on_count
         self._ex["JCT"] = self.branch_on_count
+        self._ex["BRCT"] = self.branch_on_count
         self._ex["BCTR"] = self.branch_on_count_register
         self._ex["BXLE"] = self.branch_on_index_low_or_equal
         self._ex["BXH"] = self.branch_on_index_high
@@ -173,6 +174,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["LG"] = self.load_grande
         self._ex["STG"] = self.store_grande
         self._ex["XGR"] = self.xor_grande_register
+        self._ex["CLHHSI"] = self.compare_logical_halfword_immediate
 
         # Realtime Macros
         self._ex["GETCC"] = self.getcc

@@ -423,6 +423,14 @@ class CompareLogical(State):
         self.trace_data.set_unsigned_value2(node.data, 1)
         return node.fall_down
 
+    def compare_logical_halfword_immediate(self, node: FieldData) -> str:
+        address = self.regs.get_address(node.field.base, node.field.dsp)
+        value = self.vm.get_unsigned_value(address, 2)
+        self.set_number_cc(value - node.data)
+        self.trace_data.set_unsigned_value1(value, 2)
+        self.trace_data.set_unsigned_value2(node.data, 2)
+        return node.fall_down
+
     def compare_halfword(self, node: RegisterFieldIndex) -> str:
         address = self.regs.get_address(node.field.base, node.field.dsp, node.field.index)
         value = self.vm.get_value(address, 2)

@@ -13,7 +13,7 @@ class NonConditional2(unittest.TestCase):
         self.tpf_server = TpfServer()
         self.test_data = TestDataUTS()
         ecb_fields = [("EBW000", 4), ("EBW004", 2), ("EBW008", 12), ("EBW020", 12), ("EBW032", 6), ("EBW040", 8),
-                      ("EBW048", 8), ("EBW056", 8), ("EBW064", 6), ("EBT000", 4)]
+                      ("EBW048", 8), ("EBW056", 8), ("EBW064", 6), ("EBT000", 4), ("EBT004", 1)]
         self.test_data.add_fields(ecb_fields, "EB0EB")
         self.test_data.add_all_regs()
 
@@ -92,6 +92,12 @@ class NonConditional2(unittest.TestCase):
         seconds = int(seconds // 1.048576)
         seconds_set = {f"{seconds:08X}", f"{seconds + 1:08X}"}
         self.assertIn(test_data.get_field("EBW040")[:8], seconds_set)
+
+    def test_ts15_clhhsi(self):
+        self.test_data.set_field("EBX000", bytes([0x01]))
+        self.test_data.set_field("EBW004", DataType("H", input="-1").to_bytes())
+        test_data = self.tpf_server.run("TS15", self.test_data)
+        self.assertEqual("02", test_data.get_field("EBT004"))
 
 
 if __name__ == "__main__":

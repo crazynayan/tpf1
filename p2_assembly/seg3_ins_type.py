@@ -68,7 +68,7 @@ class FieldLenFieldLen(InstructionGeneric):
 
 
 class FieldData(InstructionGeneric):
-    MAX_VALUE = 255
+    MAX_VALUE = 0xFFFFFFFF
 
     def __init__(self, line: Line, field: FieldBaseDsp, data: int):
         super().__init__(line)
@@ -76,7 +76,7 @@ class FieldData(InstructionGeneric):
         self.data: int = data
 
     def __repr__(self) -> str:
-        return f"{super().__repr__()}:{self.field},{self.data}"
+        return f"{super().__repr__()}:{self.field},0x{self.data:02X}"
 
 
 class FieldSingle(InstructionGeneric):
