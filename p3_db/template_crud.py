@@ -25,7 +25,6 @@ def get_templates_by_type(template_type: str) -> List[dict]:
         template_list = list(template_group)
         template_dict = Template.objects.to_dicts([template_list[0]])[0]
         template_dicts.append(template_dict)
-        # template_dict["all_templates"] = Template.objects.to_dicts(template_list)
         template_dict["count"] = len(template_list)
     return template_dicts
 
@@ -246,3 +245,11 @@ def update_aaa_template(template_id: str, body: dict) -> dict:
     template.save()
     rsp.message = f"AAA template updated successfully."
     return rsp.dict
+
+
+def get_variations(test_data_id: str, v_type: str) -> list:
+    test_data = get_whole_test_data(test_data_id, link=False)
+    variations = {(element.variation, element.variation_name) for element in test_data.ref(v_type)}
+    variation_list = list(variations)
+    variation_list.append((-1, "New Variation"))
+    return variation_list

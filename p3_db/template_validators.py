@@ -4,8 +4,7 @@ from flask import g
 
 from p2_assembly.mac2_data_macro import get_global_ref
 from p3_db.response import StandardResponse
-from p3_db.template_models import Template, PNR, GLOBAL, AAA, AAA_MACRO_NAME, TD_REF, validate_ownership
-from p3_db.test_data import TestData
+from p3_db.template_models import Template, PNR, GLOBAL, AAA, AAA_MACRO_NAME, validate_ownership
 from p3_db.test_data_validators import validate_and_update_pnr_text_with_field, validate_and_update_global_data, \
     validate_and_update_macro_field_data
 
@@ -120,22 +119,6 @@ def validate_and_update_aaa_fields(rsp: StandardResponse) -> None:
         return
     rsp.body.field_data = body["original_field_data"]
     rsp.body.type = AAA
-    return
-
-
-def add_test_data_link_to_template(test_data: TestData, templates: List[Template]):
-    for template in templates:
-        if test_data.id not in template.test_data_links:
-            template.test_data_links.append(test_data.id)
-    return
-
-
-def remove_test_data_link_from_template(test_data: TestData, templates: List[Template]):
-    if any(element for element in test_data.ref(TD_REF[templates[0].type]) if element.link == templates[0].name):
-        return
-    for template in templates:
-        if test_data.id in template.test_data_links:
-            template.test_data_links.remove(test_data.id)
     return
 
 
