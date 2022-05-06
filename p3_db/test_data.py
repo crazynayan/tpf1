@@ -371,7 +371,7 @@ class TestData(FirestoreDocument):
             response["error_fields"]["variation"] = "Invalid variation"
         elif "global_name" not in response["error_fields"]:
             body["global_name"] = body["global_name"].strip().upper()
-            if any(core.variation == body["variation"] and core.heap_name == body["global_name"]
+            if any(core.variation == body["variation"] and core.global_name == body["global_name"]
                    for core in self.cores):
                 response["error_fields"]["global_name"] = f"Global {body['global_name']} already exists for " \
                                                           f"variation {body['variation']}."
