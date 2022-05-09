@@ -143,30 +143,6 @@ def delete_output_field(test_data_id: str, macro_name: str, field_name: str, **k
     return jsonify(field_byte)
 
 
-@tpf1_app.route("/test_data/<string:test_data_id>/input/cores/<string:macro_name>/fields", methods=["PATCH"])
-@token_auth.login_required
-@test_data_required
-@role_check_required
-def add_input_field(test_data_id: str, macro_name: str, **kwargs) -> Response:
-    field_byte_dict: dict = request.get_json()
-    field_byte: dict = kwargs[test_data_id].create_field_byte(macro_name, field_byte_dict)
-    if not field_byte:
-        return error_response(400, "Error in adding field")
-    return jsonify(field_byte)
-
-
-@tpf1_app.route("/test_data/<string:test_data_id>/input/cores/<string:macro_name>/fields/<string:field_name>",
-                methods=["DELETE"])
-@token_auth.login_required
-@test_data_required
-@role_check_required
-def delete_input_field(test_data_id: str, macro_name: str, field_name: str, **kwargs) -> Response:
-    field_byte: dict = kwargs[test_data_id].delete_field_byte(macro_name, unquote(field_name))
-    if not field_byte:
-        return error_response(400, "Error in deleting field")
-    return jsonify(field_byte)
-
-
 @tpf1_app.route("/test_data/<string:test_data_id>/input/macro", methods=["PATCH"])
 @token_auth.login_required
 @test_data_required
