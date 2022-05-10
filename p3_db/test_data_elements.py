@@ -79,8 +79,6 @@ class Pnr(FirestoreDocument):
         super().__init__()
         self.locator: str = config.AAAPNR
         self.key: str = str()
-        self.data: str = str()
-        self.field_data: List[dict] = list()
         self.variation: int = 0
         self.variation_name: str = str()
         self.field_data_item: List[dict] = list()
@@ -91,7 +89,7 @@ class Pnr(FirestoreDocument):
         self.link_status: str = str()  # is either active or inactive - only updated on read.
 
     def __repr__(self):
-        return f"V={self.variation}:L={self.locator}:K={self.key}:T={len(self.text)}:FDI={len(self.field_data)}"
+        return f"V={self.variation}:L={self.locator}:K={self.key}:T={len(self.text)}:FDI={len(self.field_data_item)}"
 
     @classmethod
     def validate(cls, pnr_dict: dict) -> bool:

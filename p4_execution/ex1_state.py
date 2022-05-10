@@ -274,10 +274,6 @@ class State:
                 for _, field_group in groupby(pnr.field_data_item, key=lambda item: item["item_number"]):
                     pnr_field_bytes: dict = self._field_data_to_bytearray(list(field_group))
                     Pnr.add_from_byte_array(pnr_field_bytes, pnr.key, pnr_locator)
-            elif pnr.data:
-                Pnr.add_from_data(pnr.data, pnr.key, pnr_locator)
-            elif pnr.field_data:
-                Pnr.add_from_byte_array(self._field_data_to_bytearray(pnr.field_data), pnr.key, pnr_locator)
         Tpfdf.init_db()
         for lrec in test_data.tpfdf:
             if lrec.macro_name not in macros:
