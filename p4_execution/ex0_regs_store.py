@@ -226,8 +226,13 @@ class Storage:
 
     def and_bit(self, address: int, bit: int) -> None:
         base_address, dsp, _ = self._get_data(address)
-        self.frames[base_address][dsp] = self.frames[base_address][dsp] & bit
-        self._frame[base_address][dsp] = self._frame[base_address][dsp] & bit
+        self.frames[base_address][dsp] &= bit
+        self._frame[base_address][dsp] &= bit
+
+    def xor_bit(self, address: int, bit: int) -> None:
+        base_address, dsp, _ = self._get_data(address)
+        self.frames[base_address][dsp] ^= bit
+        self._frame[base_address][dsp] ^= bit
 
     def is_updated_bit(self, address: int, bit: int) -> bool:
         # Will return True only if all requested bits are updated

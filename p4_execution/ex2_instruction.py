@@ -111,6 +111,13 @@ class LoadStore(State):
         self.trace_data.set_byte_array1(byte)
         return node.fall_down
 
+    def load_logical_character(self, node: RegisterFieldIndex) -> str:
+        address = self.regs.get_address(node.field.base, node.field.dsp, node.field.index)
+        byte: int = self.vm.get_unsigned_value(address, length=1)
+        self.regs.set_value(byte, node.reg)
+        self.trace_data.set_unsigned_value1(byte, 1)
+        return node.fall_down
+
     def insert_character_mask(self, node: RegisterDataField) -> str:
         address = self.regs.get_address(node.field.base, node.field.dsp)
         byte: bytearray = self.vm.get_bytes(address, bin(node.data).count('1'))
@@ -335,6 +342,12 @@ class MoveLogicControl(State):
         self.trace_data.set_signed_value1(node.data)
         return node.fall_down
 
+    def move_halfword_immediate(self, node: FieldData) -> str:
+        address = self.regs.get_address(node.field.base, node.field.dsp)
+        self.vm.set_value(node.data, address, 2)
+        self.trace_data.set_signed_value1(node.data)
+        return node.fall_down
+
     def branch(self, node: BranchCondition) -> str:
         if node.mask & (1 << 3 - self.cc) != 0:
             label = self.index_to_label(node.branch)
@@ -454,6 +467,15 @@ class CompareLogical(State):
         self.set_number_cc(reg_value - value)
         self.trace_data.set_signed_value1(reg_value)
         self.trace_data.set_signed_value2(value)
+        return node.fall_down
+
+    def compare_logical_fullword(self, node: RegisterFieldIndex) -> str:
+        address = self.regs.get_address(node.field.base, node.field.dsp, node.field.index)
+        value = self.vm.get_unsigned_value(address, 4)
+        reg_value = self.regs.get_unsigned_value(node.reg)
+        self.set_number_cc(reg_value - value)
+        self.trace_data.set_unsigned_value1(reg_value, 4)
+        self.trace_data.set_unsigned_value2(value, 4)
         return node.fall_down
 
     def compare_register(self, node: RegisterRegister) -> str:
@@ -608,6 +630,15 @@ class LogicalUsefulConversion(State):
     def and_immediate(self, node: FieldBits) -> str:
         address = self.regs.get_address(node.field.base, node.field.dsp)
         self.vm.and_bit(address, node.bits.value)
+        value = self.vm.get_byte(address)
+        self.trace_data.set_unsigned_value1(value, 1)
+        self.trace_data.set_unsigned_value2(node.bits.value, 1)
+        self.set_zero_cc(value)
+        return node.fall_down
+
+    def xor_immediate(self, node: FieldBits) -> str:
+        address = self.regs.get_address(node.field.base, node.field.dsp)
+        self.vm.xor_bit(address, node.bits.value)
         value = self.vm.get_byte(address)
         self.trace_data.set_unsigned_value1(value, 1)
         self.trace_data.set_unsigned_value2(node.bits.value, 1)

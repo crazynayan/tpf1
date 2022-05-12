@@ -36,6 +36,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["A"] = self.add_fullword
         self._ex["AH"] = self.add_halfword
         self._ex["AHI"] = self.add_halfword_immediate
+        self._ex["AFI"] = self.add_halfword_immediate
         self._ex["SR"] = self.subtract_register
         self._ex["S"] = self.subtract_fullword
         self._ex["SH"] = self.subtract_halfword
@@ -124,9 +125,10 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         # S06 -  Compare & Logical
         self._ex["CR"] = self.compare_register
         self._ex["C"] = self.compare_fullword
+        self._ex["CL"] = self.compare_logical_fullword
         self._ex["CH"] = self.compare_halfword
         self._ex["CHI"] = self.compare_halfword_immediate
-        # CL, CLR - Not in ETA5
+        #  CLR - Not in ETA5
         self._ex["CLI"] = self.compare_logical_immediate
         self._ex["CLC"] = self.compare_logical_character
         self._ex["CLM"] = self.compare_logical_character_mask
@@ -148,7 +150,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["XC"] = self.xor_character
         self._ex["NI"] = self.and_immediate
         self._ex["OI"] = self.or_immediate
-        # XI - Not in ETA5 (Need to check the status of flipped bits via is_updated_bit)
+        self._ex["XI"] = self.xor_immediate  # (Need to check the status of flipped bits via is_updated_bit)
         self._ex["TM"] = self.test_mask
         self._ex["EX"] = self.execute
         self._ex["PACK"] = self.pack
@@ -175,6 +177,8 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["STG"] = self.store_grande
         self._ex["XGR"] = self.xor_grande_register
         self._ex["CLHHSI"] = self.compare_logical_halfword_immediate
+        self._ex["MVHHI"] = self.move_halfword_immediate
+        self._ex["LLC"] = self.load_logical_character
 
         # Realtime Macros
         self._ex["GETCC"] = self.getcc

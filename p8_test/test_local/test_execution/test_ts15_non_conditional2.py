@@ -99,6 +99,18 @@ class NonConditional2(unittest.TestCase):
         test_data = self.tpf_server.run("TS15", self.test_data)
         self.assertEqual("02", test_data.get_field("EBT004"))
 
+    def test_ts15_cl_afi_mvhhi_llc_xi(self):
+        self.test_data.set_field("EBX000", bytes([0x02]))
+        self.test_data.set_field("EBT000", bytes([0xFF]))
+        self.test_data.set_field("EBT001", bytes([0x08]))
+        self.test_data.set_field("EBW000", DataType("F", input="-1").to_bytes())
+        test_data = self.tpf_server.run("TS15", self.test_data)
+        self.assertEqual(2, test_data.output.regs["R1"])  # CL
+        self.assertEqual(-44000, test_data.output.regs["R2"])  # AFI
+        self.assertEqual("0FFE", test_data.get_field("EBW004"))  # MVHHI
+        self.assertEqual(0xFF, test_data.output.regs["R3"])  # LLC
+        self.assertEqual(0xF7, test_data.output.regs["R4"])  # XI
+
 
 if __name__ == "__main__":
     unittest.main()
