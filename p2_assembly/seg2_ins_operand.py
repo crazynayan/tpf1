@@ -113,7 +113,10 @@ class InstructionOperand(DirectiveImplementation):
     @staticmethod
     def split_operand(operand: str) -> List[str]:
         # Returns up to 3 elements that are first divided by ( and then by a , and then by a )
-        return next(iter(re.findall(r"^([^(]+)\(*([^,)]*),*([^)]*)\)*", operand)))
+        try:
+            return next(iter(re.findall(r"^([^(]*)\(*([^,)]*),*([^)]*)\)*", operand)))
+        except StopIteration:
+            raise FieldLengthInvalidError(operand)
 
     def _get_field_by_name(self, name: str) -> FieldBaseDsp:
         dsp = self.get_value(name)
@@ -154,10 +157,7 @@ class InstructionOperand(DirectiveImplementation):
         if operand.startswith('='):
             label_ref = self._literal(operand[1:])
             return FieldBaseDsp(label_ref.label, self.get_base(self.name), label_ref.dsp)
-        try:
-            operand1, operand2, error = self.split_operand(operand)
-        except StopIteration:
-            raise FieldLengthInvalidError(operand)
+        operand1, operand2, error = self.split_operand(operand)
         if error:
             raise FieldLengthInvalidError(operand)
         if operand2:
@@ -191,7 +191,10 @@ class InstructionOperand(DirectiveImplementation):
         elif not operand3:
             # Note: In TPF these types are with no base but with index register set.
             # In our tool we have flipped this. So there would be no index but the base would be present.
-            if operand1.endswith("+"):
+            if not operand1:
+                # (PR20_20_NAM_TXT-PR20SIZ)
+                field: FieldBaseDsp = self._get_field_by_base_dsp(base="R0", dsp=operand2)
+            elif operand1.endswith("+"):
                 # Base_dsp Q44REG1+(R1*4)
                 field: FieldBaseDsp = self._get_field_by_name(name=operand1 + operand2)
             elif operand1.isdigit() or set("+-*").intersection(operand1):
