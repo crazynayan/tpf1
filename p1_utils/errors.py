@@ -174,6 +174,10 @@ class FaceError(ExecutionError):
     pass
 
 
+class FileError(ExecutionError):
+    pass
+
+
 class PnrLocatorNotFoundError(ExecutionError):
     pass
 

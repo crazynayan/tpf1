@@ -1,6 +1,6 @@
 from typing import Dict, Optional
 
-from p1_utils.errors import FaceError
+from p1_utils.errors import FaceError, FileError
 
 
 class FlatFile:
@@ -33,6 +33,14 @@ class FlatFile:
         db_key = f"{record_id}{file_address:08X}"
         cls.DB[db_key] = data
         return file_address
+
+    @classmethod
+    def set_data(cls, data: bytearray, record_id: int, file_address: int) -> None:
+        db_key = f"{record_id:04X}{file_address:08X}"
+        try:
+            cls.DB[db_key] = data
+        except KeyError:
+            raise FileError
 
     @classmethod
     def remove_pool(cls, record_id: int, file_address: int):

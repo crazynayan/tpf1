@@ -168,6 +168,13 @@ class Storage:
         self.extend_frame(base_address, end)
         return base_address, start, end
 
+    def get_data_from_base_address(self, address: int) -> bytearray:
+        base_address = self.base_key(address)
+        try:
+            return self.frames[base_address]
+        except KeyError:
+            raise BaseAddressError
+
     def get_bytes(self, address: int, length: Optional[int] = None) -> bytearray:
         base_address, start, end = self._get_data(address, length)
         return self.frames[base_address][start: end]

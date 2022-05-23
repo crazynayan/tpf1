@@ -1,8 +1,10 @@
+from copy import copy
 from typing import Optional, Tuple
 
 from p1_utils.data_type import Register, DataType
 from p1_utils.errors import RegisterInvalidError, Pd0BaseError, PdredFieldError, PdredSearchError, \
-    PdredNotFoundError, PdredPd0Error, DbredError, TpfdfExecutionError, TPFServerMemoryError, NotFoundInSymbolTableError
+    PdredNotFoundError, PdredPd0Error, DbredError, TpfdfExecutionError, TPFServerMemoryError, \
+    NotFoundInSymbolTableError, FileError
 from p2_assembly.mac0_generic import LabelReference
 from p2_assembly.seg2_ins_operand import FieldBaseDsp
 from p2_assembly.seg3_ins_type import InstructionGeneric
@@ -296,6 +298,44 @@ class RealTimeDbMacro(State):
         address = self.regs.R7 + 4
         file_address = int(FlatFile.face(face_type, ordinal), 16)
         self.vm.set_value(file_address, address)
+        return node.fall_down
+
+    def getfc(self, node: KeyValue) -> str:
+        level = node.keys[0]
+        id_with_type = node.get_value("ID")
+        if not id_with_type:
+            raise FileError
+        record_id: int = self.seg.get_value(id_with_type)
+        record_id_address = self.get_ecb_address(level, "CE1FA")
+        file_address: int = FlatFile.add_pool(bytearray(), record_id)
+        file_address_address: int = self.get_ecb_address(level, "EBCFA")
+        self.vm.set_value(file_address, file_address_address, length=4)
+        self.vm.set_value(record_id, record_id_address, length=2)
+        if node.get_value("BLOCK") == "YES":
+            address = self.vm.allocate()
+            self._core_block(address, level)
+            self.regs.R14 = address
+        return node.fall_down
+
+    def relcc(self, node: KeyValue) -> str:
+        control_address = self.get_ecb_address(node.keys[0], "CE1CT")
+        size_address = self.get_ecb_address(node.keys[0], "CE1CC")
+        self.vm.set_value(0x01, control_address, 2)
+        self.vm.set_value(0, size_address, 2)
+        return node.fall_down
+
+    def filec(self, node: KeyValue) -> str:
+        level = node.keys[0]
+        record_id_address = self.get_ecb_address(level, "CE1FA")
+        file_address_address = self.get_ecb_address(level, "EBCFA")
+        record_id = self.vm.get_unsigned_value(record_id_address, length=2)
+        file_address = self.vm.get_unsigned_value(file_address_address, length=4)
+        core_block_address = self.get_ecb_address(level, "CE1CR")
+        core_block = self.vm.get_unsigned_value(core_block_address, length=4)
+        data: bytearray = copy(self.vm.get_data_from_base_address(core_block))
+        FlatFile.set_data(data, record_id, file_address)
+        if node.command in {"FILEC", "FILUC"}:
+            self.relcc(node)
         return node.fall_down
 
 

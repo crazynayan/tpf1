@@ -244,9 +244,11 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["FINWC"] = self.finwc
         self._ex["FIWHC"] = self.finwc
         # FINHC
-        # FILUC, GETFC, SONIC
-        self._ex["FILEC"] = self.no_operation
-        self._ex["FILNC"] = self.no_operation
+        # SONIC
+        self._ex["GETFC"] = self.getfc
+        self._ex["FILUC"] = self.filec
+        self._ex["FILEC"] = self.filec
+        self._ex["FILNC"] = self.filec
         self._ex["WAITC"] = self.no_operation
 
         # User defined Db Macros

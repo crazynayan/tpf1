@@ -37,13 +37,6 @@ class RealTimeMacro(State):
         not_used = node.get_value("NOTUSED") if node.get_value("NOTUSED") else node.fall_down
         return in_use if self._is_level_present(level) else not_used
 
-    def relcc(self, node: KeyValue) -> str:
-        control_address = self.get_ecb_address(node.keys[0], "CE1CT")
-        size_address = self.get_ecb_address(node.keys[0], "CE1CC")
-        self.vm.set_value(0x01, control_address, 2)
-        self.vm.set_value(0, size_address, 2)
-        return node.fall_down
-
     def crusa(self, node: KeyValue) -> str:
         for index in range(16):
             level = node.get_value(f"S{index}")
