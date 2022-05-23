@@ -105,8 +105,13 @@ def reset_and_create_lxp(blob_name: str):
     if not seg:
         print("Reset fail")
         return
-    create_lxp(seg.seg_name)
-    print("LXP created")
+    if create_lxp(seg.seg_name):
+        seg_lst = SegLst.objects.filter_by(seg_name=seg.seg_name).first()
+        seg_lst.source = config.LOCAL
+        seg_lst.save()
+        print("LXP created")
+    else:
+        print("Error in creating LXP")
     return
 
 
@@ -161,4 +166,20 @@ def migrate_to_lst(seg_name: str):
         seg_lst.source = config.LOCAL
     SegLst.objects.filter_by(seg_name=seg.seg_name).delete()
     seg_lst.create()
+    return
+
+
+def update_seg_lst(seg_names: List[str]):
+    seg_lst = list()
+    config.CI_CLOUD_STORAGE = True
+    for seg_name in seg_names:
+        segment = seg_collection.get_seg(seg_name)
+        if not segment:
+            print(f"{seg_name} not found.")
+            continue
+        seg_lst.append(get_seg_lst(segment))
+    update_seg_names = [seg.seg_name for seg in seg_lst]
+    SegLst.objects.filter("seg_name", SegLst.objects.IN, update_seg_names).delete()
+    SegLst.objects.create_all(SegLst.objects.to_dicts(seg_lst))
+    print(f"{len(seg_lst)} SegLst updated.")
     return

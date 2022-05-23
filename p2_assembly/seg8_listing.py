@@ -4,6 +4,8 @@ import re
 from copy import copy
 from typing import List, Optional
 
+# noinspection PyPackageRequirements
+import google.api_core.exceptions
 from firestore_ci import FirestoreDocument
 
 from config import config
@@ -55,7 +57,7 @@ def create_listing_command(listing_line: ListingLine, seg_name) -> LstCmd:
 
 
 def split_operand(operand: str) -> list:
-    return re.split("[,'=()+-]", operand)
+    return re.split("[,'=()*+-]", operand)
 
 
 def create_listing_commands(seg_name: str, lines: List[str]) -> List[LstCmd]:
@@ -66,7 +68,7 @@ def create_listing_commands(seg_name: str, lines: List[str]) -> List[LstCmd]:
     # Init with commands that require generated code
     exec_macro_commands: set = {"GLOBZ", "#IF", "#ELSE", "#", "#EIF", "#ELIF", "#GOTO", "#LOCA", "#PERF", "#SUBR",
                                 "#ESUB", "#EIFM", "#DO", "#EDO", "#EXEC", "#STPH", "#CAST", "#CASE", "#ECAS",
-                                "#EXIF", "#OREL", "#DOEX", "#ELOP", "TYCVA", "CLCVC", "ALPHA", "MPY"}
+                                "#EXIF", "#OREL", "#DOEX", "#ELOP", "TYCVA", "CLCVC", "ALPHA", "MPY", "TSTWK24"}
     # Init with commands that will never be expanded (IBM TPF specific executable macro)
     ibm_cmds: set = {"DETAC", "FINIS", "FLIPC", "ATTAC", "ENTNC"}
     # Initialize the different type of source stmt
@@ -186,7 +188,7 @@ def get_from_lxp(filename: str) -> List[LstCmd]:
         with open(filename, "rb") as file:
             lst_cmds = pickle.load(file)
         lst_cmds.sort(key=lambda item: item.stmt)
-    except (FileNotFoundError, pickle.UnpicklingError):
+    except (FileNotFoundError, pickle.UnpicklingError, EOFError):
         lst_cmds = list()
     return lst_cmds
 
@@ -214,7 +216,11 @@ def get_or_create_lst_cmds(seg_name: str, filename: str, blob_name: str) -> List
         from google.cloud.storage import Client
         client = Client()
         blob = client.bucket(config.BUCKET).blob(blob_name)
-        blob.download_to_filename(filename)
+        try:
+            blob.download_to_filename(filename)
+        except google.api_core.exceptions.NotFound:
+            client.close()
+            return list()
         client.close()
     lines: List[str] = File.open_file(filename)
     listing_commands: List[LstCmd] = create_listing_commands(seg_name, lines)
