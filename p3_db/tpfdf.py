@@ -13,15 +13,22 @@ class Tpfdf:
                  other_keys: Dict[str, Tuple[str, int]]) -> Tuple[Optional[bytearray], int]:
         # item_number starts from 1 for the 1st item (index 0)
         ref = Tpfdf.get_ref(ref_name)
-        lrec_list = [lrec['data'] for lrec in ref if lrec['key'] == key]
-        if not lrec_list:
+        lrec_list = [lrec for lrec in ref]
+        if not lrec_list or item_number > len(lrec_list):
             return None, item_number
-        for item_number in range(item_number, len(lrec_list) + 1):
+        if item_number != 0 and not other_keys:
             lrec = lrec_list[item_number - 1]
+            data = lrec_list[item_number - 1]['data'] if lrec['key'] == key else None
+            return data, item_number
+        adjusted_number = 0 if not item_number else item_number - 1
+        for updated_item in range(adjusted_number, len(lrec_list)):
+            lrec = lrec_list[updated_item]
+            if lrec['key'] != key:
+                continue
             symbol_table = macros[ref_name].all_labels
-            if all(eval(f'{lrec[symbol_table[field_name].dsp: symbol_table[field_name].dsp + length]} {expression}')
-                   for field_name, (expression, length) in other_keys.items()):
-                return lrec, item_number
+            if all(eval(f"{lrec['data'][symbol_table[field_name].dsp: symbol_table[field_name].dsp + length]} {exp}")
+                   for field_name, (exp, length) in other_keys.items()):
+                return lrec['data'], updated_item + 1
         return None, item_number
 
     @staticmethod
@@ -60,3 +67,13 @@ class Tpfdf:
             if df_record is not None:
                 Tpfdf.DB.remove(df_record)
         return
+
+    @staticmethod
+    def delete_lrec(ref_name: str, item_number: int) -> bool:
+        # item_number starts from 1 for the 1st item (index 0)
+        ref = Tpfdf.get_ref(ref_name)
+        delete_item = item_number - 1
+        if not 0 <= delete_item < len(ref):
+            return False
+        ref.remove(ref[delete_item])
+        return True

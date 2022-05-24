@@ -1,5 +1,6 @@
 import unittest
 
+from p3_db.tpfdf import Tpfdf
 from p4_execution.ex5_execute import TpfServer
 from p8_test.test_local import TestDataUTS
 from p8_test.test_local.test_eta5_execution import tr1gaa
@@ -17,6 +18,7 @@ class DbTest(unittest.TestCase):
         test_data = self.tpf_server.run('TS20', self.test_data)
         self.assertEqual(21, test_data.output.regs['R0'])
         self.assertEqual('80', test_data.get_field('EBW000'))
+        self.assertEqual(1, len(Tpfdf.DB[0]["doc"]))
 
 
 if __name__ == '__main__':

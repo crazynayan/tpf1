@@ -98,11 +98,10 @@ class RealtimeMacroImplementation(InstructionImplementation):
         self._command["PNAMC"] = self.pnamc
         self._command["DATE"] = self.date_macro
         self._command["DBRED"] = self.dbred
+        self._command["DBDEL"] = self.dbred
         self._command["PDRED"] = self.pdred
         self._command["PDMOD"] = self.pdred
         self._command["DBADD"] = self.dbadd
-        self._command["TSTWK24"] = self.executable_data_macro
-        self._command["SONIC"] = self.executable_data_macro
 
     def key_value(self, line: Line) -> KeyValue:
         operands_list: List[str] = line.split_operands()

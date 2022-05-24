@@ -347,6 +347,36 @@ class TpfdfMacro(State):
         self.regs.R3 = self.vm.valid_address(self.regs.R3)
         self.seg.load_macro("SW00SR")
 
+    def _get_tpfdf_key(self, node: KeyValue) -> str:
+        pky = node.get_sub_value("KEY1", "PKY")
+        pky2 = node.get_sub_value("KEY1", "S")
+        if pky is not None:
+            key = f"{self.seg.evaluate(pky):02X}"
+        elif pky2 is not None:
+            key = f"{self.seg.evaluate(pky2):02X}"
+        else:
+            key = str()
+        return key
+
+    def _get_other_keys(self, node: KeyValue) -> dict:
+        other_keys = dict()
+        for key_number in range(2, 7):
+            key_n = f"KEY{key_number}"
+            if node.get_value(key_n) is None:
+                break
+            df_field_name = node.get_sub_value(key_n, "R")
+            condition = node.get_sub_value(key_n, "C")
+            sign = self.C[condition] if condition is not None else "=="
+            field: FieldBaseDsp = node.get_sub_value(key_n, "S")
+            if field is None:
+                # TODO For M, D, L types
+                raise DbredError
+            base_address = self.regs.get_value(field.base)
+            length = self.seg.lookup(df_field_name).length
+            byte_array = self.vm.get_bytes(base_address + field.dsp, length)
+            other_keys[df_field_name] = (f"{sign} {byte_array}", length)
+        return other_keys
+
     def dbopn(self, node: KeyValue) -> str:
         self.tpfdf_ref[node.get_value("REF")] = 0
         return node.fall_down
@@ -382,39 +412,15 @@ class TpfdfMacro(State):
 
     def dbred(self, node: KeyValue) -> str:
         self._base_sw00sr()
-
         # Setup KEY1 Primary key
-        pky = node.get_sub_value("KEY1", "PKY")
-        if pky is not None:
-            key = f"{self.seg.evaluate(pky):02X}"
-        else:
-            key = f"{self.seg.evaluate(node.get_sub_value('KEY1', 'S')):02X}"
-
+        key = self._get_tpfdf_key(node)
         # Set up KEY2 to KEY6
-        other_keys = dict()
-        for key_number in range(2, 7):
-            key_n = f"KEY{key_number}"
-            if node.get_value(key_n) is None:
-                break
-            df_field_name = node.get_sub_value(key_n, "R")
-            condition = node.get_sub_value(key_n, "C")
-            sign = self.C[condition] if condition is not None else "=="
-            field: FieldBaseDsp = node.get_sub_value(key_n, "S")
-            if field is None:
-                # TODO For M, D, L types
-                raise DbredError
-            base_address = self.regs.get_value(field.base)
-            length = self.seg.lookup(df_field_name).length
-            byte_array = self.vm.get_bytes(base_address + field.dsp, length)
-            other_keys[df_field_name] = (f"{sign} {byte_array}", length)
-
+        other_keys = self._get_other_keys(node)
         # Get the lrec
         ref_name = node.get_value("REF")
-        item_number = 0 if node.get_value("BEGIN") else self.tpfdf_ref[ref_name]
-        item_number += 1
+        item_number = 0 if node.get_value("BEGIN") else self.tpfdf_ref.get(ref_name, -1) + 1
         lrec, item_number = Tpfdf.get_lrec(ref_name, key, item_number, other_keys)
         self.tpfdf_ref[ref_name] = item_number
-
         # Update error_code and REG=
         if lrec is None or self.is_error(node.label):
             error_code = self.seg.evaluate("#TPFDBER")
@@ -426,22 +432,16 @@ class TpfdfMacro(State):
             if reg.is_valid():
                 self.regs.set_value(data_address, reg)
         self.vm.set_byte(error_code, self.regs.R3 + self.seg.evaluate("SW00RTN"))
-
         # ERROR=
         error_label = node.get_value("ERRORA")
         if error_label and self.is_error(node.label):
             return error_label
-
         return node.fall_down
 
     def dbadd(self, node: KeyValue) -> str:
         self._base_sw00sr()
         # Get Key
-        pky = node.get_sub_value("KEY1", "PKY")
-        if pky is not None:
-            key = f"{self.seg.evaluate(pky):02X}"
-        else:
-            key = f"{self.seg.evaluate(node.get_sub_value('KEY1', 'S')):02X}"
+        key = self._get_tpfdf_key(node)
         # Get data
         newlrec: FieldBaseDsp = node.get_value("NEWLREC")
         source_address: int = self.regs.get_unsigned_value(newlrec.base) + newlrec.dsp
@@ -455,6 +455,21 @@ class TpfdfMacro(State):
         # Add it
         ref_name = node.get_value("REF")
         Tpfdf.add_bytes(data=data_bytes, key=key, ref_name=ref_name)
+        return node.fall_down
+
+    def dbdel(self, node) -> str:
+        self._base_sw00sr()
+        ref_name = node.get_value("REF")
+        key = self._get_tpfdf_key(node)
+        if key:
+            other_keys = self._get_other_keys(node)
+            _, item_number = Tpfdf.get_lrec(ref_name, key, item_number=0, other_keys=other_keys)
+        else:
+            item_number = self.tpfdf_ref.get(ref_name, 0)
+        delete_status = Tpfdf.delete_lrec(ref_name, item_number)
+        error_label = node.get_value("ERROR") or node.get_value("ERRORA")
+        if error_label and delete_status is False:
+            return error_label
         return node.fall_down
 
 
