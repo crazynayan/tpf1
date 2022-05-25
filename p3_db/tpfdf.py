@@ -9,35 +9,38 @@ class Tpfdf:
     HDR = bytearray([0x00] * 3)
 
     @staticmethod
-    def get_lrec(ref_name: str, key: str, item_number: int,
-                 other_keys: Dict[str, Tuple[str, int]]) -> Tuple[Optional[bytearray], int]:
-        # item_number starts from 1 for the 1st item (index 0)
-        ref = Tpfdf.get_ref(ref_name)
-        lrec_list = [lrec for lrec in ref]
-        if not lrec_list or item_number > len(lrec_list):
-            return None, item_number
-        if item_number != 0 and not other_keys:
-            lrec = lrec_list[item_number - 1]
-            data = lrec_list[item_number - 1]['data'] if lrec['key'] == key else None
-            return data, item_number
-        adjusted_number = 0 if not item_number else item_number - 1
-        for updated_item in range(adjusted_number, len(lrec_list)):
-            lrec = lrec_list[updated_item]
-            if lrec['key'] != key:
-                continue
-            symbol_table = macros[ref_name].all_labels
-            if all(eval(f"{lrec['data'][symbol_table[field_name].dsp: symbol_table[field_name].dsp + length]} {exp}")
-                   for field_name, (exp, length) in other_keys.items()):
-                return lrec['data'], updated_item + 1
-        return None, item_number
-
-    @staticmethod
     def get_ref(ref_name: str) -> List[Dict[str, bytearray]]:
         ref = next((df_record['doc'] for df_record in Tpfdf.DB if df_record['id'] == ref_name), None)
         if ref is None:
             ref: List[Dict[str, bytearray]] = list()
             Tpfdf.DB.append({'id': ref_name, 'doc': ref})
         return ref
+
+    @staticmethod
+    def get_lrec_from_item_number(ref_name: str, item_number: int) -> Optional[bytearray]:
+        # item_number starts from 1 for the 1st item (index 0)
+        ref = Tpfdf.get_ref(ref_name)
+        index = item_number - 1
+        if not 0 <= index < len(ref):
+            return None
+        return ref[index]["data"]
+
+    @staticmethod
+    def get_item_numbers(ref_name: str, key: str, other_keys: Dict[str, Tuple[str, int]], start: int = 0) -> List[int]:
+        ref = Tpfdf.get_ref(ref_name)
+        start_index = 0 if start == 0 else start - 1
+        if not 0 <= start_index < len(ref):
+            return list()
+        if ref_name not in macros:
+            return list()
+        symbol_table = macros[ref_name].all_labels
+        return [index + start_index + 1 for index, lrec in enumerate(ref[start_index:]) if lrec["key"] == key and
+                all(eval(f"{lrec['data'][symbol_table[field_name].dsp: symbol_table[field_name].dsp + length]} {exp}")
+                    for field_name, (exp, length) in other_keys.items())]
+
+    @staticmethod
+    def get_size(ref_name: str):
+        return len(Tpfdf.get_ref(ref_name))
 
     @staticmethod
     def add(data: Dict[str, bytearray], key: str, ref_name: str) -> None:
@@ -69,11 +72,10 @@ class Tpfdf:
         return
 
     @staticmethod
-    def delete_lrec(ref_name: str, item_number: int) -> bool:
+    def delete_lrec(ref_name: str, item_numbers: list) -> None:
         # item_number starts from 1 for the 1st item (index 0)
         ref = Tpfdf.get_ref(ref_name)
-        delete_item = item_number - 1
-        if not 0 <= delete_item < len(ref):
-            return False
-        ref.remove(ref[delete_item])
-        return True
+        indexes = [index - 1 for index in item_numbers if 0 <= index - 1 < len(ref)]
+        for index in sorted(indexes, reverse=True):
+            del ref[index]
+        return

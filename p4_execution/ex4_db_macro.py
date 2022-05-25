@@ -419,10 +419,11 @@ class TpfdfMacro(State):
         # Get the lrec
         ref_name = node.get_value("REF")
         item_number = 0 if node.get_value("BEGIN") else self.tpfdf_ref.get(ref_name, -1) + 1
-        lrec, item_number = Tpfdf.get_lrec(ref_name, key, item_number, other_keys)
-        self.tpfdf_ref[ref_name] = item_number
+        item_numbers = Tpfdf.get_item_numbers(ref_name, key, other_keys, item_number)
+        self.tpfdf_ref[ref_name] = item_numbers[0] if item_numbers else Tpfdf.get_size(ref_name)
+        lrec = Tpfdf.get_lrec_from_item_number(ref_name, item_numbers[0]) if item_numbers else None
         # Update error_code and REG=
-        if lrec is None or self.is_error(node.label):
+        if lrec is None:
             error_code = self.seg.evaluate("#TPFDBER")
         else:
             error_code = self.seg.evaluate("#TPFDBOK")
@@ -432,8 +433,8 @@ class TpfdfMacro(State):
             if reg.is_valid():
                 self.regs.set_value(data_address, reg)
         self.vm.set_byte(error_code, self.regs.R3 + self.seg.evaluate("SW00RTN"))
-        # ERROR=
-        error_label = node.get_value("ERRORA")
+        # Error branching - Only for system errors
+        error_label = node.get_value("ERROR") or node.get_value("ERRORA")
         if error_label and self.is_error(node.label):
             return error_label
         return node.fall_down
@@ -457,18 +458,30 @@ class TpfdfMacro(State):
         Tpfdf.add_bytes(data=data_bytes, key=key, ref_name=ref_name)
         return node.fall_down
 
-    def dbdel(self, node) -> str:
+    def dbdel(self, node: KeyValue) -> str:
         self._base_sw00sr()
         ref_name = node.get_value("REF")
         key = self._get_tpfdf_key(node)
+        other_keys = self._get_other_keys(node)
+        all = "ALL" in node.keys
+        item_numbers = list()
         if key:
-            other_keys = self._get_other_keys(node)
-            _, item_number = Tpfdf.get_lrec(ref_name, key, item_number=0, other_keys=other_keys)
+            item_numbers = Tpfdf.get_item_numbers(ref_name, key, other_keys)
+            if not all and item_numbers:
+                item_numbers = item_numbers[0:1]
+        elif all:
+            Tpfdf.init_db(ref_name)
         else:
-            item_number = self.tpfdf_ref.get(ref_name, 0)
-        delete_status = Tpfdf.delete_lrec(ref_name, item_number)
+            item_numbers = [self.tpfdf_ref.get(ref_name, 0)]
+        Tpfdf.delete_lrec(ref_name, item_numbers)
+        # Set return code
+        error_code = self.seg.evaluate("#TPFDBOK")
+        if all or not item_numbers:
+            error_code = self.seg.evaluate("#TPFDBER")
+        self.vm.set_byte(error_code, self.regs.R3 + self.seg.evaluate("SW00RTN"))
+        # Error branching - Only for system errors
         error_label = node.get_value("ERROR") or node.get_value("ERRORA")
-        if error_label and delete_status is False:
+        if error_label and self.is_error(node.label):
             return error_label
         return node.fall_down
 
