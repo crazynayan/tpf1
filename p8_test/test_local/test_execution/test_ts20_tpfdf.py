@@ -32,6 +32,12 @@ class DbTest(unittest.TestCase):
         self.tpf_server.run("TS20", self.test_data)
         self.assertEqual(0, len(Tpfdf.DB[0]["doc"]))
 
+    def test_ts20_dbmod(self):
+        self.test_data.add_tpfdf(tr1gaa, "40", "TR1GAA")
+        self.test_data.set_field("EBX000", bytes([0x04]))
+        self.tpf_server.run("TS20", self.test_data)
+        self.assertEqual(bytearray([0xC1, 0xC1, 0xC1]), Tpfdf.DB[0]["doc"][0]["data"][116:119])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,19 +1,19 @@
 from typing import List, Dict, Union, Tuple, Optional
 
+from p1_utils.data_type import DataType
 from p2_assembly.mac2_data_macro import macros
 from p3_db.stream import Stream
 
 
 class Tpfdf:
     DB: List[Dict[str, Union[str, List[Dict[str, bytearray]]]]] = list()
-    HDR = bytearray([0x00] * 3)
 
     @staticmethod
     def get_ref(ref_name: str) -> List[Dict[str, bytearray]]:
-        ref = next((df_record['doc'] for df_record in Tpfdf.DB if df_record['id'] == ref_name), None)
+        ref = next((df_record["doc"] for df_record in Tpfdf.DB if df_record["id"] == ref_name), None)
         if ref is None:
             ref: List[Dict[str, bytearray]] = list()
-            Tpfdf.DB.append({'id': ref_name, 'doc': ref})
+            Tpfdf.DB.append({"id": ref_name, "doc": ref})
         return ref
 
     @staticmethod
@@ -24,6 +24,16 @@ class Tpfdf:
         if not 0 <= index < len(ref):
             return None
         return ref[index]["data"]
+
+    @staticmethod
+    def set_lrec_from_item_number(ref_name: str, item_number: int, data: bytearray) -> bool:
+        # item_number starts from 1 for the 1st item (index 0)
+        ref = Tpfdf.get_ref(ref_name)
+        index = item_number - 1
+        if not 0 <= index < len(ref):
+            return False
+        ref[index]["data"] = data
+        return True
 
     @staticmethod
     def get_item_numbers(ref_name: str, key: str, other_keys: Dict[str, Tuple[str, int]], start: int = 0) -> List[int]:
@@ -47,9 +57,14 @@ class Tpfdf:
         ref = Tpfdf.get_ref(ref_name)
         macros[ref_name].load()
         lrec = dict()
-        lrec['key'] = key
-        lrec['data'] = bytearray()
-        lrec['data'].extend(Stream(macros[ref_name]).to_bytes(data))
+        lrec["key"] = key
+        input_data: bytearray = Stream(macros[ref_name]).to_bytes(data)
+        if len(input_data) >= 3:
+            input_data = input_data[3:]
+        final_data = DataType("H", input=f"{len(input_data) + 3}").to_bytes()
+        final_data.extend(DataType("X", input=key).to_bytes(length=1))
+        final_data.extend(input_data)
+        lrec["data"] = final_data
         ref.append(lrec)
 
     @staticmethod
@@ -57,8 +72,8 @@ class Tpfdf:
         ref = Tpfdf.get_ref(ref_name)
         macros[ref_name].load()
         lrec = dict()
-        lrec['key'] = key
-        lrec['data'] = data
+        lrec["key"] = key
+        lrec["data"] = data
         ref.append(lrec)
 
     @staticmethod
@@ -66,7 +81,7 @@ class Tpfdf:
         if ref_name is None:
             Tpfdf.DB = list()
         else:
-            df_record = next((df_record for df_record in Tpfdf.DB if df_record['id'] == ref_name), None)
+            df_record = next((df_record for df_record in Tpfdf.DB if df_record["id"] == ref_name), None)
             if df_record is not None:
                 Tpfdf.DB.remove(df_record)
         return
