@@ -324,7 +324,7 @@ class State:
                     data_bytes = Stream(macros[pool_file.macro_name]).to_bytes(pool_file_bytes_dict)
                 else:
                     raise PoolFileSpecificationError
-                pool_address = FlatFile.add_pool(data_bytes, pool_file.rec_id)
+                pool_address = FlatFile.add_pool(data_bytes)
                 if pool_file.forward_chain_count and not item_field:
                     raise PoolFileSpecificationError
                 empty_items = [{field: bytearray([config.ZERO] * len(byte_array))
@@ -336,7 +336,7 @@ class State:
                         fch_dict = {**fch_dict, **pool_file_bytes_dict}
                     data_bytes = Stream(macros[pool_file.macro_name]).item_to_bytes(empty_items, item_field,
                                                                                     count_field, fch_dict)
-                    pool_address = FlatFile.add_pool(data_bytes, pool_file.rec_id)
+                    pool_address = FlatFile.add_pool(data_bytes)
                 index_dict = {pool_file.index_field: DataType("F", input=str(pool_address)).to_bytes()}
                 fixed_dict = {**fixed_dict, **index_dict}
             # Fixed File
@@ -359,7 +359,7 @@ class State:
                 data_bytes = Stream(macros[fixed_file.macro_name]).to_bytes(fixed_dict)
             else:
                 raise PoolFileSpecificationError
-            FlatFile.add_fixed(data_bytes, fixed_file.rec_id, fixed_file.fixed_type, fixed_file.fixed_ordinal)
+            FlatFile.add_fixed(data_bytes, fixed_file.fixed_type, fixed_file.fixed_ordinal)
             # TODO multiple level indexes to be coded later when scenario is with us
         return
 
