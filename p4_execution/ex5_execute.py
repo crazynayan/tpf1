@@ -204,11 +204,23 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["FLIPC"] = self.flipc
         self._ex["EOWNRC"] = self.no_operation
         self._ex["CREMC"] = self.no_operation
+        self._ex["CREDC"] = self.no_operation
+        self._ex["CREEC"] = self.no_operation
+        self._ex["SWISC"] = self.no_operation
+        self._ex["POSTC"] = self.no_operation
+        self._ex["EVNTC"] = self.no_operation
+        self._ex["EVNQC"] = self.no_operation
+        self._ex["EVNWC"] = self.no_operation
+        self._ex["GLMOD"] = self.no_operation
+        self._ex["FLIKW"] = self.no_operation
+        self._ex["KEYCC"] = self.no_operation
+        self._ex["KEYRC"] = self.no_operation
         self._ex["GLBLC"] = self.no_operation
         self._ex["DLAYC"] = self.no_operation
         self._ex["DEFRC"] = self.no_operation
         self._ex["REALTIMA"] = self.realtima
         self._ex["MALOC"] = self.maloc
+        self._ex["FREEC"] = self.no_operation
         self._ex["CINFC"] = self.cinfc
 
         # SPM Macros
@@ -250,6 +262,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["FILEC"] = self.filec
         self._ex["FILNC"] = self.filec
         self._ex["WAITC"] = self.no_operation
+        self._ex["UNFRC"] = self.no_operation
 
         # User defined Db Macros
         self._ex["PDCRE"] = self.no_operation
