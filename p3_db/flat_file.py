@@ -64,3 +64,7 @@ class FlatFile:
         else:
             raise FaceError
         return file_address
+
+    @classmethod
+    def is_address_valid(cls, file_address: int) -> bool:
+        return f"{file_address:08X}" in cls.DB

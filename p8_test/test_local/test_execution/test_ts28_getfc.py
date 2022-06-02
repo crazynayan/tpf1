@@ -10,6 +10,7 @@ class Ts28Test(unittest.TestCase):
         self.tpf_server = TpfServer()
         self.test_data = TestDataUTS()
         self.test_data.add_fields([("EBW000", 4), ("EBW004", 4)], "EB0EB")
+        self.test_data.add_all_regs()
 
     def test_ts28_getfc(self):
         test_data = self.tpf_server.run("TS28", self.test_data)
@@ -22,6 +23,8 @@ class Ts28Test(unittest.TestCase):
         self.assertIsNotNone(data2)
         self.assertEqual(bytearray([0xB1, 0xB2, 0x00, 0x00]), data1)
         self.assertEqual(bytearray([0xC1, 0x00, 0x00, 0x00]), data2)
+        self.assertEqual(2, test_data.output.regs["R12"])
+        self.assertEqual(3, test_data.output.regs["R14"])
 
 
 if __name__ == "__main__":

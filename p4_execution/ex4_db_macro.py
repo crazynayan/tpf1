@@ -334,6 +334,19 @@ class RealTimeDbMacro(State):
             self.relcc(node)
         return node.fall_down
 
+    def sonic(self, node: KeyValue) -> str:
+        operand = node.keys[0]
+        file_address = 0
+        if operand.startswith("(") and len(operand) >= 3:
+            reg = Register(operand[1:-1])
+            if reg.is_valid():
+                file_address = self.regs.get_value(reg)
+        elif operand.startswith("D") and len(operand) == 2:
+            file_address_address = self.get_ecb_address(operand, "EBCFA")
+            file_address = self.vm.get_unsigned_value(file_address_address, length=4)
+        self.cc = 0 if FlatFile.is_address_valid(file_address) else 1
+        return node.fall_down
+
 
 class TpfdfMacro(State):
     C = {"E": "==", "EQ": "==", "NE": "!=", "GE": ">=", "LE": "<=", "GT": ">", "LT": "<", "H": ">", "L": "<",

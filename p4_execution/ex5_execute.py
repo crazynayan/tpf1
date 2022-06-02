@@ -256,7 +256,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["FINWC"] = self.finwc
         self._ex["FIWHC"] = self.finwc
         # FINHC
-        # SONIC
+        self._ex["SONIC"] = self.sonic
         self._ex["GETFC"] = self.getfc
         self._ex["FILUC"] = self.filec
         self._ex["FILEC"] = self.filec
