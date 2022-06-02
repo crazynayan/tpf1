@@ -165,7 +165,7 @@ class RealTimeMacro(State):
         return branch
 
     def maloc(self, node: KeyValue) -> str:
-        size_reg: str = node.get_value("SIZE")
+        size_reg: str = node.get_value("SIZE") if node.command == "MALOC" else node.get_value("COUNT")
         reg: Register = Register(size_reg)
         if not reg.is_valid():
             raise UserDefinedMacroExecutionError(node)
@@ -291,6 +291,13 @@ class UserDefinedMacro(State):
         if not error:
             raise NotImplementedExecutionError
         return error
+
+    @staticmethod
+    def toura(node: KeyValue) -> str:
+        inhibit = node.get_value("INHIBIT")
+        if inhibit:
+            return inhibit
+        return node.fall_down
 
     def prima(self, node: KeyValue) -> str:
         if "PNR" not in node.keys and "AAA" not in node.keys:

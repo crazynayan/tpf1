@@ -212,7 +212,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["EVNQC"] = self.no_operation
         self._ex["EVNWC"] = self.no_operation
         self._ex["GLMOD"] = self.no_operation
-        self._ex["FLIKW"] = self.no_operation
+        self._ex["FILKW"] = self.no_operation
         self._ex["KEYCC"] = self.no_operation
         self._ex["KEYRC"] = self.no_operation
         self._ex["GLBLC"] = self.no_operation
@@ -220,11 +220,12 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["DEFRC"] = self.no_operation
         self._ex["REALTIMA"] = self.realtima
         self._ex["MALOC"] = self.maloc
+        self._ex["CALOC"] = self.maloc
         self._ex["FREEC"] = self.no_operation
         self._ex["CINFC"] = self.cinfc
+        self._ex["WTOPC"] = self.no_operation
 
         # SPM Macros
-        self._ex["#PERF"] = self.no_operation
         self._ex["#SPM"] = self.no_operation
 
         # User Defined Executable Macros
@@ -240,6 +241,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["PNRCC"] = self.pnrcc
         self._ex["AGSQR"] = self.no_operation
         self._ex["TKDNA"] = self.tkdna
+        self._ex["TOURA"] = self.toura
         self._ex["FLBKA"] = self.no_operation
         self._ex["PNRUA"] = self.pnrua
         self._ex["DATE"] = self.date_macro
