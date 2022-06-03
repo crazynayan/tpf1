@@ -118,7 +118,6 @@ class Storage:
         self.nab: int = config.F4K << config.NIBBLE  # To ensure total 16 fixed frames
         self.allocate_fixed(config.ECB)
         self.allocate_fixed(config.GL0BS)
-        self.allocate_fixed(config.AAA)
         self.allocate_fixed(config.IMG)
         self.allocate_fixed(config.MULTI_HOST)
         self.allocate_fixed(config.GLOBAS)

@@ -173,9 +173,9 @@ class Output(FirestoreDocument):
         field_dict = field_dict.copy()
         del field_dict["base_reg"]
         core_dict["base_reg"] = core_dict["base_reg"] if core_dict["base_reg"] != "R0" else str()
-        if not core_dict["base_reg"] and macro_name not in config.DEFAULT_MACROS:
+        if not core_dict["base_reg"] and macro_name not in config.FIXED_MACROS:
             return dict()
-        if core_dict["base_reg"] and macro_name in config.DEFAULT_MACROS:
+        if core_dict["base_reg"] and macro_name in config.FIXED_MACROS:
             return dict()
         field_dict["length"] = field_dict["length"] if "length" in field_dict and field_dict["length"] \
             else macros[macro_name].evaluate(f"L'{field_dict['field']}")

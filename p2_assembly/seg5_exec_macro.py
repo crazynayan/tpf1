@@ -149,7 +149,7 @@ class RealtimeMacroImplementation(InstructionImplementation):
             raise RegisterInvalidError(line)
         self.load_macro(macro_name, base=reg)
         line.command = "LHI"
-        return RegisterData(line, base, config.DEFAULT_MACROS[macro_name])
+        return RegisterData(line, base, config.FIXED_MACROS[macro_name])
 
     def dbred(self, line: Line) -> KeyValue:
         dbred_key = self.key_value(line)

@@ -95,7 +95,7 @@ class _DataMacroCollection:
         # Initialize non default macros
         for macro_name, file_name in non_default_macros_dict.items():
             self.macros[macro_name] = DataMacro(name=macro_name, filename=file_name, default_macros=self.default_macros)
-        # for macro_name in config.DEFAULT_MACROS:
+        # for macro_name in config.FIXED_MACROS:
         #     self.macros[macro_name].load()
         for macro_name, data_macro in self.macros.items():
             data_macro.load()
@@ -121,5 +121,5 @@ def get_global_address(global_name: str) -> int:
     global_ref: LabelReference = get_global_ref(global_name)
     if not global_ref:
         raise NotFoundInSymbolTableError
-    address = config.DEFAULT_MACROS[global_ref.name] + global_ref.dsp
+    address = config.FIXED_MACROS[global_ref.name] + global_ref.dsp
     return address

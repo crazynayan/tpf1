@@ -226,7 +226,7 @@ class TestData(FirestoreDocument):
         if set(body) != {"macro_name", "variation", "variation_name", "field_data"}:
             response["message"] = "Only 4 fields allowed (macro_name, variation, variation_name and field_data."
             return response
-        if body["macro_name"] not in config.DEFAULT_MACROS:
+        if body["macro_name"] not in config.FIXED_MACROS:
             response["error_fields"]["macro_name"] = f"Invalid macro name. {body['macro_name']} is not a default macro."
         if not self.validate_and_update_variation(body, "core"):
             response["error_fields"]["variation"] = "Invalid variation."
