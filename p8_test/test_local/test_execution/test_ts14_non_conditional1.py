@@ -19,7 +19,7 @@ class NonConditional1(unittest.TestCase):
 
     def test_ts14(self):
         test_data = self.tpf_server.run("TS14", self.test_data)
-        aaa = config.AAA
+        aaa = self.tpf_server.aaa_address
         self.assertEqual(0xFFFFC1C1, test_data.get_unsigned_value("R2"))
         self.assertEqual("C1C1", test_data.get_field("WA0BBR"))
         self.assertEqual("00000000C1C1", test_data.get_field("WA0QHR"))
@@ -32,8 +32,8 @@ class NonConditional1(unittest.TestCase):
         self.assertEqual(0x00000100, test_data.output.regs["R4"])
         self.assertEqual(0x00000000, test_data.output.regs["R11"])
         self.assertEqual(-1, test_data.output.regs["R12"])
-        self.assertEqual(config.AAA + macros["WA0AA"].evaluate("WA0TKK"), test_data.output.regs["R13"])
-        self.assertEqual(config.AAA + macros["WA0AA"].evaluate("WA0DAR") + 1, test_data.output.regs["R14"])
+        self.assertEqual(aaa + macros["WA0AA"].evaluate("WA0TKK"), test_data.output.regs["R13"])
+        self.assertEqual(aaa + macros["WA0AA"].evaluate("WA0DAR") + 1, test_data.output.regs["R14"])
         self.assertEqual(5, test_data.output.regs["R15"])
         self.assertEqual("02", test_data.get_field("EBW000"))
         self.assertEqual("40" * 6, test_data.get_field("EBW001"))

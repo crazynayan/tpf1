@@ -39,7 +39,7 @@ class Conditional(unittest.TestCase):
         self.test_data.set_field("EBW008", bytearray([0xC1]))
         self.test_data.set_field("EBW009", bytearray([0x11]))
         self.test_data.regs["R15"] = -10
-        self.test_data.regs["R14"] = 23
+        self.test_data.regs["R13"] = 23
         test_data = self.tpf_server.run("TS16", self.test_data)
         self.assertEqual(2, test_data.output.regs["R0"])
         self.assertEqual(3, test_data.output.regs["R1"])
