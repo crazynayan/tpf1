@@ -15,6 +15,7 @@ from p2_assembly.mac0_generic import LabelReference
 from p2_assembly.mac2_data_macro import macros, get_global_address
 from p2_assembly.seg2_ins_operand import FieldIndex
 from p2_assembly.seg3_ins_type import InstructionType
+from p2_assembly.seg5_exec_macro import KeyValue
 from p2_assembly.seg6_segment import Segment
 from p2_assembly.seg9_collection import seg_collection
 from p3_db.flat_file import FlatFile
@@ -50,6 +51,7 @@ class State:
         self.fields: dict = {"CE3ENTPGM": bytearray()}
         self.stop_segments: List[str] = list()
         self.instruction_counter: int = 0
+        self._ex: Dict[str, callable] = dict()
 
     def __repr__(self) -> str:
         return f"State:{self.seg}:{self.regs}:{self.vm}"
@@ -126,7 +128,6 @@ class State:
         self._init_seg(seg_name)
         self._init_ecb()
         self._init_globals()
-        self._core_block(config.AAA, "D1")
         self._core_block(config.IMG, "D0")
 
     def run(self, seg_name: str, test_data: TestData) -> TestData:
@@ -135,6 +136,7 @@ class State:
         outputs = list()
         for test_data_variant in test_data.yield_variation():
             self.init_run(seg_name)
+            self.init_aaa(test_data_variant)
             self._set_from_test_data(test_data_variant)
             label = self.seg.root_label()
             node = self.seg.equ(Line.from_line(f"{label} EQU 0"))
@@ -185,6 +187,16 @@ class State:
     def set_zero_cc(self, number: int) -> None:
         self.cc = 1 if number else 0
 
+    def init_aaa(self, test_data) -> None:
+        getfc_node: KeyValue = self.seg.key_value(Line.from_line(" GETFC D1,ID=C'AA',BLOCK=YES"))
+        self._ex["GETFC"](getfc_node)
+        aaa_core = next((core for core in test_data.cores if core.macro_name == config.AAA_MACRO_NAME), None)
+        if aaa_core:
+            self._set_core(aaa_core.field_data, config.AAA_MACRO_NAME, self.aaa_address)
+        filnc_node: KeyValue = self.seg.key_value(Line.from_line(" FLINC D1"))
+        self._ex["FILNC"](filnc_node)
+        return
+
     def set_partition(self, partition: str) -> None:
         if partition not in config.PARTITION:
             raise PartitionError
@@ -226,6 +238,11 @@ class State:
         control_value = self.vm.get_value(self.get_ecb_address(f"D{level}", "CE1CT"), 2)
         return False if control_value == 0x01 or control_value == 0x00 else True
 
+    @property
+    def aaa_address(self) -> int:
+        ce1cr1: int = self.get_ecb_address("D1", "CE1CR")
+        return self.vm.get_value(ce1cr1)
+
     @staticmethod
     def _field_data_to_bytearray(field_data: List[dict]):
         return {field_dict["field"]: bytearray(b64decode(field_dict["data"])) for field_dict in field_data}
@@ -250,8 +267,8 @@ class State:
                 self._set_from_core_hex_and_field_data(core, address)
             elif core.macro_name:
                 macro_name = core.macro_name.upper()
-                if macro_name in config.DEFAULT_MACROS:
-                    self._set_core(core.field_data, macro_name, config.DEFAULT_MACROS[macro_name])
+                if macro_name in config.FIXED_MACROS and macro_name != config.AAA_MACRO_NAME:
+                    self._set_core(core.field_data, macro_name, config.FIXED_MACROS[macro_name])
             elif core.global_name:
                 address: int = self._evaluate_global(core.global_name)
                 if core.is_global_record:
@@ -380,8 +397,10 @@ class State:
             output.traces = self.trace_list.get_traces()
         for core in output.cores:
             macro_name = core.macro_name.upper()
-            if macro_name in config.DEFAULT_MACROS:
-                self._capture_core(core.field_data, macro_name, config.DEFAULT_MACROS[macro_name])
+            if macro_name in config.FIXED_MACROS:
+                base_address = self.aaa_address if macro_name == config.AAA_MACRO_NAME \
+                    else config.FIXED_MACROS[macro_name]
+                self._capture_core(core.field_data, macro_name, base_address)
             elif macro_name in macros:
                 if not Register(core.base_reg).is_valid():
                     raise InvalidBaseRegError

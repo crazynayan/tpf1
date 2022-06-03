@@ -1,5 +1,3 @@
-from typing import Dict
-
 from p2_assembly.seg3_ins_type import InstructionType
 from p4_execution.ex2_instruction import Instruction
 from p4_execution.ex3_executable_macro import ExecutableMacro
@@ -9,7 +7,6 @@ from p4_execution.ex4_db_macro import DbMacro
 class TpfServer(Instruction, ExecutableMacro, DbMacro):
     def __init__(self):
         super().__init__()
-        self._ex: Dict[str, callable] = dict()
 
         # S03 - Load & Store
         self._ex["LR"] = self.load_register

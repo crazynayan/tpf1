@@ -209,7 +209,7 @@ class UserDefinedMacro(State):
         core_reference = self.get_ecb_address(f"D{to_level}", "CE1CR")
         aaa_copy = self.vm.allocate()
         self.vm.set_value(aaa_copy, core_reference)
-        aaa_bytes = copy(self.vm.frames[self.vm.base_key(config.AAA)])
+        aaa_bytes = copy(self.vm.frames[self.vm.base_key(self.aaa_address)])
         self.vm.set_bytes(aaa_bytes, aaa_copy, len(aaa_bytes))
         return node.fall_down
 
@@ -308,7 +308,7 @@ class UserDefinedMacro(State):
             raise PrimaExecutionError
         match_label = node.get_value("YES") if node.get_value("YES") else node.fall_down
         not_match_label = node.get_value("NO") if node.get_value("NO") else node.fall_down
-        prime_host = self.vm.get_value(config.AAA + macros["WA0AA"].evaluate("WA0PHA"), 1) & 0x0F
+        prime_host = self.vm.get_value(self.aaa_address + macros["WA0AA"].evaluate("WA0PHA"), 1) & 0x0F
         input_type = node.get_value("PH")
         if prime_host == 0:
             return not_match_label
