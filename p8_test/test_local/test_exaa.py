@@ -62,7 +62,7 @@ class ExaaTest(TestDebug):
         self.test_data.add_pnr_element(["NAYAN"], RCVD_FROM)
         self.test_data.add_pnr_element(["123456"], PHONE)
         self._mini_tjr_setup("00")
-        test_data = self.tpf_server.run("EWA1", self.test_data)
+        test_data = self.tpf_server.run("ETA1", self.test_data)
         self.output = test_data.output
         self.assertEqual(self.IGR1_END, self.output.last_line, f"{self.output.last_node}--{self.output.dumps}")
         self.assertEqual("0007", test_data.get_pnr_field("PR00_20_PTY"))
@@ -78,7 +78,7 @@ class ExaaTest(TestDebug):
         self.test_data.add_pnr_element(["NAYAN"], RCVD_FROM)
         self.test_data.add_pnr_element(["123456"], PHONE)
         self._mini_tjr_setup("00")
-        test_data = self.tpf_server.run("EWA1", self.test_data)
+        test_data = self.tpf_server.run("ETA1", self.test_data)
         self.output = test_data.output
         self.assertEqual(self.IGR1_END, self.output.last_line, f"{self.output.last_node}--{self.output.dumps}")
         self.assertEqual("0009", test_data.get_pnr_field("PR00_20_PTY"))
