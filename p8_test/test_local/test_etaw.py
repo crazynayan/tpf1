@@ -19,14 +19,15 @@ class EtawTest(TestDebug):
     def test_etaw_wa0tsc(self) -> None:
         self.test_data.set_global_record("@MH00C", field_data=str(), seg_name=str())
         self.test_data.set_global_record("@APCIB", field_data=str(), seg_name=str())
+        self.test_data.set_global_field("@@PNRMC", "C2C1")
         self.test_data.set_field("WA0ET5", DataType("X", input="01").to_bytes())
         self.test_data.set_field("WA0ASC", DataType("X", input="01").to_bytes())
         self.test_data.set_field("WA0TSC", DataType("X", input="01").to_bytes())
+        self.test_data.set_field("WA0PTY", DataType("X", input="01").to_bytes())
         self.test_data.set_field("WA0POR", DataType("X", input="00017F").to_bytes())
         self.test_data.add_pnr_element(["1ZAVERI/NAYAN"], NAME)
         self.test_data.add_pnr_element(["NAYAN"], RCVD_FROM)
         self.test_data.add_pnr_element(["123456"], PHONE)
-        self.test_data.stop_segments = ["EWA1"]
         test_data = self.tpf_server.run("ETA1", self.test_data)
         self.output = test_data.output
-        self.assertEqual("ETGE0250.1", self.output.last_line, self.output.last_node)
+        self.assertEqual(self.IGR1_END, self.output.last_line, self.output.last_node)
