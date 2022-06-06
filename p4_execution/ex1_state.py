@@ -51,6 +51,7 @@ class State:
         self.fields: dict = {"CE3ENTPGM": bytearray()}
         self.stop_segments: List[str] = list()
         self.instruction_counter: int = 0
+        self.aaa_field_data: List[dict] = list()
         self._ex: Dict[str, callable] = dict()
 
     def __repr__(self) -> str:
@@ -136,7 +137,8 @@ class State:
         outputs = list()
         for test_data_variant in test_data.yield_variation():
             self.init_run(seg_name)
-            self.init_aaa(test_data_variant)
+            self.init_aaa_field_data(test_data_variant)
+            self.init_aaa()
             self._set_from_test_data(test_data_variant)
             label = self.seg.root_label()
             node = self.seg.equ(Line.from_line(f"{label} EQU 0"))
@@ -187,14 +189,19 @@ class State:
     def set_zero_cc(self, number: int) -> None:
         self.cc = 1 if number else 0
 
-    def init_aaa(self, test_data) -> None:
+    def init_aaa(self) -> None:
         getfc_node: KeyValue = self.seg.key_value(Line.from_line(" GETFC D1,ID=C'AA',BLOCK=YES"))
         self._ex["GETFC"](getfc_node)
-        aaa_core = next((core for core in test_data.cores if core.macro_name == config.AAA_MACRO_NAME), None)
-        if aaa_core:
-            self._set_core(aaa_core.field_data, config.AAA_MACRO_NAME, self.aaa_address)
+        self._set_core(self.aaa_field_data, config.AAA_MACRO_NAME, self.aaa_address)
         filnc_node: KeyValue = self.seg.key_value(Line.from_line(" FLINC D1"))
         self._ex["FILNC"](filnc_node)
+        return
+
+    def init_aaa_field_data(self, test_data):
+        FlatFile.init_db()
+        aaa_core = next((core for core in test_data.cores if core.macro_name == config.AAA_MACRO_NAME), None)
+        if aaa_core:
+            self.aaa_field_data = aaa_core.field_data
         return
 
     def set_partition(self, partition: str) -> None:
@@ -314,7 +321,6 @@ class State:
         return
 
     def _capture_file(self, test_data: TestData):
-        FlatFile.init_db()
         for fixed_file in test_data.fixed_files:
             fixed_dict = dict()
             for pool_file in fixed_file.pool_files:
