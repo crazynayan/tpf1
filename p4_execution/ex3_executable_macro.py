@@ -173,8 +173,11 @@ class RealTimeMacro(State):
         return node.fall_down
 
     def pnamc(self, node: KeyValue) -> str:
+        name_type = node.get_value("NAMETYPE")
+        current_seg = DataType("C", input=self.seg.seg_name).to_bytes()
+        seg_bytes = self.fields["CE3ENTPGM"] if name_type in {"CALLER", "ENTER"} else current_seg
         field: FieldBaseDsp = node.get_value("FIELD")
-        self.vm.set_bytes(self.fields["CE3ENTPGM"], self.regs.get_value(field.base) + field.dsp, 4)
+        self.vm.set_bytes(seg_bytes, self.regs.get_value(field.base) + field.dsp, 4)
         return node.fall_down
 
     def cinfc(self, node: KeyValue) -> str:

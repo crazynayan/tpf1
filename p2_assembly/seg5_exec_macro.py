@@ -198,8 +198,6 @@ class RealtimeMacroImplementation(InstructionImplementation):
 
     def pnamc(self, line: Line) -> KeyValue:
         pnamc_key_value = self.key_value(line)
-        if pnamc_key_value.get_value("NAMETYPE") != "ENTER":
-            raise AssemblyError(line)
         field_name = pnamc_key_value.get_value("FIELD")
         if not field_name:
             raise AssemblyError(line)
