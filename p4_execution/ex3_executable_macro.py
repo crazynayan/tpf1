@@ -216,6 +216,12 @@ class UserDefinedMacro(State):
         self.vm.set_bytes(aaa_bytes, aaa_copy, len(aaa_bytes))
         return node.fall_down
 
+    def aaint(self, node: KeyValue) -> str:
+        if not node.get_value("INIT"):
+            return node.fall_down
+        self.vm.set_frame(bytearray(), self.aaa_address)
+        return node.fall_down
+
     def heapa(self, node: KeyValue) -> str:
         # REG, REF and SREF
         reg = Register(node.get_value("REG"))
