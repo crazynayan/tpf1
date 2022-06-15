@@ -21,6 +21,7 @@ class RequestType:
     TEMPLATE_MERGE_LINK = SimpleNamespace(variation=int(), variation_name=str(), template_name=str())
     TEMPLATE_LINK_UPDATE = SimpleNamespace(variation=int(), new_template_name=str(), template_name=str())
     TEMPLATE_LINK_DELETE = SimpleNamespace(variation=int(), template_name=str())
+    RESULT_COMMENT_UPDATE = SimpleNamespace(comment_type=str(), comment=str())
 
 
 class StandardResponse:
