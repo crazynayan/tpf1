@@ -121,6 +121,7 @@ class InstructionImplementation(InstructionOperand):
         self._command["BRAS"] = self.reg_branch
         self._command["BCT"] = self.reg_branch
         self._command["JCT"] = self.reg_branch
+        self._command["BRCT"] = self.reg_branch
         self._command["BXH"] = self.reg_reg_branch
         self._command["BXLE"] = self.reg_reg_branch
         self._command["EX"] = self.reg_label
