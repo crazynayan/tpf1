@@ -11,6 +11,7 @@ from p2_assembly.mac2_data_macro import macros
 from p2_assembly.seg9_collection import seg_collection, SegLst
 from p3_db.test_data import TestData
 from p3_db.test_data_elements import Tpfdf, FixedFile
+from p3_db.test_data_results import update_comment
 from p3_db.test_data_variations import rename_variation, copy_variation, delete_variation
 from p4_execution.ex5_execute import TpfServer
 from p7_flask_app import tpf1_app
@@ -84,8 +85,15 @@ def run_test_data(test_data_id: str, **kwargs) -> Response:
     if not seg_collection.is_seg_present(test_data.seg_name):
         return error_response(400, "Error in segment name")
     tpf_server = TpfServer()
-    test_data = tpf_server.run(test_data.seg_name, test_data)
-    return jsonify(test_data.cascade_to_dict())
+    output_test_data = tpf_server.run(test_data.seg_name, test_data)
+    final_test_data = output_test_data.cascade_to_dict()
+    # Indicate which type of test data variation is present
+    final_test_data["test_data_variation"] = {"core": False, "pnr": False, "tpfdf": False, "file": False}
+    for variation_type in final_test_data["test_data_variation"]:
+        if any(output["variation"][variation_type] != final_test_data["outputs"][0]["variation"][variation_type]
+               for output in final_test_data["outputs"]):
+            final_test_data["test_data_variation"][variation_type] = True
+    return jsonify(final_test_data)
 
 
 @tpf1_app.route("/test_data/<string:test_data_id>")
@@ -94,6 +102,12 @@ def run_test_data(test_data_id: str, **kwargs) -> Response:
 def get_test_data(test_data_id: str, **kwargs) -> Response:
     test_data: TestData = kwargs[test_data_id]
     return jsonify(test_data.cascade_to_dict())
+
+
+@tpf1_app.route("/test_data/<string:test_data_id>/results/<int:result_id>/comment", methods=["POST"])
+@token_auth.login_required
+def test_data_result_comment(test_data_id: str, result_id: int) -> Response:
+    return jsonify(update_comment(test_data_id, result_id, request.get_json()))
 
 
 @tpf1_app.route("/test_data/<string:test_data_id>", methods=["DELETE"])
