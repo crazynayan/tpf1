@@ -166,6 +166,8 @@ class State:
             self._capture_output(test_data_variant.output, node)
             outputs.append(test_data_variant.output)
         output_test_data = deepcopy(test_data)
+        for index, output in enumerate(outputs):
+            output.result_id = index + 1
         output_test_data.outputs = outputs
         return output_test_data
 
