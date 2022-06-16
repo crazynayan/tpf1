@@ -1,5 +1,3 @@
-from base64 import b64decode
-from copy import copy
 from typing import List, Dict, Union
 
 from firestore_ci import FirestoreDocument
@@ -243,49 +241,6 @@ class Output(FirestoreDocument):
 
 
 Output.init()
-
-
-class Result(FirestoreDocument):
-    VALID_COMMENT_TYPES = {"user_comment", "core_comment", "pnr_comment"}
-
-    def __init__(self, test_data_id: str = str(), output: Output = None):
-        super().__init__()
-        self.test_data_id: str = test_data_id
-        self.result_id: int = output.result_id if output else int()
-        self.regs: Dict[str, int] = output.regs if output else dict()
-        self.reg_pointers: Dict[str, Union[str, int]] = output.reg_pointers if output else dict()
-        self.dumps: List[str] = output.dumps if output else list()
-        self.messages: List[str] = output.messages if output else list()
-        self.last_line: str = output.last_line if output else str()
-        self.last_node: str = output.last_node if output else str()
-        self.variation: Dict[str, int] = output.variation if output else dict()
-        self.variation_name: Dict[str, str] = output.variation_name if output else dict()
-        self.user_comment: str = str()
-        self.core_comment: str = str()
-        self.pnr_comment: str = str()
-        self.core_field_data: List[dict] = list()
-        self.pnr_field_data: List[dict] = list()
-
-        def convert_data(field_data: dict) -> dict:
-            updated_field_data = copy(field_data)
-            updated_field_data["data"] = b64decode(field_data["data"]).hex().upper()
-            return updated_field_data
-
-        if output:
-            self.pnr_field_data = [convert_data(field_data) for pnr in output.pnr_outputs
-                                   for field_data in pnr.field_data]
-            self.core_field_data = [convert_data(field_data) for core in output.cores for field_data in core.field_data]
-        return
-
-    @classmethod
-    def is_comment_type_valid(cls, comment_type: str) -> bool:
-        return comment_type in cls.VALID_COMMENT_TYPES
-
-    def set_comment(self, comment: str, comment_type: str):
-        self.__setattr__(comment_type, comment)
-
-
-Result.init()
 
 
 class FlatFile(FirestoreDocument):

@@ -79,6 +79,7 @@ def copy_test_data(test_data_id: str, **kwargs) -> Response:
 
 
 @tpf1_app.route("/test_data/<string:test_data_id>/run")
+@token_auth.login_required
 @test_data_with_links_required
 def run_test_data(test_data_id: str, **kwargs) -> Response:
     test_data: TestData = kwargs[test_data_id]
@@ -104,10 +105,10 @@ def get_test_data(test_data_id: str, **kwargs) -> Response:
     return jsonify(test_data.cascade_to_dict())
 
 
-@tpf1_app.route("/test_data/<string:test_data_id>/results/<int:result_id>/comment", methods=["POST"])
+@tpf1_app.route("/test_results/<string:test_data_id>/comment", methods=["POST"])
 @token_auth.login_required
-def test_data_result_comment(test_data_id: str, result_id: int) -> Response:
-    return jsonify(update_comment(test_data_id, result_id, request.get_json()))
+def test_result_comment(test_data_id: str) -> Response:
+    return jsonify(update_comment(test_data_id, request.get_json()))
 
 
 @tpf1_app.route("/test_data/<string:test_data_id>", methods=["DELETE"])
