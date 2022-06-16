@@ -11,8 +11,8 @@ from p2_assembly.mac2_data_macro import macros
 from p2_assembly.seg9_collection import seg_collection, SegLst
 from p3_db.test_data import TestData
 from p3_db.test_data_elements import Tpfdf, FixedFile
-from p3_db.test_data_results import update_comment
 from p3_db.test_data_variations import rename_variation, copy_variation, delete_variation
+from p3_db.test_results_crud import update_comment, create_test_result, get_test_results
 from p4_execution.ex5_execute import TpfServer
 from p7_flask_app import tpf1_app
 from p7_flask_app.auth import token_auth, User
@@ -103,6 +103,20 @@ def run_test_data(test_data_id: str, **kwargs) -> Response:
 def get_test_data(test_data_id: str, **kwargs) -> Response:
     test_data: TestData = kwargs[test_data_id]
     return jsonify(test_data.cascade_to_dict())
+
+
+@tpf1_app.route("/test_data/<string:test_data_id>/save_results", methods=["POST"])
+@token_auth.login_required
+@test_data_with_links_required
+def test_results_create(test_data_id: str, **kwargs) -> Response:
+    return jsonify(create_test_result(kwargs[test_data_id], request.get_json()))
+
+
+@tpf1_app.route("/test_results")
+@token_auth.login_required
+def test_results_get() -> Response:
+    name = request.args.get("name", str())
+    return jsonify(get_test_results(name))
 
 
 @tpf1_app.route("/test_results/<string:test_data_id>/comment", methods=["POST"])
