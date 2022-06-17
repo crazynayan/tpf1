@@ -129,7 +129,7 @@ class TestResult(FirestoreDocument):
     def init_pnr(self, pnr: Pnr):
         if not pnr:
             return
-        self.type = self.CORE
+        self.type = self.PNR
         self.init_from_input_object(pnr)
         self.field_data = convert_field_list(pnr.field_data_item)
 
@@ -145,6 +145,7 @@ class TestResult(FirestoreDocument):
             return
         self.type = self.FILE
         self.fixed_rec_id: int = file.rec_id
+        self.macro_name: str = file.macro_name
         self.fixed_forward_chain_label: str = file.forward_chain_label
         self.fixed_forward_chain_count: int = file.forward_chain_count
         self.fixed_type: int = file.fixed_type
@@ -184,6 +185,18 @@ class TestResult(FirestoreDocument):
                                 for field_data in convert_field_list(core.field_data)]
         return
 
+    def __repr__(self):
+        text = {
+            self.HEADER: f"{self.seg_name}::{self.name}",
+            self.CORE: f"V{self.variation}::{self.macro_name or self.ecb_level or self.global_name or self.heap_name}"
+                       f"::{self.field_data}",
+            self.PNR: f"V{self.variation}::{self.key}::{self.field_data or self.text}",
+            self.TPFDF: f"V{self.variation}::{self.macro_name}::{self.field_data}",
+            self.FILE: f"V{self.variation}::{self.macro_name}",
+            self.RESULT: f"R{self.result_id:02}::{self.last_node}::{self.core_field_data or self.pnr_field_data}"
+        }
+        return f"{self.type}::{text[self.type]}"
+
     @classmethod
     def is_comment_type_valid(cls, comment_type: str) -> bool:
         return comment_type in cls.VALID_COMMENT_TYPES
@@ -194,6 +207,9 @@ class TestResult(FirestoreDocument):
     def trunc_to_dict(self) -> dict:
         result = {key: value for key, value in self.doc_to_dict().items() if key in self.VALID_TYPE_FIELDS[self.type]}
         result["id"] = self.id
+        if self.type == self.RESULT:
+            result["core_fields"] = [field_data["field"] for field_data in self.core_field_data]
+            result["pnr_fields"] = [field_data["field"] for field_data in self.pnr_field_data]
         return result
 
 
