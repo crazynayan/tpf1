@@ -1,5 +1,7 @@
 from typing import List
 
+from munch import Munch
+
 from p2_assembly.seg9_collection import seg_collection
 from p3_db.response import StandardResponse, RequestType
 from p3_db.test_data import TestData
@@ -18,7 +20,7 @@ def create_test_result(test_data: TestData, body: dict):
     if not rsp.body.name:
         rsp.error_fields.name = "Name of the Test Result cannot be blank."
         rsp.error = True
-    if seg_collection.is_seg_present(test_data.seg_name):
+    if not seg_collection.is_seg_present(test_data.seg_name):
         rsp.message = "The start seg of the test data does not exists. This test data cannot be executed."
         rsp.error = True
     if rsp.error:
@@ -37,11 +39,27 @@ def create_test_result(test_data: TestData, body: dict):
 
 
 def get_test_results(name: str) -> List[dict]:
-    if name:
-        test_results: List[TestResult] = TestResult.objects.filter_by(name=name).get()
-    else:
+    if not name:
         test_results: List[TestResult] = TestResult.objects.filter_by(type=TestResult.HEADER).get()
-    return [test_result.trunc_to_dict() for test_result in test_results]
+        return [test_result.trunc_to_dict() for test_result in test_results]
+    test_results: List[TestResult] = TestResult.objects.filter_by(name=name).get()
+    test_results.sort(key=lambda result: (result.type, result.result_id, result.variation, result.ecb_level,
+                                          result.heap_name, result.macro_name, result.global_name, result.locator,
+                                          result.key))
+    results: Munch = Munch.fromDict({"test_results": [result.trunc_to_dict() for result in test_results]})
+    results.counters = Munch()
+    results.counters.dumps = sum(1 for result in test_results if result.type == TestResult.RESULT and result.dumps)
+    results.counters.messages = sum(1 for result in test_results if result.type == TestResult.RESULT
+                                    and result.messages)
+    results.counters.core_variations = len(set(result.variation for result in test_results
+                                               if result.type == TestResult.CORE))
+    results.counters.pnr_variations = len(set(result.variation for result in test_results
+                                              if result.type == TestResult.PNR))
+    results.counters.tpfdf_variations = len(set(result.variation for result in test_results
+                                                if result.type == TestResult.TPFDF))
+    results.counters.file_variations = len(set(result.variation for result in test_results
+                                               if result.type == TestResult.FILE))
+    return results.toDict()
 
 
 def update_comment(test_result_id: str, body: dict) -> dict:
