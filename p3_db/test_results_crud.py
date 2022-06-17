@@ -61,3 +61,14 @@ def update_comment(test_result_id: str, body: dict) -> dict:
     result.save()
     rsp.message = "Comment updated successfully."
     return rsp.dict
+
+
+def delete_test_result(name: str) -> dict:
+    rsp: StandardResponse = StandardResponse()
+    deleted: str = TestResult.objects.filter_by(name=name.strip()).delete()
+    if deleted:
+        rsp.message = "Test Result deleted successfully."
+    else:
+        rsp.message = "Test Result with this name not found."
+        rsp.error = True
+    return rsp.dict
