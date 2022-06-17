@@ -5,7 +5,7 @@ from typing import Dict, List, Set
 
 
 class Config:
-    # Used by test_api
+    # Used by test_refactor_api
     TEST_TOKEN = str()
 
     # Used by api

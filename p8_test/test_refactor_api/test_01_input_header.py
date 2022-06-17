@@ -1,6 +1,6 @@
 from p7_flask_app.api.api0_constants import Types, NAME, SEG_NAME, TYPE, ACTION, Actions, ErrorMsg, TEST_DATA, \
     SuccessMsg
-from p8_test.test_api import TestAPI
+from p8_test.test_refactor_api import TestAPI
 
 
 class InputHeader(TestAPI):
