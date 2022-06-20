@@ -96,7 +96,7 @@ def extract_core_links(test_data: TestData) -> TestData:
 
 def get_whole_test_data(test_data_id: str, link: bool) -> TestData:
     test_data: TestData = TestData.get_by_id(test_data_id, cascade=True)
-    if not link:
+    if not link or not test_data:
         return test_data
     test_data = extract_pnr_links(test_data)
     test_data = extract_core_links(test_data)
