@@ -68,7 +68,7 @@ def update_comment(test_result_id: str, body: dict) -> dict:
         return rsp.dict
     result: TestResult = TestResult.get_by_id(test_result_id)
     if not result:
-        rsp.error_fields.message = "Saved result not found for this variation."
+        rsp.message = "Saved result not found for this variation."
         rsp.error = True
     if not TestResult.is_comment_type_valid(rsp.body.comment_type):
         rsp.error_fields.comment_type = "Invalid comment type."
