@@ -4,7 +4,7 @@ from unittest import TestCase
 from flask import Response
 from munch import Munch
 
-from p3_db.response import RequestType
+from p3_db.test_data import TestData
 from p3_db.test_result_model import TestResult
 from p8_test.test_api import api_post, api_delete, api_get
 
@@ -14,6 +14,7 @@ class TestResults(TestCase):
     def setUp(self) -> None:
         self.nz04_name = "NZTestResult - NZ04 - ETA5 - Companion Validation, TPFDF Variation"
         self.nz04_deleted = False
+        self.nz04_td_id = "YTxEmSmxTAFbpNVwr4zC"
 
     def tearDown(self) -> None:
         if not self.nz04_deleted:
@@ -21,16 +22,15 @@ class TestResults(TestCase):
 
     def test_happy_path(self):
         # Test Result Create
-        body = RequestType.RESULT_CREATE
+        body = Munch()
         body.name = self.nz04_name
-        nz04_td_id = "YTxEmSmxTAFbpNVwr4zC"
-        response: Response = api_post(f"/test_data/{nz04_td_id}/save_results", json=body.__dict__)
+        response: Response = api_post(f"/test_data/{self.nz04_td_id}/save_results", json=body.__dict__)
         self.assertEqual(200, response.status_code)
         rsp: Munch = Munch.fromDict(response.get_json())
         self.assertEqual(False, rsp.error, rsp.message or rsp.error_fields.name)
         self.assertEqual("Test Result saved successfully.", rsp.message)
         # Test Result Duplicate Add
-        response: Response = api_post(f"/test_data/{nz04_td_id}/save_results", json=body.__dict__)
+        response: Response = api_post(f"/test_data/{self.nz04_td_id}/save_results", json=body.__dict__)
         self.assertEqual(200, response.status_code)
         rsp: Munch = Munch.fromDict(response.get_json())
         self.assertEqual(True, rsp.error, rsp.message or rsp.error_fields.name)
@@ -75,7 +75,7 @@ class TestResults(TestCase):
         self.assertEqual("TR1G_40_PTI", tpfdf.field_data[4].field)
         self.assertEqual("80", tpfdf.field_data[4].data)
         # Test Update Comment
-        comment_body = RequestType.RESULT_COMMENT_UPDATE
+        comment_body = Munch()
         comment_body.comment_type = "user_comment"
         comment_body.comment = "Some test user comment."
         response: Response = api_post(f"/test_results/{result.id}/comment", json=comment_body.__dict__)
@@ -97,13 +97,20 @@ class TestResults(TestCase):
         rsp: Munch = Munch.fromDict(response.get_json())
         self.assertEqual(False, rsp.error)
         self.assertEqual("Comment updated successfully.", rsp.message)
+        comment_body.comment_type = "core_comment"
+        comment_body.comment = ""  # Test removing comment
+        response: Response = api_post(f"/test_results/{result.id}/comment", json=comment_body.__dict__)
+        self.assertEqual(200, response.status_code)
+        rsp: Munch = Munch.fromDict(response.get_json())
+        self.assertEqual(False, rsp.error)
+        self.assertEqual("Comment updated successfully.", rsp.message)
         response: Response = api_get(f"/test_results", query_string=body.__dict__)
         self.assertEqual(200, response.status_code)
         rsp: Munch = Munch.fromDict(response.get_json())
         result: Munch = next(result for result in rsp.test_results if result.type == TestResult.RESULT)
         self.assertEqual("Some test user comment.", result.user_comment)
         self.assertEqual("Some test pnr comment.", result.pnr_comment)
-        self.assertEqual("Some test core comment.", result.core_comment)
+        self.assertEqual("", result.core_comment)
         # Test Result Delete
         response: Response = api_delete(f"/test_results/delete", query_string=body.__dict__)
         self.assertEqual(200, response.status_code)
@@ -111,3 +118,87 @@ class TestResults(TestCase):
         rsp = Munch.fromDict(response.get_json())
         self.assertEqual(False, rsp.error, rsp.message or rsp.error_fields.name)
         self.assertEqual("Test Result deleted successfully.", rsp.message)
+
+    def test_read_errors(self):
+        body = Munch()
+        body.name = "Some invalid name which is not present!! 12345"
+        response: Response = api_get(f"/test_results", query_string=body.__dict__)
+        self.assertEqual(200, response.status_code)
+        rsp: Munch = Munch.fromDict(response.get_json())
+        self.assertListEqual(list(), rsp.test_results)
+        # If an invalid parameter is passed then it will return header of all test results
+        body = Munch()
+        body.some_invalid_param = "Some invalid name which is not present!! 12345"
+        response: Response = api_get(f"/test_results", query_string=body.__dict__)
+        self.assertEqual(200, response.status_code)
+        test_results = response.get_json()
+        if not test_results:
+            self.assertListEqual(list(), test_results)
+        else:
+            self.assertNotEqual(list(), test_results)
+
+    def test_create_errors_invalid_body(self):
+        response: Response = api_post(f"/test_data/{self.nz04_td_id}/save_results", json=dict())
+        self.assertEqual(200, response.status_code)
+        rsp: Munch = Munch.fromDict(response.get_json())
+        self.assertTrue(rsp.error)
+        self.assertEqual("Invalid request. Request cannot be empty.", rsp.message)
+        response: Response = api_post(f"/test_data/{self.nz04_td_id}/save_results", json={"com": "error"})
+        self.assertEqual(200, response.status_code)
+        rsp: Munch = Munch.fromDict(response.get_json())
+        self.assertTrue(rsp.error)
+        self.assertEqual("Invalid request. Only 1 field (name) allowed and it is mandatory.", rsp.message)
+        response: Response = api_post(f"/test_data/{self.nz04_td_id}/save_results", json={"name": ["error"]})
+        self.assertEqual(200, response.status_code)
+        rsp: Munch = Munch.fromDict(response.get_json())
+        self.assertTrue(rsp.error)
+        self.assertEqual("Invalid data type.", rsp.error_fields.name)
+
+    def test_create_errors_others(self):
+        td_dummy = TestData()
+        td_dummy.name = "NZTestResults - Dummy for testing. 12345"
+        td_dummy.seg_name = "Invalid segment"
+        td_id = td_dummy.create()
+        response: Response = api_post(f"/test_data/{td_id}/save_results", json={"name": ""})
+        self.assertEqual(200, response.status_code)
+        rsp: Munch = Munch.fromDict(response.get_json())
+        self.assertTrue(rsp.error)
+        self.assertEqual("Name of the Test Result cannot be blank.", rsp.error_fields.name)
+        self.assertEqual("The start seg of the test data does not exists. This test data cannot be executed.",
+                         rsp.message)
+
+    def test_comment_errors_invalid_body(self):
+        response: Response = api_post(f"/test_results/abcd/comment", json={"com": "error"})
+        self.assertEqual(200, response.status_code)
+        rsp: Munch = Munch.fromDict(response.get_json())
+        self.assertEqual(True, rsp.error)
+        self.assertEqual("Invalid request. Only 2 fields (comment_type, comment) allowed and they are mandatory.",
+                         rsp.message)
+
+    def test_comment_errors_others(self):
+        comment_body = Munch()
+        comment_body.comment_type = "Some invalid comment type"
+        comment_body.comment = "Some test user comment."
+        response: Response = api_post(f"/test_results/abcd/comment", json=comment_body.__dict__)
+        self.assertEqual(200, response.status_code)
+        rsp: Munch = Munch.fromDict(response.get_json())
+        self.assertEqual(True, rsp.error)
+        self.assertEqual("Invalid comment type.", rsp.error_fields.comment_type)
+        self.assertEqual("Saved result not found for this variation.", rsp.message)
+
+    def test_delete_error(self):
+        body = Munch()
+        body.name = "Some invalid name which is not present!! 12345"
+        response: Response = api_delete(f"/test_results/delete", query_string=body.__dict__)
+        self.assertEqual(200, response.status_code)
+        rsp = Munch.fromDict(response.get_json())
+        self.assertEqual(True, rsp.error)
+        self.assertEqual("Test Result with this name not found.", rsp.message)
+        # If an invalid param is passed then it will NOT delete and return the same error
+        body = Munch()
+        body.some_invalid_param = "Some invalid name which is not present!! 12345"
+        response: Response = api_delete(f"/test_results/delete", query_string=body.__dict__)
+        self.assertEqual(200, response.status_code)
+        rsp = Munch.fromDict(response.get_json())
+        self.assertEqual(True, rsp.error)
+        self.assertEqual("Test Result with this name not found.", rsp.message)
