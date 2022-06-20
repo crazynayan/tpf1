@@ -38,8 +38,8 @@ class StandardResponse:
             self.message = "Invalid request. Request cannot be empty."
             self.error = True
             return
-        valid_fields: set = set(request_type.__dict__)
-        if set(body) != valid_fields:
+        valid_fields: list = list(request_type.__dict__)
+        if set(body) != set(valid_fields):
             count = len(valid_fields)
             field_list = ", ".join([field for field in valid_fields])
             self.message = f"Invalid request. Only 1 field ({field_list}) allowed and it is mandatory." if count == 1 \
