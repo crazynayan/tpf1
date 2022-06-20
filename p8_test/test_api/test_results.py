@@ -47,6 +47,7 @@ class TestResults(TestCase):
         self.assertEqual(0, rsp.counters.file_variations)
         result: Munch = next(result for result in rsp.test_results if result.type == TestResult.RESULT)
         self.assertListEqual(["EBX000", "EBRS01", "WA0PTY"], result.core_fields)
+        self.assertListEqual(list(), result.pnr_field_data)
         self.assertEqual("EBRS01", result.core_field_data[1].field)
         self.assertEqual(1, result.result_id)
         self.assertEqual("HFAX == ITIN", result.variation_name.pnr)
@@ -65,6 +66,44 @@ class TestResults(TestCase):
         self.assertEqual("D5D2C5F9F0F8F7", pnr_list[2].field_data[1].data)
         self.assertEqual(1, pnr_list[2].field_data[1].item_number)
         self.assertListEqual(["SSRFQTUAA2812Y20OCTDFW  ORD  0510GLD*DGHWCL RR"], pnr_list[0].text)
+        tpfdf: Munch = next(result for result in rsp.test_results if result.type == TestResult.TPFDF)
+        self.assertEqual("HFAX == TR1G", tpfdf.variation_name)
+        self.assertEqual("TR1GAA", tpfdf.macro_name)
+        self.assertEqual("40", tpfdf.key)
+        self.assertEqual("TR1G_40_OCC", tpfdf.field_data[0].field)
+        self.assertEqual("C1C1", tpfdf.field_data[0].data)
+        self.assertEqual("TR1G_40_PTI", tpfdf.field_data[4].field)
+        self.assertEqual("80", tpfdf.field_data[4].data)
+        # Test Update Comment
+        comment_body = RequestType.RESULT_COMMENT_UPDATE
+        comment_body.comment_type = "user_comment"
+        comment_body.comment = "Some test user comment."
+        response: Response = api_post(f"/test_results/{result.id}/comment", json=comment_body.__dict__)
+        self.assertEqual(200, response.status_code)
+        rsp: Munch = Munch.fromDict(response.get_json())
+        self.assertEqual(False, rsp.error)
+        self.assertEqual("Comment updated successfully.", rsp.message)
+        comment_body.comment_type = "pnr_comment"
+        comment_body.comment = "Some test pnr comment."
+        response: Response = api_post(f"/test_results/{result.id}/comment", json=comment_body.__dict__)
+        self.assertEqual(200, response.status_code)
+        rsp: Munch = Munch.fromDict(response.get_json())
+        self.assertEqual(False, rsp.error)
+        self.assertEqual("Comment updated successfully.", rsp.message)
+        comment_body.comment_type = "core_comment"
+        comment_body.comment = "Some test core comment."
+        response: Response = api_post(f"/test_results/{result.id}/comment", json=comment_body.__dict__)
+        self.assertEqual(200, response.status_code)
+        rsp: Munch = Munch.fromDict(response.get_json())
+        self.assertEqual(False, rsp.error)
+        self.assertEqual("Comment updated successfully.", rsp.message)
+        response: Response = api_get(f"/test_results", query_string=body.__dict__)
+        self.assertEqual(200, response.status_code)
+        rsp: Munch = Munch.fromDict(response.get_json())
+        result: Munch = next(result for result in rsp.test_results if result.type == TestResult.RESULT)
+        self.assertEqual("Some test user comment.", result.user_comment)
+        self.assertEqual("Some test pnr comment.", result.pnr_comment)
+        self.assertEqual("Some test core comment.", result.core_comment)
         # Test Result Delete
         response: Response = api_delete(f"/test_results/delete", query_string=body.__dict__)
         self.assertEqual(200, response.status_code)

@@ -126,10 +126,10 @@ def test_results_delete() -> Response:
     return jsonify(delete_test_result(name))
 
 
-@tpf1_app.route("/test_results/<string:test_data_id>/comment", methods=["POST"])
+@tpf1_app.route("/test_results/<string:test_result_id>/comment", methods=["POST"])
 @token_auth.login_required
-def test_result_comment(test_data_id: str) -> Response:
-    return jsonify(update_comment(test_data_id, request.get_json()))
+def test_result_comment(test_result_id: str) -> Response:
+    return jsonify(update_comment(test_result_id, request.get_json()))
 
 
 @tpf1_app.route("/test_data/<string:test_data_id>", methods=["DELETE"])
