@@ -45,7 +45,7 @@ class TestResults(TestCase):
         self.assertEqual(2, rsp.counters.pnr_variations)
         self.assertEqual(2, rsp.counters.tpfdf_variations)
         self.assertEqual(0, rsp.counters.file_variations)
-        result: Munch = next(result for result in rsp.test_results if result.type == TestResult.RESULT)
+        result: Munch = rsp.results[0]
         self.assertListEqual(["EBX000", "EBRS01", "WA0PTY"], result.core_fields)
         self.assertListEqual(list(), result.pnr_field_data)
         self.assertEqual("EBRS01", result.core_field_data[1].field)
@@ -54,10 +54,10 @@ class TestResults(TestCase):
         self.assertEqual("HFAX == TR1G", result.variation_name.tpfdf)
         self.assertEqual("60", result.core_field_data[1].data)
         self.assertEqual(" 15765:$$CN_PGM_START.5:ENTNC:[('ETK7', None)]", result.last_node)
-        core: Munch = next(result for result in rsp.test_results if result.type == TestResult.CORE)
+        core: Munch = rsp.cores[0]
         self.assertEqual("WA0ET6", core.field_data[0].field)
         self.assertEqual("10", core.field_data[0].data)
-        pnr_list: List[Munch] = [result for result in rsp.test_results if result.type == TestResult.PNR]
+        pnr_list: List[Munch] = rsp.pnr
         self.assertEqual("HFAX != ITIN", pnr_list[4].variation_name)
         self.assertEqual(1, pnr_list[4].variation)
         self.assertEqual("fqtv", pnr_list[2].key)
@@ -66,7 +66,7 @@ class TestResults(TestCase):
         self.assertEqual("D5D2C5F9F0F8F7", pnr_list[2].field_data[1].data)
         self.assertEqual(1, pnr_list[2].field_data[1].item_number)
         self.assertListEqual(["SSRFQTUAA2812Y20OCTDFW  ORD  0510GLD*DGHWCL RR"], pnr_list[0].text)
-        tpfdf: Munch = next(result for result in rsp.test_results if result.type == TestResult.TPFDF)
+        tpfdf: Munch = rsp.tpfdf[0]
         self.assertEqual("HFAX == TR1G", tpfdf.variation_name)
         self.assertEqual("TR1GAA", tpfdf.macro_name)
         self.assertEqual("40", tpfdf.key)
@@ -107,7 +107,7 @@ class TestResults(TestCase):
         response: Response = api_get(f"/test_results", query_string=body.__dict__)
         self.assertEqual(200, response.status_code)
         rsp: Munch = Munch.fromDict(response.get_json())
-        result: Munch = next(result for result in rsp.test_results if result.type == TestResult.RESULT)
+        result: Munch = rsp.results[0]
         self.assertEqual("Some test user comment.", result.user_comment)
         self.assertEqual("Some test pnr comment.", result.pnr_comment)
         self.assertEqual("", result.core_comment)
@@ -125,17 +125,17 @@ class TestResults(TestCase):
         response: Response = api_get(f"/test_results", query_string=body.__dict__)
         self.assertEqual(200, response.status_code)
         rsp: Munch = Munch.fromDict(response.get_json())
-        self.assertListEqual(list(), rsp.test_results)
+        self.assertListEqual(list(), rsp.headers)
         # If an invalid parameter is passed then it will return header of all test results
         body = Munch()
         body.some_invalid_param = "Some invalid name which is not present!! 12345"
         response: Response = api_get(f"/test_results", query_string=body.__dict__)
         self.assertEqual(200, response.status_code)
-        test_results = response.get_json()
-        if not test_results:
-            self.assertListEqual(list(), test_results)
+        rsp: Munch = Munch.fromDict(response.get_json())
+        if not rsp.headers:
+            self.assertListEqual(list(), rsp.headers)
         else:
-            self.assertNotEqual(list(), test_results)
+            self.assertNotEqual(list(), rsp.headers)
 
     def test_create_errors_invalid_body(self):
         response: Response = api_post(f"/test_data/{self.nz04_td_id}/save_results", json=dict())

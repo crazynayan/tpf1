@@ -39,14 +39,14 @@ def create_test_result(test_data: TestData, body: dict):
 
 
 def get_test_results(name: str) -> List[dict]:
-    if not name:
-        test_results: List[TestResult] = TestResult.objects.filter_by(type=TestResult.HEADER).get()
-        return [test_result.trunc_to_dict() for test_result in test_results]
-    test_results: List[TestResult] = TestResult.objects.filter_by(name=name).get()
+    kwargs: dict = {"name": name} if name else {"type": TestResult.HEADER}
+    test_results: List[TestResult] = TestResult.objects.filter_by(**kwargs).get()
     test_results.sort(key=lambda result: (result.type, result.result_id, result.variation, result.ecb_level,
-                                          result.heap_name, result.macro_name, result.global_name, result.locator,
-                                          result.key))
-    results: Munch = Munch.fromDict({"test_results": [result.trunc_to_dict() for result in test_results]})
+                                          result.heap_name, result.macro_name, result.global_name,
+                                          result.locator, result.key, result.owner, result.name))
+    results: Munch = Munch.fromDict({"headers": [result.trunc_to_dict() for result in test_results]})
+    if not name:
+        return results.toDict()
     results.counters = Munch()
     results.counters.dumps = sum(1 for result in test_results if result.type == TestResult.RESULT and result.dumps)
     results.counters.messages = sum(1 for result in test_results if result.type == TestResult.RESULT
@@ -59,6 +59,12 @@ def get_test_results(name: str) -> List[dict]:
                                                 if result.type == TestResult.TPFDF))
     results.counters.file_variations = len(set(result.variation for result in test_results
                                                if result.type == TestResult.FILE))
+    results.cores = [result for result in results.headers if result.type == TestResult.CORE]
+    results.pnr = [result for result in results.headers if result.type == TestResult.PNR]
+    results.tpfdf = [result for result in results.headers if result.type == TestResult.TPFDF]
+    results.files = [result for result in results.headers if result.type == TestResult.FILE]
+    results.results = [result for result in results.headers if result.type == TestResult.RESULT]
+    results.headers = [result for result in results.headers if result.type == TestResult.HEADER]
     return results.toDict()
 
 
