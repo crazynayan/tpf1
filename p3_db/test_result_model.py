@@ -35,7 +35,7 @@ class TestResult(FirestoreDocument):
                  "messages", "last_node", "user_comment", "core_comment", "pnr_comment", "core_field_data",
                  "pnr_field_data"],
     }
-    VALID_COMMENT_TYPES = {"user_comment", "core_comment", "pnr_comment"}
+    VALID_COMMENT_TYPES = {"user_comment", "core_comment", "pnr_comment", "general_comment"}
 
     def __init__(self, name=str(), test_data=None, core=None, pnr=None, tpfdf=None, file=None, output=None):
         super().__init__()
@@ -92,6 +92,7 @@ class TestResult(FirestoreDocument):
         self.dumps: List[str] = list()
         self.messages: List[str] = list()
         self.last_node: str = str()
+        self.general_comment: str = str()
         self.user_comment: str = str()
         self.core_comment: str = str()
         self.pnr_comment: str = str()
@@ -213,4 +214,4 @@ class TestResult(FirestoreDocument):
         return result
 
 
-TestResult.init()
+TestResult.init("test_results")
