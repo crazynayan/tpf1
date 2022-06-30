@@ -26,14 +26,14 @@ class TestResult(FirestoreDocument):
         PNR: ["name", "type", "variation", "variation_name", "locator", "key", "field_data", "text"],
         TPFDF: ["name", "type", "variation", "variation_name", "macro_name", "key", "field_data"],
         FILE: ["name", "type", "variation", "variation_name", "fixed_rec_id", "fixed_forward_chain_label",
-               "fixed_forward_chain_count", "fixed_type", "fixed_ordinal", "fixed_field_data", "fixed_item_label",
-               "fixed_item_adjust", "fixed_item_repeat", "fixed_item_count_label", "fixed_item_field_data",
-               "pool_macro_name", "pool_rec_id", "pool_fixed_label", "pool_forward_chain_label",
-               "pool_forward_chain_count", "pool_field_data", "pool_item_label", "pool_item_adjust", "pool_item_repeat",
-               "pool_item_count_label", "pool_item_field_data"],
+               "fixed_macro_name", "fixed_forward_chain_count", "fixed_type", "fixed_ordinal", "fixed_field_data",
+               "fixed_item_label", "fixed_item_adjust", "fixed_item_repeat", "fixed_item_count_label",
+               "fixed_item_field_data", "pool_macro_name", "pool_rec_id", "pool_fixed_label",
+               "pool_forward_chain_label", "pool_forward_chain_count", "pool_field_data", "pool_item_label",
+               "pool_item_adjust", "pool_item_repeat", "pool_item_count_label", "pool_item_field_data"],
         RESULT: ["name", "type", "variation", "variation_name", "result_id", "result_regs", "reg_pointers", "dumps",
                  "messages", "last_node", "user_comment", "core_comment", "pnr_comment", "core_field_data",
-                 "pnr_field_data"],
+                 "pnr_field_data", "general_comment"],
     }
     VALID_COMMENT_TYPES = {"user_comment", "core_comment", "pnr_comment", "general_comment"}
 
@@ -64,6 +64,7 @@ class TestResult(FirestoreDocument):
         self.text: List[str] = list()
         # File Header
         self.fixed_rec_id: int = int()
+        self.fixed_macro_name: str = str()
         self.fixed_forward_chain_label: str = str()
         self.fixed_forward_chain_count: int = int()
         self.fixed_type: int = int()
@@ -126,6 +127,7 @@ class TestResult(FirestoreDocument):
         self.type = self.CORE
         self.init_from_input_object(core)
         self.field_data = convert_field_list(core.field_data)
+        self.hex_data = b64decode(self.hex_data).hex().upper()
 
     def init_pnr(self, pnr: Pnr):
         if not pnr:
@@ -145,8 +147,10 @@ class TestResult(FirestoreDocument):
         if not file:
             return
         self.type = self.FILE
+        self.variation = file.variation
+        self.variation_name = file.variation_name
         self.fixed_rec_id: int = file.rec_id
-        self.macro_name: str = file.macro_name
+        self.fixed_macro_name: str = file.macro_name
         self.fixed_forward_chain_label: str = file.forward_chain_label
         self.fixed_forward_chain_count: int = file.forward_chain_count
         self.fixed_type: int = file.fixed_type
