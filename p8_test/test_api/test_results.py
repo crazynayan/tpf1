@@ -84,6 +84,11 @@ class TestResults(TestCase):
         rsp: Munch = api_post(f"/test_results/{result.id}/comment", json=comment_body.__dict__)
         self.assertEqual(False, rsp.error)
         self.assertEqual("Comment updated successfully.", rsp.message)
+        comment_body.comment_type = "general_comment"
+        comment_body.comment = "A common comment."
+        rsp: Munch = api_post(f"/test_results/{result.id}/comment", json=comment_body.__dict__)
+        self.assertEqual(False, rsp.error)
+        self.assertEqual("Comment updated successfully.", rsp.message)
         comment_body.comment_type = "core_comment"
         comment_body.comment = ""  # Test removing comment
         rsp: Munch = api_post(f"/test_results/{result.id}/comment", json=comment_body.__dict__)
@@ -91,6 +96,7 @@ class TestResults(TestCase):
         self.assertEqual("Comment updated successfully.", rsp.message)
         rsp: Munch = api_get(f"/test_results", query_string=body.__dict__)
         result: Munch = rsp.results[0]
+        self.assertEqual("A common comment.", result.general_comment)
         self.assertEqual("Some test user comment.", result.user_comment)
         self.assertEqual("Some test pnr comment.", result.pnr_comment)
         self.assertEqual("", result.core_comment)
