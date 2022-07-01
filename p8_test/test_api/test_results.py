@@ -103,6 +103,12 @@ class TestResults(TestCase):
         self.assertEqual("Some test user comment.", result.user_comment)
         self.assertEqual("Some test pnr comment.", result.pnr_comment)
         self.assertEqual("", result.core_comment)
+        # Test Result Get
+        rsp: Munch = api_get(f"/test_results/{result.id}")
+        self.assertEqual(False, rsp.error)
+        self.assertEqual(str(), rsp.message)
+        self.assertEqual("A common comment.", rsp.data[0].general_comment)
+        self.assertEqual("Some test user comment.", rsp.data[0].user_comment)
         # Test Result Delete
         rsp: Munch = api_delete(f"/test_results/delete", query_string=body.__dict__)
         self.td_deleted = True
@@ -149,6 +155,11 @@ class TestResults(TestCase):
             self.assertListEqual(list(), rsp.headers)
         else:
             self.assertNotEqual(list(), rsp.headers)
+        # Test Result get error
+        rsp: Munch = api_get(f"/test_results/some_invalid_id")
+        self.assertEqual(True, rsp.error)
+        self.assertEqual("Test Result not found.", rsp.message)
+        self.assertEqual(list(), rsp.data)
 
     def test_create_errors_invalid_body(self):
         rsp: Munch = api_post(f"/test_data/{self.nz04_td_id}/save_results", json=dict())

@@ -12,7 +12,8 @@ from p2_assembly.seg9_collection import seg_collection, SegLst
 from p3_db.test_data import TestData
 from p3_db.test_data_elements import Tpfdf, FixedFile
 from p3_db.test_data_variations import rename_variation, copy_variation, delete_variation
-from p3_db.test_results_crud import update_comment, create_test_result, get_test_results, delete_test_result
+from p3_db.test_results_crud import update_comment, create_test_result, get_test_results, delete_test_result, \
+    get_test_result
 from p4_execution.ex5_execute import TpfServer
 from p7_flask_app import tpf1_app
 from p7_flask_app.auth import token_auth, User
@@ -124,6 +125,12 @@ def test_results_get() -> Response:
 def test_results_delete() -> Response:
     name = request.args.get("name", str())
     return jsonify(delete_test_result(name))
+
+
+@tpf1_app.route("/test_results/<string:test_result_id>", methods=["GET"])
+@token_auth.login_required
+def test_result_get_comment(test_result_id: str) -> Response:
+    return jsonify(get_test_result(test_result_id))
 
 
 @tpf1_app.route("/test_results/<string:test_result_id>/comment", methods=["POST"])

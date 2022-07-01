@@ -3,7 +3,7 @@ from typing import List
 from munch import Munch
 
 from p2_assembly.seg9_collection import seg_collection
-from p3_db.response import StandardResponse, RequestType
+from p3_db.response import StandardResponse, RequestType, StandardGetResponse
 from p3_db.test_data import TestData
 from p3_db.test_result_model import TestResult
 from p4_execution.ex5_execute import TpfServer
@@ -38,7 +38,7 @@ def create_test_result(test_data: TestData, body: dict):
     return rsp.dict
 
 
-def get_test_results(name: str) -> List[dict]:
+def get_test_results(name: str) -> dict:
     kwargs: dict = {"name": name} if name else {"type": TestResult.HEADER}
     test_results: List[TestResult] = TestResult.objects.filter_by(**kwargs).get()
     test_results.sort(key=lambda result: (result.type, result.result_id, result.variation, result.ecb_level,
@@ -66,6 +66,17 @@ def get_test_results(name: str) -> List[dict]:
     results.results = [result for result in results.headers if result.type == TestResult.RESULT]
     results.headers = [result for result in results.headers if result.type == TestResult.HEADER]
     return results.toDict()
+
+
+def get_test_result(test_result_id: str) -> dict:
+    rsp = StandardGetResponse()
+    test_result: TestResult = TestResult.get_by_id(test_result_id)
+    if not test_result:
+        rsp.error = True
+        rsp.message = "Test Result not found."
+        return rsp.dict
+    rsp.data.append(test_result.trunc_to_dict())
+    return rsp.dict
 
 
 def update_comment(test_result_id: str, body: dict) -> dict:
