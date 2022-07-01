@@ -75,7 +75,11 @@ def get_test_result(test_result_id: str) -> dict:
         rsp.error = True
         rsp.message = "Test Result not found."
         return rsp.dict
+    tr_core_field_data = ", ".join([f"{field['field']}:{field['data']}" for field in test_result.core_field_data])
+    tr_pnr_field_data = ", ".join([f"{field['field']}:{field['data']}" for field in test_result.pnr_field_data])
     rsp.data.append(test_result.trunc_to_dict())
+    rsp.data[0]["core_field_data"] = tr_core_field_data
+    rsp.data[0]["pnr_field_data"] = tr_pnr_field_data
     return rsp.dict
 
 

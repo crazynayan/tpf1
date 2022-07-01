@@ -109,6 +109,7 @@ class TestResults(TestCase):
         self.assertEqual(str(), rsp.message)
         self.assertEqual("A common comment.", rsp.data[0].general_comment)
         self.assertEqual("Some test user comment.", rsp.data[0].user_comment)
+        self.assertEqual("EBX000:00000000, EBRS01:60, WA0PTY:00", rsp.data[0].core_field_data)
         # Test Result Delete
         rsp: Munch = api_delete(f"/test_results/delete", query_string=body.__dict__)
         self.td_deleted = True
