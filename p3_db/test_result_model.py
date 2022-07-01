@@ -63,7 +63,7 @@ class TestResult(FirestoreDocument):
         self.key: str = str()  # Also used in tpfdf
         self.text: List[str] = list()
         # File Header
-        self.fixed_rec_id: int = int()
+        self.fixed_rec_id: str = str()
         self.fixed_macro_name: str = str()
         self.fixed_forward_chain_label: str = str()
         self.fixed_forward_chain_count: int = int()
@@ -76,7 +76,7 @@ class TestResult(FirestoreDocument):
         self.fixed_item_count_label: str = str()
         self.fixed_item_field_data: List[dict] = list()
         self.pool_macro_name: str = str()
-        self.pool_rec_id: int = int()
+        self.pool_rec_id: str = str()
         self.pool_fixed_label: str = str()
         self.pool_forward_chain_label: str = str()
         self.pool_forward_chain_count: int = int()
@@ -149,7 +149,7 @@ class TestResult(FirestoreDocument):
         self.type = self.FILE
         self.variation = file.variation
         self.variation_name = file.variation_name
-        self.fixed_rec_id: int = file.rec_id
+        self.fixed_rec_id: str = f"{file.rec_id:04X}"
         self.fixed_macro_name: str = file.macro_name
         self.fixed_forward_chain_label: str = file.forward_chain_label
         self.fixed_forward_chain_count: int = file.forward_chain_count
@@ -164,8 +164,8 @@ class TestResult(FirestoreDocument):
             self.fixed_item_field_data: List[dict] = convert_field_list(file.file_items[0].field_data)
         if not file.pool_files:
             return
-        self.pool_macro_name: str = file.pool_files[0].index_macro_name
-        self.pool_rec_id: int = file.pool_files[0].rec_id
+        self.pool_macro_name: str = file.pool_files[0].macro_name
+        self.pool_rec_id: str = f"{file.pool_files[0].rec_id:04X}"
         self.pool_fixed_label: str = file.pool_files[0].index_field
         self.pool_forward_chain_label: str = file.pool_files[0].forward_chain_label
         self.pool_forward_chain_count: int = file.pool_files[0].forward_chain_count
