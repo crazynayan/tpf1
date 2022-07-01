@@ -60,3 +60,15 @@ class StandardResponse:
             "error": self.error,
             "error_fields": self.error_fields.__dict__
         }
+
+
+class StandardGetResponse:
+
+    def __init__(self):
+        self.message: str = str()
+        self.error: bool = bool()
+        self.data: list = list()
+
+    @property
+    def dict(self):
+        return self.__dict__
