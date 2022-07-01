@@ -12,12 +12,14 @@ class TestResults(TestCase):
 
     def setUp(self) -> None:
         self.nz04_name = "NZTestResult - NZ04 - ETA5 - Companion Validation, TPFDF Variation"
-        self.nz04_deleted = False
+        self.td_deleted = True
         self.nz04_td_id = "YTxEmSmxTAFbpNVwr4zC"
+        self.nz07_name = "NZTestResult - NZ07 - ETAJ - Validate PNR Owner PCC"
+        self.nz07_td_id = "u6999F91vQtV0K56LsMF"
 
     def tearDown(self) -> None:
-        if not self.nz04_deleted:
-            TestResult.objects.filter_by(name=self.nz04_name).delete()
+        if not self.td_deleted:
+            TestResult.objects.filter("name", TestResult.objects.IN, [self.nz04_name, self.nz07_name]).delete()
 
     def test_happy_path(self):
         # Test Result Create
@@ -26,6 +28,7 @@ class TestResults(TestCase):
         rsp: Munch = api_post(f"/test_data/{self.nz04_td_id}/save_results", json=body.__dict__)
         self.assertEqual(False, rsp.error, rsp.message or rsp.error_fields.name)
         self.assertEqual("Test Result saved successfully.", rsp.message)
+        self.td_deleted = False
         # Test Result Duplicate Add
         rsp: Munch = api_post(f"/test_data/{self.nz04_td_id}/save_results", json=body.__dict__)
         self.assertEqual(True, rsp.error, rsp.message or rsp.error_fields.name)
@@ -102,9 +105,36 @@ class TestResults(TestCase):
         self.assertEqual("", result.core_comment)
         # Test Result Delete
         rsp: Munch = api_delete(f"/test_results/delete", query_string=body.__dict__)
-        self.nz04_deleted = True
+        self.td_deleted = True
         self.assertEqual(False, rsp.error, rsp.message or rsp.error_fields.name)
         self.assertEqual("Test Result deleted successfully.", rsp.message)
+
+    def test_read_file(self):
+        body = Munch()
+        body.name = self.nz07_name
+        rsp: Munch = api_post(f"/test_data/{self.nz07_td_id}/save_results", json=body.__dict__)
+        self.assertEqual(False, rsp.error, rsp.message or rsp.error_fields.name)
+        self.assertEqual("Test Result saved successfully.", rsp.message)
+        self.td_deleted = False
+        # Test Result Read
+        rsp: Munch = api_get(f"/test_results", query_string=body.__dict__)
+        self.assertEqual(16, len(rsp.results))
+        file: Munch = rsp.files[0]
+        self.assertEqual("TJ0TJ", file.fixed_macro_name)
+        self.assertEqual("E3D1", file.fixed_rec_id)
+        self.assertEqual(94, file.fixed_type)
+        self.assertEqual(383, file.fixed_ordinal)
+        self.assertEqual("IY1IY", file.pool_macro_name)
+        self.assertEqual("C9E8", file.pool_rec_id)
+        self.assertEqual("TJ0ATH", file.pool_fixed_label)
+        self.assertEqual("IY1ATH", file.pool_item_label)
+        self.assertEqual("IY1CTR", file.pool_item_count_label)
+        self.assertEqual(False, file.pool_item_adjust)
+        self.assertEqual(1, file.pool_item_repeat)
+        self.assertEqual("IY9AON", file.pool_item_field_data[0].field)
+        self.assertEqual("00006F2F", file.pool_item_field_data[0].data)
+        self.assertEqual("IY9AGY", file.pool_item_field_data[1].field)
+        self.assertEqual("00", file.pool_item_field_data[1].data)
 
     def test_read_errors(self):
         body = Munch()
