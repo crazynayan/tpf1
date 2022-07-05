@@ -3,6 +3,7 @@ from copy import copy
 from typing import List, Dict, Union
 
 from firestore_ci import FirestoreDocument
+from flask import g
 
 from p3_db.test_data import TestData
 from p3_db.test_data_elements import Core, Pnr, FixedFile, Output
@@ -37,12 +38,12 @@ class TestResult(FirestoreDocument):
     }
     VALID_COMMENT_TYPES = {"user_comment", "core_comment", "pnr_comment", "general_comment"}
 
-    def __init__(self, name=str(), test_data=None, core=None, pnr=None, tpfdf=None, file=None, output=None, owner=None):
+    def __init__(self, name=str(), test_data=None, core=None, pnr=None, tpfdf=None, file=None, output=None):
         super().__init__()
         self.name = name  # Each test result should have unique name. Helps in grouping elements of a test result.
         self.type = str()  # Must be from valid type fields.
         # Header
-        self.owner = owner if owner else str()
+        self.owner = str()
         self.seg_name = str()
         self.stop_segments: List[str] = list()
         self.errors: List[str] = list()
@@ -119,6 +120,7 @@ class TestResult(FirestoreDocument):
             return
         self.type = self.HEADER
         self.init_from_input_object(test_data)
+        self.owner = g.current_user.email
         self.name = name
 
     def init_core(self, core: Core):
@@ -183,6 +185,7 @@ class TestResult(FirestoreDocument):
             return
         self.type = self.RESULT
         self.init_from_input_object(output)
+        self.owner = g.current_user.email
         self.result_regs = output.regs
         self.pnr_field_data = [field_data for pnr in output.pnr_outputs
                                for field_data in convert_field_list(pnr.field_data)]
