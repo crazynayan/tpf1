@@ -10,9 +10,14 @@ CLIENT = tpf1_app.test_client()
 
 
 def authorized_request(func: Callable, url: str, **kwargs) -> Munch:
-    if not config.TEST_TOKEN:
-        config.TEST_TOKEN = User.objects.filter_by(email="nayan@crazyideas.co.in").first().token
-    kwargs['headers'] = {'Authorization': f"Bearer {config.TEST_TOKEN}"}
+    if "api_other_auth" in kwargs:
+        token = User.objects.filter_by(email="jeff.moyalan@infogain.com").first().token
+        del kwargs["api_other_auth"]
+    else:
+        if not config.TEST_TOKEN:
+            config.TEST_TOKEN = User.objects.filter_by(email="nayan@crazyideas.co.in").first().token
+        token = config.TEST_TOKEN
+    kwargs['headers'] = {'Authorization': f"Bearer {token}"}
     response = func(url, **kwargs)
     if response.status_code == 401:
         config.TEST_TOKEN = str()

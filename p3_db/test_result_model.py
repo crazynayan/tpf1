@@ -33,16 +33,16 @@ class TestResult(FirestoreDocument):
                "pool_item_adjust", "pool_item_repeat", "pool_item_count_label", "pool_item_field_data"],
         RESULT: ["name", "type", "variation", "variation_name", "result_id", "result_regs", "reg_pointers", "dumps",
                  "messages", "last_node", "user_comment", "core_comment", "pnr_comment", "core_field_data",
-                 "pnr_field_data", "general_comment"],
+                 "pnr_field_data", "general_comment", "owner"],
     }
     VALID_COMMENT_TYPES = {"user_comment", "core_comment", "pnr_comment", "general_comment"}
 
-    def __init__(self, name=str(), test_data=None, core=None, pnr=None, tpfdf=None, file=None, output=None):
+    def __init__(self, name=str(), test_data=None, core=None, pnr=None, tpfdf=None, file=None, output=None, owner=None):
         super().__init__()
         self.name = name  # Each test result should have unique name. Helps in grouping elements of a test result.
         self.type = str()  # Must be from valid type fields.
         # Header
-        self.owner = str()
+        self.owner = owner if owner else str()
         self.seg_name = str()
         self.stop_segments: List[str] = list()
         self.errors: List[str] = list()

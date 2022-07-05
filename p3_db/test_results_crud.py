@@ -1,5 +1,6 @@
 from typing import List
 
+from flask import g
 from munch import Munch
 
 from p2_assembly.seg9_collection import seg_collection
@@ -32,7 +33,8 @@ def create_test_result(test_data: TestData, body: dict):
     test_results.extend([TestResult(name=rsp.body.name, pnr=pnr) for pnr in td_result.pnr])
     test_results.extend([TestResult(name=rsp.body.name, tpfdf=tpfdf) for tpfdf in td_result.tpfdf])
     test_results.extend([TestResult(name=rsp.body.name, file=file) for file in td_result.fixed_files])
-    test_results.extend([TestResult(name=rsp.body.name, output=output) for output in td_result.outputs])
+    test_results.extend([TestResult(name=rsp.body.name, output=output, owner=td_result.owner)
+                         for output in td_result.outputs])
     TestResult.objects.truncate.create_all(TestResult.objects.to_dicts(test_results))
     rsp.message = "Test Result saved successfully."
     return rsp.dict
@@ -87,12 +89,15 @@ def update_comment(test_result_id: str, body: dict) -> dict:
     rsp: StandardResponse = StandardResponse(body, RequestType.RESULT_COMMENT_UPDATE)
     if rsp.error:
         return rsp.dict
+    if not TestResult.is_comment_type_valid(rsp.body.comment_type):
+        rsp.error_fields.comment_type = "Invalid comment type."
+        rsp.error = True
     result: TestResult = TestResult.get_by_id(test_result_id)
     if not result:
         rsp.message = "Saved result not found for this variation."
         rsp.error = True
-    if not TestResult.is_comment_type_valid(rsp.body.comment_type):
-        rsp.error_fields.comment_type = "Invalid comment type."
+    elif result.owner != g.current_user.email:
+        rsp.message = "Unauthorized to update this test result."
         rsp.error = True
     if rsp.error:
         return rsp.dict
@@ -104,10 +109,16 @@ def update_comment(test_result_id: str, body: dict) -> dict:
 
 def delete_test_result(name: str) -> dict:
     rsp: StandardResponse = StandardResponse()
-    deleted: str = TestResult.objects.filter_by(name=name.strip()).delete()
-    if deleted:
-        rsp.message = "Test Result deleted successfully."
-    else:
+    delete_name = name.strip()
+    result: TestResult = TestResult.objects.filter_by(name=delete_name, type=TestResult.HEADER).first()
+    if not result:
         rsp.message = "Test Result with this name not found."
         rsp.error = True
+        return rsp.dict
+    if result.owner != g.current_user.email:
+        rsp.message = "Unauthorized to delete this test result."
+        rsp.error = True
+        return rsp.dict
+    TestResult.objects.filter_by(name=delete_name).delete()
+    rsp.message = "Test Result deleted successfully."
     return rsp.dict

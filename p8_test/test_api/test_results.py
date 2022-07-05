@@ -103,6 +103,10 @@ class TestResults(TestCase):
         self.assertEqual("Some test user comment.", result.user_comment)
         self.assertEqual("Some test pnr comment.", result.pnr_comment)
         self.assertEqual("", result.core_comment)
+        # Test ownership
+        rsp: Munch = api_post(f"/test_results/{result.id}/comment", json=comment_body.__dict__, api_other_auth=True)
+        self.assertEqual(True, rsp.error)
+        self.assertEqual("Unauthorized to update this test result.", rsp.message)
         # Test Result Get
         rsp: Munch = api_get(f"/test_results/{result.id}")
         self.assertEqual(False, rsp.error)
@@ -110,6 +114,11 @@ class TestResults(TestCase):
         self.assertEqual("A common comment.", rsp.data[0].general_comment)
         self.assertEqual("Some test user comment.", rsp.data[0].user_comment)
         self.assertEqual("EBX000:00000000, EBRS01:60, WA0PTY:00", rsp.data[0].core_field_data)
+        self.assertEqual("nayan@crazyideas.co.in", rsp.data[0].owner)
+        # Test Result Delete Ownership
+        rsp: Munch = api_delete(f"/test_results/delete", query_string=body.__dict__, api_other_auth=True)
+        self.assertEqual(True, rsp.error)
+        self.assertEqual("Unauthorized to delete this test result.", rsp.message)
         # Test Result Delete
         rsp: Munch = api_delete(f"/test_results/delete", query_string=body.__dict__)
         self.td_deleted = True
