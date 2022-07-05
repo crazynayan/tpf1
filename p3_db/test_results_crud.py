@@ -33,8 +33,7 @@ def create_test_result(test_data: TestData, body: dict):
     test_results.extend([TestResult(name=rsp.body.name, pnr=pnr) for pnr in td_result.pnr])
     test_results.extend([TestResult(name=rsp.body.name, tpfdf=tpfdf) for tpfdf in td_result.tpfdf])
     test_results.extend([TestResult(name=rsp.body.name, file=file) for file in td_result.fixed_files])
-    test_results.extend([TestResult(name=rsp.body.name, output=output, owner=td_result.owner)
-                         for output in td_result.outputs])
+    test_results.extend([TestResult(name=rsp.body.name, output=output) for output in td_result.outputs])
     TestResult.objects.truncate.create_all(TestResult.objects.to_dicts(test_results))
     rsp.message = "Test Result saved successfully."
     return rsp.dict
