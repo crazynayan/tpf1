@@ -231,7 +231,7 @@ class TestData(FirestoreDocument):
         if not self.validate_and_update_variation(body, "core"):
             response["error_fields"]["variation"] = "Invalid variation."
         elif "macro_name" not in response["error_fields"]:
-            if any(core.variation == body["variation"] and core.macro_name == body["macro_name"]
+            if any(core.variation == body["variation"] and core.macro_name == body["macro_name"] and not core.link
                    for core in self.cores):
                 response["error_fields"]["macro_name"] = f"Macro {body['macro_name']} already exists for " \
                                                          f"variation {body['variation']}."
