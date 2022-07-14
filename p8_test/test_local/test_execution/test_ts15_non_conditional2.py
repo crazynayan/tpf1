@@ -111,6 +111,15 @@ class NonConditional2(unittest.TestCase):
         self.assertEqual(0xFF, test_data.output.regs["R3"])  # LLC
         self.assertEqual(0xF7, test_data.output.regs["R4"])  # XI
 
+    def test_ts15_lpr_lnr(self):
+        self.test_data.set_field("EBX000", bytes([0x02]))
+        test_data = self.tpf_server.run("TS15", self.test_data)
+        self.assertEqual(44000, test_data.output.regs["R5"])  # LPR
+        self.assertEqual(-44000, test_data.output.regs["R6"])  # LNR
+        self.assertEqual(-44000 * 16, test_data.output.regs["R7"])  # SLA
+        self.assertEqual(6, test_data.output.regs["R12"])  # BXLE
+        self.assertEqual(12, test_data.output.regs["R13"])  # BXLE
+
 
 if __name__ == "__main__":
     unittest.main()
