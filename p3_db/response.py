@@ -23,27 +23,31 @@ class RequestType:
     TEMPLATE_LINK_DELETE = SimpleNamespace(variation=int(), template_name=str())
     RESULT_COMMENT_UPDATE = SimpleNamespace(comment_type=str(), comment=str())
     RESULT_CREATE = SimpleNamespace(name=str())
+    TEST_DATA_CREATE = SimpleNamespace(name=str(), seg_name=str(), stop_segments=str(), startup_script=str())
 
 
 class StandardResponse:
+    EMPTY_RESPONSE = "Invalid request. Request cannot be empty."
+    INVALID_PREFIX = "Invalid request. Only "
 
     def __init__(self, body: Optional[dict] = None, request_type: Optional[SimpleNamespace] = None):
         self.message: str = str()
         self.error: bool = bool()
         self.error_fields: SimpleNamespace = SimpleNamespace() if request_type is None else copy(request_type)
         self.body: SimpleNamespace = SimpleNamespace()
+        self.id: str = str()
         if body is None:
             return
         if not isinstance(body, dict) or not body:
-            self.message = "Invalid request. Request cannot be empty."
+            self.message = self.EMPTY_RESPONSE
             self.error = True
             return
         valid_fields: list = list(request_type.__dict__)
         if set(body) != set(valid_fields):
             count = len(valid_fields)
             field_list = ", ".join([field for field in valid_fields])
-            self.message = f"Invalid request. Only 1 field ({field_list}) allowed and it is mandatory." if count == 1 \
-                else f"Invalid request. Only {count} fields ({field_list}) allowed and they are mandatory."
+            self.message = f"{self.INVALID_PREFIX}1 field ({field_list}) allowed and it is mandatory." if count == 1 \
+                else f"{self.INVALID_PREFIX}{count} fields ({field_list}) allowed and they are mandatory."
             self.error = True
             return
         for field, value in body.items():
@@ -60,6 +64,12 @@ class StandardResponse:
             "error": self.error,
             "error_fields": self.error_fields.__dict__
         }
+
+    @property
+    def dict_with_id(self):
+        rsp_dict = self.dict
+        rsp_dict["id"] = self.id
+        return rsp_dict
 
 
 class StandardGetResponse:

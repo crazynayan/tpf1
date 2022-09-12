@@ -219,13 +219,19 @@ class InstructionImplementation(InstructionOperand):
         return FieldLenField(line, field_len, field)
 
     def field_len_field_len(self, line: Line) -> FieldLenFieldLen:
-        operand1, operand2 = line.split_operands()
+        try:
+            operand1, operand2 = line.split_operands()
+        except ValueError:
+            raise AssemblyError(line)
         field_len1 = self.field_len(operand1, FieldLenFieldLen.MAX_LEN)
         field_len2 = self.field_len(operand2, FieldLenFieldLen.MAX_LEN)
         return FieldLenFieldLen(line, field_len1, field_len2)
 
     def field_data(self, line: Line) -> FieldData:
-        operand1, operand2 = line.split_operands()
+        try:
+            operand1, operand2 = line.split_operands()
+        except ValueError:
+            raise AssemblyError(line)
         try:
             field = self.field_base_dsp(operand1)
         except NotFoundInSymbolTableError:
@@ -244,7 +250,10 @@ class InstructionImplementation(InstructionOperand):
         return FieldSingleBaseDsp(line, field)
 
     def field_len_field_data(self, line: Line) -> FieldLenFieldData:
-        operand1, operand2, operand3 = line.split_operands()
+        try:
+            operand1, operand2, operand3 = line.split_operands()
+        except ValueError:
+            raise AssemblyError(line)
         field_len = self.field_len(operand1, FieldLenFieldData.MAX_LEN)
         field = self.field_base_dsp(operand2)
         data = self.get_value(operand3)
@@ -254,7 +263,10 @@ class InstructionImplementation(InstructionOperand):
 
     @staticmethod
     def reg_reg(line: Line) -> RegisterRegister:
-        operand1, operand2 = line.split_operands()
+        try:
+            operand1, operand2 = line.split_operands()
+        except ValueError:
+            raise AssemblyError(line)
         reg1 = Register(operand1)
         reg2 = Register(operand2)
         if not reg1.is_valid() or not reg2.is_valid():
@@ -262,7 +274,10 @@ class InstructionImplementation(InstructionOperand):
         return RegisterRegister(line, reg1, reg2)
 
     def reg_field_index(self, line: Line) -> RegisterFieldIndex:
-        operand1, operand2 = line.split_operands()
+        try:
+            operand1, operand2 = line.split_operands()
+        except ValueError:
+            raise AssemblyError(line)
         reg = Register(operand1)
         if not reg.is_valid():
             raise RegisterInvalidError(line)
@@ -275,7 +290,10 @@ class InstructionImplementation(InstructionOperand):
         return RegisterFieldIndex(line, reg, field)
 
     def reg_data(self, line: Line) -> RegisterData:
-        operand1, operand2 = line.split_operands()
+        try:
+            operand1, operand2 = line.split_operands()
+        except ValueError:
+            raise AssemblyError(line)
         reg = Register(operand1)
         if not reg.is_valid():
             raise RegisterInvalidError
@@ -286,11 +304,14 @@ class InstructionImplementation(InstructionOperand):
         if not min_signed_value <= data <= max_unsigned_value:
             raise DataInvalidError((line, data))
         if data > max_signed_value:
-            data -= max_unsigned_value + 1  # Two"s complement negative number
+            data -= max_unsigned_value + 1  # Two's complement negative number
         return RegisterData(line, reg, data)
 
     def reg_reg_field(self, line: Line) -> RegisterRegisterField:
-        operand1, operand2, operand3 = line.split_operands()
+        try:
+            operand1, operand2, operand3 = line.split_operands()
+        except ValueError:
+            raise AssemblyError(line)
         reg1 = Register(operand1)
         reg2 = Register(operand2)
         if not reg1.is_valid() or not reg2.is_valid():
@@ -299,7 +320,10 @@ class InstructionImplementation(InstructionOperand):
         return RegisterRegisterField(line, reg1, reg2, field)
 
     def reg_data_field(self, line: Line) -> RegisterDataField:
-        operand1, operand2, operand3 = line.split_operands()
+        try:
+            operand1, operand2, operand3 = line.split_operands()
+        except ValueError:
+            raise AssemblyError(line)
         reg = Register(operand1)
         if not reg.is_valid():
             raise RegisterInvalidError
@@ -310,7 +334,10 @@ class InstructionImplementation(InstructionOperand):
         return RegisterDataField(line, reg, data, field)
 
     def branch_condition(self, line: Line) -> BranchCondition:
-        operand1, operand2 = line.split_operands()
+        try:
+            operand1, operand2 = line.split_operands()
+        except ValueError:
+            raise AssemblyError(line)
         mask = self.get_value(operand1)
         if not 0 <= mask <= BranchGeneric.MAX_VALUE:
             raise ConditionMaskError
@@ -334,7 +361,10 @@ class InstructionImplementation(InstructionOperand):
         return BranchConditionRegister(line, mask, reg)
 
     def branch_condition_reg(self, line: Line) -> BranchConditionRegister:
-        operand1, operand2 = line.split_operands()
+        try:
+            operand1, operand2 = line.split_operands()
+        except ValueError:
+            raise AssemblyError(line)
         mask = self.get_value(operand1)
         if not 0 <= mask <= BranchGeneric.MAX_VALUE:
             raise ConditionMaskError
@@ -344,7 +374,10 @@ class InstructionImplementation(InstructionOperand):
         return BranchConditionRegister(line, mask, reg)
 
     def reg_branch(self, line: Line) -> RegisterBranch:
-        operand1, operand2 = line.split_operands()
+        try:
+            operand1, operand2 = line.split_operands()
+        except ValueError:
+            raise AssemblyError(line)
         reg = Register(operand1)
         if not reg.is_valid():
             raise RegisterInvalidError
@@ -352,7 +385,10 @@ class InstructionImplementation(InstructionOperand):
         return RegisterBranch(line, reg, branch)
 
     def reg_reg_branch(self, line: Line) -> RegisterRegisterBranch:
-        operand1, operand2, operand3 = line.split_operands()
+        try:
+            operand1, operand2, operand3 = line.split_operands()
+        except ValueError:
+            raise AssemblyError(line)
         reg1 = Register(operand1)
         reg2 = Register(operand2)
         if not reg1.is_valid() or not reg2.is_valid():
@@ -362,7 +398,10 @@ class InstructionImplementation(InstructionOperand):
 
     def reg_label(self, line: Line) -> RegisterFieldIndex:
         reg_index: RegisterFieldIndex = self.reg_field_index(line)
-        _, operand2 = line.split_operands()
+        try:
+            _, operand2 = line.split_operands()
+        except ValueError:
+            raise AssemblyError(line)
         if operand2.startswith("*"):
             expression = line.label + operand2[1:]
             reg_index.field.dsp = self.get_value(expression)

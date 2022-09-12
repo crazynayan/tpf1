@@ -1,6 +1,7 @@
 import unittest
 
-from p1_utils.errors import RegisterInvalidError, DataInvalidError, NotFoundInSymbolTableError, FieldDspInvalidError
+from p1_utils.errors import RegisterInvalidError, DataInvalidError, NotFoundInSymbolTableError, FieldDspInvalidError, \
+    AssemblyError
 from p1_utils.file_line import Line
 from p2_assembly.seg6_segment import Segment
 from p2_assembly.seg9_collection import seg_collection
@@ -20,12 +21,12 @@ class RegisterVariants(unittest.TestCase):
         self.assertRaises(DataInvalidError, seg.reg_data_field, Line.from_line(" STCM  R1,-1,EBW000"))
         self.assertRaises(DataInvalidError, seg.reg_data_field, Line.from_line(" ICM R1,16,EBW000"))
         self.assertRaises(FieldDspInvalidError, seg.reg_data_field, Line.from_line(" ICM R1,7,-1(R9)"))
-        self.assertRaises(ValueError, seg.reg_data, Line.from_line(" AHI R1,1,3"))
-        self.assertRaises(ValueError, seg.reg_data, Line.from_line(" LHI R1"))
-        self.assertRaises(ValueError, seg.reg_reg_field, Line.from_line(" STM R1,R2,B,C"))
-        self.assertRaises(ValueError, seg.reg_reg_field, Line.from_line(" LM R1,R2"))
-        self.assertRaises(ValueError, seg.reg_data_field, Line.from_line(" ICM R1,1"))
-        self.assertRaises(ValueError, seg.reg_data_field, Line.from_line(" STCM R1"))
+        self.assertRaises(AssemblyError, seg.reg_data, Line.from_line(" AHI R1,1,3"))
+        self.assertRaises(AssemblyError, seg.reg_data, Line.from_line(" LHI R1"))
+        self.assertRaises(AssemblyError, seg.reg_reg_field, Line.from_line(" STM R1,R2,B,C"))
+        self.assertRaises(AssemblyError, seg.reg_reg_field, Line.from_line(" LM R1,R2"))
+        self.assertRaises(AssemblyError, seg.reg_data_field, Line.from_line(" ICM R1,1"))
+        self.assertRaises(AssemblyError, seg.reg_data_field, Line.from_line(" STCM R1"))
         seg.assemble()
         # Check RegisterData
         # AHI   R15,SUIFF with BP    TS050110

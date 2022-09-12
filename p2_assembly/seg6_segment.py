@@ -1,10 +1,10 @@
 import re
 from typing import Optional, List
 
-from config import config
+from config import config, Config
 from p1_utils.data_type import DataType
 from p1_utils.errors import NotFoundInSymbolTableError, AssemblyError
-from p1_utils.file_line import Line, File
+from p1_utils.file_line import Line, File, get_lines_from_data_stream
 from p2_assembly.mac2_data_macro import macros
 from p2_assembly.seg2_ins_operand import Label
 from p2_assembly.seg5_exec_macro import RealtimeMacroImplementation
@@ -12,8 +12,9 @@ from p2_assembly.seg8_listing import LstCmd, get_lines_from_listing_commands, ge
 
 
 class Segment(RealtimeMacroImplementation):
+    STARTUP = "STARTUP"
 
-    def __init__(self, name: str, file_name: str):
+    def __init__(self, name: str, file_name: str, data_stream: str = str()):
         super().__init__(name)
         self.file_name: str = file_name
         self.file_type: str = str()
@@ -21,6 +22,7 @@ class Segment(RealtimeMacroImplementation):
         self.blob_name: str = str()
         self.error_line: str = str()
         self.error_constant: str = str()
+        self.data_stream: str = data_stream
 
     def __repr__(self) -> str:
         return f"{self.name}:{self.nodes != dict()}:{len(self.nodes)}"
@@ -41,8 +43,15 @@ class Segment(RealtimeMacroImplementation):
         # Default processing
         self.set_using(self.name, base_reg="R8")
         if self.file_type == config.ASM:
-            lines = self._assemble_asm()
-            lines = self._update_index(lines)
+            lines = self._get_asm_lines()
+            self._assemble_asm(lines)
+            self._update_index(lines)
+            if self.data_stream:
+                excluded_cmds = {"ENTRC", "ENTNC", "EXITC", "SENDA", "BACKC", "ENTDC", "SERRC", "SYSRA", "SNAPC"}
+                line = next((line for line in lines if line.command in excluded_cmds), None)
+                if line:
+                    self.error_line = str(line)
+                    return
         else:
             lines = self._assemble_lst()
         try:
@@ -56,12 +65,16 @@ class Segment(RealtimeMacroImplementation):
                 LstCmd.objects.filter_by(seg_name=self.seg_name).delete(workers=100)
         return
 
-    def _assemble_asm(self) -> List[Line]:
+    def _get_asm_lines(self) -> List[Line]:
+        if self.data_stream:
+            lines = get_lines_from_data_stream(self.data_stream)
+        else:
+            file = File(self.file_name)
+            lines = Line.from_file(file.lines)
+        return lines
+
+    def _assemble_asm(self, lines: List[Line]) -> None:
         self.load_macro("EB0EB", base="R9")
-        file = File(self.file_name)
-        # Create a list of Line objects
-        lines = Line.from_file(file.lines)
-        # Load inline data macro and DSECT
         prior_label: Label = Label(self.root_label())
         for line in lines:
             if line.command in macros:
@@ -81,7 +94,7 @@ class Segment(RealtimeMacroImplementation):
                 self.add_label(line.label, self._location_counter, length, self.name)
                 self._symbol_table[line.label].set_branch()
                 self._location_counter += length
-        return lines
+        return
 
     def _assemble_lst(self):
         blob_name = self.blob_name if self.source == config.CLOUD else str()
@@ -194,10 +207,10 @@ class Segment(RealtimeMacroImplementation):
         return True
 
     @staticmethod
-    def _update_index(lines: List[Line]) -> List[Line]:
+    def _update_index(lines: List[Line]) -> None:
         for index, line in enumerate(lines):
             line.index = index + 1
-        return lines
+        return
 
     def get_constant_bytes(self, label: str, length: Optional[int] = None) -> Optional[bytearray]:
         dsp = self.get_value(label)
@@ -208,3 +221,13 @@ class Segment(RealtimeMacroImplementation):
             return self.data.literal[dsp: dsp + length]
         else:
             return self.data.constant[dsp: dsp + length]
+
+
+def get_assembled_startup_seg(data_stream: str) -> Segment:
+    startup_script = f"$#STARTUP EQU *\n{data_stream}"
+    seg = Segment(name=Segment.STARTUP, file_name="startup.asm", data_stream=startup_script)
+    seg.seg_name = Segment.STARTUP
+    seg.file_type = Config.ASM
+    if data_stream.strip():
+        seg.assemble()
+    return seg

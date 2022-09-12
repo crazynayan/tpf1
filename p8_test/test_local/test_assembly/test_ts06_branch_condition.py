@@ -1,6 +1,6 @@
 import unittest
 
-from p1_utils.errors import RegisterInvalidError, ConditionMaskError, NotFoundInSymbolTableError
+from p1_utils.errors import RegisterInvalidError, ConditionMaskError, NotFoundInSymbolTableError, AssemblyError
 from p1_utils.file_line import Line
 from p2_assembly.seg6_segment import Segment
 from p2_assembly.seg9_collection import seg_collection
@@ -15,7 +15,7 @@ class BranchCondition(unittest.TestCase):
         self.assertRaises(ConditionMaskError, seg.branch_condition, Line.from_line(" BC 16,TS06E100"))
         self.assertRaises(RegisterInvalidError, seg.branch_condition, Line.from_line(" JC 14,8(-1)"))
         self.assertRaises(NotFoundInSymbolTableError, seg.branch_mnemonic, Line.from_line(" JE 12,TS061000"))
-        self.assertRaises(ValueError, seg.branch_condition, Line.from_line(" BC TS060100"))
+        self.assertRaises(AssemblyError, seg.branch_condition, Line.from_line(" BC TS060100"))
         self.assertRaises(NotFoundInSymbolTableError, seg.branch_condition, Line.from_line(" JC A,TS060100"))
         seg.assemble()
         # LTR  R1, R1 with multiple goes

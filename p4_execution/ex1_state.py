@@ -16,7 +16,7 @@ from p2_assembly.mac2_data_macro import macros, get_global_address
 from p2_assembly.seg2_ins_operand import FieldIndex
 from p2_assembly.seg3_ins_type import InstructionType
 from p2_assembly.seg5_exec_macro import KeyValue
-from p2_assembly.seg6_segment import Segment
+from p2_assembly.seg6_segment import Segment, get_assembled_startup_seg
 from p2_assembly.seg9_collection import seg_collection
 from p3_db.flat_file import FlatFile
 from p3_db.pnr import Pnr
@@ -63,10 +63,11 @@ class State:
             self.regs.R8 = self.loaded_seg[seg_name][1]
             self.seg = self.loaded_seg[seg_name][0]
         else:
-            self.seg = seg_collection.get_seg(seg_name)
-            if not self.seg:
-                raise SegmentNotFoundError
-            self.seg.assemble()
+            if seg_name != Segment.STARTUP:
+                self.seg = seg_collection.get_seg(seg_name)
+                if not self.seg:
+                    raise SegmentNotFoundError
+                self.seg.assemble()
             self.regs.R8 = self.vm.allocate()  # Constant
             literal = self.vm.allocate()  # Literal is immediately the next frame
             self.vm.set_frame(self.seg.data.constant, self.regs.R8)
@@ -130,39 +131,29 @@ class State:
         self._init_ecb()
         self._init_globals()
         self._core_block(config.IMG, "D0")
+        Pnr.init_db()
+        Tpfdf.init_db()
+        FlatFile.init_db()
 
     def run(self, seg_name: str, test_data: TestData) -> TestData:
         if not seg_collection.is_seg_present(seg_name):
             raise SegmentNotFoundError
         outputs = list()
+        startup_seg: Segment = get_assembled_startup_seg(test_data.startup_script)
+        startup_error: str = startup_seg.error_line or startup_seg.error_constant
         for test_data_variant in test_data.yield_variation():
             self.init_run(seg_name)
-            self.init_aaa_field_data(test_data_variant)
-            self.init_aaa()
-            self._set_from_test_data(test_data_variant)
-            label = self.seg.root_label()
-            node = self.seg.equ(Line.from_line(f"{label} EQU 0"))
-            try:
-                if not self.seg.nodes:
-                    raise ExecutionError
-                node: InstructionType = self.seg.nodes[label]
-                while self.instruction_counter < 2000:
-                    label = self._ex_command(node)
-                    if label is None:
-                        break
-                    node = self.seg.nodes[label]
-                    self.instruction_counter += 1
-                if label is not None:
-                    self.dumps.append("000010")
-                    self.messages.append("INFINITE LOOP ERROR")
-            except ExecutionError:
-                self.dumps.append("000003")
-                self.messages.append("EXECUTION ERROR")
-            except KeyError:
-                raise ExecutionError(node)
-            except TPFServerMemoryError:
-                self.dumps.append("000004")
-                self.messages.append("MEMORY ERROR")
+            if test_data.startup_script and not startup_error:
+                self.seg = startup_seg
+                self._init_seg(startup_seg.seg_name)
+                node = self.run_seg()
+            if not self.dumps:
+                self._init_seg(seg_name)
+                self.init_aaa_field_data(test_data_variant)
+                self.init_aaa()
+                self._set_from_test_data(test_data_variant)
+                node = self.run_seg()
+            # noinspection PyUnboundLocalVariable
             self._capture_output(test_data_variant.output, node)
             outputs.append(test_data_variant.output)
         output_test_data = deepcopy(test_data)
@@ -170,6 +161,32 @@ class State:
             output.result_id = index + 1
         output_test_data.outputs = outputs
         return output_test_data
+
+    def run_seg(self) -> InstructionType:
+        label = self.seg.root_label()
+        node = self.seg.equ(Line.from_line(f"{label} EQU 0"))
+        try:
+            if not self.seg.nodes:
+                raise ExecutionError
+            node: InstructionType = self.seg.nodes[label]
+            while self.instruction_counter < 2000:
+                label = self._ex_command(node)
+                if label is None:
+                    break
+                node = self.seg.nodes[label]
+                self.instruction_counter += 1
+            if label is not None:
+                self.dumps.append("000010")
+                self.messages.append("INFINITE LOOP ERROR")
+        except ExecutionError:
+            self.dumps.append("000003")
+            self.messages.append("EXECUTION ERROR")
+        except KeyError:
+            raise ExecutionError(node)
+        except TPFServerMemoryError:
+            self.dumps.append("000004")
+            self.messages.append("MEMORY ERROR")
+        return node
 
     def _ex_command(self, node: InstructionType) -> str:
         seg_name = self.seg.seg_name
@@ -200,7 +217,6 @@ class State:
         return
 
     def init_aaa_field_data(self, test_data):
-        FlatFile.init_db()
         aaa_core = next((core for core in test_data.cores if core.macro_name == config.AAA_MACRO_NAME), None)
         if aaa_core:
             self.aaa_field_data = aaa_core.field_data
@@ -287,7 +303,6 @@ class State:
                 self._set_from_core_hex_and_field_data(core, address)
         for reg, value in test_data.regs.items():
             self.regs.set_value(value, reg)
-        Pnr.init_db()
         for pnr in test_data.pnr:
             if pnr.link_status == "inactive":
                 continue
@@ -300,7 +315,6 @@ class State:
                 for _, field_group in groupby(pnr.field_data_item, key=lambda item: item["item_number"]):
                     pnr_field_bytes: dict = self._field_data_to_bytearray(list(field_group))
                     Pnr.add_from_byte_array(pnr_field_bytes, pnr.key, pnr_locator)
-        Tpfdf.init_db()
         for lrec in test_data.tpfdf:
             if lrec.macro_name not in macros:
                 raise TpfdfError

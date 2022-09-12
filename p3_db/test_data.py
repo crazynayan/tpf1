@@ -42,6 +42,7 @@ class TestData(FirestoreDocument):
         self.outputs: List[Output] = [Output()]
         self.partition: str = str()
         self.regs: Dict[str, int] = dict()
+        self.startup_script: str = str()
 
     def ref(self, e_type: str):
         ref: Dict[str, list] = {

@@ -9,6 +9,7 @@ from config import config
 from p2_assembly.mac0_generic import LabelReference
 from p2_assembly.mac2_data_macro import macros
 from p2_assembly.seg9_collection import seg_collection, SegLst
+from p3_db.startup_script import test_data_create, test_data_update
 from p3_db.test_data import TestData
 from p3_db.test_data_elements import Tpfdf, FixedFile
 from p3_db.test_data_variations import rename_variation, copy_variation, delete_variation
@@ -34,11 +35,7 @@ def get_user(doc_id: str) -> Response:
 @tpf1_app.route("/test_data", methods=["POST"])
 @token_auth.login_required
 def create_test_data() -> Response:
-    test_data: dict = request.get_json()
-    test_data: TestData = TestData.create_test_data(test_data)
-    if not test_data:
-        return error_response(400, "Invalid format of test data. Need unique name and seg_name only.")
-    return jsonify(test_data.cascade_to_dict())
+    return jsonify(test_data_create(request.get_json()))
 
 
 @tpf1_app.route("/test_data")
@@ -55,16 +52,12 @@ def get_test_data_header() -> Response:
     return jsonify(test_data_list)
 
 
-@tpf1_app.route("/test_data/<string:test_data_id>/rename", methods=["PATCH"])
+@tpf1_app.route("/test_data/<string:test_data_id>/rename", methods=["POST"])
 @token_auth.login_required
 @test_data_required
 @role_check_required
 def rename_test_data(test_data_id: str, **kwargs) -> Response:
-    header: dict = request.get_json()
-    test_data: TestData = kwargs[test_data_id]
-    if not test_data.rename(header):
-        return error_response(400, "Error in renaming test data")
-    return jsonify(test_data.get_header_dict())
+    return jsonify(test_data_update(kwargs[test_data_id], request.get_json()))
 
 
 @tpf1_app.route("/test_data/<string:test_data_id>/copy", methods=["POST"])

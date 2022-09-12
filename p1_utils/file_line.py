@@ -20,19 +20,22 @@ class File:
             return list()
         return lines
 
-    def __init__(self, filename: str):
+    def __init__(self, filename: str = None):
         self.lines: List[str] = list()
-        # Open the file
-        lines = self.open_file(filename)
-        if not lines:
+        self.buffer: List[str] = list()
+        if not filename:
             return
+        self.buffer = self.open_file(filename)
+        self.convert_to_lines()
+
+    def convert_to_lines(self):
         # Remove the CVS header if present
         index = 0
-        for line in lines:
+        for line in self.buffer:
             if line[:2] not in config.CVS_C2:
                 break
             index += 1
-        lines = lines[index:] if index < len(lines) else list()
+        lines = self.buffer[index:] if index < len(self.buffer) else list()
         # Remove empty lines and trailing new line character & make everything upper case
         lines = [line.strip("\n").upper() for line in lines if line.strip()]
         if not lines:
@@ -166,7 +169,7 @@ class Line:
         return True if self.command not in config.NO_FALL_DOWN else False
 
     def split_operands(self) -> List[str]:
-        # Split operands separated by commas. Ignore commas enclosed in parenthesis or quotes.
+        # Split operands separated by commas. Ignore commas enclosed in parentheses or quotes.
         # Take care L' does NOT start a quote
         if not self.operand:
             return list()
@@ -196,3 +199,11 @@ class Line:
 
     def __repr__(self) -> str:
         return f"{self.label}:{self.command}:{self.operand}"
+
+
+def get_lines_from_data_stream(data_stream: str) -> List[Line]:
+    data_lines: List[str] = data_stream.split("\n")
+    data_file: File = File()
+    data_file.buffer = data_lines
+    data_file.convert_to_lines()
+    return Line.from_file(data_file.lines)
