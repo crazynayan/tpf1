@@ -1,6 +1,7 @@
 import os
 from base64 import b64encode
 from datetime import datetime
+from types import SimpleNamespace
 from typing import Dict, List, Set
 
 
@@ -26,6 +27,11 @@ class Config:
     DOWNLOAD_PATH = os.path.join(os.path.abspath(os.sep), "tmp")
     ROOT_DIR: str = os.path.dirname(os.path.abspath(__file__))
     BUCKET = "tpf-listings"
+    DOMAINS = SimpleNamespace()
+    DOMAINS.GENERAL = "general"
+    DOMAINS.BASE = "base"
+    DOMAINS.SABRE = "sabre"
+    DOMAIN = os.environ.get("DOMAIN") or DOMAINS.GENERAL
     MAC_FOLDER_NAME = os.path.join("p0_source", "macro")
     ASM_EXT = {".asm", ".txt"}
     ASM_FOLDER_NAME = os.path.join("p0_source", ASM)
@@ -129,7 +135,7 @@ class Config:
     ET_TEST_CLASS_COUNT: int = 22
     # Change 4CC1 to 4E2F to 4F9C to 5109 i.e. 20Oct19 to 20Oct20 to 20Oct21 to 20Oct22 (every year after 20NOV)
     # Next is 5276
-    PARS_DATE: str = "5109"
+    PARS_DATE: str = "5276"
 
 
 config = Config()
