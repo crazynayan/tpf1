@@ -2,7 +2,6 @@ from flask import Flask
 from flask_cors import CORS
 
 from config import Config
-from p2_assembly.seg8_listing import create_lxp
 
 tpf1_app = Flask(__name__)
 tpf1_app.config.from_object(Config)
@@ -21,7 +20,7 @@ def make_shell_context():
     from config import config
     import tpf
     from p1_utils.file_line import File
-    from p2_assembly.seg8_listing import create_listing_commands, write_tmp_output, LstCmd
+    from p2_assembly.seg8_listing import create_listing_commands, write_tmp_output, LstCmd, create_lxp
     from p2_assembly.seg9_collection import SegLst, seg_collection
     from p3_db.test_data import TestData
     from p3_db import template_crud, template_merge, test_data_get, template_models, test_data_variations, \
