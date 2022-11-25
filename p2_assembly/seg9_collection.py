@@ -69,11 +69,13 @@ class _SegmentCollection:
         if config.CI_CLOUD_STORAGE:
             self.init_seg_from_db()
         else:
-            self.init_seg_from_folder(config.ASM_FOLDER_NAME, config.ASM_EXT, config.ASM)
             self.init_seg_from_folder(config.LXP_FOLDER_NAME, config.LXP_EXT, config.LST)
+            self.init_seg_from_folder(config.ASM_FOLDER_NAME, config.ASM_EXT, config.ASM)
 
     def init_seg_from_folder(self, folder_name: str, extensions: set, file_type: str):
         for seg_name, filename in read_folder(folder_name, extensions):
+            if seg_name in self.segments:
+                continue
             self.segments[seg_name]: Segment = get_segment(seg_name, filename, file_type, config.LOCAL)
         return
 
