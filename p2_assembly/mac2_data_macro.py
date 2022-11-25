@@ -1,7 +1,7 @@
-import os
 from typing import Dict, List, Tuple, Optional
 
 from config import config
+from p1_utils.domain import get_domain_folder, read_folder, get_base_folder
 from p1_utils.errors import EquDataTypeHasAmpersandError, NotFoundInSymbolTableError
 from p1_utils.file_line import Line, File
 from p2_assembly.mac0_generic import LabelReference
@@ -67,40 +67,35 @@ class DataMacro(DataMacroImplementation):
 
 
 class _DataMacroCollection:
-    MAC_EXT = {".mac", ".txt"}
     DEFAULT_MACROS = ("AASEQ", "SYSEQ", "SYSEQC", "EB0EB", "UATKW", "UXTEQ", "TRMEQ", "CUSTOM")
+
+    def filename_parser(self, filename):
+        return filename[:-4].upper()
 
     def __init__(self):
         self.macros: Dict[str, DataMacro] = dict()
-        self.indexed_labels: Dict[str, str] = dict()
-        self.default_macros: Dict[str, LabelReference] = dict()
-        # Load default macros
-        default_macros_dict: Dict[str, str] = dict()
-        non_default_macros_dict: Dict[str, str] = dict()
-        for file_name in os.listdir(config.MAC_FOLDER_NAME):
-            if len(file_name) < 6 or file_name[-4:].lower() not in self.MAC_EXT:
-                continue
-            macro_name = file_name[:-4].upper()
-            file_name = os.path.join(config.MAC_FOLDER_NAME, file_name)
-            if macro_name in self.DEFAULT_MACROS:
-                default_macros_dict[macro_name] = file_name
-            else:
-                non_default_macros_dict[macro_name] = file_name
-        # Initialize default macros in hierarchical order
+        self.indexed_labels: Dict[str, str] = dict()  # Only used in api v2. Init commented out to improve test exec.
+        default_macros: Dict[str, LabelReference] = dict()
+        # Load macros from folders
+        macro_filenames: List[Tuple[str, str]] = read_folder(get_domain_folder(config.SOURCES.MACRO),
+                                                             config.EXTENSIONS.MACRO, self.filename_parser)
+        macro_filenames += read_folder(get_base_folder(config.SOURCES.MACRO), config.EXTENSIONS.MACRO,
+                                       self.filename_parser)
+        # Default Macros should be in the hierarchical order and required by all other macros.
         for macro_name in self.DEFAULT_MACROS:
-            self.macros[macro_name] = DataMacro(name=macro_name, filename=default_macros_dict[macro_name],
-                                                default_macros=self.default_macros)
+            filename = next((filename for macro, filename in macro_filenames if macro == macro_name), None)
+            if not filename:
+                continue
+            self.macros[macro_name] = DataMacro(macro_name, filename, default_macros)
             self.macros[macro_name].load()
-            self.default_macros = {**self.default_macros, **self.macros[macro_name].all_labels}
-        # Initialize non default macros
-        for macro_name, file_name in non_default_macros_dict.items():
-            self.macros[macro_name] = DataMacro(name=macro_name, filename=file_name, default_macros=self.default_macros)
-        # for macro_name in config.FIXED_MACROS:
-        #     self.macros[macro_name].load()
-        for macro_name, data_macro in self.macros.items():
-            data_macro.load()
-            # self.indexed_labels = {**self.indexed_labels,
-            #                        **{label: label_ref.name for label, label_ref in data_macro.all_labels.items()}}
+            default_macros = {**default_macros, **self.macros[macro_name].all_labels}
+        # Load all macros to improve test execution
+        for macro_name, filename in macro_filenames:
+            if macro_name in self.macros:
+                continue
+            self.macros[macro_name] = DataMacro(macro_name, filename, default_macros)
+            self.macros[macro_name].load()
+            # self.indexed_labels = {**self.indexed_labels, **{l: lr.name for l, lr in data_macro.all_labels.items()}}
 
 
 _collection = _DataMacroCollection()
@@ -110,6 +105,8 @@ indexed_macros = _collection.indexed_labels
 
 def get_global_ref(global_name: str) -> Optional[LabelReference]:
     global_macros = ["GLOBAS", "GLOBYS", "GL0BS"]
+    for macro_name in global_macros:
+        macros[macro_name].load()
     global_macro = next((macros[macro_name] for macro_name in global_macros if macros[macro_name].check(global_name)),
                         None)
     if not global_macro:

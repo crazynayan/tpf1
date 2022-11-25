@@ -32,11 +32,16 @@ class Config:
     DOMAINS.BASE = "base"
     DOMAINS.SABRE = "sabre"
     DOMAIN = os.environ.get("DOMAIN") or DOMAINS.GENERAL
-    MAC_FOLDER_NAME = os.path.join("p0_source", "macro")
+    SOURCES = SimpleNamespace()
+    SOURCES.MACRO = "macro"
+    SOURCES.ASM = "asm"
+    SOURCES.LST = "lst"
+    SOURCES.LXP = "lxp"
+    SOURCES.ROOT = "p0_source"
+    EXTENSIONS = SimpleNamespace()
+    EXTENSIONS.MACRO = {".mac", ".txt"}
     ASM_EXT = {".asm", ".txt"}
     ASM_FOLDER_NAME = os.path.join("p0_source", ASM)
-    LST_EXT = {".lst"}
-    LST_FOLDER_NAME = os.path.join("p0_source", LST)
     LXP_EXT = {".lxp"}
     LXP_FOLDER_NAME = os.path.join("p0_source", LXP)
 
