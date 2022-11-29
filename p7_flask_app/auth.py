@@ -58,6 +58,7 @@ class User(FirestoreDocument):
         self.email: str = str()  # email address is the username
         self.initial: str = str()  # 2 character initial in uppercase
         self.role: str = config.MEMBER  # Role of the user. Refer config.ROLES
+        self.domain: str = config.DOMAIN  # Domain of the user. Refer config.DOMAINS
         self.password_hash: str = config.DEFAULT_PASSWORD
         self.token: str = config.DEFAULT_TOKEN
 
@@ -100,9 +101,12 @@ class User(FirestoreDocument):
 User.init()
 
 
-def create_user(email: str, initial: str):
+def create_user(email: str, initial: str, domain: str):
     if not isinstance(email, str) or sum(1 for char in email if char == "@") != 1 or "|" in email:
         print(f"Invalid email - {email}")
+        return
+    if domain not in config.DOMAINS.__dict__.keys():
+        print(f"Invalid domain - {domain}")
         return
     if User.objects.filter_by(email=email).first():
         print(f"Email already exists")
@@ -116,6 +120,7 @@ def create_user(email: str, initial: str):
     user = User()
     user.email = email
     user.initial = initial.upper()
+    user.domain = domain
     password = b64encode(os.urandom(24)).decode()
     user.set_password(password)
     user.set_id(email.replace("@", "_").replace(".", "-"))
