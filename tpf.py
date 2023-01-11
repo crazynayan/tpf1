@@ -1,5 +1,7 @@
 import os
-from typing import List, Optional
+from typing import List
+
+from p7_flask_app.segment import get_seg_lst, reset_seg_assembly
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "google-cloud-tokyo.json"
 # noinspection PyPackageRequirements
@@ -10,8 +12,7 @@ from p1_utils.data_type import DataType
 from p1_utils.ucdr import date_to_pars, pars_to_date
 from p2_assembly.seg6_segment import Segment
 from p2_assembly.seg8_listing import LstCmd, create_lxp
-from p2_assembly.seg9_collection import SegLst, read_folder, get_segment, read_cloud, seg_collection
-from p4_execution.ex5_execute import TpfServer
+from p2_assembly.seg9_collection import SegLst, get_segment, get_seg_collection
 
 
 def to_pars(date: str):
@@ -26,54 +27,22 @@ def from_pars(pars: int):
     print(date)
 
 
-
-
-def get_seg_lst(segment: Segment) -> SegLst:
-    seg_lst = SegLst()
-    seg_lst.seg_name = segment.seg_name
-    seg_lst.filename = segment.file_name
-    seg_lst.file_type = segment.file_type
-    seg_lst.source = segment.source
-    seg_lst.blob_name = segment.blob_name
-    segment.assemble()
-    seg_lst.error_line = str(segment.error_line)
-    seg_lst.error_constant = segment.error_constant
-    seg_lst.loc = len(segment.nodes)
-    unsupported_nodes = [node for _, node in segment.nodes.items()
-                         if node.command not in TpfServer().supported_commands]
-    seg_lst.error_count = len(unsupported_nodes)
-    seg_lst.error_cmds = list({node.command for node in unsupported_nodes})
-    return seg_lst
-
-
-def init_seg_lst():
-    SegLst.objects.delete()
-    seg_to_create: List[SegLst] = list()
-    lxp_set: set = set()
-    for seg_name, filename in read_folder(config.ASM_FOLDER_NAME, config.ASM_EXT):
-        segment = get_segment(seg_name, filename, config.ASM, config.LOCAL)
-        seg_to_create.append(get_seg_lst(segment))
-    for seg_name, filename in read_folder(config.LXP_FOLDER_NAME, config.LXP_EXT):
-        segment = get_segment(seg_name, filename, config.LST, config.LOCAL)
-        seg_to_create.append(get_seg_lst(segment))
-        lxp_set.add(seg_name)
-    for blob_name, filename in read_cloud():
-        segment = get_segment(blob_name[:4].upper(), filename, config.LST, config.CLOUD, blob_name)
-        if segment.seg_name not in lxp_set:
-            seg_to_create.append(get_seg_lst(segment))
-    SegLst.objects.create_all(SegLst.objects.to_dicts(seg_to_create))
-
-
-def reset_seg_assembly(blob_name: str) -> Optional[SegLst]:
-    seg_name = seg_collection.init_from_cloud(blob_name)
-    segment = seg_collection.get_seg(seg_name)
-    if not segment:
-        return None
-    LstCmd.objects.filter_by(seg_name=seg_name).delete()
-    SegLst.objects.filter_by(seg_name=seg_name).delete()
-    seg: SegLst = get_seg_lst(segment)  # Assemble the segment and create LstCmd
-    seg.create()
-    return seg
+# def init_seg_lst():
+#     SegLst.objects.delete()
+#     seg_to_create: List[SegLst] = list()
+#     lxp_set: set = set()
+#     for seg_name, filename in read_folder(config.ASM_FOLDER_NAME, config.ASM_EXT):
+#         segment = get_segment(seg_name, filename, config.ASM, config.LOCAL)
+#         seg_to_create.append(get_seg_lst(segment))
+#     for seg_name, filename in read_folder(config.LXP_FOLDER_NAME, config.LXP_EXT):
+#         segment = get_segment(seg_name, filename, config.LST, config.LOCAL)
+#         seg_to_create.append(get_seg_lst(segment))
+#         lxp_set.add(seg_name)
+#     for blob_name, filename in read_cloud():
+#         segment = get_segment(blob_name[:4].upper(), filename, config.LST, config.CLOUD, blob_name)
+#         if segment.seg_name not in lxp_set:
+#             seg_to_create.append(get_seg_lst(segment))
+#     SegLst.objects.create_all(SegLst.objects.to_dicts(seg_to_create))
 
 
 def reset_and_create_lxp(blob_name: str):
@@ -125,7 +94,7 @@ def migrate_to_lst(seg_name: str):
     client.close()
     print(f"{filename} uploaded to Google Cloud Storage.")
     # Generate Listing Commands
-    seg: Segment = seg_collection.from_asm_to_lst(seg_name, filename)
+    seg: Segment = get_seg_collection().from_asm_to_lst(seg_name, filename)
     if not seg:
         print("Error in creating a segment object.")
         return
@@ -149,7 +118,7 @@ def update_seg_lst(seg_names: List[str]):
     seg_lst = list()
     config.CI_CLOUD_STORAGE = True
     for seg_name in seg_names:
-        segment = seg_collection.get_seg(seg_name)
+        segment = get_seg_collection().get_seg(seg_name)
         if not segment:
             print(f"{seg_name} not found.")
             continue

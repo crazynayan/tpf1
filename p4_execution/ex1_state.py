@@ -12,12 +12,12 @@ from p1_utils.errors import SegmentNotFoundError, EcbLevelFormatError, InvalidBa
     NotFoundInSymbolTableError
 from p1_utils.file_line import Line
 from p2_assembly.mac0_generic import LabelReference
-from p2_assembly.mac2_data_macro import macros, get_global_address
+from p2_assembly.mac2_data_macro import get_macros, get_global_address
 from p2_assembly.seg2_ins_operand import FieldIndex
 from p2_assembly.seg3_ins_type import InstructionType
 from p2_assembly.seg5_exec_macro import KeyValue
 from p2_assembly.seg6_segment import Segment, get_assembled_startup_seg
-from p2_assembly.seg9_collection import seg_collection
+from p2_assembly.seg9_collection import get_seg_collection
 from p3_db.flat_file import FlatFile
 from p3_db.pnr import Pnr
 from p3_db.stream import Stream
@@ -64,7 +64,7 @@ class State:
             self.seg = self.loaded_seg[seg_name][0]
         else:
             if seg_name != Segment.STARTUP:
-                self.seg = seg_collection.get_seg(seg_name)
+                self.seg = get_seg_collection().get_seg(seg_name)
                 if not self.seg:
                     raise SegmentNotFoundError
                 self.seg.assemble()
@@ -88,7 +88,7 @@ class State:
             # level is from D0 to DF, ecb_label is the partial label to which the level number (0-F) to be appended
             level = d_level[1]
         ecb_label_level = f"{ecb_label}{level}"
-        dsp = macros["EB0EB"].evaluate(ecb_label_level)
+        dsp = get_macros()["EB0EB"].evaluate(ecb_label_level)
         return config.ECB + dsp
 
     def _init_ecb(self) -> None:
@@ -136,7 +136,7 @@ class State:
         FlatFile.init_db()
 
     def run(self, seg_name: str, test_data: TestData) -> TestData:
-        if not seg_collection.is_seg_present(seg_name):
+        if not get_seg_collection().is_seg_present(seg_name):
             raise SegmentNotFoundError
         outputs = list()
         startup_seg: Segment = get_assembled_startup_seg(test_data.startup_script)
@@ -226,7 +226,7 @@ class State:
         if partition not in config.PARTITION:
             raise PartitionError
         haalc = self._evaluate_global("@HAALC")
-        ce1uid = config.ECB + macros["EB0EB"].evaluate("CE1$UID")
+        ce1uid = config.ECB + get_macros()["EB0EB"].evaluate("CE1$UID")
         self.vm.set_bytes(DataType("C", input=partition).to_bytes(), haalc, 2)
         self.vm.set_value(config.PARTITION[partition], ce1uid, 1)
         # TODO Switch MH Base
@@ -316,7 +316,7 @@ class State:
                     pnr_field_bytes: dict = self._field_data_to_bytearray(list(field_group))
                     Pnr.add_from_byte_array(pnr_field_bytes, pnr.key, pnr_locator)
         for lrec in test_data.tpfdf:
-            if lrec.macro_name not in macros:
+            if lrec.macro_name not in get_macros():
                 raise TpfdfError
             lrec_data = self._field_data_to_bytearray(lrec.field_data)
             Tpfdf.add(lrec_data, lrec.key, lrec.macro_name)
@@ -329,7 +329,7 @@ class State:
             self.vm.set_bytes(byte_array, address, len(byte_array))
         elif core.field_data:
             field_byte_array: Dict[str, bytearray] = self._field_data_to_bytearray(core.field_data)
-            seg = seg_collection.get_seg(core.seg_name.upper())
+            seg = get_seg_collection().get_seg(core.seg_name.upper())
             seg.assemble()
             for field, byte_array in field_byte_array.items():
                 address_to_update = seg.evaluate(field.upper()) + address
@@ -337,6 +337,7 @@ class State:
         return
 
     def _capture_file(self, test_data: TestData):
+        macros = get_macros()
         for fixed_file in test_data.fixed_files:
             fixed_dict = dict()
             for pool_file in fixed_file.pool_files:
@@ -405,7 +406,7 @@ class State:
     def _set_core(self, field_data: List[dict], macro_name: str, base_address: int) -> None:
         field_byte_array: Dict[str, bytearray] = self._field_data_to_bytearray(field_data)
         for field, byte_array in field_byte_array.items():
-            address = macros[macro_name].evaluate(field) + base_address
+            address = get_macros()[macro_name].evaluate(field) + base_address
             self.vm.set_bytes(byte_array, address, len(byte_array))
         return
 
@@ -423,7 +424,7 @@ class State:
                 base_address = self.aaa_address if macro_name == config.AAA_MACRO_NAME \
                     else config.FIXED_MACROS[macro_name]
                 self._capture_core(core.field_data, macro_name, base_address)
-            elif macro_name in macros:
+            elif macro_name in get_macros():
                 if not Register(core.base_reg).is_valid():
                     raise InvalidBaseRegError
                 self._capture_core(core.field_data, macro_name, self.regs.get_unsigned_value(core.base_reg))
@@ -463,7 +464,7 @@ class State:
 
     def _capture_core(self, field_data: List[dict], macro_name: str, base_address: int) -> None:
         for field_byte in field_data:
-            field: LabelReference = macros[macro_name].lookup(field_byte["field"].upper())
+            field: LabelReference = get_macros()[macro_name].lookup(field_byte["field"].upper())
             address = field.dsp + base_address
             length = field_byte["length"] if field_byte["length"] > 0 else field.length
             try:

@@ -1,13 +1,13 @@
 import unittest
 
 from p2_assembly.seg6_segment import Segment
-from p2_assembly.seg9_collection import seg_collection
+from p2_assembly.seg9_collection import get_seg_collection
 
 
 class OtherInstruction(unittest.TestCase):
     # noinspection SpellCheckingInspection
     def test_other_ins(self):
-        seg: Segment = seg_collection.get_seg("TS12")
+        seg: Segment = get_seg_collection().get_seg("TS12")
         seg.assemble()
         # LH    R1,FNAME(R2)
         node = seg.nodes["TS120100.1"]

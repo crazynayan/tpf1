@@ -5,7 +5,7 @@ from p1_utils.data_type import Register
 from p1_utils.errors import UsingInvalidError, DropInvalidError
 from p1_utils.file_line import Line
 from p2_assembly.mac1_implementation import Dc
-from p2_assembly.mac2_data_macro import macros
+from p2_assembly.mac2_data_macro import get_macros
 from p2_assembly.seg0_generic import SegmentGeneric
 
 
@@ -112,7 +112,7 @@ class DirectiveImplementation(SegmentGeneric):
         suffix: Optional[str] = operands[1] if operands[1] else None
         try:
             for operand in operands[2:]:
-                if operand not in macros:
+                if operand not in get_macros():
                     raise UsingInvalidError(line)
                 self.load_macro(operand, base=operands[0], suffix=suffix)
         except UsingInvalidError:

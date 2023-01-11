@@ -19,6 +19,7 @@ COPY config.py google-cloud-tokyo.json tpf.py ./
 # ENV GOOGLE_APPLICATION_CREDENTIALS google-cloud.json
 # Prod database
 ENV GOOGLE_APPLICATION_CREDENTIALS google-cloud-tokyo.json
+ENV DOMAIN sabre
 
 RUN exec python -m unittest discover -s p8_test.test_local -v -f
 

@@ -5,8 +5,8 @@ from firestore_ci import FirestoreDocument
 import p3_db.pnr as db_pnr
 from config import config
 from p1_utils.data_type import Register
-from p2_assembly.mac2_data_macro import macros
-from p2_assembly.seg9_collection import seg_collection
+from p2_assembly.mac2_data_macro import get_macros
+from p2_assembly.seg9_collection import get_seg_collection
 
 
 class Core(FirestoreDocument):
@@ -35,6 +35,7 @@ class Core(FirestoreDocument):
 
     @staticmethod
     def validate_field_dict(macro_name: str, field_dict: dict) -> bool:
+        macros = get_macros()
         if not isinstance(field_dict, dict):
             return False
         if "field" not in field_dict or not field_dict["field"]:
@@ -179,7 +180,7 @@ class Output(FirestoreDocument):
         if core_dict["base_reg"] and macro_name in config.FIXED_MACROS:
             return dict()
         field_dict["length"] = field_dict["length"] if "length" in field_dict and field_dict["length"] \
-            else macros[macro_name].evaluate(f"L'{field_dict['field']}")
+            else get_macros()[macro_name].evaluate(f"L'{field_dict['field']}")
         core = next((core for core in self.cores if core.macro_name == core_dict["macro_name"]), None)
         if core:
             core.base_reg = core_dict["base_reg"]
@@ -219,7 +220,7 @@ class Output(FirestoreDocument):
         if "traces" not in debug or not debug["traces"] or not isinstance(debug["traces"], list):
             return list()
         for seg in debug["traces"]:
-            if not seg_collection.is_seg_present(seg.upper()):
+            if not get_seg_collection().is_seg_present(seg.upper()):
                 return list()
         for seg in debug["traces"]:
             self.debug.append(seg.upper())
@@ -257,6 +258,7 @@ class FlatFile(FirestoreDocument):
 
     @classmethod
     def validate(cls, file_dict: dict) -> bool:
+        macros = get_macros()
         template = cls().__dict__
         if not isinstance(file_dict, dict) or not file_dict:
             return False
@@ -332,6 +334,7 @@ class PoolFile(FlatFile):
 
     @classmethod
     def validate(cls, file_dict: dict) -> bool:
+        macros = get_macros()
         if not super().validate(file_dict):
             return False
         if not {"index_field", "index_macro_name"}.issubset(file_dict):
@@ -365,6 +368,7 @@ class FileItem(FirestoreDocument):
 
     @classmethod
     def validate(cls, item_dict: dict) -> bool:
+        macros = get_macros()
         template = cls().__dict__
         if not isinstance(item_dict, dict) or not item_dict:
             return False

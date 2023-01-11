@@ -5,7 +5,7 @@ from config import config, Config
 from p1_utils.data_type import DataType
 from p1_utils.errors import NotFoundInSymbolTableError, AssemblyError
 from p1_utils.file_line import Line, File, get_lines_from_data_stream
-from p2_assembly.mac2_data_macro import macros
+from p2_assembly.mac2_data_macro import get_macros
 from p2_assembly.seg2_ins_operand import Label
 from p2_assembly.seg5_exec_macro import RealtimeMacroImplementation
 from p2_assembly.seg8_listing import LstCmd, get_lines_from_listing_commands, get_or_create_lst_cmds
@@ -59,7 +59,8 @@ class Segment(RealtimeMacroImplementation):
             self._generate_constants()
             # Second pass - Assemble instructions and populates nodes.
             self._assemble_instructions(lines)
-        except AssemblyError:
+        except AssemblyError as e:
+            print(e)  # This is required to see which line has assembly error
             self.nodes = dict()
             if self.file_type == config.LST:
                 LstCmd.objects.filter_by(seg_name=self.seg_name).delete(workers=100)
@@ -76,6 +77,7 @@ class Segment(RealtimeMacroImplementation):
     def _assemble_asm(self, lines: List[Line]) -> None:
         self.load_macro("EB0EB", base="R9")
         prior_label: Label = Label(self.root_label())
+        macros = get_macros()
         for line in lines:
             if line.command in macros:
                 self.load_macro_from_line(line, using=False)
@@ -194,7 +196,7 @@ class Segment(RealtimeMacroImplementation):
         if line.is_sw00sr:
             self.load_macro("SW00SR", "R3")
             return False
-        if line.command in macros:
+        if line.command in get_macros():
             self.load_macro_from_line(line, using=True)
             return True
         if line.create_node_for_directive and self.is_branch(line.label):

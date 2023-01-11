@@ -3,12 +3,12 @@ import unittest
 from p1_utils.errors import RegisterInvalidError
 from p1_utils.file_line import Line
 from p2_assembly.seg6_segment import Segment
-from p2_assembly.seg9_collection import seg_collection
+from p2_assembly.seg9_collection import get_seg_collection
 
 
 class Subroutine(unittest.TestCase):
     def test_subroutine(self):
-        seg: Segment = seg_collection.get_seg("TS09")
+        seg: Segment = get_seg_collection().get_seg("TS09")
         self.assertRaises(RegisterInvalidError, seg.reg_branch, Line.from_line(" BAS R16,TS09S100"))
         self.assertRaises(RegisterInvalidError, seg.branch_mnemonic_reg, Line.from_line(" BR -1"))
         seg.assemble()

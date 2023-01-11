@@ -1,7 +1,7 @@
 from base64 import b64encode
 
 from p1_utils.data_type import DataType
-from p2_assembly.mac2_data_macro import macros
+from p2_assembly.mac2_data_macro import get_macros
 from p3_db.pnr import RCVD_FROM, PHONE, NAME
 from p3_db.test_data_elements import FixedFile, FileItem
 from p8_test.test_local import TestDebug
@@ -10,6 +10,7 @@ from p8_test.test_local import TestDebug
 class Etg1Test(TestDebug):
 
     def _mini_tjr_setup(self, tj2qaa) -> None:
+        macros = get_macros()
         fixed_file = FixedFile()
         fixed_file.rec_id = DataType("C", input="P9").value
         fixed_file.macro_name = "TJ2TJ"
@@ -36,7 +37,7 @@ class Etg1Test(TestDebug):
         fixed_file = FixedFile()
         fixed_file.rec_id = DataType("C", input="TJ").value
         fixed_file.macro_name = "TJ0TJ"
-        fixed_file.fixed_type = macros["SYSEQC"].evaluate("#TJRRI")
+        fixed_file.fixed_type = get_macros()["SYSEQC"].evaluate("#TJRRI")
         fixed_file.fixed_ordinal = 0x17F
         fixed_file.field_data = [
             {
@@ -75,7 +76,7 @@ class Etg1Test(TestDebug):
         self.test_data.add_pnr_element(["1ZAVERI/NAYAN"], NAME)
         self.test_data.add_pnr_element(["NAYAN"], RCVD_FROM)
         self.test_data.add_pnr_element(["123456"], PHONE)
-        self._mini_tjr_setup(f"{macros['TJ2TJ'].evaluate('#TJ2IBB'):02X}")  # 20
+        self._mini_tjr_setup(f"{get_macros()['TJ2TJ'].evaluate('#TJ2IBB'):02X}")  # 20
         test_data = self.tpf_server.run("ETA1", self.test_data)
         self.output = test_data.output
         self.assertEqual("INS0ER01.2", self.output.last_line, f"{self.output.last_node}--{self.output.dumps}")
@@ -91,7 +92,7 @@ class Etg1Test(TestDebug):
         self.test_data.add_pnr_element(["1ZAVERI/NAYAN"], NAME)
         self.test_data.add_pnr_element(["NAYAN"], RCVD_FROM)
         self.test_data.add_pnr_element(["123456"], PHONE)
-        self._mini_tjr_setup(f"{macros['TJ2TJ'].evaluate('#TJ2IBB'):02X}")  # 20
+        self._mini_tjr_setup(f"{get_macros()['TJ2TJ'].evaluate('#TJ2IBB'):02X}")  # 20
         self._main_tjr_setup()
         test_data = self.tpf_server.run("ETA1", self.test_data)
         self.output = test_data.output

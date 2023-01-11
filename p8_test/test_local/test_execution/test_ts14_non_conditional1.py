@@ -1,7 +1,7 @@
 import unittest
 
 from config import config
-from p2_assembly.mac2_data_macro import macros
+from p2_assembly.mac2_data_macro import get_macros
 from p4_execution.ex5_execute import TpfServer
 from p8_test.test_local import TestDataUTS
 
@@ -18,6 +18,7 @@ class NonConditional1(unittest.TestCase):
         self.test_data.add_fields(ecb_fields, "EB0EB")
 
     def test_ts14(self):
+        macros = get_macros()
         test_data = self.tpf_server.run("TS14", self.test_data)
         aaa = self.tpf_server.aaa_address
         self.assertEqual(0xFFFFC1C1, test_data.get_unsigned_value("R2"))

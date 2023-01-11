@@ -1,7 +1,7 @@
 from flask import g
 
 from p2_assembly.seg6_segment import get_assembled_startup_seg, Segment
-from p2_assembly.seg9_collection import seg_collection
+from p2_assembly.seg9_collection import get_seg_collection
 from p3_db.response import StandardResponse, RequestType
 from p3_db.test_data import TestData
 from p4_execution.ex5_execute import TpfServer
@@ -54,7 +54,7 @@ def validate_test_data_name(rsp: StandardResponse, existing_name: str = str()):
 
 def validate_seg_name(rsp: StandardResponse):
     rsp.body.seg_name = rsp.body.seg_name.upper()
-    if not seg_collection.is_seg_present(rsp.body.seg_name):
+    if not get_seg_collection().is_seg_present(rsp.body.seg_name):
         rsp.error_fields.seg_name = StartupMsg.SEG_NOT_FOUND
         rsp.error = True
     return

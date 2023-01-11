@@ -1,12 +1,12 @@
 import unittest
 
 from p2_assembly.seg6_segment import Segment
-from p2_assembly.seg9_collection import seg_collection
+from p2_assembly.seg9_collection import get_seg_collection
 
 
 class Execute(unittest.TestCase):
     def test_execute(self):
-        seg: Segment = seg_collection.get_seg("TS13")
+        seg: Segment = get_seg_collection().get_seg("TS13")
         seg.assemble()
         # TM    EBW000,0
         node = seg.nodes["TS130010.1"]

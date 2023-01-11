@@ -2,7 +2,7 @@ from base64 import b64encode
 
 from config import config
 from p1_utils.data_type import DataType
-from p2_assembly.mac2_data_macro import macros
+from p2_assembly.mac2_data_macro import get_macros
 from p8_test.test_local import TestDebug
 
 
@@ -28,6 +28,7 @@ class NameGeneral(TestDebug):
         # Registers
         self.test_data.add_all_regs()
         # Equates
+        macros = get_macros()
         macros["UI2PF"].load()
         self.wa0pn2 = macros["WA0AA"].evaluate("#WA0PN2")
         self.wa0any = macros["WA0AA"].evaluate("#WA0ANY")

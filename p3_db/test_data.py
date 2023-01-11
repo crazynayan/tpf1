@@ -8,8 +8,8 @@ from firestore_ci import FirestoreDocument
 from config import config
 from p1_utils.data_type import Register
 from p1_utils.errors import InvalidBaseRegError
-from p2_assembly.mac2_data_macro import macros, get_global_ref
-from p2_assembly.seg9_collection import seg_collection
+from p2_assembly.mac2_data_macro import get_macros, get_global_ref
+from p2_assembly.seg9_collection import get_seg_collection
 from p3_db.test_data_elements import Core, Pnr, Tpfdf, Output, FixedFile, PnrOutput
 from p3_db.test_data_validators import validate_and_update_hex_and_field_data, validate_and_update_macro_field_data, \
     validate_and_update_field_item_len, validate_and_update_pnr_locator_key, validate_and_update_pnr_text_with_field, \
@@ -120,7 +120,7 @@ class TestData(FirestoreDocument):
         if "name" not in header or "seg_name" not in header:
             return False
         header["seg_name"] = header["seg_name"].upper()
-        if not seg_collection.is_seg_present(header["seg_name"]) or not header["name"]:
+        if not get_seg_collection().is_seg_present(header["seg_name"]) or not header["name"]:
             return False
         if "stop_segments" in header and any(len(segment) != 4 or not segment.isalnum()
                                              for segment in header["stop_segments"]):
@@ -649,6 +649,7 @@ class TestData(FirestoreDocument):
         return response
 
     def create_tpfdf_lrec(self, df_dict: dict, persistence=True) -> Optional[Tpfdf]:
+        macros = get_macros()
         if set(df_dict) != {"key", "field_data", "macro_name", "variation", "variation_name"}:
             return None
         if not isinstance(df_dict["key"], str) or len(df_dict["key"]) != 2 or not df_dict["key"].isalnum():

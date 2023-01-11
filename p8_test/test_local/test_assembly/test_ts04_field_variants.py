@@ -3,13 +3,13 @@ import unittest
 from p1_utils.errors import FieldLengthInvalidError
 from p1_utils.file_line import Line
 from p2_assembly.seg6_segment import Segment
-from p2_assembly.seg9_collection import seg_collection
+from p2_assembly.seg9_collection import get_seg_collection
 
 
 class FieldVariants(unittest.TestCase):
     # noinspection SpellCheckingInspection
     def test_field_variants(self):
-        seg: Segment = seg_collection.get_seg("TS04")
+        seg: Segment = get_seg_collection().get_seg("TS04")
         self.assertRaises(FieldLengthInvalidError, seg.field_len_field, Line.from_line(" MVC 2(257,R3),26(R4)"))
         self.assertRaises(FieldLengthInvalidError, seg.field_len_field, Line.from_line(" OC EBW000(,R4),EBW000"))
         self.assertRaises(FieldLengthInvalidError, seg.field_len_field, Line.from_line(" OC EBW000(,R4),EBW000"))

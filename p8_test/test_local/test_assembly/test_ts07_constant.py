@@ -3,13 +3,13 @@ import unittest
 from p1_utils.errors import EquLabelRequiredError
 from p1_utils.file_line import Line
 from p2_assembly.seg6_segment import Segment
-from p2_assembly.seg9_collection import seg_collection
+from p2_assembly.seg9_collection import get_seg_collection
 
 
 class Constant(unittest.TestCase):
     # noinspection SpellCheckingInspection
     def test_constant(self):
-        seg: Segment = seg_collection.get_seg("TS07")
+        seg: Segment = get_seg_collection().get_seg("TS07")
         self.assertRaises(EquLabelRequiredError, seg.equ, Line.from_line(" EQU 23"))
         seg.assemble()
         at = 0x018

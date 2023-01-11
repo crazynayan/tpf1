@@ -5,7 +5,7 @@ from config import config
 from p1_utils.data_type import Register
 from p1_utils.errors import RegisterInvalidError, AssemblyError
 from p1_utils.file_line import Line
-from p2_assembly.mac2_data_macro import macros
+from p2_assembly.mac2_data_macro import get_macros
 from p2_assembly.seg2_ins_operand import FieldBaseDsp
 from p2_assembly.seg3_ins_type import InstructionGeneric, RegisterData
 from p2_assembly.seg4_ins_implementation import InstructionImplementation
@@ -153,7 +153,7 @@ class RealtimeMacroImplementation(InstructionImplementation):
 
     def dbred(self, line: Line) -> KeyValue:
         dbred_key = self.key_value(line)
-        if dbred_key.get_value("REF") in macros and dbred_key.get_value("REG"):
+        if dbred_key.get_value("REF") in get_macros() and dbred_key.get_value("REG"):
             self.load_macro(dbred_key.get_value("REF"), base=dbred_key.get_value("REG"))
         for key_number in range(2, 7):
             key_n = f"KEY{key_number}"

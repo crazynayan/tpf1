@@ -4,13 +4,13 @@ from p1_utils.errors import FieldLengthInvalidError, RegisterInvalidError, NotFo
     BitsInvalidError, FieldDspInvalidError
 from p1_utils.file_line import Line
 from p2_assembly.seg6_segment import Segment
-from p2_assembly.seg9_collection import seg_collection
+from p2_assembly.seg9_collection import get_seg_collection
 
 
 class FieldBits(unittest.TestCase):
     def test_field_bits(self):
         seg_name = "TS01"
-        seg: Segment = seg_collection.get_seg(seg_name)
+        seg: Segment = get_seg_collection().get_seg(seg_name)
         self.assertRaises(FieldLengthInvalidError, seg.field_bits, Line.from_line(" OI 23(2,R9),1"))
         self.assertRaises(RegisterInvalidError, seg.field_bits, Line.from_line(" OI 23(L'EBW001),1"))
         self.assertRaises(NotFoundInSymbolTableError, seg.field_bits, Line.from_line(" OI ERROR_FIELD,1"))

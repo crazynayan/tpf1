@@ -3,9 +3,9 @@ from typing import Tuple, Callable, Optional
 
 from config import config
 from p1_utils.errors import AssemblyError
-from p2_assembly.mac2_data_macro import macros
+from p2_assembly.mac2_data_macro import get_macros
 from p2_assembly.seg6_segment import Segment
-from p2_assembly.seg9_collection import seg_collection
+from p2_assembly.seg9_collection import get_seg_collection
 from p3_db.pnr import Pnr as PnrDb, PnrLocator
 from p3_db.response import StandardResponse
 
@@ -66,7 +66,7 @@ def validate_seg_name(body: dict) -> Tuple[dict, Optional[Segment]]:
     if len(body["seg_name"]) != 4:
         errors["seg_name"] = "Invalid segment name. Seg name must of 4 characters."
         return errors, None
-    seg: Segment = seg_collection.get_seg(body["seg_name"])
+    seg: Segment = get_seg_collection().get_seg(body["seg_name"])
     if not seg:
         errors["seg_name"] = f"Segment {body['seg_name']} not found."
     elif seg.file_type != config.LST:
@@ -162,6 +162,7 @@ def validate_and_update_global_data(body: dict) -> dict:
 
 def validate_and_update_macro_field_data(body: dict, macro_name: str) -> dict:
     errors: dict = dict()
+    macros = get_macros()
     if macro_name not in macros:
         errors["macro_name"] = f"Data macro {macro_name} not found."
         return errors

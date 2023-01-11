@@ -1,7 +1,7 @@
 from typing import Tuple, List
 
 from config import config
-from p2_assembly.mac2_data_macro import indexed_macros, macros
+from p2_assembly.mac2_data_macro import indexed_macros, get_macros
 from p7_flask_app.api.api0_constants import ErrorMsg, Types, FIELD_DATA, FIELD, NAME, MACRO_NAME, TYPE, \
     VARIATION_NAME, NEW_VARIATION_NAME, VARIATION
 from p7_flask_app.api.api1_models import TestData
@@ -59,7 +59,7 @@ def validate_macro_name(data_dict: dict, test_data: List[dict]) -> dict:
     error = validate_empty_str(data_dict, MACRO_NAME)
     if error:
         return error
-    if data_dict[MACRO_NAME].strip().upper() not in macros:
+    if data_dict[MACRO_NAME].strip().upper() not in get_macros():
         return {MACRO_NAME: ErrorMsg.MACRO_LIBRARY}
     if not any(element[MACRO_NAME] == data_dict[MACRO_NAME] for element in test_data):
         return {MACRO_NAME: ErrorMsg.NOT_FOUND}

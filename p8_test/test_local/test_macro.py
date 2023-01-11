@@ -1,18 +1,20 @@
 import unittest
 
-from p2_assembly.mac2_data_macro import DataMacro, macros
+from p2_assembly.mac2_data_macro import DataMacro, get_macros
 
 
 class MacroTest(unittest.TestCase):
     NUMBER_OF_FILES = 112
 
     def test_files(self):
+        macros = get_macros()
         self.assertIn("EB0EB", macros)
         self.assertIn("WA0AA", macros)
         self.assertNotIn("ETA5", macros)
         self.assertEqual(self.NUMBER_OF_FILES, len(macros), "Update number of files in MacroTest")
 
     def _common_checks(self, macro_name, accepted_errors_list=None):
+        macros = get_macros()
         self.macro: DataMacro = macros[macro_name]
         self.macro.load()
         self.assertTrue(macros[macro_name].loaded)

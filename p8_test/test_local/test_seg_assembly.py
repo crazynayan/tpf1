@@ -1,7 +1,7 @@
 import unittest
 
 from p2_assembly.seg6_segment import Segment
-from p2_assembly.seg9_collection import seg_collection
+from p2_assembly.seg9_collection import get_seg_collection
 from p4_execution.ex5_execute import TpfServer
 
 
@@ -10,7 +10,7 @@ class SegmentTest(unittest.TestCase):
 
     def test_segment(self):
         self.maxDiff = None
-        seg: Segment = seg_collection.get_seg(self.SEG_NAME)
+        seg: Segment = get_seg_collection().get_seg(self.SEG_NAME)
         seg.assemble()
         self.assertEqual(str(), seg.error_line)
         self.assertEqual(str(), seg.error_constant)

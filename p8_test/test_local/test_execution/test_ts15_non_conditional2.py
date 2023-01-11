@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 from config import config
 from p1_utils.data_type import DataType
-from p2_assembly.mac2_data_macro import macros
+from p2_assembly.mac2_data_macro import get_macros
 from p4_execution.ex5_execute import TpfServer
 from p8_test.test_local import TestDataUTS
 
@@ -56,7 +56,7 @@ class NonConditional2(unittest.TestCase):
         self.test_data.set_field("EBX000", bytes([0x01]))
         test_data = self.tpf_server.run("TS15", self.test_data)
         self.assertEqual(1, test_data.output.regs["R3"])
-        self.assertEqual(macros["EB0EB"].evaluate("EBW034") + config.ECB, test_data.output.regs["R1"])
+        self.assertEqual(get_macros()["EB0EB"].evaluate("EBW034") + config.ECB, test_data.output.regs["R1"])
         self.assertEqual(0x000000FF, test_data.output.regs["R2"])
 
     def test_ts15_trt2(self):
@@ -64,7 +64,7 @@ class NonConditional2(unittest.TestCase):
         self.test_data.set_field("EBX000", bytes([0x01]))
         test_data = self.tpf_server.run("TS15", self.test_data)
         self.assertEqual(2, test_data.output.regs["R3"])
-        self.assertEqual(macros["EB0EB"].evaluate("EBW037") + config.ECB, test_data.output.regs["R1"])
+        self.assertEqual(get_macros()["EB0EB"].evaluate("EBW037") + config.ECB, test_data.output.regs["R1"])
         self.assertEqual(0x000000FF, test_data.output.regs["R2"])
 
     def test_ts15_mr(self):

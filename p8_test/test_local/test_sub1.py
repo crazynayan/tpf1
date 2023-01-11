@@ -1,7 +1,7 @@
 import unittest
 
 from p1_utils.data_type import DataType
-from p2_assembly.seg9_collection import seg_collection
+from p2_assembly.seg9_collection import get_seg_collection
 from p4_execution.ex5_execute import TpfServer
 from p8_test.test_local import TestDataUTS
 
@@ -24,7 +24,7 @@ class Sub1Test(unittest.TestCase):
         self.assertEqual("00017F", test_data.get_field("EBX008"))
         # TODO remove once the scenario for it is present
         tnaa_bytes = DataType("X", input="00003EF8000002A40000001A00040000").to_bytes()
-        sub1 = seg_collection.get_seg("SUB1")
+        sub1 = get_seg_collection().get_seg("SUB1")
         self.assertEqual(tnaa_bytes, sub1.get_constant_bytes("SUB2TNAA", 16))
 
     def test_00017F(self):

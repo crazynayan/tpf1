@@ -4,13 +4,13 @@ from p1_utils.errors import RegisterInvalidError, DataInvalidError, NotFoundInSy
     AssemblyError
 from p1_utils.file_line import Line
 from p2_assembly.seg6_segment import Segment
-from p2_assembly.seg9_collection import seg_collection
+from p2_assembly.seg9_collection import get_seg_collection
 
 
 class RegisterVariants(unittest.TestCase):
     # noinspection SpellCheckingInspection
     def test_reg_variants(self):
-        seg: Segment = seg_collection.get_seg("TS05")
+        seg: Segment = get_seg_collection().get_seg("TS05")
         self.assertRaises(RegisterInvalidError, seg.reg_data, Line.from_line(" LHI RAB,1"))
         self.assertRaises(DataInvalidError, seg.reg_data, Line.from_line(" LHI R1,X'100000000'"))
         self.assertRaises(RegisterInvalidError, seg.reg_reg_field, Line.from_line(" STM R14,R16,EBW000"))

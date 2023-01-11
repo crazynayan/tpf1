@@ -6,6 +6,7 @@ from firestore_ci import FirestoreDocument
 from google.cloud.storage import Client
 
 from config import config
+from p1_utils.domain import read_folder, get_domain_folder, get_base_folder, get_domain
 from p2_assembly.seg6_segment import Segment
 
 
@@ -16,6 +17,7 @@ class SegLst(FirestoreDocument):
         self.seg_name: str = str()
         self.file_type: str = str()
         self.filename: str = str()
+        self.domain: str = str()
         self.source: str = str()
         self.blob_name: str = str()
         self.error_line: str = str()
@@ -39,12 +41,6 @@ class SegLst(FirestoreDocument):
 SegLst.init("segments")
 
 
-def read_folder(folder_name: str, extensions: set) -> List[Tuple[str, str]]:
-    # Returns a list of seg_name and filename
-    return [(filename[:4].upper(), os.path.join(folder_name, filename)) for filename in os.listdir(folder_name)
-            if len(filename) >= 6 and filename[-4:].lower() in extensions]
-
-
 def read_cloud() -> List[Tuple[str, str]]:
     # Returns a list of blob_name and filename
     client = Client()
@@ -62,18 +58,31 @@ def get_segment(seg_name: str, filename: str, file_type: str, source: str, blob_
     return segment
 
 
-class _SegmentCollection:
+def get_seg_lst_for_domain() -> List[SegLst]:
+    domains: List[str] = [config.DOMAINS.BASE, get_domain()]
+    seg_lst: List[SegLst] = SegLst.objects.filter("domain", SegLst.objects.IN, domains).get()
+    seg_lst.sort(key=lambda item: (item.domain, item.file_type), reverse=True)  # Assumes all domains are > base
+    return seg_lst
+
+
+class SegmentCollection:
 
     def __init__(self):
         self.segments: Dict = dict()  # Dictionary of Segment. Segment name is the key.
         if config.CI_CLOUD_STORAGE:
             self.init_seg_from_db()
         else:
-            self.init_seg_from_folder(config.LXP_FOLDER_NAME, config.LXP_EXT, config.LST)
-            self.init_seg_from_folder(config.ASM_FOLDER_NAME, config.ASM_EXT, config.ASM)
+            self.init_seg_from_folder(get_domain_folder(config.SOURCES.LXP), config.LXP_EXT, config.LST)
+            self.init_seg_from_folder(get_base_folder(config.SOURCES.LXP), config.LXP_EXT, config.LST)
+            self.init_seg_from_folder(get_domain_folder(config.SOURCES.ASM), config.ASM_EXT, config.ASM)
+            self.init_seg_from_folder(get_base_folder(config.SOURCES.ASM), config.ASM_EXT, config.ASM)
+
+    @staticmethod
+    def filename_parser(filename: str):
+        return filename[:4].upper()
 
     def init_seg_from_folder(self, folder_name: str, extensions: set, file_type: str):
-        for seg_name, filename in read_folder(folder_name, extensions):
+        for seg_name, filename in read_folder(folder_name, extensions, self.filename_parser):
             if seg_name in self.segments:
                 continue
             self.segments[seg_name]: Segment = get_segment(seg_name, filename, file_type, config.LOCAL)
@@ -81,8 +90,10 @@ class _SegmentCollection:
 
     def init_seg_from_db(self):
         self.segments: Dict = dict()  # Ensure segments is empty
-        seg_lst: List[SegLst] = SegLst.objects.get()
+        seg_lst: List[SegLst] = get_seg_lst_for_domain()
         for seg in seg_lst:
+            if seg.seg_name in self.segments:
+                continue
             self.init_seg_from_seg_lst(seg)
         return
 
@@ -110,7 +121,7 @@ class _SegmentCollection:
             return seg_name in self.segments
         if seg_name in self.segments:
             return True
-        seg: SegLst = SegLst.objects.filter_by(seg_name=seg_name).first()
+        seg: SegLst = next((seg_lst for seg_lst in get_seg_lst_for_domain() if seg_lst.seg_name == seg_name), None)
         if not seg:
             return False
         self.init_seg_from_seg_lst(seg)
@@ -127,4 +138,13 @@ class _SegmentCollection:
         return self.segments[seg_name].source == config.LOCAL
 
 
-seg_collection = _SegmentCollection()
+_seg_collection = SegmentCollection()
+
+
+def get_seg_collection() -> SegmentCollection:
+    return _seg_collection
+
+
+def init_seg_collection() -> None:
+    global _seg_collection
+    _seg_collection = SegmentCollection()

@@ -9,7 +9,7 @@ from p1_utils.errors import HeapaExecutionError, RegisterInvalidError, DumpExecu
     PrimaExecutionError, McpckExecutionError, SegmentNotFoundError, NotImplementedExecutionError, \
     UserDefinedMacroExecutionError, TPFServerMemoryError, UcdrError
 from p1_utils.ucdr import pars_to_date, date_to_pars
-from p2_assembly.mac2_data_macro import macros
+from p2_assembly.mac2_data_macro import get_macros
 from p2_assembly.seg2_ins_operand import FieldBaseDsp
 from p2_assembly.seg5_exec_macro import KeyValue, SegmentCall
 from p3_db.pnr import PnrLocator
@@ -27,7 +27,7 @@ class RealTimeMacro(State):
         address = self.vm.allocate()
         self.vm.set_value(self.regs.get_value("R7"), address + 8)
         self.regs.set_value(address + 8, "R7")
-        ce1aut = self.regs.get_value("R9") + macros["EB0EB"].evaluate("CE1AUT")
+        ce1aut = self.regs.get_value("R9") + get_macros()["EB0EB"].evaluate("CE1AUT")
         self.vm.set_value(address, ce1aut)
         return node.fall_down
 
@@ -91,7 +91,7 @@ class RealTimeMacro(State):
         can: str = node.get_value("CAN")
         if not can:
             raise UserDefinedMacroExecutionError(node)
-        canned_number = macros["UI2PF"].evaluate(can)
+        canned_number = get_macros()["UI2PF"].evaluate(can)
         if node.get_value("SEC") == "YES":
             canned_number += 256
         message_string = next((canned["message"] for canned in UI2CNN
@@ -317,7 +317,7 @@ class UserDefinedMacro(State):
             raise PrimaExecutionError
         match_label = node.get_value("YES") if node.get_value("YES") else node.fall_down
         not_match_label = node.get_value("NO") if node.get_value("NO") else node.fall_down
-        prime_host = self.vm.get_value(self.aaa_address + macros["WA0AA"].evaluate("WA0PHA"), 1) & 0x0F
+        prime_host = self.vm.get_value(self.aaa_address + get_macros()["WA0AA"].evaluate("WA0PHA"), 1) & 0x0F
         input_type = node.get_value("PH")
         if prime_host == 0:
             return not_match_label
@@ -390,8 +390,8 @@ class UserDefinedMacro(State):
 
     def generate_locator(self, node: KeyValue) -> str:
         r6: int = self.regs.get_value("R6")
-        ul4loc: int = r6 + macros["UL0LC"].evaluate("UL4LOC")
-        ul4ord: int = r6 + macros["UL0LC"].evaluate("UL4ORD")
+        ul4loc: int = r6 + get_macros()["UL0LC"].evaluate("UL4LOC")
+        ul4ord: int = r6 + get_macros()["UL0LC"].evaluate("UL4ORD")
         ordinal: int = random.randint(0, 26 ** 6)
         locator: str = PnrLocator.to_locator(ordinal)
         locator_bytes: bytearray = DataType("C", input=locator).to_bytes()
@@ -400,6 +400,7 @@ class UserDefinedMacro(State):
         return node.fall_down
 
     def uio1_user_exit(self, node: KeyValue) -> str:
+        macros = get_macros()
         r2 = self.regs.get_value("R2")
         if r2 != 0:
             ui2cnn = r2 + macros["UI2PF"].lookup("UI2CNN").dsp
@@ -432,7 +433,7 @@ class UserDefinedMacro(State):
         r2 = self.regs.get_value("R2")
         if not r1 or not r2:
             raise TPFServerMemoryError
-        ui2bct = r2 + macros["UI2PF"].lookup("UI2BCT").dsp
+        ui2bct = r2 + get_macros()["UI2PF"].lookup("UI2BCT").dsp
         length = self.vm.get_value(ui2bct, 2)
         if not length:
             return node.fall_down

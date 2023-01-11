@@ -4,7 +4,7 @@ from copy import deepcopy
 
 from config import config
 from p1_utils.data_type import DataType
-from p2_assembly.mac2_data_macro import macros
+from p2_assembly.mac2_data_macro import get_macros
 from p3_db.test_data_elements import FixedFile, PoolFile, FileItem
 from p4_execution.ex5_execute import TpfServer
 from p8_test.test_local import TestDataUTS
@@ -31,7 +31,7 @@ class EtajTest(unittest.TestCase):
         # Test data setup
         self.test_data.add_pnr_element(["BTS-B4T0/108/11-FINANCIAL SERVICES"], "group_plan")
         self.test_data.set_field("WA0POR", DataType("X", input="006F2F").to_bytes())
-        self.test_data.set_field("WA0FNS", bytes([macros["WA0AA"].evaluate("#WA0TVL")]))
+        self.test_data.set_field("WA0FNS", bytes([get_macros()["WA0AA"].evaluate("#WA0TVL")]))
         self.test_data.set_global_field("@TJORD", "00088EDC")
         self.test_data.add_all_regs()
         # Item setup
@@ -43,7 +43,7 @@ class EtajTest(unittest.TestCase):
         fixed_file.variation = variation
         fixed_file.rec_id = DataType("C", input="TJ").value
         fixed_file.macro_name = "TJ0TJ"
-        fixed_file.fixed_type = macros["SYSEQC"].evaluate("#TJRRI")
+        fixed_file.fixed_type = get_macros()["SYSEQC"].evaluate("#TJRRI")
         fixed_file.fixed_ordinal = 0x17F
         pool_file = PoolFile()
         fixed_file.pool_files.append(pool_file)
@@ -75,8 +75,8 @@ class EtajTest(unittest.TestCase):
 
     def test_branch_validation_pass_lok_on(self) -> None:
         self.iy_item[0]["data"] = b64encode(DataType("X", input="00006F2F").to_bytes()).decode()
-        macros["IY1IY"].load()
-        self.iy_item[1]["data"] = b64encode(bytearray([macros["IY1IY"].evaluate("#IY1LOK")])).decode()
+        get_macros()["IY1IY"].load()
+        self.iy_item[1]["data"] = b64encode(bytearray([get_macros()["IY1IY"].evaluate("#IY1LOK")])).decode()
         self._tjr_setup()
         test_data = self.tpf_server.run("TS21", self.test_data)
         self.assertEqual("TS21EXIT.1", test_data.output.last_line)
@@ -92,7 +92,7 @@ class EtajTest(unittest.TestCase):
     def test_variation(self):
         self.iy_item[0]["data"] = b64encode(DataType("X", input="00006F2F").to_bytes()).decode()
         self._tjr_setup()
-        self.iy_item[1]["data"] = b64encode(bytearray([macros["IY1IY"].evaluate("#IY1LOK")])).decode()
+        self.iy_item[1]["data"] = b64encode(bytearray([get_macros()["IY1IY"].evaluate("#IY1LOK")])).decode()
         self._tjr_setup(variation=1)
         test_data = self.tpf_server.run("TS21", self.test_data)
         self.assertEqual("$$ETK4$$.1", test_data.outputs[0].last_line)

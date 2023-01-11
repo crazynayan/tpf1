@@ -1,16 +1,16 @@
 from base64 import b64encode
 
 from p1_utils.data_type import DataType
-from p2_assembly.mac2_data_macro import macros
+from p2_assembly.mac2_data_macro import get_macros
 from p3_db.pnr import RCVD_FROM, ITIN
 from p3_db.test_data_elements import FixedFile
 from p8_test.test_local import TestDebug
 
-macros["WI0BS"].load()
-macros["WA0AA"].load()
-wi0act = f"{macros['WI0BS'].evaluate('#WI0ACT'):02X}"
-wa0tvl = f"{macros['WA0AA'].evaluate('#WA0TVL'):02X}"
-wa0sec = f"{macros['WA0AA'].evaluate('#WA0SEC'):02X}"
+get_macros()["WI0BS"].load()
+get_macros()["WA0AA"].load()
+wi0act = f"{get_macros()['WI0BS'].evaluate('#WI0ACT'):02X}"
+wa0tvl = f"{get_macros()['WA0AA'].evaluate('#WA0TVL'):02X}"
+wa0sec = f"{get_macros()['WA0AA'].evaluate('#WA0SEC'):02X}"
 itin = f"WI0TYP:{wi0act}:I1,WI0AAC:{bytes('GN', 'CP037').hex()}:I1"
 
 
@@ -20,7 +20,7 @@ class EtazTest(TestDebug):
         fixed_file = FixedFile()
         fixed_file.rec_id = DataType("C", input="TJ").value
         fixed_file.macro_name = "TJ0TJ"
-        fixed_file.fixed_type = macros["SYSEQC"].evaluate("#TJRRI")
+        fixed_file.fixed_type = get_macros()["SYSEQC"].evaluate("#TJRRI")
         fixed_file.fixed_ordinal = 0x17F
         fixed_file.field_data = [
             {

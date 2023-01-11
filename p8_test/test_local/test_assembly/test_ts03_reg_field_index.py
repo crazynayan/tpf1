@@ -3,12 +3,12 @@ import unittest
 from p1_utils.errors import RegisterInvalidError, RegisterIndexInvalidError
 from p1_utils.file_line import Line
 from p2_assembly.seg6_segment import Segment
-from p2_assembly.seg9_collection import seg_collection
+from p2_assembly.seg9_collection import get_seg_collection
 
 
 class RegFieldIndex(unittest.TestCase):
     def test_reg_field_index(self):
-        seg: Segment = seg_collection.get_seg("TS03")
+        seg: Segment = get_seg_collection().get_seg("TS03")
         self.assertRaises(RegisterInvalidError, seg.reg_field_index, Line.from_line(" LA R1,2(R1,R3,R4)"))
         self.assertRaises(RegisterInvalidError, seg.reg_field_index, Line.from_line(" L R16,0(R9)"))
         self.assertRaises(RegisterIndexInvalidError, seg.reg_field_index, Line.from_line(" LA R1,2(ABC,R1)"))

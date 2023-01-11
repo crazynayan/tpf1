@@ -1,12 +1,12 @@
 import unittest
 
 from p2_assembly.seg6_segment import Segment
-from p2_assembly.seg9_collection import seg_collection
+from p2_assembly.seg9_collection import get_seg_collection
 
 
 class SegmentCall(unittest.TestCase):
     def test_seg_call(self):
-        seg: Segment = seg_collection.get_seg("TS10")
+        seg: Segment = get_seg_collection().get_seg("TS10")
         seg.assemble()
         # ENTRC TS01
         node = seg.nodes["$$TS10$$.1"]

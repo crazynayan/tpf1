@@ -7,8 +7,8 @@ from google.cloud.storage import Client
 
 from config import config
 from p2_assembly.mac0_generic import LabelReference
-from p2_assembly.mac2_data_macro import macros
-from p2_assembly.seg9_collection import seg_collection, SegLst
+from p2_assembly.mac2_data_macro import get_macros
+from p2_assembly.seg9_collection import get_seg_collection, SegLst, get_seg_lst_for_domain
 from p3_db.startup_script import test_data_create, test_data_update
 from p3_db.test_data import TestData
 from p3_db.test_data_elements import Tpfdf, FixedFile
@@ -20,7 +20,7 @@ from p7_flask_app import tpf1_app
 from p7_flask_app.auth import token_auth, User
 from p7_flask_app.errors import error_response
 from p7_flask_app.route_decorators import test_data_required, role_check_required, test_data_with_links_required
-from tpf import reset_seg_assembly
+from p7_flask_app.segment import reset_seg_assembly
 
 
 @tpf1_app.route("/users/<string:doc_id>")
@@ -77,7 +77,7 @@ def copy_test_data(test_data_id: str, **kwargs) -> Response:
 @test_data_with_links_required
 def run_test_data(test_data_id: str, **kwargs) -> Response:
     test_data: TestData = kwargs[test_data_id]
-    if not seg_collection.is_seg_present(test_data.seg_name):
+    if not get_seg_collection().is_seg_present(test_data.seg_name):
         return error_response(400, "Error in segment name")
     tpf_server = TpfServer()
     output_test_data = tpf_server.run(test_data.seg_name, test_data)
@@ -462,6 +462,7 @@ def find_field(field_name: str) -> Response:
     if not field_name:
         return error_response(400, "Field name cannot be empty")
     field_name = field_name.upper()
+    macros = get_macros()
     if field_name in macros:
         return jsonify(LabelReference(name=field_name, label=field_name, dsp=0, length=0).to_dict())
     label_ref = None
@@ -478,7 +479,7 @@ def find_field(field_name: str) -> Response:
 @tpf1_app.route("/segments")
 @token_auth.login_required
 def segment_list() -> Response:
-    seg_lst: List[SegLst] = SegLst.objects.order_by("seg_name").get()
+    seg_lst: List[SegLst] = get_seg_lst_for_domain()
     attributes: Dict[str, dict] = dict()
     for seg in seg_lst:
         attributes[seg.seg_name] = seg.doc_to_dict()
@@ -518,7 +519,7 @@ def segment_upload() -> Response:
         blob.delete()
         return close_jsonify(response, client)
     seg_name = blob_name[:4].upper()
-    if seg_collection.is_seg_local(seg_name):
+    if get_seg_collection().is_seg_local(seg_name):
         response["message"] = "Cannot upload segments which are present in local."
         blob.delete()
         return close_jsonify(response, client)
@@ -548,10 +549,10 @@ def segment_instruction(seg_name: str) -> Response:
         "instructions": list(),
         "not_supported": list()
     }
-    if not seg_collection.is_seg_present(seg_name):
+    segment = get_seg_collection().get_seg(seg_name)
+    if not segment:
         response["message"] = f"{seg_name} segment not found."
         return jsonify(response)
-    segment = seg_collection.get_seg(seg_name)
     segment.assemble()
     if segment.error_constant:
         response["message"] = f"Error in assembling constant at {segment.error_constant}."
@@ -578,7 +579,7 @@ def segment_instruction(seg_name: str) -> Response:
 @tpf1_app.route("/macros")
 @token_auth.login_required
 def macro_list() -> Response:
-    mac_list: List[str] = sorted(list(macros))
+    mac_list: List[str] = sorted(list(get_macros()))
     response_dict: Dict[str, List[str]] = {"macros": mac_list}
     return jsonify(response_dict)
 
@@ -586,6 +587,7 @@ def macro_list() -> Response:
 @tpf1_app.route("/macros/<string:macro_name>/symbol_table")
 @token_auth.login_required
 def macro_symbol_table(macro_name: str) -> Response:
+    macros = get_macros()
     if macro_name not in macros:
         return error_response(404, "Macro not found")
     macros[macro_name].load()

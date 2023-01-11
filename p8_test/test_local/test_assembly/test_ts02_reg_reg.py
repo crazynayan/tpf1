@@ -3,12 +3,12 @@ import unittest
 from p1_utils.errors import RegisterInvalidError
 from p1_utils.file_line import Line
 from p2_assembly.seg6_segment import Segment
-from p2_assembly.seg9_collection import seg_collection
+from p2_assembly.seg9_collection import get_seg_collection
 
 
 class RegReg(unittest.TestCase):
     def test_reg_reg(self):
-        seg: Segment = seg_collection.get_seg("TS02")
+        seg: Segment = get_seg_collection().get_seg("TS02")
         self.assertRaises(RegisterInvalidError, seg.reg_reg, Line.from_line(" LR R16,R15"))
         self.assertRaises(RegisterInvalidError, seg.reg_reg, Line.from_line(" LR R1,RBD"))
         seg.assemble()

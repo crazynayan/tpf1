@@ -1,6 +1,6 @@
 from typing import List
 
-from p2_assembly.mac2_data_macro import indexed_macros, macros
+from p2_assembly.mac2_data_macro import indexed_macros, get_macros
 from p7_flask_app.api.api0_constants import Types, MACRO_NAME, VARIATION, FIELD_DATA, NAME, TYPE, FIELD, DATA, \
     VARIATION_NAME, SuccessMsg, ErrorMsg, LENGTH
 from p7_flask_app.api.api1_models import TestData
@@ -148,7 +148,7 @@ def get_data_length(field: dict, element_type: str) -> dict:
         return {DATA: field[DATA]}
     if LENGTH in field:
         return {LENGTH: field[LENGTH]}
-    label_ref = macros[indexed_macros[field[FIELD].strip().upper()]].lookup(field[FIELD].strip().upper())
+    label_ref = get_macros()[indexed_macros[field[FIELD].strip().upper()]].lookup(field[FIELD].strip().upper())
     return {LENGTH: label_ref.length}
 
 

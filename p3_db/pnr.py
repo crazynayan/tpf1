@@ -4,7 +4,7 @@ from config import config
 from p1_utils.data_type import DataType
 from p1_utils.errors import PnrElementError, PnrLocatorNotFoundError, NotFoundInSymbolTableError, TestDataError
 from p2_assembly.mac0_generic import LabelReference
-from p2_assembly.mac2_data_macro import macros
+from p2_assembly.mac2_data_macro import get_macros
 from p3_db.stream import Stream
 
 NAME, HFAX, FQTV, ITIN, RCVD_FROM, PHONE, REMARKS = "name", "hfax", "fqtv", "itin", "rcvd_from", "phone", "remarks"
@@ -38,6 +38,7 @@ class PnrLrec:
 
 def load_pdequ():
     pdequ = dict()
+    macros = get_macros()
     try:
         macros["PDEQU"].load()
     except KeyError:
@@ -89,11 +90,12 @@ class Pnr:
     @classmethod
     def load_macros(cls):
         for attribute in Pnr.ATTRIBUTES:
-            macros[attribute.macro_name].load()
+            get_macros()[attribute.macro_name].load()
         return
 
     @classmethod
     def get_field(cls, field_name) -> Optional[LabelReference]:
+        macros = get_macros()
         pnr_macros: set = {attribute.macro_name for attribute in Pnr.ATTRIBUTES}
         return next((macros[macro].lookup(field_name) for macro in pnr_macros if macros[macro].check(field_name)), None)
 
@@ -203,8 +205,9 @@ class Pnr:
 
     @staticmethod
     def add_from_byte_array(byte_array: Dict[str, bytearray], key: str, locator: str):
+        macros = get_macros()
         attribute = Pnr.get_attribute_by_name(key)
-        if attribute is None or not attribute.byte_array or attribute.macro_name not in macros:
+        if attribute is None or not attribute.byte_array or attribute.macro_name not in get_macros():
             raise PnrElementError
         pnr_doc: List[Dict[str, bytearray]] = Pnr.get_pnr_doc(locator)
         lrec = PnrLrec(attribute.key)

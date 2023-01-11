@@ -8,6 +8,8 @@ from flask_httpauth import HTTPBasicAuth, HTTPTokenAuth
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from config import config
+from p2_assembly.mac2_data_macro import init_macros
+from p2_assembly.seg9_collection import init_seg_collection
 from p7_flask_app import tpf1_app
 from p7_flask_app.errors import error_response
 
@@ -30,6 +32,8 @@ def basic_auth_error() -> Response:
 @basic_auth.login_required
 def generate_token() -> Response:
     g.current_user.generate_token()
+    init_seg_collection()
+    init_macros()
     user_response: dict = {
         "email": g.current_user.email,
         "id": g.current_user.id,

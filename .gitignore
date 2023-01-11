@@ -5,11 +5,7 @@ __pycache__
 *.csv
 static/
 tpf1-key.json
-p0_source/macro/
-p0_source/sabre/
-p0_source/asm/
-p0_source/lst/
-p0_source/lxp/
+p0_source/
 google-cloud.json
 google-cloud-tokyo.json
 tmp/

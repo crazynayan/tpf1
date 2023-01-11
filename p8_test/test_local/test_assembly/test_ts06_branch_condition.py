@@ -3,12 +3,12 @@ import unittest
 from p1_utils.errors import RegisterInvalidError, ConditionMaskError, NotFoundInSymbolTableError, AssemblyError
 from p1_utils.file_line import Line
 from p2_assembly.seg6_segment import Segment
-from p2_assembly.seg9_collection import seg_collection
+from p2_assembly.seg9_collection import get_seg_collection
 
 
 class BranchCondition(unittest.TestCase):
     def test_branch_condition(self):
-        seg: Segment = seg_collection.get_seg("TS06")
+        seg: Segment = get_seg_collection().get_seg("TS06")
         seg.add_label("TS06INVALID", 0, 0, "NOT_TS06")
         # self.assertRaises(BranchInvalidError, seg.branch_mnemonic, Line.from_line(" BNZ TS06INVALID"))
         self.assertRaises(ConditionMaskError, seg.branch_condition, Line.from_line(" JC -1,TS06E100"))

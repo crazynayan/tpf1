@@ -19,9 +19,10 @@ tpf1_app.register_blueprint(api_bp, url_prefix="/api")
 def make_shell_context():
     from config import config
     import tpf
+    from p1_utils import domain
     from p1_utils.file_line import File
     from p2_assembly.seg8_listing import create_listing_commands, write_tmp_output, LstCmd, create_lxp
-    from p2_assembly.seg9_collection import SegLst, seg_collection
+    from p2_assembly.seg9_collection import SegLst, get_seg_collection
     from p3_db.test_data import TestData
     from p3_db import template_crud, template_merge, test_data_get, template_models, test_data_variations, \
         test_data_elements, test_results_crud
@@ -40,7 +41,7 @@ def make_shell_context():
         "LstCmd": LstCmd,
         "write_tmp_output": write_tmp_output,
         "create_lxp": create_lxp,
-        "seg_collection": seg_collection,
+        "seg_collection": get_seg_collection(),
         "routes": routes,
         "tpf": tpf,
         "template": template_crud,
@@ -50,4 +51,5 @@ def make_shell_context():
         "td_variations": test_data_variations,
         "td_elements": test_data_elements,
         "test_results": test_results_crud,
+        "domain": domain,
     }

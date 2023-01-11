@@ -1,7 +1,7 @@
 from base64 import b64encode
 
 from p1_utils.data_type import DataType
-from p2_assembly.mac2_data_macro import macros
+from p2_assembly.mac2_data_macro import get_macros
 from p3_db.pnr import RCVD_FROM, PHONE, NAME, HEADER
 from p3_db.test_data_elements import FixedFile, FileItem
 from p8_test.test_local import TestDebug
@@ -32,8 +32,8 @@ class ExaaTest(TestDebug):
         fixed_file = FixedFile()
         fixed_file.rec_id = DataType("C", input="P9").value
         fixed_file.macro_name = "TJ2TJ"
-        fixed_file.fixed_type = macros["SYSEQC"].evaluate("#PR9RI")  # 390
-        fixed_file.fixed_ordinal = 0x17F // macros["TJ2TJ"].evaluate("#TJ2MAX")  # 38  0x26
+        fixed_file.fixed_type = get_macros()["SYSEQC"].evaluate("#PR9RI")  # 390
+        fixed_file.fixed_ordinal = 0x17F // get_macros()["TJ2TJ"].evaluate("#TJ2MAX")  # 38  0x26
         item = FileItem()
         item.macro_name = "TJ2TJ"
         item.field = "TJ2ITM"
@@ -44,7 +44,7 @@ class ExaaTest(TestDebug):
                 "data": b64encode(DataType("X", input=tj2qaa).to_bytes()).decode()
             },
         ]
-        item.repeat = 0x17F % macros["TJ2TJ"].evaluate("#TJ2MAX") + 1  # 4
+        item.repeat = 0x17F % get_macros()["TJ2TJ"].evaluate("#TJ2MAX") + 1  # 4
         fixed_file.file_items.append(item)
         file_dict = fixed_file.doc_to_dict()
         file_dict["file_items"] = [item.doc_to_dict() for item in fixed_file.file_items]

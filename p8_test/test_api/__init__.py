@@ -11,7 +11,7 @@ CLIENT = tpf1_app.test_client()
 
 def authorized_request(func: Callable, url: str, **kwargs) -> Munch:
     if "api_other_auth" in kwargs:
-        token = User.objects.filter_by(email="jeff.moyalan@infogain.com").first().token
+        token = User.objects.filter_by(email="john.stack@smltd.com").first().token
         del kwargs["api_other_auth"]
     else:
         if not config.TEST_TOKEN:

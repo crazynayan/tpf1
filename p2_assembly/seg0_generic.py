@@ -5,7 +5,7 @@ from p1_utils.data_type import Register
 from p1_utils.errors import UsingInvalidError
 from p2_assembly.mac0_generic import LabelReference
 from p2_assembly.mac1_implementation import DataMacroImplementation, Dc
-from p2_assembly.mac2_data_macro import macros
+from p2_assembly.mac2_data_macro import get_macros
 
 
 class Data:
@@ -47,6 +47,7 @@ class SegmentGeneric(DataMacroImplementation):
         return "$$" + self.seg_name + "$$" if name is None else "$$" + name + "$$"
 
     def load_macro(self, name: str, base: str = None, suffix: Optional[str] = None, using: bool = True) -> None:
+        macros = get_macros()
         macros[name].load()
         suffix_name = name + suffix if suffix else name
         if suffix_name not in self.data_macro:
@@ -80,7 +81,7 @@ class SegmentGeneric(DataMacroImplementation):
         name = self.get_macro_name(base)
         if not name:
             return None
-        indexed_data = self._index if name == self.seg_name else macros[name].indexed_data
+        indexed_data = self._index if name == self.seg_name else get_macros()[name].indexed_data
         index_label = name + str(dsp)
         if index_label not in indexed_data:
             return None

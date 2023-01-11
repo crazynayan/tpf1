@@ -4,13 +4,13 @@ from config import config
 from p2_assembly.seg3_ins_type import RegisterData
 from p2_assembly.seg5_exec_macro import KeyValue
 from p2_assembly.seg6_segment import Segment
-from p2_assembly.seg9_collection import seg_collection
+from p2_assembly.seg9_collection import get_seg_collection
 
 
 class KeyValueTest(unittest.TestCase):
     # noinspection SpellCheckingInspection
     def test_key_value(self):
-        seg: Segment = seg_collection.get_seg("TS11")
+        seg: Segment = get_seg_collection().get_seg("TS11")
         seg.assemble()
         # AAGET BASEREG=R1,GET=CORE,INIT=YES,FILE=NO
         node: KeyValue = seg.nodes["TS110010.1"]

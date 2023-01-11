@@ -1,12 +1,12 @@
 import unittest
 
 from p2_assembly.seg6_segment import Segment
-from p2_assembly.seg9_collection import seg_collection
+from p2_assembly.seg9_collection import get_seg_collection
 
 
 class Dsect(unittest.TestCase):
     def test_dsect(self):
-        seg: Segment = seg_collection.get_seg("TS08")
+        seg: Segment = get_seg_collection().get_seg("TS08")
         seg.assemble()
         self.assertEqual(48, seg.lookup("TS08IND").dsp)
         self.assertEqual("TS08BLK", seg.lookup("TS08IND").name)

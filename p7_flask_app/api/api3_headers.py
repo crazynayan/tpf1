@@ -1,6 +1,6 @@
 from typing import List
 
-from p2_assembly.seg9_collection import seg_collection
+from p2_assembly.seg9_collection import get_seg_collection
 from p7_flask_app.api.api0_constants import SEG_NAME, ErrorMsg, NAME, TYPE, Types, NEW_NAME
 from p7_flask_app.api.api1_models import TestData
 from p7_flask_app.api.api2_validators import validate_empty_str, get_test_data
@@ -10,7 +10,7 @@ def create_test_data(data_dict: dict) -> (int, dict):
     errors = dict()
     if validate_empty_str(data_dict, SEG_NAME):
         errors[SEG_NAME] = ErrorMsg.NOT_EMPTY
-    elif not seg_collection.is_seg_present(data_dict[SEG_NAME].upper()):
+    elif not get_seg_collection().is_seg_present(data_dict[SEG_NAME].upper()):
         errors[SEG_NAME] = ErrorMsg.SEG_LIBRARY
     errors = {**errors, **validate_new_name(data_dict, NAME)}
     if errors:

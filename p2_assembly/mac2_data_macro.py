@@ -59,17 +59,18 @@ class DataMacro(DataMacroImplementation):
 
     @classmethod
     def get_label_reference(cls, field_name) -> Optional[LabelReference]:
-        for _, data_macro in macros.items():
+        for _, data_macro in get_macros().items():
             data_macro.load()
             if data_macro.check(field_name):
                 return data_macro.lookup(field_name)
         return None
 
 
-class _DataMacroCollection:
+class DataMacroCollection:
     DEFAULT_MACROS = ("AASEQ", "SYSEQ", "SYSEQC", "EB0EB", "UATKW", "UXTEQ", "TRMEQ", "CUSTOM")
 
-    def filename_parser(self, filename):
+    @staticmethod
+    def filename_parser(filename):
         return filename[:-4].upper()
 
     def __init__(self):
@@ -98,13 +99,22 @@ class _DataMacroCollection:
             # self.indexed_labels = {**self.indexed_labels, **{l: lr.name for l, lr in data_macro.all_labels.items()}}
 
 
-_collection = _DataMacroCollection()
-macros = _collection.macros
-indexed_macros = _collection.indexed_labels
+_macros = DataMacroCollection().macros
+indexed_macros = dict()
+
+
+def get_macros():
+    return _macros
+
+
+def init_macros():
+    global _macros
+    _macros = DataMacroCollection().macros
 
 
 def get_global_ref(global_name: str) -> Optional[LabelReference]:
     global_macros = ["GLOBAS", "GLOBYS", "GL0BS"]
+    macros = get_macros()
     for macro_name in global_macros:
         macros[macro_name].load()
     global_macro = next((macros[macro_name] for macro_name in global_macros if macros[macro_name].check(global_name)),

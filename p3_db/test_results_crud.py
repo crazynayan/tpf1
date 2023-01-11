@@ -3,7 +3,7 @@ from typing import List
 from flask import g
 from munch import Munch
 
-from p2_assembly.seg9_collection import seg_collection
+from p2_assembly.seg9_collection import get_seg_collection
 from p3_db.response import StandardResponse, RequestType, StandardGetResponse
 from p3_db.test_data import TestData
 from p3_db.test_result_model import TestResult
@@ -21,7 +21,7 @@ def create_test_result(test_data: TestData, body: dict):
     if not rsp.body.name:
         rsp.error_fields.name = "Name of the Test Result cannot be blank."
         rsp.error = True
-    if not seg_collection.is_seg_present(test_data.seg_name):
+    if not get_seg_collection().is_seg_present(test_data.seg_name):
         rsp.message = "The start seg of the test data does not exists. This test data cannot be executed."
         rsp.error = True
     if rsp.error:

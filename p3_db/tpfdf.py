@@ -1,7 +1,7 @@
 from typing import List, Dict, Union, Tuple, Optional
 
 from p1_utils.data_type import DataType
-from p2_assembly.mac2_data_macro import macros
+from p2_assembly.mac2_data_macro import get_macros
 from p3_db.stream import Stream
 
 
@@ -41,9 +41,9 @@ class Tpfdf:
         start_index = 0 if start == 0 else start - 1
         if not 0 <= start_index < len(ref):
             return list()
-        if ref_name not in macros:
+        if ref_name not in get_macros():
             return list()
-        symbol_table = macros[ref_name].all_labels
+        symbol_table = get_macros()[ref_name].all_labels
         return [index + start_index + 1 for index, lrec in enumerate(ref[start_index:]) if lrec["key"] == key and
                 all(eval(f"{lrec['data'][symbol_table[field_name].dsp: symbol_table[field_name].dsp + length]} {exp}")
                     for field_name, (exp, length) in other_keys.items())]
@@ -55,10 +55,10 @@ class Tpfdf:
     @staticmethod
     def add(data: Dict[str, bytearray], key: str, ref_name: str) -> None:
         ref = Tpfdf.get_ref(ref_name)
-        macros[ref_name].load()
+        get_macros()[ref_name].load()
         lrec = dict()
         lrec["key"] = key
-        input_data: bytearray = Stream(macros[ref_name]).to_bytes(data)
+        input_data: bytearray = Stream(get_macros()[ref_name]).to_bytes(data)
         if len(input_data) >= 3:
             input_data = input_data[3:]
         final_data = DataType("H", input=f"{len(input_data) + 3}").to_bytes()
@@ -70,7 +70,7 @@ class Tpfdf:
     @staticmethod
     def add_bytes(data: bytearray, key: str, ref_name: str) -> None:
         ref = Tpfdf.get_ref(ref_name)
-        macros[ref_name].load()
+        get_macros()[ref_name].load()
         lrec = dict()
         lrec["key"] = key
         lrec["data"] = data
