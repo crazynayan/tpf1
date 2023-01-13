@@ -74,8 +74,9 @@ class State:
             self.vm.set_frame(self.seg.data.literal, literal)
             self.loaded_seg[seg_name] = (self.seg, self.regs.R8)
 
-    def init_debug(self, seg_list: List[str]) -> None:
-        self.trace_list.seg_list = [seg_name for seg_name in seg_list]
+    def init_debug(self, test_data: TestData) -> None:
+        if test_data.output.debug:
+            self.trace_list.seg_list = [seg_name for seg_name in test_data.output.debug]
         return
 
     @staticmethod
@@ -143,6 +144,7 @@ class State:
         startup_error: str = startup_seg.error_line or startup_seg.error_constant
         for test_data_variant in test_data.yield_variation():
             self.init_run(seg_name)
+            self.init_debug(test_data_variant)
             if test_data.startup_script and not startup_error:
                 self.seg = startup_seg
                 self._init_seg(startup_seg.seg_name)
@@ -275,8 +277,6 @@ class State:
     def _set_from_test_data(self, test_data: TestData) -> None:
         self.errors = set(test_data.errors)
         self.stop_segments = test_data.stop_segments
-        if test_data.output.debug:
-            self.init_debug(test_data.output.debug)
         if test_data.partition:
             self.set_partition(test_data.partition)
         for core in test_data.cores:

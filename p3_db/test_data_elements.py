@@ -6,6 +6,7 @@ import p3_db.pnr as db_pnr
 from config import config
 from p1_utils.data_type import Register
 from p2_assembly.mac2_data_macro import get_macros
+from p2_assembly.seg6_segment import Segment
 from p2_assembly.seg9_collection import get_seg_collection
 
 
@@ -220,6 +221,8 @@ class Output(FirestoreDocument):
         if "traces" not in debug or not debug["traces"] or not isinstance(debug["traces"], list):
             return list()
         for seg in debug["traces"]:
+            if seg.upper() == Segment.STARTUP:
+                continue
             if not get_seg_collection().is_seg_present(seg.upper()):
                 return list()
         for seg in debug["traces"]:
