@@ -1,6 +1,7 @@
 import os
 from typing import List
 
+from p1_utils.domain import get_bucket, get_domain_folder
 from p7_flask_app.segment import get_seg_lst, reset_seg_assembly
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "google-cloud-tokyo.json"
@@ -46,7 +47,7 @@ def from_pars(pars: int):
 
 
 def reset_and_create_lxp(blob_name: str):
-    seg = reset_seg_assembly(blob_name)
+    seg = reset_seg_assembly(blob_name, config.LST)
     if not seg:
         print("Reset fail")
         return
@@ -62,7 +63,7 @@ def reset_and_create_lxp(blob_name: str):
 
 def init_asm_seg(filename: str):
     seg_name: str = filename[:4].upper()
-    file_path: str = os.path.join(config.ASM_FOLDER_NAME, filename)
+    file_path: str = os.path.join(get_domain_folder(config.ASM), filename)
     segment: Segment = get_segment(seg_name, file_path, config.ASM, config.LOCAL)
     seg: SegLst = get_seg_lst(segment)  # Assemble the segment and create LstCmd
     SegLst.objects.filter_by(seg_name=seg_name).delete()
@@ -70,8 +71,9 @@ def init_asm_seg(filename: str):
     return seg
 
 
+
 def migrate_to_lst(seg_name: str):
-    source_path = os.path.join(config.ASM_FOLDER_NAME, f"{seg_name}.asm")
+    source_path = os.path.join(get_domain_folder(config.ASM), f"{seg_name}.asm")
     target_path = os.path.join("tmp", f"{seg_name}.asm")
     if os.path.isfile(source_path):
         if not os.path.isfile(target_path):
@@ -89,7 +91,7 @@ def migrate_to_lst(seg_name: str):
         print(f"Listing of {seg_name} not found in Downloads directory.")
         return
     client = Client()
-    blob = client.bucket(config.BUCKET).blob(filename)
+    blob = client.bucket(get_bucket()).blob(filename)
     blob.upload_from_filename(source_path)
     client.close()
     print(f"{filename} uploaded to Google Cloud Storage.")

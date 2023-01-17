@@ -14,14 +14,23 @@ def get_domain():
 
 
 def get_domain_folder(sub_folder_name: str) -> str:
-    return os.path.join(config.SOURCES.ROOT, get_domain(), sub_folder_name)
+    return os.path.join(config.SOURCES_ROOT, get_domain(), sub_folder_name)
 
 
 def get_base_folder(sub_folder_name: str) -> str:
-    return os.path.join(config.SOURCES.ROOT, config.DOMAINS.BASE, sub_folder_name)
+    return os.path.join(config.SOURCES_ROOT, config.DOMAINS.BASE, sub_folder_name)
 
 
 def read_folder(folder_name: str, extensions: set, filename_parser: Callable) -> List[Tuple[str, str]]:
     # Returns a list of seg_name and filename
     return [(filename_parser(filename), os.path.join(folder_name, filename)) for filename in os.listdir(folder_name)
             if len(filename) >= 6 and filename[-4:].lower() in extensions]
+
+
+def get_bucket() -> str:
+    domain = get_domain()
+    if domain == config.DOMAINS.SABRE:
+        return config.BUCKETS.SABRE
+    elif domain == config.DOMAINS.SML:
+        return config.BUCKETS.SML
+    return config.BUCKETS.GENERAL

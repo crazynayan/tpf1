@@ -9,6 +9,7 @@ import google.api_core.exceptions
 from firestore_ci import FirestoreDocument
 
 from config import config
+from p1_utils.domain import get_bucket, get_domain_folder
 from p1_utils.file_line import Line, File
 from p2_assembly.seg7_listing_line import ListingLine, create_listing_lines
 
@@ -198,10 +199,25 @@ def create_lxp(seg_name: str) -> str:
     lst_cmds: List[LstCmd] = LstCmd.objects.filter_by(seg_name=seg_name.upper()).order_by("stmt").get()
     if not lst_cmds:
         return str()
-    filename = f"{config.LXP_FOLDER_NAME}/{seg_name.lower()}.{config.LXP}"
-    with open(filename, "wb") as file:
+    filename = f"{seg_name.lower()}.{config.LXP}"
+    file_path = os.path.join(get_domain_folder(config.LXP), filename)
+    with open(file_path, "wb") as file:
         pickle.dump(lst_cmds, file)
-    return filename
+    return file_path
+
+
+def download_from_cloud(blob_name: str, filename: str) -> bool:
+    # noinspection PyPackageRequirements
+    from google.cloud.storage import Client
+    client = Client()
+    blob = client.bucket(get_bucket()).blob(blob_name)
+    try:
+        blob.download_to_filename(filename)
+    except google.api_core.exceptions.NotFound:
+        client.close()
+        return False
+    client.close()
+    return True
 
 
 def get_or_create_lst_cmds(seg_name: str, filename: str, blob_name: str) -> List[LstCmd]:
@@ -213,16 +229,8 @@ def get_or_create_lst_cmds(seg_name: str, filename: str, blob_name: str) -> List
         return lst_cmds
     # Ensure file is present for cloud objects
     if blob_name and not os.path.exists(filename):
-        # noinspection PyPackageRequirements
-        from google.cloud.storage import Client
-        client = Client()
-        blob = client.bucket(config.BUCKET).blob(blob_name)
-        try:
-            blob.download_to_filename(filename)
-        except google.api_core.exceptions.NotFound:
-            client.close()
+        if not download_from_cloud(blob_name, filename):
             return list()
-        client.close()
     lines: List[str] = File.open_file(filename)
     listing_commands: List[LstCmd] = create_listing_commands(seg_name, lines)
     LstCmd.objects.create_all(LstCmd.objects.to_dicts(listing_commands))

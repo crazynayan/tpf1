@@ -27,23 +27,21 @@ class Config:
     DOWNLOAD_PATH = os.path.join(os.path.abspath(os.sep), "tmp")
     ROOT_DIR: str = os.path.dirname(os.path.abspath(__file__))
     BUCKET = "tpf-listings"
+    BUCKETS = SimpleNamespace()
+    BUCKETS.GENERAL = "tpf-general"
+    BUCKETS.SABRE = "tpf-listings"
+    BUCKETS.SML = "tpf-sml"
     DOMAINS = SimpleNamespace()
     DOMAINS.GENERAL = "general"
     DOMAINS.BASE = "base"
     DOMAINS.SABRE = "sabre"
+    DOMAINS.SML = "sml"
     DOMAIN = os.environ.get("DOMAIN") or DOMAINS.GENERAL
-    SOURCES = SimpleNamespace()
-    SOURCES.MACRO = "macro"
-    SOURCES.ASM = "asm"
-    SOURCES.LST = "lst"
-    SOURCES.LXP = "lxp"
-    SOURCES.ROOT = "p0_source"
-    EXTENSIONS = SimpleNamespace()
-    EXTENSIONS.MACRO = {".mac", ".txt"}
+    MAC_FOLDER = "macro"
+    SOURCES_ROOT = "p0_source"
     ASM_EXT = {".asm", ".txt"}
-    ASM_FOLDER_NAME = os.path.join("p0_source", ASM)
     LXP_EXT = {".lxp"}
-    LXP_FOLDER_NAME = os.path.join("p0_source", LXP)
+    MAC_EXT = {".mac", ".txt"}
 
     # Used by utils
     REG_INVALID: str = "??"

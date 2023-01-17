@@ -82,6 +82,10 @@ class ConditionMaskError(AssemblyError):
     pass
 
 
+class AssemblyFileNotFoundError(AssemblyError):
+    pass
+
+
 class BaseAddressError(TPFServerMemoryError):
     pass
 

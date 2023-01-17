@@ -6,7 +6,7 @@ from firestore_ci import FirestoreDocument
 from google.cloud.storage import Client
 
 from config import config
-from p1_utils.domain import read_folder, get_domain_folder, get_base_folder, get_domain
+from p1_utils.domain import read_folder, get_domain_folder, get_base_folder, get_domain, get_bucket
 from p2_assembly.seg6_segment import Segment
 
 
@@ -44,7 +44,7 @@ SegLst.init("segments")
 def read_cloud() -> List[Tuple[str, str]]:
     # Returns a list of blob_name and filename
     client = Client()
-    blobs = client.list_blobs(config.BUCKET)
+    blobs = client.list_blobs(get_bucket())
     blob_list = [(blob.name, os.path.join(config.DOWNLOAD_PATH, blob.name)) for blob in blobs]
     client.close()
     return blob_list
@@ -72,10 +72,10 @@ class SegmentCollection:
         if config.CI_CLOUD_STORAGE:
             self.init_seg_from_db()
         else:
-            self.init_seg_from_folder(get_domain_folder(config.SOURCES.LXP), config.LXP_EXT, config.LST)
-            self.init_seg_from_folder(get_base_folder(config.SOURCES.LXP), config.LXP_EXT, config.LST)
-            self.init_seg_from_folder(get_domain_folder(config.SOURCES.ASM), config.ASM_EXT, config.ASM)
-            self.init_seg_from_folder(get_base_folder(config.SOURCES.ASM), config.ASM_EXT, config.ASM)
+            self.init_seg_from_folder(get_domain_folder(config.LXP), config.LXP_EXT, config.LST)
+            self.init_seg_from_folder(get_base_folder(config.LXP), config.LXP_EXT, config.LST)
+            self.init_seg_from_folder(get_domain_folder(config.ASM), config.ASM_EXT, config.ASM)
+            self.init_seg_from_folder(get_base_folder(config.ASM), config.ASM_EXT, config.ASM)
 
     @staticmethod
     def filename_parser(filename: str):
@@ -85,7 +85,7 @@ class SegmentCollection:
         for seg_name, filename in read_folder(folder_name, extensions, self.filename_parser):
             if seg_name in self.segments:
                 continue
-            self.segments[seg_name]: Segment = get_segment(seg_name, filename, file_type, config.LOCAL)
+            self.segments[seg_name]: Segment = get_segment(seg_name, filename, file_type=file_type, source=config.LOCAL)
         return
 
     def init_seg_from_db(self):
@@ -101,10 +101,11 @@ class SegmentCollection:
         self.segments[seg.seg_name]: Segment = get_segment(seg.seg_name, seg.filename, seg.file_type, seg.source,
                                                            seg.blob_name)
 
-    def init_from_cloud(self, blob_name: str) -> str:
+    def init_from_cloud(self, blob_name: str, file_type) -> str:
         seg_name = blob_name[:4].upper()
         filename = os.path.join(config.DOWNLOAD_PATH, blob_name)
-        self.segments[seg_name] = get_segment(seg_name, filename, config.LST, config.CLOUD, blob_name)
+        self.segments[seg_name] = get_segment(seg_name, filename, source=config.CLOUD, file_type=file_type,
+                                              blob_name=blob_name)
         return seg_name
 
     def from_asm_to_lst(self, seg_name, blob_name) -> Optional[Segment]:
@@ -113,7 +114,8 @@ class SegmentCollection:
         if not asm_seg:
             return None
         filename = os.path.join(config.DOWNLOAD_PATH, blob_name)
-        self.segments[seg_key] = get_segment(seg_key, filename, config.LST, config.CLOUD, blob_name)
+        self.segments[seg_key] = get_segment(seg_key, filename, source=config.CLOUD, file_type=config.LST,
+                                             blob_name=blob_name)
         return self.segments[seg_key]
 
     def is_seg_present(self, seg_name: str) -> bool:

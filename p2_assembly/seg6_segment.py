@@ -1,14 +1,16 @@
+import os.path
 import re
 from typing import Optional, List
 
 from config import config, Config
 from p1_utils.data_type import DataType
-from p1_utils.errors import NotFoundInSymbolTableError, AssemblyError
+from p1_utils.errors import NotFoundInSymbolTableError, AssemblyError, AssemblyFileNotFoundError
 from p1_utils.file_line import Line, File, get_lines_from_data_stream
 from p2_assembly.mac2_data_macro import get_macros
 from p2_assembly.seg2_ins_operand import Label
 from p2_assembly.seg5_exec_macro import RealtimeMacroImplementation
-from p2_assembly.seg8_listing import LstCmd, get_lines_from_listing_commands, get_or_create_lst_cmds
+from p2_assembly.seg8_listing import LstCmd, get_lines_from_listing_commands, get_or_create_lst_cmds, \
+    download_from_cloud
 
 
 class Segment(RealtimeMacroImplementation):
@@ -61,6 +63,8 @@ class Segment(RealtimeMacroImplementation):
             self._assemble_instructions(lines)
         except AssemblyError as e:
             print(e)  # This is required to see which line has assembly error
+            if not self.error_line:
+                self.error_line = str(e)
             self.nodes = dict()
             if self.file_type == config.LST:
                 LstCmd.objects.filter_by(seg_name=self.seg_name).delete(workers=100)
@@ -69,9 +73,16 @@ class Segment(RealtimeMacroImplementation):
     def _get_asm_lines(self) -> List[Line]:
         if self.data_stream:
             lines = get_lines_from_data_stream(self.data_stream)
-        else:
-            file = File(self.file_name)
-            lines = Line.from_file(file.lines)
+            return lines
+        if not os.path.exists(self.file_name):
+            if self.source != config.CLOUD:
+                raise AssemblyFileNotFoundError("File not found on local. Contact Administrator.")
+            if not self.blob_name:
+                raise AssemblyFileNotFoundError("Blob name not initialized for cloud file.")
+            if not download_from_cloud(self.blob_name, self.file_name):
+                raise AssemblyFileNotFoundError("Unable to download the file from cloud.")
+        file = File(self.file_name)
+        lines = Line.from_file(file.lines)
         return lines
 
     def _assemble_asm(self, lines: List[Line]) -> None:

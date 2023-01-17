@@ -6,6 +6,7 @@ from flask import Response, jsonify, request, g
 from google.cloud.storage import Client
 
 from config import config
+from p1_utils.domain import get_bucket
 from p2_assembly.mac0_generic import LabelReference
 from p2_assembly.mac2_data_macro import get_macros
 from p2_assembly.seg9_collection import get_seg_collection, SegLst, get_seg_lst_for_domain
@@ -510,27 +511,30 @@ def segment_upload() -> Response:
         return close_jsonify(response)
     blob_name = blob_name.lower()
     client = Client()
-    blob = client.bucket(config.BUCKET).blob(blob_name)
+    blob = client.bucket(get_bucket()).blob(blob_name)
     if not blob.exists():
         response["message"] = "File does NOT exists in cloud storage."
         return close_jsonify(response, client)
-    if blob_name[-4:] != ".lst":
-        response["message"] = "Filenames should always end with lst."
+    valid_extensions = {f".{config.LST}", f".{config.ASM}"}
+    blob_extension = blob_name[-4:]
+    if blob_extension not in valid_extensions:
+        response["message"] = "Filenames should have an extension of lst or asm."
         blob.delete()
         return close_jsonify(response, client)
     seg_name = blob_name[:4].upper()
+    file_type = blob_extension[-3:]
     if get_seg_collection().is_seg_local(seg_name):
         response["message"] = "Cannot upload segments which are present in local."
         blob.delete()
         return close_jsonify(response, client)
-    blobs = client.list_blobs(config.BUCKET)
+    blobs = client.list_blobs(get_bucket())
     duplicate_blobs = [blob for blob in blobs if blob.name != blob_name and blob.name[:4].upper() == seg_name]
     if duplicate_blobs:
         duplicate_names = ", ".join([blob.name for blob in duplicate_blobs])
         for blob in duplicate_blobs:
             blob.delete()
         response["warning"] = f"Earlier file with the same segment name ({duplicate_names}) deleted."
-    seg: SegLst = reset_seg_assembly(blob_name)
+    seg: SegLst = reset_seg_assembly(blob_name, file_type)
     if seg.assembly_error:
         response["message"] = f"Segment successfully added but assembly error on the instruction {seg.assembly_error}."
     else:

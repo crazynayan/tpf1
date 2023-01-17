@@ -78,10 +78,9 @@ class DataMacroCollection:
         self.indexed_labels: Dict[str, str] = dict()  # Only used in api v2. Init commented out to improve test exec.
         default_macros: Dict[str, LabelReference] = dict()
         # Load macros from folders
-        macro_filenames: List[Tuple[str, str]] = read_folder(get_domain_folder(config.SOURCES.MACRO),
-                                                             config.EXTENSIONS.MACRO, self.filename_parser)
-        macro_filenames += read_folder(get_base_folder(config.SOURCES.MACRO), config.EXTENSIONS.MACRO,
-                                       self.filename_parser)
+        macro_filenames: List[Tuple[str, str]] = read_folder(get_domain_folder(config.MAC_FOLDER),
+                                                             config.MAC_EXT, self.filename_parser)
+        macro_filenames += read_folder(get_base_folder(config.MAC_FOLDER), config.MAC_EXT, self.filename_parser)
         # Default Macros should be in the hierarchical order and required by all other macros.
         for macro_name in self.DEFAULT_MACROS:
             filename = next((filename for macro, filename in macro_filenames if macro == macro_name), None)
