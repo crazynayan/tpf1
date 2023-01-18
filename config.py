@@ -26,7 +26,6 @@ class Config:
     ASM, LST, LXP, LOCAL, CLOUD = "asm", "lst", "lxp", "local", "cloud"
     DOWNLOAD_PATH = os.path.join(os.path.abspath(os.sep), "tmp")
     ROOT_DIR: str = os.path.dirname(os.path.abspath(__file__))
-    BUCKET = "tpf-listings"
     BUCKETS = SimpleNamespace()
     BUCKETS.GENERAL = "tpf-general"
     BUCKETS.SABRE = "tpf-listings"

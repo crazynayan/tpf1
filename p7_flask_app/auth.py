@@ -40,6 +40,7 @@ def generate_token() -> Response:
         "initial": g.current_user.initial,
         "role": g.current_user.role,
         "token": g.current_user.token,
+        "domain": g.current_user.domain,
     }
     return jsonify(user_response)
 
