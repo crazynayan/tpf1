@@ -49,6 +49,13 @@ def get_data_type(input_string: str) -> str:
     raise AssemblyError("get_data_type -> Input string is not a data type.")
 
 
+def get_data_type_length(string: str) -> str:
+    try:
+        return DATA_TYPES[string]
+    except KeyError:
+        raise AssemblyError("get_data_type_length -> Input string is not a data type.")
+
+
 def get_index_after_parenthesis_or_digits(string: str, start_index: int) -> int:
     if start_index >= len(string):
         raise AssemblyError("get_index_after_parenthesis_or_digits -> Index is beyond the length of string.")

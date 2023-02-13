@@ -1,7 +1,7 @@
 from typing import Optional, List
 
-from p5_v3.token import Token, AssemblyError, is_data_type, get_data_type, \
-    get_index_after_parenthesis_or_digits, Operators
+from p5_v3.asm_token import Token, AssemblyError, is_data_type, get_data_type, \
+    get_index_after_parenthesis_or_digits, Operators, get_data_type_length
 
 
 class Expression:
@@ -47,6 +47,8 @@ class Expression:
                     self.tokens.append(Token(Operators.LOCATION_COUNTER))
                     continue
             self.tokens.append(Token(string[index]))
+        if in_symbol or in_digit:
+            self.tokens.append(Token(string[start_index:]))
         return
 
     def has_arithmetic_operator(self) -> bool:
@@ -113,6 +115,14 @@ class SelfDefinedTerm:
 
     def build_values(self, string: str):
         pass
+
+    @property
+    def duplication_factor_value(self) -> int:
+        return self.duplication_factor.evaluate() if self.duplication_factor else 1
+
+    @property
+    def length_value(self) -> int:
+        return self.length.evaluate() if self.length else get_data_type_length(self.data_type)
 
 
 def create_expression_for_duplication_factor_or_length(string: str) -> Expression:
