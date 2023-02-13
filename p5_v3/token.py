@@ -5,20 +5,31 @@ class AssemblyError(Exception):
     pass
 
 
-LOCATION_COUNTER = "\*"
-OPERATORS = SimpleNamespace()
-OPERATORS.ARITHMETIC = {"*", "+", "-", "/"}
-OPERATORS.OPENING_PARENTHESIS = "("
-OPERATORS.CLOSING_PARENTHESIS = ")"
-OPERATORS.PARENTHESIS = {OPERATORS.OPENING_PARENTHESIS, OPERATORS.CLOSING_PARENTHESIS}
-OPERATORS.QUOTE = "'"
-OPERATORS.ENCLOSURES = OPERATORS.PARENTHESIS.add(OPERATORS.QUOTE)
 REGISTERS = SimpleNamespace()
 REGISTERS.TO_VALUE = {"R0": 0, "R00": 0, "RAC": 0, "R1": 1, "R01": 1, "RG1": 1}
 REGISTERS.TO_SYMBOL = {"0": "R0", "1": "R1"}
 DATA_PREFIX = "'"
 DATA_TYPES = {"X": 1, "C": 1, "H": 2, "F": 4, "D": 8, "FD": 8, "B": 1, "P": 1, "Z": 1, "A": 4, "Y": 2, "AD": 8, "V": 4,
               "S": 2}
+
+
+class Operators:
+    LOCATION_COUNTER = "\*"
+    PLUS = "+"
+    MINUS = "-"
+    PRODUCT = "*"
+    DIVIDE = "/"
+    UNDERSCORE = "_"
+    DOLLAR = "$"
+    HASH = "#"
+    VALID_SYMBOLS = {UNDERSCORE, DOLLAR, HASH}
+    QUOTE = "'"
+    OPENING_PARENTHESIS = "("
+    CLOSING_PARENTHESIS = ")"
+    PARENTHESIS = {OPENING_PARENTHESIS, CLOSING_PARENTHESIS}
+    ENCLOSURES = PARENTHESIS.union({QUOTE})
+    ARITHMETIC = {PLUS, MINUS, PRODUCT, DIVIDE}
+    LENGTH_SYMBOL = "L"
 
 
 def is_data_type(input_string: str) -> bool:
@@ -41,7 +52,7 @@ def get_data_type(input_string: str) -> str:
 def get_index_after_parenthesis_or_digits(string: str, start_index: int) -> int:
     if start_index >= len(string):
         raise AssemblyError("get_index_after_parenthesis_or_digits -> Index is beyond the length of string.")
-    if string[start_index] == OPERATORS.OPENING_PARENTHESIS:
+    if string[start_index] == Operators.OPENING_PARENTHESIS:
         return get_index_of_closing_parenthesis(string, start_index) + 1
     if string[start_index].isdigit():
         return get_index_of_last_digit(string, start_index) + 1
@@ -49,14 +60,14 @@ def get_index_after_parenthesis_or_digits(string: str, start_index: int) -> int:
 
 
 def get_index_of_closing_parenthesis(string: str, start_index: int) -> int:
-    if string[start_index] != OPERATORS.OPENING_PARENTHESIS:
+    if string[start_index] != Operators.OPENING_PARENTHESIS:
         raise AssemblyError("get_index_of_closing_parenthesis -> Start index not at opening parenthesis.")
     nesting_level = 0
     for index in range(start_index, len(string) - start_index):
-        if string[index] == OPERATORS.OPENING_PARENTHESIS:
+        if string[index] == Operators.OPENING_PARENTHESIS:
             nesting_level += 1
             continue
-        if string[index] == OPERATORS.CLOSING_PARENTHESIS:
+        if string[index] == Operators.CLOSING_PARENTHESIS:
             nesting_level -= 1
             if nesting_level == 0:
                 return index
@@ -146,10 +157,10 @@ class Token:
         pass
 
     def is_location_counter(self):
-        return self._string == LOCATION_COUNTER
+        return self._string == Operators.LOCATION_COUNTER
 
     def is_arithmetic_operator(self):
-        return self._string in OPERATORS.ARITHMETIC
+        return self._string in Operators.ARITHMETIC
 
     def is_parenthesis(self):
-        return self._string in OPERATORS.PARENTHESIS
+        return self._string in Operators.PARENTHESIS
