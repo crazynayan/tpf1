@@ -6,9 +6,48 @@ from p5_v3.token import Token, AssemblyError, is_data_type, get_data_type, \
 
 class Expression:
 
-    def __init__(self):
+    def __init__(self, string):
         self.tokens: List[Token] = list()
         self.self_defined_term: Optional[SelfDefinedTerm] = None
+        self.build(string)
+
+    def build(self, input_string: str):
+        string: str = input_string.strip().upper()
+        if not string:
+            raise AssemblyError("create_expression -> Input string is empty.")
+        start_index: int = 0
+        in_symbol: bool = False
+        in_digit: bool = False
+        for index in range(len(string)):
+            if (string[index].isalpha() or string[index] in Operators.VALID_SYMBOLS) and not in_symbol:
+                start_index = index
+                in_symbol = True
+                continue
+            if in_symbol:
+                if string[index].isalnum():
+                    continue
+                if string[index] in Operators.VALID_SYMBOLS:
+                    continue
+                if string[index] == Operators.QUOTE and index > 0 and string[index - 1] == Operators.LENGTH_SYMBOL:
+                    continue
+            if string[index].isdigit() and not in_digit:
+                start_index = index
+                in_digit = True
+                continue
+            if in_digit and string[index].isdigit():
+                continue
+            if string[index].isalnum() or string[index] in Operators.VALID_SYMBOLS:
+                raise AssemblyError("create_expression -> Invalid seperator.")
+            if index > start_index:
+                self.tokens.append(Token(string[start_index:index]))
+                in_symbol = False
+                in_digit = False
+            if string[index] == Operators.PRODUCT:
+                if index == 0 or string[index - 1] in Operators.ARITHMETIC:
+                    self.tokens.append(Token(Operators.LOCATION_COUNTER))
+                    continue
+            self.tokens.append(Token(string[index]))
+        return
 
     def has_arithmetic_operator(self) -> bool:
         return any(token for token in self.tokens if token.is_arithmetic_operator())
@@ -34,14 +73,16 @@ class Expression:
 
 class SelfDefinedTerm:
 
-    def __init__(self):
+    def __init__(self, string):
         self.duplication_factor: Optional[Expression] = None
         self.data_type: str = str()
         self.length: Optional[Expression] = None
         self.opening_enclosure: Optional[Token] = None
         self.values: List[Expression] = list()
+        self.build(string)
 
-    def build(self, string: str):
+    def build(self, input_string: str):
+        string = input_string.strip().upper()
         if not string:
             raise AssemblyError("SelfDefinedTerm -> Input string cannot be empty.")
         data_type_index = get_index_after_parenthesis_or_digits(string, 0)
@@ -51,6 +92,8 @@ class SelfDefinedTerm:
             self.build_duplication_factor(string[:data_type_index])
         self.data_type = get_data_type(string[data_type_index])
         length_index = data_type_index + len(self.data_type)
+        if length_index >= len(string):
+            return
         if string[length_index] == "L":
             value_index = get_index_after_parenthesis_or_digits(string, length_index + 1)
             if value_index == 0:
@@ -72,49 +115,9 @@ class SelfDefinedTerm:
         pass
 
 
-def create_expression(input_string: str) -> Expression:
-    string: str = input_string.upper().strip()
-    if not string:
-        raise AssemblyError("create_expression -> Input string is empty.")
-    expression: Expression = Expression()
-    start_index: int = 0
-    in_symbol: bool = False
-    in_digit: bool = False
-    for index in range(len(string)):
-        if (string[index].isalpha() or string[index] in Operators.VALID_SYMBOLS) and not in_symbol:
-            start_index = index
-            in_symbol = True
-            continue
-        if in_symbol:
-            if string[index].isalnum():
-                continue
-            if string[index] in Operators.VALID_SYMBOLS:
-                continue
-            if string[index] == Operators.QUOTE and index > 0 and string[index - 1] == Operators.LENGTH_SYMBOL:
-                continue
-        if string[index].isdigit() and not in_digit:
-            start_index = index
-            in_digit = True
-            continue
-        if in_digit and string[index].isdigit():
-            continue
-        if string[index].isalnum() or string[index] in Operators.VALID_SYMBOLS:
-            raise AssemblyError("create_expression -> Invalid seperator.")
-        if index > start_index:
-            expression.tokens.append(Token(string[start_index:index]))
-            in_symbol = False
-            in_digit = False
-        if string[index] == Operators.PRODUCT:
-            if index == 0 or string[index - 1] in Operators.ARITHMETIC:
-                expression.tokens.append(Token(Operators.LOCATION_COUNTER))
-                continue
-        expression.tokens.append(Token(string[index]))
-    return expression
-
-
 def create_expression_for_duplication_factor_or_length(string: str) -> Expression:
     if string.isdigit():
-        return create_expression(string)
+        return Expression(string)
     if string[0] == Operators.OPENING_PARENTHESIS and string[:-1] == Operators.CLOSING_PARENTHESIS:
-        return create_expression(string[1:-1])
+        return Expression(string[1:-1])
     raise AssemblyError("create_expression_for_duplication_factor_or_length -> Invalid string.")
