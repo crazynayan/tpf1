@@ -26,6 +26,18 @@ class SelfDefinedTermTest(unittest.TestCase):
         self.assertEqual("C", term.data_type)
         self.assertEqual(10, term.length_value)
 
+    def test_duplication_factor_and_length_as_expression(self):
+        term = SelfDefinedTerm("(4*(3-1))FL(6/3-1)")
+        self.assertEqual(8, term.duplication_factor_value)
+        self.assertEqual("F", term.data_type)
+        self.assertEqual(1, term.length_value)
+
+    def test_negative_one(self):
+        term = SelfDefinedTerm("(-1+3)FD")
+        self.assertEqual(2, term.duplication_factor_value)
+        self.assertEqual("FD", term.data_type)
+        self.assertEqual(8, term.length_value)
+
 
 if __name__ == '__main__':
     unittest.main()

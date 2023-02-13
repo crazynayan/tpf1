@@ -11,6 +11,9 @@ class Expression:
         self.self_defined_term: Optional[SelfDefinedTerm] = None
         self.build(string)
 
+    def __repr__(self):
+        return " ".join([str(token) for token in self.tokens])
+
     def build(self, input_string: str):
         string: str = input_string.strip().upper()
         if not string:
@@ -38,10 +41,10 @@ class Expression:
                 continue
             if string[index].isalnum() or string[index] in Operators.VALID_SYMBOLS:
                 raise AssemblyError("create_expression -> Invalid seperator.")
-            if index > start_index:
+            if index > start_index and (in_symbol or in_digit):
                 self.tokens.append(Token(string[start_index:index]))
-                in_symbol = False
-                in_digit = False
+            in_symbol = False
+            in_digit = False
             if string[index] == Operators.PRODUCT:
                 if index == 0 or string[index - 1] in Operators.ARITHMETIC:
                     self.tokens.append(Token(Operators.LOCATION_COUNTER))
@@ -92,7 +95,7 @@ class SelfDefinedTerm:
             raise AssemblyError("SelfDefinedTerm -> The string does not have a valid data type.")
         if data_type_index > 0:
             self.build_duplication_factor(string[:data_type_index])
-        self.data_type = get_data_type(string[data_type_index])
+        self.data_type = get_data_type(string[data_type_index:])
         length_index = data_type_index + len(self.data_type)
         if length_index >= len(string):
             return
@@ -128,6 +131,6 @@ class SelfDefinedTerm:
 def create_expression_for_duplication_factor_or_length(string: str) -> Expression:
     if string.isdigit():
         return Expression(string)
-    if string[0] == Operators.OPENING_PARENTHESIS and string[:-1] == Operators.CLOSING_PARENTHESIS:
+    if string[0] == Operators.OPENING_PARENTHESIS and string[-1] == Operators.CLOSING_PARENTHESIS:
         return Expression(string[1:-1])
     raise AssemblyError("create_expression_for_duplication_factor_or_length -> Invalid string.")

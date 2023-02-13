@@ -70,7 +70,7 @@ def get_index_of_closing_parenthesis(string: str, start_index: int) -> int:
     if string[start_index] != Operators.OPENING_PARENTHESIS:
         raise AssemblyError("get_index_of_closing_parenthesis -> Start index not at opening parenthesis.")
     nesting_level = 0
-    for index in range(start_index, len(string) - start_index):
+    for index in range(start_index, len(string)):
         if string[index] == Operators.OPENING_PARENTHESIS:
             nesting_level += 1
             continue
