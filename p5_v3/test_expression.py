@@ -1,5 +1,6 @@
 import unittest
 
+from p5_v3.asm_token import AssemblyError
 from p5_v3.expression import SelfDefinedTerm
 
 
@@ -27,7 +28,7 @@ class SelfDefinedTermTest(unittest.TestCase):
         self.assertEqual(10, term.length_value)
 
     def test_duplication_factor_and_length_as_expression(self):
-        term = SelfDefinedTerm("(4*(3-1))FL(6/3-1)")
+        term = SelfDefinedTerm("(4*(3-1))fl(6/3-1)")
         self.assertEqual(8, term.duplication_factor_value)
         self.assertEqual("F", term.data_type)
         self.assertEqual(1, term.length_value)
@@ -38,6 +39,17 @@ class SelfDefinedTermTest(unittest.TestCase):
         self.assertEqual("FD", term.data_type)
         self.assertEqual(8, term.length_value)
 
+    def test_error_invalid_data_type(self):
+        self.assertRaises(AssemblyError, SelfDefinedTerm, "E")
+
+    def test_error_length_not_specified(self):
+        self.assertRaises(AssemblyError, SelfDefinedTerm, "FL")
+
+    def test_error_length_invalid(self):
+        self.assertRaises(AssemblyError, SelfDefinedTerm, "FL'1'")
+
+    def test_error_term_empty(self):
+        self.assertRaises(AssemblyError, SelfDefinedTerm, " ")
 
 if __name__ == '__main__':
     unittest.main()
