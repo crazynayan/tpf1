@@ -56,7 +56,7 @@ class Config:
     }
     CHAR_PADDING: int = 0x40
     NUMBER_PADDING: int = 0xF0
-    CVS_C2: Set[str] = {"Ch", "RC", "VE", "==", "**", "ng", "/u", "1."}
+    CVS_C2: Set[str] = {"Ch", "RC", "VE", "==", "**"}  # , "ng", "/u", "1."}
     TRIM: Dict[str, int] = {"0": 7, " ": 1}
     COMMENT_C1: Set[str] = {"*", "."}
     DIRECTIVE: Set[str] = {"PUSH", "USING", "DSECT", "PGMID", "LTORG", "FINIS", "END", "ORG", "POP", "CSECT",
