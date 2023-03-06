@@ -2,6 +2,7 @@ import unittest
 
 from p5_v3.asm_token import AssemblyError
 from p5_v3.expression import SelfDefinedTerm
+from p5_v3.file import FilePreprocessor
 
 
 class SelfDefinedTermTest(unittest.TestCase):
@@ -50,6 +51,10 @@ class SelfDefinedTermTest(unittest.TestCase):
 
     def test_error_term_empty(self):
         self.assertRaises(AssemblyError, SelfDefinedTerm, " ")
+
+    def test_file_preprocessor(self):
+        preprocessor = FilePreprocessor("p0_source/sabre/macro/wa0aa.mac")
+        [print(line) for line in preprocessor.process()]
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,9 +1,6 @@
 from types import SimpleNamespace
 
-
-class AssemblyError(Exception):
-    pass
-
+from p5_v3.errors import AssemblyError
 
 REGISTERS = SimpleNamespace()
 REGISTERS.TO_VALUE = {"R0": 0, "R00": 0, "RAC": 0, "R1": 1, "R01": 1, "RG1": 1}
