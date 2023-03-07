@@ -17,13 +17,13 @@ class AssemblerLine:
         for index, char in enumerate(self.line[start_index:]):
             if char == self.SPACE:
                 return index
-        raise ParserError
+        raise ParserError("AssemblerLine -> Next space not found.")
 
     def get_next_non_space(self, start_index: int) -> int:
         for index, char in enumerate(self.line[start_index:]):
             if char != self.SPACE:
                 return index
-        raise ParserError
+        raise ParserError("AssemblerLine -> Next non space not found.")
 
     def is_label_present(self) -> bool:
         return self.line[self.LABEL_START] != self.SPACE

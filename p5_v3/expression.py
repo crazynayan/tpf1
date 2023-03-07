@@ -1,7 +1,7 @@
 from typing import Optional, List
 
 from p5_v3.asm_token import Token, AssemblyError, is_data_type, get_data_type, \
-    get_index_after_parenthesis_or_digits, Operators, get_data_type_length
+    get_index_after_parenthesis_or_digits, Operators, get_data_type_length, is_char_first_char_of_symbol, is_char_part_of_symbol
 
 
 class Expression:
@@ -21,35 +21,33 @@ class Expression:
         start_index: int = 0
         in_symbol: bool = False
         in_digit: bool = False
-        for index in range(len(string)):
-            if (string[index].isalpha() or string[index] in Operators.VALID_SYMBOLS) and not in_symbol:
+        for index, char in enumerate(string):
+            if is_char_first_char_of_symbol(char) and not in_symbol:
                 start_index = index
                 in_symbol = True
                 continue
             if in_symbol:
-                if string[index].isalnum():
+                if is_char_part_of_symbol(char):
                     continue
-                if string[index] in Operators.VALID_SYMBOLS:
+                if char == Operators.QUOTE and index > 0 and string[index - 1] == Operators.LENGTH_SYMBOL:
                     continue
-                if string[index] == Operators.QUOTE and index > 0 and string[index - 1] == Operators.LENGTH_SYMBOL:
-                    continue
-            if string[index].isdigit() and not in_digit:
+            if char.isdigit() and not in_digit:
                 start_index = index
                 in_digit = True
                 continue
-            if in_digit and string[index].isdigit():
+            if in_digit and char.isdigit():
                 continue
-            if string[index].isalnum() or string[index] in Operators.VALID_SYMBOLS:
+            if is_char_part_of_symbol(char):
                 raise AssemblyError("create_expression -> Invalid seperator.")
             if index > start_index and (in_symbol or in_digit):
                 self.tokens.append(Token(string[start_index:index]))
             in_symbol = False
             in_digit = False
-            if string[index] == Operators.PRODUCT:
+            if char == Operators.PRODUCT:
                 if index == 0 or string[index - 1] in Operators.ARITHMETIC or string[index - 1] == Operators.OPENING_PARENTHESIS:
                     self.tokens.append(Token(Operators.LOCATION_COUNTER))
                     continue
-            self.tokens.append(Token(string[index]))
+            self.tokens.append(Token(char))
         if in_symbol or in_digit:
             self.tokens.append(Token(string[start_index:]))
         return
@@ -83,7 +81,9 @@ class SelfDefinedTerm:
         self.data_type: str = str()
         self.length: Optional[Expression] = None
         self.opening_enclosure: Optional[Token] = None
-        self.values: Optional[Expression] = None
+        self.values: List[Expression] = list()
+        self.value: Optional[Token] = None
+        self.closing_enclosure: Optional[Token] = None
         self.build(string)
 
     def build(self, input_string: str):
@@ -119,18 +119,17 @@ class SelfDefinedTerm:
     def build_values(self, string: str):
         if string[0] == Operators.QUOTE:
             if string[-1] != Operators.QUOTE or len(string) <= 2:
-                raise AssemblyError
-            self.values = Expression(Operators.QUOTE)
-            self.values.tokens.append(Token(string[1:-1], data=True))
-            self.values.tokens.append(Token(Operators.QUOTE))
+                raise AssemblyError("SelfDefinedTerm -> Values within quotes should have data and end with quote.")
+            self.opening_enclosure = self.closing_enclosure = Token(Operators.QUOTE)
+            self.value = Token(string[1:-1], data=True)
             return
         if string[0] != Operators.OPENING_PARENTHESIS:
-            raise AssemblyError
+            raise AssemblyError("SelfDefinedTerm -> Values if present should start with parenthesis or quotes.")
         if string[-1] != Operators.CLOSING_PARENTHESIS or len(string) <= 2:
-            raise AssemblyError
-        self.values = Expression(string[1:-1])
-        self.values.tokens.insert(0, Token(Operators.OPENING_PARENTHESIS))
-        self.values.tokens.append(Token(Operators.CLOSING_PARENTHESIS))
+            raise AssemblyError("SelfDefinedTerm -> Values within parenthesis should have data and end with parenthesis.")
+        self.values = [Expression(value) for value in string[1:-1].split(Operators.COMMA)]
+        self.opening_enclosure = Token(Operators.OPENING_PARENTHESIS)
+        self.closing_enclosure = Token(Operators.CLOSING_PARENTHESIS)
 
     @property
     def duplication_factor_value(self) -> int:

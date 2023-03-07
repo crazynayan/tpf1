@@ -40,14 +40,14 @@ class SelfDefinedTermTest(unittest.TestCase):
         self.assertEqual(8, term.length_value)
 
     def test_location_counter(self):
-        term = SelfDefinedTerm("A(*+2,@ABC)")
-        self.assertTrue(term.values.tokens[0].is_parenthesis())
-        self.assertTrue(term.values.tokens[1].is_location_counter())
-        self.assertTrue(term.values.tokens[2].is_arithmetic_operator())
-        self.assertTrue(term.values.tokens[3].is_decimal())
-        self.assertTrue(term.values.tokens[4].is_comma())
-        self.assertTrue(term.values.tokens[5].is_symbol())
-        print("".join([token.evaluate_to_str(symbol_table="abc", location_counter=23) for token in term.values.tokens[:4]]))
+        term = SelfDefinedTerm("A(*+2-R1+#EQ-L'J,@ABC)")
+        self.assertTrue(term.opening_enclosure.is_parenthesis())
+        self.assertTrue(term.closing_enclosure.is_parenthesis())
+        self.assertTrue(term.values[0].tokens[0].is_location_counter())
+        self.assertTrue(term.values[0].tokens[1].is_arithmetic_operator())
+        self.assertTrue(term.values[0].tokens[2].is_decimal())
+        self.assertTrue(term.values[1].tokens[0].is_symbol())
+        print("".join([token.evaluate_to_str(symbol_table="abc", location_counter=23) for token in term.values[0].tokens]))
 
     def test_error_invalid_data_type(self):
         self.assertRaises(AssemblyError, SelfDefinedTerm, "E")

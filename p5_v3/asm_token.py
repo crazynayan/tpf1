@@ -91,6 +91,14 @@ def get_index_of_last_digit(string: str, start_index: int) -> int:
     return len(string) - 1
 
 
+def is_char_first_char_of_symbol(char: str) -> bool:
+    return char.isalpha() or char in Operators.VALID_SYMBOLS
+
+
+def is_char_part_of_symbol(char: str) -> bool:
+    return char.isalnum() or char in Operators.VALID_SYMBOLS
+
+
 class Token:
 
     def __init__(self, string: str, data: bool = False):
@@ -148,7 +156,7 @@ class Token:
     def is_symbol(self) -> bool:
         if self.is_register():
             return False
-        return self._string[0].isalpha() or self._string[0] in Operators.VALID_SYMBOLS
+        return is_char_first_char_of_symbol(self._string[0])
 
     def get_value_from_symbol(self, symbol_table) -> int:
         return 0
