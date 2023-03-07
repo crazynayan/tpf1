@@ -19,8 +19,11 @@ class Operators:
     UNDERSCORE = "_"
     DOLLAR = "$"
     HASH = "#"
-    VALID_SYMBOLS = {UNDERSCORE, DOLLAR, HASH}
+    AT = "@"
+    AMPERSAND = "&"
+    VALID_SYMBOLS = {AT, DOLLAR, HASH, AMPERSAND, UNDERSCORE}
     QUOTE = "'"
+    COMMA = ","
     OPENING_PARENTHESIS = "("
     CLOSING_PARENTHESIS = ")"
     PARENTHESIS = {OPENING_PARENTHESIS, CLOSING_PARENTHESIS}
@@ -90,12 +93,14 @@ def get_index_of_last_digit(string: str, start_index: int) -> int:
 
 class Token:
 
-    def __init__(self, string: str):
+    def __init__(self, string: str, data: bool = False):
         if not string:
             raise AssemblyError("Token -> token cannot be empty.")
         if string[0] == DATA_PREFIX and len(string) == 1:
             raise AssemblyError("Token -> token cannot be empty data.")
         self._string: str = string
+        if data:
+            self._string = f"{DATA_PREFIX}string"
 
     def __repr__(self) -> str:
         return self._string
@@ -143,10 +148,10 @@ class Token:
     def is_symbol(self) -> bool:
         if self.is_register():
             return False
-        return self._string[0].isalpha()
+        return self._string[0].isalpha() or self._string[0] in Operators.VALID_SYMBOLS
 
     def get_value_from_symbol(self, symbol_table) -> int:
-        pass
+        return 0
 
     def is_data(self) -> bool:
         return self._string[0] == DATA_PREFIX
@@ -168,3 +173,9 @@ class Token:
 
     def is_parenthesis(self):
         return self._string in Operators.PARENTHESIS
+
+    def is_quote(self):
+        return self._string == Operators.QUOTE
+
+    def is_comma(self):
+        return self._string == Operators.COMMA

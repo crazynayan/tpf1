@@ -4,3 +4,7 @@ class AssemblyError(Exception):
 
 class SourceFileNotFound(AssemblyError):
     pass
+
+
+class ParserError(AssemblyError):
+    pass

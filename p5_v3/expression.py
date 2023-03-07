@@ -46,7 +46,7 @@ class Expression:
             in_symbol = False
             in_digit = False
             if string[index] == Operators.PRODUCT:
-                if index == 0 or string[index - 1] in Operators.ARITHMETIC:
+                if index == 0 or string[index - 1] in Operators.ARITHMETIC or string[index - 1] == Operators.OPENING_PARENTHESIS:
                     self.tokens.append(Token(Operators.LOCATION_COUNTER))
                     continue
             self.tokens.append(Token(string[index]))
@@ -83,7 +83,7 @@ class SelfDefinedTerm:
         self.data_type: str = str()
         self.length: Optional[Expression] = None
         self.opening_enclosure: Optional[Token] = None
-        self.values: List[Expression] = list()
+        self.values: Optional[Expression] = None
         self.build(string)
 
     def build(self, input_string: str):
@@ -117,7 +117,20 @@ class SelfDefinedTerm:
         self.length = create_expression_for_duplication_factor_or_length(string)
 
     def build_values(self, string: str):
-        pass
+        if string[0] == Operators.QUOTE:
+            if string[-1] != Operators.QUOTE or len(string) <= 2:
+                raise AssemblyError
+            self.values = Expression(Operators.QUOTE)
+            self.values.tokens.append(Token(string[1:-1], data=True))
+            self.values.tokens.append(Token(Operators.QUOTE))
+            return
+        if string[0] != Operators.OPENING_PARENTHESIS:
+            raise AssemblyError
+        if string[-1] != Operators.CLOSING_PARENTHESIS or len(string) <= 2:
+            raise AssemblyError
+        self.values = Expression(string[1:-1])
+        self.values.tokens.insert(0, Token(Operators.OPENING_PARENTHESIS))
+        self.values.tokens.append(Token(Operators.CLOSING_PARENTHESIS))
 
     @property
     def duplication_factor_value(self) -> int:

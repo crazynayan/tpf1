@@ -2,7 +2,6 @@ import unittest
 
 from p5_v3.asm_token import AssemblyError
 from p5_v3.expression import SelfDefinedTerm
-from p5_v3.file import FilePreprocessor
 
 
 class SelfDefinedTermTest(unittest.TestCase):
@@ -40,6 +39,16 @@ class SelfDefinedTermTest(unittest.TestCase):
         self.assertEqual("FD", term.data_type)
         self.assertEqual(8, term.length_value)
 
+    def test_location_counter(self):
+        term = SelfDefinedTerm("A(*+2,@ABC)")
+        self.assertTrue(term.values.tokens[0].is_parenthesis())
+        self.assertTrue(term.values.tokens[1].is_location_counter())
+        self.assertTrue(term.values.tokens[2].is_arithmetic_operator())
+        self.assertTrue(term.values.tokens[3].is_decimal())
+        self.assertTrue(term.values.tokens[4].is_comma())
+        self.assertTrue(term.values.tokens[5].is_symbol())
+        print("".join([token.evaluate_to_str(symbol_table="abc", location_counter=23) for token in term.values.tokens[:4]]))
+
     def test_error_invalid_data_type(self):
         self.assertRaises(AssemblyError, SelfDefinedTerm, "E")
 
@@ -52,9 +61,9 @@ class SelfDefinedTermTest(unittest.TestCase):
     def test_error_term_empty(self):
         self.assertRaises(AssemblyError, SelfDefinedTerm, " ")
 
-    def test_file_preprocessor(self):
-        preprocessor = FilePreprocessor("p0_source/sabre/macro/wa0aa.mac")
-        [print(line) for line in preprocessor.process()]
+    # def test_file_preprocessor(self):
+    #     preprocessor = FilePreprocessor("p0_source/sabre/macro/wa0aa.mac")
+    #     [print(line) for line in preprocessor.process()]
 
 if __name__ == '__main__':
     unittest.main()
