@@ -24,5 +24,6 @@ ENV DOMAIN sabre
 RUN exec python -m unittest discover -s p8_test.test_local -v -f
 
 ENV CI_CLOUD_STORAGE use
+ENV DOMAIN general
 
 CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --access-logfile - --error-logfile - p7_flask_app:tpf1_app

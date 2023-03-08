@@ -604,6 +604,8 @@ def macro_symbol_table(macro_name: str) -> Response:
 @tpf1_app.route("/unsupported_instructions")
 @token_auth.login_required
 def unsupported_instructions() -> Response:
+    if g.current_user.role != config.ADMIN:
+        return error_response(401, "Only Admins can view this list")
     seg_lst: List[SegLst] = SegLst.objects.filter("error_cmds", ">", list()).filter_by(file_type=config.LST).get()
     unsupported_commands: List[List[Union[str, List]]] = list()
     for seg in seg_lst:

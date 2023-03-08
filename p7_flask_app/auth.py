@@ -48,6 +48,9 @@ def generate_token() -> Response:
 @token_auth.verify_token
 def verify_token(token: str) -> bool:
     g.current_user = User.get_by_token(token) if token else None
+    if g.current_user is not None:
+        init_seg_collection()
+        init_macros()
     return g.current_user is not None
 
 

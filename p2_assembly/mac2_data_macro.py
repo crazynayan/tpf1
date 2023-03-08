@@ -1,7 +1,7 @@
 from typing import Dict, List, Tuple, Optional
 
 from config import config
-from p1_utils.domain import get_domain_folder, read_folder, get_base_folder
+from p1_utils.domain import get_domain_folder, read_folder, get_base_folder, get_domain
 from p1_utils.errors import EquDataTypeHasAmpersandError, NotFoundInSymbolTableError
 from p1_utils.file_line import Line, File
 from p2_assembly.mac0_generic import LabelReference
@@ -74,6 +74,7 @@ class DataMacroCollection:
         return filename[:-4].upper()
 
     def __init__(self):
+        self.domain: str = get_domain()
         self.macros: Dict[str, DataMacro] = dict()
         self.indexed_labels: Dict[str, str] = dict()  # Only used in api v2. Init commented out to improve test exec.
         default_macros: Dict[str, LabelReference] = dict()
@@ -98,17 +99,19 @@ class DataMacroCollection:
             # self.indexed_labels = {**self.indexed_labels, **{l: lr.name for l, lr in data_macro.all_labels.items()}}
 
 
-_macros = DataMacroCollection().macros
+_macro_collection: DataMacroCollection = DataMacroCollection()
 indexed_macros = dict()
 
 
 def get_macros():
-    return _macros
+    return _macro_collection.macros
 
 
 def init_macros():
-    global _macros
-    _macros = DataMacroCollection().macros
+    global _macro_collection
+    if _macro_collection.domain != get_domain():
+        _macro_collection = DataMacroCollection()
+    return
 
 
 def get_global_ref(global_name: str) -> Optional[LabelReference]:

@@ -9,7 +9,7 @@ from config import config
 def get_domain():
     try:
         return g.current_user.domain
-    except RuntimeError:
+    except (RuntimeError, AttributeError):
         return config.DOMAIN
 
 

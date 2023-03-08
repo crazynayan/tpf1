@@ -69,6 +69,7 @@ class SegmentCollection:
 
     def __init__(self):
         self.segments: Dict = dict()  # Dictionary of Segment. Segment name is the key.
+        self.domain: str = get_domain()
         if config.CI_CLOUD_STORAGE:
             self.init_seg_from_db()
         else:
@@ -149,4 +150,6 @@ def get_seg_collection() -> SegmentCollection:
 
 def init_seg_collection() -> None:
     global _seg_collection
-    _seg_collection = SegmentCollection()
+    if _seg_collection.domain != get_domain():
+        _seg_collection = SegmentCollection()
+    return
