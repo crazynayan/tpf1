@@ -1,7 +1,7 @@
 import unittest
 
 from p5_v3.base_parser import AssemblyError
-from p5_v3.token_expression import SelfDefinedTerm
+from p5_v3.token_expression import SelfDefinedTerm, Expression
 
 
 class SelfDefinedTermTest(unittest.TestCase):
@@ -70,9 +70,15 @@ class SelfDefinedTermTest(unittest.TestCase):
 
     def test_error_term_start_with_arithmetic(self):
         self.assertFalse(SelfDefinedTerm("+F").is_data_type_present())
+
+    def test_expression_register(self):
+        register = Expression("2+3*4-6").evaluate_to_register()
+        self.assertEqual("R8", register)
+
     # def test_file_preprocessor(self):
     #     preprocessor = FilePreprocessor("p0_source/sabre/macro/wa0aa.mac")
     #     [print(line) for line in preprocessor.process()]
+
 
 if __name__ == '__main__':
     unittest.main()

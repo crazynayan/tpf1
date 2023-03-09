@@ -161,7 +161,7 @@ class Expression:
 
     def evaluate_to_int(self, *, location_counter: int = None, symbol_table=None) -> int:
         if len(self.tokens) == 1:
-            return self.tokens[0].evaluate_to_int()
+            return self.tokens[0].evaluate_to_int(location_counter=location_counter, symbol_table=symbol_table)
         expression: str = "".join([token.evaluate_to_str(location_counter=location_counter, symbol_table=symbol_table)
                                    for token in self.tokens])
         try:
