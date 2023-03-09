@@ -1,6 +1,5 @@
 import unittest
 
-from p5_v3.base_parser import AssemblyError
 from p5_v3.token_expression import SelfDefinedTerm, Expression
 
 
@@ -53,10 +52,10 @@ class SelfDefinedTermTest(unittest.TestCase):
         self.assertFalse(SelfDefinedTerm("E").is_data_type_present())
 
     def test_error_length_not_specified(self):
-        self.assertRaises(AssemblyError, SelfDefinedTerm, "FL")
+        self.assertFalse(SelfDefinedTerm("FL").is_data_type_present())
 
     def test_error_length_invalid(self):
-        self.assertRaises(AssemblyError, SelfDefinedTerm, "FL'1'")
+        self.assertFalse(SelfDefinedTerm("FL'1'").is_data_type_present())
 
     def test_error_term_empty(self):
         self.assertFalse(SelfDefinedTerm(" ").is_data_type_present())
@@ -74,6 +73,15 @@ class SelfDefinedTermTest(unittest.TestCase):
     def test_expression_register(self):
         register = Expression("2+3*4-6").evaluate_to_register()
         self.assertEqual("R8", register)
+        self.assertFalse(Expression("R8").tokens[0].is_symbol())
+
+    def test_term_in_expression(self):
+        expression = Expression("X'FF'-#BIT2")
+        self.assertTrue(expression.tokens[0].is_self_defined_term())
+        self.assertTrue(expression.tokens[1].is_arithmetic_operator())
+        self.assertTrue(expression.tokens[2].is_symbol())
+        self.assertFalse(SelfDefinedTerm("X''").is_data_type_present())
+        self.assertFalse(SelfDefinedTerm("X'01").is_data_type_present())
 
     # def test_file_preprocessor(self):
     #     preprocessor = FilePreprocessor("p0_source/sabre/macro/wa0aa.mac")

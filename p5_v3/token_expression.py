@@ -37,10 +37,6 @@ class Token:
             if not symbol_table:
                 raise AssemblyError("Token -> Symbol Table not provided to evaluate a symbol.")
             return 0  # Use SymbolTable to resolve symbol
-        if self.is_data():
-            if not data_type:
-                raise AssemblyError("Token -> Data Type not provided to evaluate a data.")
-            return self.get_value_from_data(data_type)
         if self.is_location_counter():
             return location_counter
         raise AssemblyError("Token -> Cannot evaluate token.")
@@ -65,9 +61,6 @@ class Token:
             return False
         return is_char_first_char_of_symbol(self._string[0])
 
-    def is_data(self) -> bool:
-        return self._string[:len(self.DATA_PREFIX)] == self.DATA_PREFIX
-
     @property
     def data(self) -> str:
         if self._string[:len(self.DATA_PREFIX)] != self.DATA_PREFIX:
@@ -89,8 +82,8 @@ class Token:
     def is_quote(self):
         return self._string == Operators.QUOTE
 
-    def is_comma(self):
-        return self._string == Operators.COMMA
+    def is_self_defined_term(self):
+        return self._term is not None
 
 
 class Expression:
@@ -126,11 +119,8 @@ class Expression:
                 self.tokens.append(Token(string[start_index:index]))
             in_symbol = in_digit = False
             if char.isalnum() or char == Operators.OPENING_PARENTHESIS:
-                try:
-                    term = SelfDefinedTerm(string[index:])
-                except AssemblyError:
-                    term = None
-                if term and term.is_self_defined_term():
+                term = SelfDefinedTerm(string[index:])
+                if term.is_self_defined_term():
                     self.tokens.append(Token(term=term))
                     term_end_index = term.length_of_string
                     continue
@@ -153,11 +143,11 @@ class Expression:
             self.tokens.append(Token(string[start_index:]))
         return
 
-    def has_arithmetic_operator(self) -> bool:
-        return any(token for token in self.tokens if token.is_arithmetic_operator())
-
-    def has_symbol_or_location_counter(self) -> bool:
-        return any(token for token in self.tokens if token.is_symbol() or token.is_location_counter())
+    # def has_arithmetic_operator(self) -> bool:
+    #     return any(token for token in self.tokens if token.is_arithmetic_operator())
+    #
+    # def has_symbol_or_location_counter(self) -> bool:
+    #     return any(token for token in self.tokens if token.is_symbol() or token.is_location_counter())
 
     def evaluate_to_int(self, *, location_counter: int = None, symbol_table=None) -> int:
         if len(self.tokens) == 1:
@@ -194,9 +184,13 @@ class SelfDefinedTerm:
         if not self.is_data_type_present():
             return
         self.build_duplication_factor(data_type_index)
+        if not self.is_data_type_present():
+            return
         if length_index >= len(self._string):
             return
         value_index = self.build_length(length_index)
+        if not self.is_data_type_present():
+            return
         if value_index >= len(self._string):
             return
         self.build_values(value_index)
@@ -207,11 +201,21 @@ class SelfDefinedTerm:
         data_type_index = 0
         if self._string[data_type_index] == Operators.OPENING_PARENTHESIS or self._string[data_type_index].isdigit():
             data_type_index = GetIndex.after_parenthesis_or_digits(self._string, 0)
-        if data_type_index == GetIndex.INVALID_CLOSING_ENCLOSURE or not is_data_type(self._string[data_type_index:]):
+        if data_type_index == GetIndex.INVALID_ENCLOSURE or not is_data_type(self._string[data_type_index:]):
             return self.INVALID_SELF_DEFINED_TERM, self.INVALID_SELF_DEFINED_TERM
         self.data_type = get_data_type(self._string[data_type_index:])
         length_index = data_type_index + len(self.data_type)
         return data_type_index, length_index
+
+    def remove_term(self):
+        self.duplication_factor: Optional[Expression] = None
+        self.data_type: str = str()
+        self.length: Optional[Expression] = None
+        self.opening_enclosure: Optional[Token] = None
+        self.values: List[Expression] = list()
+        self.value: Optional[Token] = None
+        self.closing_enclosure: Optional[Token] = None
+        self.length_of_string: int = int()
 
     def build_duplication_factor(self, data_type_index: int):
         if data_type_index == 0:
@@ -222,8 +226,9 @@ class SelfDefinedTerm:
         if self._string[length_index] != Operators.LENGTH_SYMBOL:
             return length_index
         value_index = GetIndex.after_parenthesis_or_digits(self._string, length_index + 1)
-        if value_index == GetIndex.INVALID_CLOSING_ENCLOSURE:
-            raise AssemblyError("SelfDefinedTerm -> Length after L is not specified.")
+        if value_index == GetIndex.INVALID_ENCLOSURE:
+            self.remove_term()
+            return self.INVALID_SELF_DEFINED_TERM
         self.length = self.create_expression_for_duplication_factor_or_length(length_index + 1, value_index)
         return value_index
 
@@ -231,11 +236,13 @@ class SelfDefinedTerm:
         if self._string[value_index] not in {Operators.QUOTE, Operators.OPENING_PARENTHESIS}:
             raise AssemblyError("SelfDefinedTerm -> Values if present should start with a quote or parenthesis.")
         end_index_of_string = GetIndex.after_parenthesis_or_quote(self._string, value_index)
-        if end_index_of_string == GetIndex.INVALID_CLOSING_ENCLOSURE:
-            raise AssemblyError("SelfDefinedTerm -> Values within quotes should have data and end with a quote or parenthesis.")
+        if end_index_of_string == GetIndex.INVALID_ENCLOSURE:
+            self.remove_term()
+            return
         string = self._string[value_index:end_index_of_string]
         if len(string) <= 2:
-            raise AssemblyError("SelfDefinedTerm -> Values within quotes or parenthesis should have data.")
+            self.remove_term()
+            return
         self.length_of_string = end_index_of_string
         if string[0] == Operators.QUOTE:
             self.value = Token(string[1:-1], data=True)
@@ -266,10 +273,11 @@ class SelfDefinedTerm:
     def length_value(self) -> int:
         return self.length.evaluate_to_int() if self.is_length_present() else get_data_type_length(self.data_type)
 
-    def create_expression_for_duplication_factor_or_length(self, start_index: int, end_index: int) -> Expression:
+    def create_expression_for_duplication_factor_or_length(self, start_index: int, end_index: int) -> Optional[Expression]:
         string = self._string[start_index:end_index]
         if string.isdigit():
             return Expression(string)
         if string[0] == Operators.OPENING_PARENTHESIS and string[-1] == Operators.CLOSING_PARENTHESIS:
             return Expression(string[1:-1])
-        raise AssemblyError("SelfDefinedTerm -> Invalid duplication factor or length.")
+        self.remove_term()
+        return None

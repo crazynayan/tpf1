@@ -51,27 +51,27 @@ def get_data_type_length(string: str) -> str:
 
 
 class GetIndex:
-    INVALID_CLOSING_ENCLOSURE = -99
+    INVALID_ENCLOSURE = -99
 
     @classmethod
     def after_parenthesis_or_digits(cls, string: str, start_index: int) -> int:
         if start_index >= len(string):
-            raise AssemblyError("GetIndex -> Index is beyond the length of string.")
+            return cls.INVALID_ENCLOSURE
         if string[start_index] == Operators.OPENING_PARENTHESIS:
             return cls.of_closing_parenthesis(string, start_index) + 1
         if string[start_index].isdigit():
             return cls.of_last_digit(string, start_index) + 1
-        return cls.INVALID_CLOSING_ENCLOSURE
+        return cls.INVALID_ENCLOSURE
 
     @classmethod
     def after_parenthesis_or_quote(cls, string: str, start_index: int) -> int:
         if start_index >= len(string):
-            raise AssemblyError("GetIndex -> Index is beyond the length of string.")
+            return cls.INVALID_ENCLOSURE
         if string[start_index] == Operators.OPENING_PARENTHESIS:
             return cls.of_closing_parenthesis(string, start_index) + 1
         if string[start_index] == Operators.QUOTE:
             return cls.of_closing_quote(string, start_index) + 1
-        return cls.INVALID_CLOSING_ENCLOSURE
+        return cls.INVALID_ENCLOSURE
 
     @classmethod
     def of_closing_parenthesis(cls, string: str, start_index: int) -> int:
@@ -86,7 +86,7 @@ class GetIndex:
                 nesting_level -= 1
                 if nesting_level == 0:
                     return index
-        return cls.INVALID_CLOSING_ENCLOSURE
+        return cls.INVALID_ENCLOSURE
 
     @classmethod
     def of_closing_quote(cls, string: str, start_index: int) -> int:
@@ -95,7 +95,7 @@ class GetIndex:
         for index in range(start_index + 1, len(string)):
             if string[index] == Operators.QUOTE:
                 return index
-        return cls.INVALID_CLOSING_ENCLOSURE
+        return cls.INVALID_ENCLOSURE
 
     @classmethod
     def of_last_digit(cls, string: str, start_index: int) -> int:
