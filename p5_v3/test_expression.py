@@ -1,7 +1,7 @@
 import unittest
 
-from p5_v3.asm_token import AssemblyError
-from p5_v3.expression import SelfDefinedTerm
+from p5_v3.base_parser import AssemblyError
+from p5_v3.token_expression import SelfDefinedTerm
 
 
 class SelfDefinedTermTest(unittest.TestCase):
@@ -28,7 +28,7 @@ class SelfDefinedTermTest(unittest.TestCase):
         self.assertEqual(10, term.length_value)
 
     def test_duplication_factor_and_length_as_expression(self):
-        term = SelfDefinedTerm("(4*(3-1))fl(6/3-1)")
+        term = SelfDefinedTerm("(4*(3-1))FL(6/3-1)")
         self.assertEqual(8, term.duplication_factor_value)
         self.assertEqual("F", term.data_type)
         self.assertEqual(1, term.length_value)
@@ -50,7 +50,7 @@ class SelfDefinedTermTest(unittest.TestCase):
         print("".join([token.evaluate_to_str(symbol_table="abc", location_counter=23) for token in term.values[0].tokens]))
 
     def test_error_invalid_data_type(self):
-        self.assertRaises(AssemblyError, SelfDefinedTerm, "E")
+        self.assertFalse(SelfDefinedTerm("E").is_data_type_present())
 
     def test_error_length_not_specified(self):
         self.assertRaises(AssemblyError, SelfDefinedTerm, "FL")
@@ -59,8 +59,17 @@ class SelfDefinedTermTest(unittest.TestCase):
         self.assertRaises(AssemblyError, SelfDefinedTerm, "FL'1'")
 
     def test_error_term_empty(self):
-        self.assertRaises(AssemblyError, SelfDefinedTerm, " ")
+        self.assertFalse(SelfDefinedTerm(" ").is_data_type_present())
 
+    def test_term(self):
+        term = SelfDefinedTerm("X'01'")
+        self.assertTrue(term.is_self_defined_term())
+        self.assertEqual("X", term.data_type)
+        self.assertTrue(term.opening_enclosure.is_quote())
+        self.assertEqual("01", term.value.data)
+
+    def test_error_term_start_with_arithmetic(self):
+        self.assertFalse(SelfDefinedTerm("+F").is_data_type_present())
     # def test_file_preprocessor(self):
     #     preprocessor = FilePreprocessor("p0_source/sabre/macro/wa0aa.mac")
     #     [print(line) for line in preprocessor.process()]
