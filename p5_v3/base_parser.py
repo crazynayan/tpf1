@@ -1,4 +1,4 @@
-from p5_v3.errors import AssemblyError
+from p5_v3.errors import ParserError
 
 DATA_TYPES = {"X": 1, "C": 1, "H": 2, "F": 4, "D": 8, "FD": 8, "B": 1, "P": 1, "Z": 1, "A": 4, "Y": 2, "AD": 8, "V": 4,
               "S": 2}
@@ -30,7 +30,7 @@ def is_data_type(input_string: str) -> bool:
     try:
         get_data_type(input_string)
         return True
-    except AssemblyError:
+    except ParserError:
         return False
 
 
@@ -40,14 +40,14 @@ def get_data_type(input_string: str) -> str:
         return string[:2]
     if len(string) >= 1 and string[0] in DATA_TYPES:
         return string[0]
-    raise AssemblyError("get_data_type -> Input string is not a data type.")
+    raise ParserError("get_data_type -> Input string is not a data type.")
 
 
 def get_data_type_length(string: str) -> str:
     try:
         return DATA_TYPES[string]
     except KeyError:
-        raise AssemblyError("get_data_type_length -> Input string is not a data type.")
+        raise ParserError("get_data_type_length -> Input string is not a data type.")
 
 
 class GetIndex:
@@ -76,7 +76,7 @@ class GetIndex:
     @classmethod
     def of_closing_parenthesis(cls, string: str, start_index: int) -> int:
         if string[start_index] != Operators.OPENING_PARENTHESIS:
-            raise AssemblyError("GetIndex -> Start index not at opening parenthesis.")
+            raise ParserError("GetIndex -> Start index not at opening parenthesis.")
         nesting_level = 0
         for index in range(start_index, len(string)):
             if string[index] == Operators.OPENING_PARENTHESIS:
@@ -91,7 +91,7 @@ class GetIndex:
     @classmethod
     def of_closing_quote(cls, string: str, start_index: int) -> int:
         if string[start_index] != Operators.QUOTE:
-            raise AssemblyError("GetIndex -> Start index not at opening quote.")
+            raise ParserError("GetIndex -> Start index not at opening quote.")
         for index in range(start_index + 1, len(string)):
             if string[index] == Operators.QUOTE:
                 return index
@@ -100,7 +100,7 @@ class GetIndex:
     @classmethod
     def of_last_digit(cls, string: str, start_index: int) -> int:
         if not string[start_index].isdigit():
-            raise AssemblyError("of_last_digit -> Start index not at a digit.")
+            raise ParserError("of_last_digit -> Start index not at a digit.")
         for index in range(start_index, len(string) - start_index):
             if string[index].isdigit():
                 continue

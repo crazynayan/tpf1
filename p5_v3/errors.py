@@ -1,10 +1,6 @@
-class AssemblyError(Exception):
+class ParserError(Exception):
     pass
 
 
-class SourceFileNotFound(AssemblyError):
-    pass
-
-
-class ParserError(AssemblyError):
+class SourceFileNotFound(ParserError):
     pass

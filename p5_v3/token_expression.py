@@ -1,6 +1,6 @@
 from typing import Optional, List, Tuple
 
-from p5_v3.base_parser import AssemblyError, is_data_type, get_data_type, \
+from p5_v3.base_parser import ParserError, is_data_type, get_data_type, \
     Operators, get_data_type_length, is_char_first_char_of_symbol, is_char_part_of_symbol, GetIndex
 from p5_v3.register import Registers
 
@@ -10,11 +10,11 @@ class Token:
 
     def __init__(self, string: str = None, *, data: bool = False, term: Optional['SelfDefinedTerm'] = None):
         if not string and not term:
-            raise AssemblyError("Token -> Cannot be empty.")
+            raise ParserError("Token -> Cannot be empty.")
         if string == self.DATA_PREFIX:
-            raise AssemblyError("Token -> Cannot be empty data.")
+            raise ParserError("Token -> Cannot be empty data.")
         if not string and data:
-            raise AssemblyError("Token -> Blank string cannot be data.")
+            raise ParserError("Token -> Blank string cannot be data.")
         self._string: str = string if string else str()
         self._term: Optional['SelfDefinedTerm'] = term
         if data:
@@ -35,11 +35,11 @@ class Token:
             return self.get_value_from_register()
         if self.is_symbol():
             if not symbol_table:
-                raise AssemblyError("Token -> Symbol Table not provided to evaluate a symbol.")
+                raise ParserError("Token -> Symbol Table not provided to evaluate a symbol.")
             return 0  # Use SymbolTable to resolve symbol
         if self.is_location_counter():
             return location_counter
-        raise AssemblyError("Token -> Cannot evaluate token.")
+        raise ParserError("Token -> Cannot evaluate token.")
 
     def is_decimal(self) -> bool:
         return self._string.isdigit()
@@ -48,7 +48,7 @@ class Token:
         try:
             return int(self._string)
         except ValueError:
-            raise AssemblyError("Token -> Is not decimal.")
+            raise ParserError("Token -> Is not decimal.")
 
     def is_register(self) -> bool:
         return Registers.is_symbol_valid(self._string)
@@ -64,7 +64,7 @@ class Token:
     @property
     def data(self) -> str:
         if self._string[:len(self.DATA_PREFIX)] != self.DATA_PREFIX:
-            raise AssemblyError("Token -> Is not data.")
+            raise ParserError("Token -> Is not data.")
         return self._string[len(self.DATA_PREFIX):]
 
     def get_value_from_data(self, data_type) -> int:
@@ -98,7 +98,7 @@ class Expression:
     def build(self, input_string: str):
         string: str = input_string.strip().upper()
         if not string:
-            raise AssemblyError("create_expression -> Input string is empty.")
+            raise ParserError("create_expression -> Input string is empty.")
         start_index: int = 0
         in_symbol: bool = bool()
         in_digit: bool = bool()
@@ -133,7 +133,7 @@ class Expression:
                 in_digit = True
                 continue
             if is_char_part_of_symbol(char):
-                raise AssemblyError("create_expression -> Invalid seperator.")
+                raise ParserError("create_expression -> Invalid seperator.")
             if char == Operators.PRODUCT:
                 if index == 0 or string[index - 1] in Operators.ARITHMETIC or string[index - 1] == Operators.OPENING_PARENTHESIS:
                     self.tokens.append(Token(Operators.LOCATION_COUNTER))
@@ -157,7 +157,7 @@ class Expression:
         try:
             return eval(expression)
         except (NameError, SyntaxError):
-            raise AssemblyError(f"Expression -> Invalid expression. {expression}")
+            raise ParserError(f"Expression -> Invalid expression. {expression}")
 
     def evaluate_to_register(self) -> str:
         register_value = self.evaluate_to_int()
@@ -234,7 +234,7 @@ class SelfDefinedTerm:
 
     def build_values(self, value_index: int):
         if self._string[value_index] not in {Operators.QUOTE, Operators.OPENING_PARENTHESIS}:
-            raise AssemblyError("SelfDefinedTerm -> Values if present should start with a quote or parenthesis.")
+            raise ParserError("SelfDefinedTerm -> Values if present should start with a quote or parenthesis.")
         end_index_of_string = GetIndex.after_parenthesis_or_quote(self._string, value_index)
         if end_index_of_string == GetIndex.INVALID_ENCLOSURE:
             self.remove_term()
