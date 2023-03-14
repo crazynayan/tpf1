@@ -1,5 +1,6 @@
 import unittest
 
+from p5_v3.line import AssemblerLines
 from p5_v3.token_expression import SelfDefinedTerm, Expression
 
 
@@ -83,9 +84,11 @@ class SelfDefinedTermTest(unittest.TestCase):
         self.assertFalse(SelfDefinedTerm("X''").is_data_type_present())
         self.assertFalse(SelfDefinedTerm("X'01").is_data_type_present())
 
-    # def test_file_preprocessor(self):
-    #     preprocessor = FilePreprocessor("p0_source/sabre/macro/wa0aa.mac")
-    #     [print(line) for line in preprocessor.process()]
+    def test_file_preprocessor(self):
+        from p5_v3.file import FilePreprocessor
+        preprocessor = FilePreprocessor("p0_source/sabre/macro/wa0aa.mac")
+        lines = AssemblerLines(preprocessor.process())
+        [print(line) for line in lines.process()]
 
 
 if __name__ == '__main__':

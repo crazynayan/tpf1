@@ -35,7 +35,6 @@ class FilePreprocessor:
     FIRST_TWO_CHAR_IN_CVS_HEADER = ["==", "Ch", "RC", "VE", "**"]
     LEN_OF_HEADER = len(FIRST_TWO_CHAR_IN_CVS_HEADER)
     LEN_OF_PREFIX_TO_REMOVE = 7
-    COMMENT_CHARACTERS = {"*", "."}
 
     def __init__(self, filename):
         self.file = File(filename)
@@ -48,7 +47,6 @@ class FilePreprocessor:
         self.remove_empty_lines()
         self.make_it_upper_case()
         self.remove_trailing_newline_char()
-        self.remove_commented_out_lines()
         return self.lines
 
     def is_cvs_file(self) -> bool:
@@ -67,6 +65,3 @@ class FilePreprocessor:
 
     def remove_trailing_newline_char(self):
         self.lines = [line.strip("\n") for line in self.lines]
-
-    def remove_commented_out_lines(self):
-        self.lines = [line for line in self.lines if line[0] not in self.COMMENT_CHARACTERS]

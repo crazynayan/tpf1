@@ -17,6 +17,7 @@ class Operators:
     AMPERSAND = "&"
     QUOTE = "'"
     COMMA = ","
+    SPACE = " "
     OPENING_PARENTHESIS = "("
     CLOSING_PARENTHESIS = ")"
     LENGTH_SYMBOL = "L"
