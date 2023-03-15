@@ -102,7 +102,10 @@ class SelfDefinedTermTest(unittest.TestCase):
         self.assertEqual("Y(ADR1-EXAM,L'ADR1-L'EXAM),X'23',YL1(EXAM+ADR1,L'ZON3+L'HALF1-EXAM+#UI2NXT)", lines[0].operand)
         self.assertEqual("TS110060", lines[1].label)
         self.assertEqual("SENDA", lines[1].command)
-        self.assertEqual("MSG='MAXIMUM NUMBER OF NAMES PER PNR IS 99 - CREATE NEW PNR'", lines[1].operand)
+        self.assertEqual("MSG='MAXIMUM NUMBER OF NAMES,PER PNR IS 99 - CREATE NEW PNR'", lines[1].operand)
+        self.assertEqual("TEST1", lines[2].label)
+        self.assertEqual("DS", lines[2].command)
+        self.assertEqual("Y(LONG_LABEL_TO_FILL_UP_SPACE_IN_THE_LINES_OF_OPERANDS+L'SOME_LABEL)", lines[2].operand)
 
 
 if __name__ == '__main__':
