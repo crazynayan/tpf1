@@ -23,12 +23,12 @@ class Token:
     def __repr__(self) -> str:
         return self._string
 
-    def evaluate_to_str(self, *, symbol_table=None, location_counter=None, data_type=None) -> str:
+    def evaluate_to_str(self, *, symbol_table=None, location_counter=None) -> str:
         if self.is_arithmetic_operator() or self.is_parenthesis():
             return self._string
-        return str(self.evaluate_to_int(symbol_table=symbol_table, location_counter=location_counter, data_type=data_type))
+        return str(self.evaluate_to_int(symbol_table=symbol_table, location_counter=location_counter))
 
-    def evaluate_to_int(self, *, symbol_table=None, location_counter=None, data_type=None) -> int:
+    def evaluate_to_int(self, *, symbol_table=None, location_counter=None) -> int:
         if self.is_decimal():
             return self.get_value_from_decimal()
         if self.is_register():

@@ -77,7 +77,9 @@ class AssemblerLine:
         is_inside_quote = inside_quote
         operand_end = self.CONTINUATION_START
         for index, char in enumerate(self.line[operand_start:self.CONTINUATION_START]):
-            possible_length_attribute = self.line[operand_start + index - 1] == "L" if index > 0 else previous_line_ending_with_l
+            possible_length_attribute = previous_line_ending_with_l
+            if index > 0:
+                possible_length_attribute = self.line[operand_start + index - 1] == Operators.LENGTH_SYMBOL
             if not is_inside_quote and char == Operators.QUOTE and not possible_length_attribute:
                 is_inside_quote = True
                 continue
@@ -134,8 +136,7 @@ class AssemblerLines:
             if not continuing and not line.is_continuation_present():
                 combined_lines.append(line)
                 continue
-            operand, inside_quote = line.get_operand_info(continuing=continuing, inside_quote=inside_quote,
-                                                          previous_line_ending_with_l=previous_line_ending_with_l)
+            operand, inside_quote = line.get_operand_info(continuing, inside_quote, previous_line_ending_with_l)
             if not continuing:
                 main_line: AssemblerLine = line
                 combined_lines.append(line)
