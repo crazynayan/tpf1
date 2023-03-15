@@ -47,7 +47,7 @@ class SelfDefinedTermTest(unittest.TestCase):
         self.assertTrue(term.values[0].tokens[1].is_arithmetic_operator())
         self.assertTrue(term.values[0].tokens[2].is_decimal())
         self.assertTrue(term.values[1].tokens[0].is_symbol())
-        print("".join([token.evaluate_to_str(symbol_table="abc", location_counter=23) for token in term.values[0].tokens]))
+        # print("".join([token.evaluate_to_str(symbol_table="abc", location_counter=23) for token in term.values[0].tokens]))
 
     def test_error_invalid_data_type(self):
         self.assertFalse(SelfDefinedTerm("E").is_data_type_present())
@@ -87,8 +87,22 @@ class SelfDefinedTermTest(unittest.TestCase):
     def test_file_preprocessor(self):
         from p5_v3.file import FilePreprocessor
         preprocessor = FilePreprocessor("p0_source/sabre/macro/wa0aa.mac")
-        lines = AssemblerLines(preprocessor.process())
-        [print(line) for line in lines.process()]
+        lines = AssemblerLines(preprocessor.process()).process()
+        self.assertEqual("WA0BID&LC0", lines[14].label)
+        self.assertEqual("DS", lines[14].command)
+        self.assertEqual("CL2", lines[14].operand)
+
+    def test_continuing_lines(self):
+        from p5_v3.file import StreamPreprocessor
+        from p5_v3.source_file import continuation_lines
+        preprocessor = StreamPreprocessor(continuation_lines)
+        lines = AssemblerLines(preprocessor.process()).process()
+        self.assertEqual("BIG", lines[0].label)
+        self.assertEqual("DC", lines[0].command)
+        self.assertEqual("Y(ADR1-EXAM,L'ADR1-L'EXAM),X'23',YL1(EXAM+ADR1,L'ZON3+L'HALF1-EXAM+#UI2NXT)", lines[0].operand)
+        self.assertEqual("TS110060", lines[1].label)
+        self.assertEqual("SENDA", lines[1].command)
+        self.assertEqual("MSG='MAXIMUM NUMBER OF NAMES PER PNR IS 99 - CREATE NEW PNR'", lines[1].operand)
 
 
 if __name__ == '__main__':

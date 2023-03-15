@@ -30,20 +30,16 @@ class File:
         return exists(self.filename)
 
 
-class FilePreprocessor:
+class Preprocessor:
     PREFIX_CHAR = "0"
     FIRST_TWO_CHAR_IN_CVS_HEADER = ["==", "Ch", "RC", "VE", "**"]
     LEN_OF_HEADER = len(FIRST_TWO_CHAR_IN_CVS_HEADER)
     LEN_OF_PREFIX_TO_REMOVE = 7
 
-    def __init__(self, filename):
-        self.file = File(filename)
+    def __init__(self):
         self.lines: List[str] = list()
 
     def process(self) -> List[str]:
-        self.lines = self.file.open()
-        if self.file.file_type in (self.file.ASSEMBLER, self.file.MACRO) and self.is_cvs_file():
-            self.remove_cvs_tags()
         self.remove_empty_lines()
         self.make_it_upper_case()
         self.remove_trailing_newline_char()
@@ -65,3 +61,20 @@ class FilePreprocessor:
 
     def remove_trailing_newline_char(self):
         self.lines = [line.strip("\n") for line in self.lines]
+
+
+class FilePreprocessor(Preprocessor):
+
+    def __init__(self, filename):
+        super().__init__()
+        file = File(filename)
+        self.lines = file.open()
+        if file.file_type in (file.ASSEMBLER, file.MACRO) and self.is_cvs_file():
+            self.remove_cvs_tags()
+
+
+class StreamPreprocessor(Preprocessor):
+
+    def __init__(self, buffer: str):
+        super().__init__()
+        self.lines = buffer.split("\n")
