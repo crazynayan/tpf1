@@ -1,7 +1,7 @@
 from typing import Optional, List, Tuple
 
-from p5_v3.base_parser import ParserError, is_data_type, get_data_type, \
-    Operators, get_data_type_length, is_char_first_char_of_symbol, is_char_part_of_symbol, GetIndex
+from p5_v3.base_parser import ParserError, Operators, is_char_first_char_of_symbol, is_char_part_of_symbol, GetIndex
+from p5_v3.data_type import DataType
 from p5_v3.register import Registers
 
 
@@ -201,9 +201,9 @@ class SelfDefinedTerm:
         data_type_index = 0
         if self._string[data_type_index] == Operators.OPENING_PARENTHESIS or self._string[data_type_index].isdigit():
             data_type_index = GetIndex.after_parenthesis_or_digits(self._string, 0)
-        if data_type_index == GetIndex.INVALID_ENCLOSURE or not is_data_type(self._string[data_type_index:]):
+        if data_type_index == GetIndex.INVALID_ENCLOSURE or not DataType.is_data_type_at_start_of_string(self._string[data_type_index:]):
             return self.INVALID_SELF_DEFINED_TERM, self.INVALID_SELF_DEFINED_TERM
-        self.data_type = get_data_type(self._string[data_type_index:])
+        self.data_type = DataType.get_data_type_from_start_of_string(self._string[data_type_index:])
         length_index = data_type_index + len(self.data_type)
         return data_type_index, length_index
 
@@ -265,13 +265,17 @@ class SelfDefinedTerm:
     def is_self_defined_term(self) -> bool:
         return self.opening_enclosure is not None
 
+    def is_self_defined_term_with_quote(self) -> bool:
+        return self.is_self_defined_term() and self.opening_enclosure.is_quote()
+
     @property
     def duplication_factor_value(self) -> int:
         return self.duplication_factor.evaluate_to_int() if self.is_duplication_factor_present() else 1
 
     @property
     def length_value(self) -> int:
-        return self.length.evaluate_to_int() if self.is_length_present() else get_data_type_length(self.data_type)
+        value: str = self.value.data if self.is_self_defined_term_with_quote() else str()
+        return self.length.evaluate_to_int() if self.is_length_present() else DataType.get_length(self.data_type, value)
 
     def create_expression_for_duplication_factor_or_length(self, start_index: int, end_index: int) -> Optional[Expression]:
         string = self._string[start_index:end_index]

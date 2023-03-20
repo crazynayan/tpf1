@@ -4,6 +4,7 @@ from p5_v3.line import AssemblerLines
 from p5_v3.token_expression import SelfDefinedTerm, Expression
 
 
+# noinspection SpellCheckingInspection
 class SelfDefinedTermTest(unittest.TestCase):
 
     def test_only_data_type(self):
@@ -106,6 +107,20 @@ class SelfDefinedTermTest(unittest.TestCase):
         self.assertEqual("TEST1", lines[2].label)
         self.assertEqual("DS", lines[2].command)
         self.assertEqual("Y(LONG_LABEL_TO_FILL_UP_SPACE_IN_THE_LINES_OF_OPERANDS+L'SOME_LABEL)", lines[2].operand)
+
+    def test_term_length(self):
+        term = SelfDefinedTerm("X'010'")
+        self.assertEqual(2, term.length_value)
+        term = SelfDefinedTerm("C'CAKE'")
+        self.assertEqual(4, term.length_value)
+        term = SelfDefinedTerm("Z'-123'")
+        self.assertEqual(3, term.length_value)
+        term = SelfDefinedTerm("P'-123'")
+        self.assertEqual(2, term.length_value)
+        term = SelfDefinedTerm("F'0'")
+        self.assertEqual(4, term.length_value)
+        term = SelfDefinedTerm("FL3'0'")
+        self.assertEqual(3, term.length_value)
 
 
 if __name__ == '__main__':

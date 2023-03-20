@@ -27,30 +27,6 @@ class Operators:
     VALID_SYMBOLS = {AT, DOLLAR, HASH, AMPERSAND, UNDERSCORE}
 
 
-def is_data_type(input_string: str) -> bool:
-    try:
-        get_data_type(input_string)
-        return True
-    except ParserError:
-        return False
-
-
-def get_data_type(input_string: str) -> str:
-    string = input_string.upper()
-    if len(string) >= 2 and string[:2] in DATA_TYPES:
-        return string[:2]
-    if len(string) >= 1 and string[0] in DATA_TYPES:
-        return string[0]
-    raise ParserError("get_data_type -> Input string is not a data type.")
-
-
-def get_data_type_length(string: str) -> str:
-    try:
-        return DATA_TYPES[string]
-    except KeyError:
-        raise ParserError("get_data_type_length -> Input string is not a data type.")
-
-
 class GetIndex:
     INVALID_ENCLOSURE = -99
 
@@ -115,6 +91,3 @@ def is_char_first_char_of_symbol(char: str) -> bool:
 
 def is_char_part_of_symbol(char: str) -> bool:
     return char.isalnum() or char in Operators.VALID_SYMBOLS
-
-
-
