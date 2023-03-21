@@ -4,3 +4,7 @@ class ParserError(Exception):
 
 class SourceFileNotFound(ParserError):
     pass
+
+
+class SymbolNotFoundError(ParserError):
+    pass

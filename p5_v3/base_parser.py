@@ -1,11 +1,9 @@
 from p5_v3.errors import ParserError
 
-DATA_TYPES = {"X": 1, "C": 1, "H": 2, "F": 4, "D": 8, "FD": 8, "B": 1, "P": 1, "Z": 1, "A": 4, "Y": 2, "AD": 8, "V": 4,
-              "S": 2}
-
 
 class Operators:
     LOCATION_COUNTER = r"\*"
+    MAX_LOCATION_COUNTER = r"\**"
     PLUS = "+"
     MINUS = "-"
     PRODUCT = "*"
