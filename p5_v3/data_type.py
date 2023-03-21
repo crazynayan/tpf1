@@ -45,3 +45,14 @@ class DataType:
             return cls.INPUT_BASED_LENGTH[data_type](string) if string else cls.DEFAULT_LENGTH[data_type]
         except KeyError:
             raise ParserError("DataType -> Invalid data type.")
+
+    @classmethod
+    def get_boundary_aligned_adjustment(cls, data_type: str, location_counter: int) -> int:
+        try:
+            default_length: int = cls.DEFAULT_LENGTH[data_type]
+        except KeyError:
+            raise ParserError("DataType -> Invalid data type.")
+        adjustment_required: int = location_counter % default_length
+        if not adjustment_required:
+            return 0
+        return default_length - adjustment_required
