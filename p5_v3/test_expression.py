@@ -1,5 +1,6 @@
 import unittest
 
+from p5_v3.base_parser import split_operands
 from p5_v3.line import AssemblerLines
 from p5_v3.token_expression import SelfDefinedTerm, Expression
 
@@ -121,6 +122,20 @@ class SelfDefinedTermTest(unittest.TestCase):
         self.assertEqual(4, term.length_value)
         term = SelfDefinedTerm("FL3'0'")
         self.assertEqual(3, term.length_value)
+
+    def test_split_operands(self):
+        operands = split_operands("0(R2,1),10(R3,1)")
+        self.assertEqual(2, len(operands))
+        self.assertEqual("0(R2,1)", operands[0])
+        self.assertEqual("10(R3,1)", operands[1])
+        operands = split_operands("MSG='A,B,C',")
+        self.assertEqual(2, len(operands))
+        self.assertEqual("MSG='A,B,C'", operands[0])
+        self.assertEqual("", operands[1])
+        operands = split_operands(",")
+        self.assertEqual(2, len(operands))
+        self.assertEqual("", operands[0])
+        self.assertEqual("", operands[1])
 
 
 if __name__ == '__main__':

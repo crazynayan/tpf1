@@ -1,3 +1,4 @@
+import os.path
 from os.path import exists
 from typing import List
 
@@ -15,6 +16,10 @@ class File:
     @property
     def file_type(self) -> str:
         return self.filename[-3:]
+
+    @property
+    def name_four_char(self) -> str:
+        return os.path.basename(self.filename)[:4].upper()
 
     def is_valid(self) -> bool:
         return self.file_type in (self.ASSEMBLER, self.LISTING, self.MACRO)

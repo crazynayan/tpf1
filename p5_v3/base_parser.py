@@ -1,3 +1,5 @@
+from typing import List
+
 from p5_v3.errors import ParserError
 
 
@@ -89,3 +91,23 @@ def is_char_first_char_of_symbol(char: str) -> bool:
 
 def is_char_part_of_symbol(char: str) -> bool:
     return char.isalnum() or char in Operators.VALID_SYMBOLS
+
+
+def split_operands(operand: str) -> List[str]:
+    operands: List[str] = list()
+    start_index: int = int()
+    closing_enclosure_index: int = -1
+    for index, char in enumerate(operand):
+        if index <= closing_enclosure_index:
+            continue
+        if char in {Operators.OPENING_PARENTHESIS, Operators.QUOTE}:
+            closing_enclosure_index = GetIndex.of_closing_parenthesis(operand, index) if char == Operators.OPENING_PARENTHESIS else \
+                GetIndex.of_closing_quote(operand, index)
+            if closing_enclosure_index == GetIndex.INVALID_ENCLOSURE:
+                raise ParserError("split_operands -> Invalid closing enclosure.")
+            continue
+        if char == Operators.COMMA:
+            operands.append(operand[start_index:index])
+            start_index = index + 1
+    operands.append(operand[start_index:len(operand)])
+    return operands
