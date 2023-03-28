@@ -102,11 +102,12 @@ So a
             token = '+'
             token = 'FLD' = 2 (after lookup)
         token = ')'
-    values = "'ABC'"
-        value = "'ABC'" = 0xc1c2c3
-            token = "'" = enclosing_operator
-            token = 'ABC' = data = 0xc1c2c3
-            token = "'" = enclosing_operator
+    opening_enclosure = '
+    closing_enclosure = '
+    values = empty
+    value = ABC
+        token = \'ABC
+
 
 L'ANC(#ABC,R10)
  db = L'ANC-1(#ABC,R10+1)
@@ -114,15 +115,12 @@ L'ANC(#ABC,R10)
         token = L'ANC  = symbol = 3
         token = '-' = arithmetic_operator
         token = '1' = digit
-    token1 = '('
     expression2 = #ABC
         token = #ABC = symbol = 23 
-    token2 = ','
     expression3 = 'R10+1' = 11
         token = R10 = register = 10
         token = '+' = arithmetic_operator
         token = '1' = digit = 1
-    token3 = ")"
 
 db = X'10'(R1)
     expression1 = X'10' = 16
@@ -130,11 +128,11 @@ db = X'10'(R1)
         self_defining_term = X'10' = 16
             duplication_factor = empty
             data_type = 'X'
-            values = '10' = 0x10
-                value = '10'
-                    token = "'" = enclosing_operator
-                    token = '10' = data = 0x10
-                    token = "'" = enclosing_operator
+            length = empty
+            opening_enclosure = '
+            value = '10
+            values = empty
+            closing_enclose = '
     token1 = '('
     expression2 = R1 = 1
         token = R1 = register = 1
@@ -142,6 +140,20 @@ db = X'10'(R1)
     expression3 = empty
     token3 = empty
 
-
+Parser
+    DS/DC is SelfDefinedTerm based on number of operands
+    EQU is Expression based on number of operands
+    ORG is Expression based on number of operands
+    DSECT ignore all operands
+    CSECT ignore all operands
+    RR = Expression, Expression
+    RX = Expression, BaseDisplacement
+    SS = BaseDisplacement, BaseDisplacement
+    RS = Expression,Expression, BaseDisplacement
+    SI = BaseDisplacement, Expression
+    RI = Expression, Expression
+    RSL = BaseDisplacement
+    Macro = KeyValue based on number of operands
+    
 
 """
