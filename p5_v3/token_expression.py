@@ -3,10 +3,12 @@ from typing import Optional, List, Tuple
 from p5_v3.base_parser import ParserError, Operators, is_char_first_char_of_symbol, is_char_part_of_symbol, GetIndex
 from p5_v3.data_type import DataType
 from p5_v3.register import Registers
+from p5_v3.symbol_table import SymbolTable
 
 
 class Token:
     DATA_PREFIX = r"\'"
+    LENGTH_PREFIX = f"{Operators.LENGTH_SYMBOL}{Operators.QUOTE}"
 
     def __init__(self, string: str = None, *, data: bool = False, term: Optional['SelfDefinedTerm'] = None):
         if not string and not term:
@@ -23,22 +25,22 @@ class Token:
     def __repr__(self) -> str:
         return self._string
 
-    def evaluate_to_str(self, *, symbol_table=None, location_counter=None) -> str:
+    def evaluate_to_str(self, symbol_table: SymbolTable = None) -> str:
         if self.is_arithmetic_operator() or self.is_parenthesis():
             return self._string
-        return str(self.evaluate_to_int(symbol_table=symbol_table, location_counter=location_counter))
+        return str(self.evaluate_to_int(symbol_table))
 
-    def evaluate_to_int(self, *, symbol_table=None, location_counter=None) -> int:
+    def evaluate_to_int(self, symbol_table: SymbolTable = None) -> int:
         if self.is_decimal():
             return self.get_value_from_decimal()
         if self.is_register():
             return self.get_value_from_register()
+        if not symbol_table:
+            raise ParserError("Token -> Symbol Table not provided to evaluate a symbol or location counter.")
         if self.is_symbol():
-            if not symbol_table:
-                raise ParserError("Token -> Symbol Table not provided to evaluate a symbol.")
-            return 0  # Use SymbolTable to resolve symbol
+            return self.evaluate_symbol(symbol_table)
         if self.is_location_counter():
-            return location_counter
+            return symbol_table.get_location_counter()
         raise ParserError("Token -> Cannot evaluate token.")
 
     def is_decimal(self) -> bool:
@@ -60,6 +62,11 @@ class Token:
         if self.is_register():
             return False
         return is_char_first_char_of_symbol(self._string[0])
+
+    def evaluate_symbol(self, symbol_table: SymbolTable) -> int:
+        if self._string.startswith(self.LENGTH_PREFIX):
+            return symbol_table.get_length(self._string[len(self.LENGTH_PREFIX):])
+        return symbol_table.get_dsp(self._string)
 
     @property
     def data(self) -> str:
@@ -143,17 +150,10 @@ class Expression:
             self.tokens.append(Token(string[start_index:]))
         return
 
-    # def has_arithmetic_operator(self) -> bool:
-    #     return any(token for token in self.tokens if token.is_arithmetic_operator())
-    #
-    # def has_symbol_or_location_counter(self) -> bool:
-    #     return any(token for token in self.tokens if token.is_symbol() or token.is_location_counter())
-
-    def evaluate_to_int(self, *, location_counter: int = None, symbol_table=None) -> int:
+    def evaluate_to_int(self, symbol_table=None) -> int:
         if len(self.tokens) == 1:
-            return self.tokens[0].evaluate_to_int(location_counter=location_counter, symbol_table=symbol_table)
-        expression: str = "".join([token.evaluate_to_str(location_counter=location_counter, symbol_table=symbol_table)
-                                   for token in self.tokens])
+            return self.tokens[0].evaluate_to_int(symbol_table)
+        expression: str = "".join([token.evaluate_to_str(symbol_table) for token in self.tokens])
         try:
             return eval(expression)
         except (NameError, SyntaxError):
@@ -268,14 +268,15 @@ class SelfDefinedTerm:
     def is_self_defined_term_with_quote(self) -> bool:
         return self.is_self_defined_term() and self.opening_enclosure.is_quote()
 
-    @property
-    def duplication_factor_value(self) -> int:
-        return self.duplication_factor.evaluate_to_int() if self.is_duplication_factor_present() else 1
+    def get_duplication_factor_value(self, symbol_table: SymbolTable = None) -> int:
+        return self.duplication_factor.evaluate_to_int(symbol_table) if self.is_duplication_factor_present() else 1
 
-    @property
-    def length_value(self) -> int:
+    def get_length_value(self, symbol_table: SymbolTable = None) -> int:
         value: str = self.value.data if self.is_self_defined_term_with_quote() else str()
-        return self.length.evaluate_to_int() if self.is_length_present() else DataType.get_length(self.data_type, value)
+        return self.length.evaluate_to_int(symbol_table) if self.is_length_present() else DataType.get_length(self.data_type, value)
+
+    def get_length_of_generate_term(self, symbol_table: SymbolTable = None) -> int:
+        return self.get_duplication_factor_value(symbol_table) * self.get_length_value(symbol_table)
 
     def create_expression_for_duplication_factor_or_length(self, start_index: int, end_index: int) -> Optional[Expression]:
         string = self._string[start_index:end_index]
