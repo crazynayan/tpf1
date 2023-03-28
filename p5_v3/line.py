@@ -15,7 +15,7 @@ class AssemblerLine:
         self.operand_accumulator: str = str()
 
     def __repr__(self):
-        return f"{self.label}:{self.command}:{self.operand}"
+        return f"{self.label}:{self.operation_code}:{self.operand}"
 
     def get_next_space(self, start_index: int) -> int:
         for index, char in enumerate(self.line[start_index:]):
@@ -44,22 +44,22 @@ class AssemblerLine:
         return self.line[:self.label_end]
 
     @property
-    def command_start(self) -> int:
+    def operation_code_start(self) -> int:
         try:
             return self.get_next_non_space(self.label_end)
         except ParserError:
             return len(self.line)
 
     @property
-    def command_end(self) -> int:
+    def operation_code_end(self) -> int:
         try:
-            return self.get_next_space(self.command_start)
+            return self.get_next_space(self.operation_code_start)
         except ParserError:
             return len(self.line)
 
     @property
-    def command(self) -> str:
-        return self.line[self.command_start: self.command_end]
+    def operation_code(self) -> str:
+        return self.line[self.operation_code_start: self.operation_code_end]
 
     def is_commented_out(self) -> bool:
         return self.line[self.LABEL_START] in self.COMMENTED_OUT_CHARS
@@ -69,7 +69,7 @@ class AssemblerLine:
 
     def get_operand_info(self, continuing: bool, inside_quote: bool, previous_line_ending_with_l: bool) -> Tuple[str, bool]:
         try:
-            operand_start = self.CONTINUING_START if continuing else self.get_next_non_space(self.command_end)
+            operand_start = self.CONTINUING_START if continuing else self.get_next_non_space(self.operation_code_end)
         except ParserError:
             return str(), False
         if operand_start >= self.CONTINUATION_START:
