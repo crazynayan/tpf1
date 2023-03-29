@@ -76,3 +76,12 @@ class OperationCode:
 
     def get_operation_parsers(self) -> List[Callable]:
         return self.DOMAIN[self.get_operation_domain()].PARSER
+
+    def is_parse_with_no_operands(self):
+        return self.get_operation_type() == self.PARSE_WITH_NO_OPERANDS
+
+    def is_parse_based_on_operands(self):
+        return self.get_operation_type() == self.PARSE_BASED_ON_OPERANDS
+
+    def is_parse_as_specified(self):
+        return self.get_operation_type() == self.PARSE_AS_SPECIFIED
