@@ -63,8 +63,11 @@ class OperationCode:
     OPERATION.FINIS = NO_OPERAND
     OPERATION.END = NO_OPERAND
 
-    def __init__(self, operation_code):
+    def __init__(self, operation_code: str):
         self.operation_code: str = operation_code
+
+    def __repr__(self):
+        return self.operation_code
 
     def get_operation_domain(self) -> str:
         if self.operation_code not in self.OPERATION:
@@ -77,11 +80,11 @@ class OperationCode:
     def get_operation_parsers(self) -> List[Callable]:
         return self.DOMAIN[self.get_operation_domain()].PARSER
 
-    def is_parse_with_no_operands(self):
+    def is_parse_with_no_operands(self) -> bool:
         return self.get_operation_type() == self.PARSE_WITH_NO_OPERANDS
 
-    def is_parse_based_on_operands(self):
+    def is_parse_based_on_operands(self) -> bool:
         return self.get_operation_type() == self.PARSE_BASED_ON_OPERANDS
 
-    def is_parse_as_specified(self):
+    def is_parse_as_specified(self) -> bool:
         return self.get_operation_type() == self.PARSE_AS_SPECIFIED
