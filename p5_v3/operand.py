@@ -29,8 +29,7 @@ class OperandParser:
         operands.append(self.operand[start_index:len(self.operand)])
         return operands
 
-    def parse(self, operation_code: str) -> list:
-        operation: OperationCode = OperationCode(operation_code)
+    def parse(self, operation: OperationCode) -> list:
         if operation.is_parse_with_no_operands():
             return list()
         operands: List[str] = self.split_operands()
