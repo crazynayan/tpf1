@@ -16,11 +16,11 @@ class MacroCall:
 class OperationCode:
     PARSE_AS_SPECIFIED, PARSE_BASED_ON_OPERANDS, PARSE_WITH_NO_OPERANDS = 0, 1, 2
     TERM, EXPRESSION, NO_OPERAND, RI1, RIL1, RR, RRE, RS1, RS2, RSL, SI, RX, SS1, SS2, MACRO_CALL = \
-        "term", "expression", "no operand", "RI1", "RIL1", "RR", "RRE", "RS1", "RS2", "RSL", "SI", "RX", "SS1", "SS2", "macro_call"
+        "term", "expression", "no operand", "RI1", "RIL1", "RR", "RRE", "RS1", "RS2", "RSL", "SI", "RX", "SS1", "SS2", "macro call"
     TYPE, PARSER = "type", "parser"
     DOMAIN: Munch = Munch()
     DOMAIN.TERM = DOMAIN.EXPRESSION = DOMAIN.NO_OPERAND = DOMAIN.RI1 = DOMAIN.RIL1 = DOMAIN.RR = DOMAIN.RRE = DOMAIN.RS1 = DOMAIN.RS2 = \
-        DOMAIN.RSL = DOMAIN.SI = DOMAIN.RX = DOMAIN.SS1 = DOMAIN.SS2 = DOMAIN.KEY_VALUE = Munch()
+        DOMAIN.RSL = DOMAIN.SI = DOMAIN.RX = DOMAIN.SS1 = DOMAIN.SS2 = DOMAIN.MACRO_CALL = Munch()
     DOMAIN.TERM.TYPE = PARSE_BASED_ON_OPERANDS
     DOMAIN.TERM.PARSER = [SelfDefinedTerm]
     DOMAIN.EXPRESSION.TYPE = PARSE_BASED_ON_OPERANDS
