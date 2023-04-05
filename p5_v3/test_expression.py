@@ -148,6 +148,12 @@ class SelfDefinedTermTest(unittest.TestCase):
         self.assertEqual("C", lines[14].operands[0].data_type)
         self.assertEqual(2, lines[14].operands[0].get_length_value())
 
+    def test_literal(self):
+        expression = Expression("=F'2'")
+        self.assertTrue(expression.tokens[0].is_literal())
+        expression = Expression("S'=P'975.32'")
+        self.assertTrue(expression.tokens[0].is_literal())
+
 
 if __name__ == '__main__':
     unittest.main()

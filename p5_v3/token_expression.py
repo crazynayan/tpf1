@@ -8,7 +8,7 @@ from p5_v3.symbol_table import SymbolTable
 
 class Token:
     DATA_PREFIX = r"\'"
-    LENGTH_PREFIX = f"{Operators.LENGTH_SYMBOL}{Operators.QUOTE}"
+    LENGTH_PREFIX = f"{Operators.LENGTH_ATTRIBUTE}{Operators.QUOTE}"
 
     def __init__(self, string: str = None, *, data: bool = False, term: Optional['SelfDefinedTerm'] = None):
         if not string and not term:
@@ -21,6 +21,8 @@ class Token:
         self._term: Optional['SelfDefinedTerm'] = term
         if data:
             self._string = f"{self.DATA_PREFIX}{string}"
+        if self.is_attributed() and self._string[2] == Operators.LITERAL_IDENTIFIER:
+            self._term = SelfDefinedTerm(self._string[2:])
 
     def __repr__(self) -> str:
         return self._string
@@ -44,7 +46,11 @@ class Token:
         raise ParserError("Token -> Cannot evaluate token.")
 
     def is_decimal(self) -> bool:
-        return self._string.isdigit()
+        try:
+            int(self._string)
+        except ValueError:
+            return False
+        return True
 
     def get_value_from_decimal(self) -> int:
         try:
@@ -58,10 +64,14 @@ class Token:
     def get_value_from_register(self) -> int:
         return Registers.get_value(self._string)
 
+    def is_attributed(self) -> bool:
+        return len(self._string) > 2 and self._string[0] in Operators.ATTRIBUTES and self._string[1] == Operators.QUOTE
+
     def is_symbol(self) -> bool:
         if self.is_register():
             return False
-        return is_char_first_char_of_symbol(self._string[0])
+        first_char_of_symbol: str = self._string[2] if self.is_attributed() else self._string[0]
+        return is_char_first_char_of_symbol(first_char_of_symbol)
 
     def evaluate_symbol(self, symbol_table: SymbolTable) -> int:
         if self._string.startswith(self.LENGTH_PREFIX):
@@ -92,6 +102,9 @@ class Token:
     def is_self_defined_term(self):
         return self._term is not None
 
+    def is_literal(self):
+        return self.is_self_defined_term() and self._term.is_literal()
+
 
 class Expression:
 
@@ -105,7 +118,7 @@ class Expression:
     def build(self, input_string: str):
         string: str = input_string.strip().upper()
         if not string:
-            raise ParserError("create_expression -> Input string is empty.")
+            raise ParserError("Expression -> Input string is empty.")
         start_index: int = 0
         in_symbol: bool = bool()
         in_digit: bool = bool()
@@ -118,24 +131,30 @@ class Expression:
             if in_symbol:
                 if is_char_part_of_symbol(char):
                     continue
-                if char == Operators.QUOTE and index > 0 and string[index - 1] == Operators.LENGTH_SYMBOL:
+                if char == Operators.QUOTE and index > 0 and string[index - 1] in Operators.ATTRIBUTES:
+                    continue
+                if char == Operators.LITERAL_IDENTIFIER and index > 0 and string[index - 1] == Operators.QUOTE:
+                    term = SelfDefinedTerm(string[index:])
+                    if not term.is_self_defined_term():
+                        raise ParserError("Expression -> Attributed literal needs to be a self defined term")
+                    term_end_index = term.length_of_string + index
                     continue
             if in_digit and char.isdigit():
                 continue
             if index > start_index and (in_symbol or in_digit):
                 self.tokens.append(Token(string[start_index:index]))
             in_symbol = in_digit = False
-            if char.isalnum() or char == Operators.OPENING_PARENTHESIS:
+            if char.isalnum() or char == Operators.OPENING_PARENTHESIS or char == Operators.LITERAL_IDENTIFIER:
                 term = SelfDefinedTerm(string[index:])
                 if term.is_self_defined_term():
                     self.tokens.append(Token(term=term))
-                    term_end_index = term.length_of_string
+                    term_end_index = term.length_of_string + index
                     continue
             if is_char_first_char_of_symbol(char):
                 start_index = index
                 in_symbol = True
                 continue
-            if char.isdigit():
+            if char.isdigit() or (char == Operators.MINUS and (index == 0 or (string[index - 1] == Operators.OPENING_PARENTHESIS))):
                 start_index = index
                 in_digit = True
                 continue
@@ -168,7 +187,11 @@ class SelfDefinedTerm:
     INVALID_SELF_DEFINED_TERM = -99
 
     def __init__(self, string: str):
-        self._string = string.strip()
+        self._string: str = string.strip()
+        self._literal: bool = False
+        if self._string and self._string[0] == Operators.LITERAL_IDENTIFIER:
+            self._literal = True
+            self._string = self._string[1:]
         self.duplication_factor: Optional[Expression] = None
         self.data_type: str = str()
         self.length: Optional[Expression] = None
@@ -192,6 +215,8 @@ class SelfDefinedTerm:
         if not self.is_data_type_present():
             return
         if value_index >= len(self._string):
+            if self._literal:  # Literals need to have values specified
+                self.remove_term()
             return
         self.build_values(value_index)
 
@@ -223,7 +248,7 @@ class SelfDefinedTerm:
         self.duplication_factor = self.create_expression_for_duplication_factor_or_length(0, data_type_index)
 
     def build_length(self, length_index: int) -> int:
-        if self._string[length_index] != Operators.LENGTH_SYMBOL:
+        if self._string[length_index] != Operators.LENGTH_ATTRIBUTE:
             return length_index
         value_index = GetIndex.after_parenthesis_or_digits(self._string, length_index + 1)
         if value_index == GetIndex.INVALID_ENCLOSURE:
@@ -244,17 +269,24 @@ class SelfDefinedTerm:
             self.remove_term()
             return
         self.length_of_string = end_index_of_string
-        if string[0] == Operators.QUOTE:
+        if string[0] == Operators.QUOTE == DataType.get_opening_enclosure(self.data_type):
             self.value = Token(string[1:-1], data=True)
             self.opening_enclosure = self.closing_enclosure = Token(Operators.QUOTE)
-        else:
+        elif string[0] == Operators.OPENING_PARENTHESIS == DataType.get_opening_enclosure(self.data_type):
             self.values = [Expression(value) for value in string[1:-1].split(Operators.COMMA)]
             self.opening_enclosure = Token(Operators.OPENING_PARENTHESIS)
             self.closing_enclosure = Token(Operators.CLOSING_PARENTHESIS)
+        else:
+            self.remove_term()
+        if self.is_literal():
+            self.length_of_string += 1
         return
 
     def is_data_type_present(self) -> bool:
         return bool(self.data_type)
+
+    def is_literal(self) -> bool:
+        return self.is_self_defined_term() and self._literal
 
     def is_duplication_factor_present(self) -> bool:
         return self.duplication_factor is not None
