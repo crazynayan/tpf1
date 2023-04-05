@@ -22,6 +22,11 @@ class DataType:
     INPUT_BASED_LENGTH.AD = lambda _: DataType.DEFAULT_LENGTH.AD
     INPUT_BASED_LENGTH.V = lambda _: DataType.DEFAULT_LENGTH.V
     INPUT_BASED_LENGTH.S = lambda _: DataType.DEFAULT_LENGTH.S
+    OPENING_ENCLOSURE: Munch = Munch()
+    OPENING_ENCLOSURE.X = OPENING_ENCLOSURE.C = OPENING_ENCLOSURE.H = OPENING_ENCLOSURE.F = OPENING_ENCLOSURE.FD = OPENING_ENCLOSURE.B = \
+        OPENING_ENCLOSURE.P = OPENING_ENCLOSURE.Z = Operators.QUOTE
+    OPENING_ENCLOSURE.A = OPENING_ENCLOSURE.Y = OPENING_ENCLOSURE.AD = OPENING_ENCLOSURE.V = OPENING_ENCLOSURE.S = \
+        Operators.OPENING_PARENTHESIS
 
     @classmethod
     def get_data_type_from_start_of_string(cls, string: str) -> str:
@@ -56,3 +61,10 @@ class DataType:
         if not adjustment_required:
             return 0
         return default_length - adjustment_required
+
+    @classmethod
+    def get_opening_enclosure(cls, data_type: str):
+        try:
+            return cls.OPENING_ENCLOSURE[data_type]
+        except KeyError:
+            raise ParserError("DataType -> Invalid data type.")
