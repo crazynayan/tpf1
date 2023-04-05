@@ -44,19 +44,13 @@ class Preprocessor:
     def __init__(self):
         self.lines: List[str] = list()
 
-    def process(self) -> List[str]:
+    def process(self):
         self.remove_empty_lines()
         self.make_it_upper_case()
         self.remove_trailing_newline_char()
+
+    def get_lines(self) -> List[str]:
         return self.lines
-
-    def is_cvs_file(self) -> bool:
-        if self.FIRST_TWO_CHAR_IN_CVS_HEADER != [line[:2] for line in self.lines[:self.LEN_OF_HEADER]]:
-            return False
-        return all(line[0] == self.PREFIX_CHAR for line in self.lines[self.LEN_OF_HEADER:] if line.strip())
-
-    def remove_cvs_tags(self) -> None:
-        self.lines = [line[self.LEN_OF_PREFIX_TO_REMOVE:] for line in self.lines[self.LEN_OF_HEADER:] if line.strip()]
 
     def remove_empty_lines(self) -> None:
         self.lines = [line for line in self.lines if line.strip()]
@@ -76,6 +70,15 @@ class FilePreprocessor(Preprocessor):
         self.lines = file.open()
         if file.file_type in (file.ASSEMBLER, file.MACRO) and self.is_cvs_file():
             self.remove_cvs_tags()
+        self.process()
+
+    def is_cvs_file(self) -> bool:
+        if self.FIRST_TWO_CHAR_IN_CVS_HEADER != [line[:2] for line in self.lines[:self.LEN_OF_HEADER]]:
+            return False
+        return all(line[0] == self.PREFIX_CHAR for line in self.lines[self.LEN_OF_HEADER:] if line.strip())
+
+    def remove_cvs_tags(self) -> None:
+        self.lines = [line[self.LEN_OF_PREFIX_TO_REMOVE:] for line in self.lines[self.LEN_OF_HEADER:] if line.strip()]
 
 
 class StreamPreprocessor(Preprocessor):
@@ -83,3 +86,4 @@ class StreamPreprocessor(Preprocessor):
     def __init__(self, buffer: str):
         super().__init__()
         self.lines = buffer.split("\n")
+        self.process()

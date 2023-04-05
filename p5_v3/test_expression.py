@@ -1,12 +1,15 @@
 import unittest
+from typing import List
 
-from p5_v3.line import AssemblerLines
+from p5_v3.line import AssemblerLines, AssemblerLine
 from p5_v3.operand import OperandParser
+from p5_v3.parser import FileParser, ParsedLine
 from p5_v3.token_expression import SelfDefinedTerm, Expression
 
 
 # noinspection SpellCheckingInspection
 class SelfDefinedTermTest(unittest.TestCase):
+    WA0AA_FILENAME = "p0_source/sabre/macro/wa0aa.mac"
 
     def test_only_data_type(self):
         term = SelfDefinedTerm("X")
@@ -88,8 +91,8 @@ class SelfDefinedTermTest(unittest.TestCase):
 
     def test_file_preprocessor(self):
         from p5_v3.file import FilePreprocessor
-        preprocessor = FilePreprocessor("p0_source/sabre/macro/wa0aa.mac")
-        lines = AssemblerLines(preprocessor.process()).process()
+        preprocessor = FilePreprocessor(self.WA0AA_FILENAME)
+        lines: List[AssemblerLine] = AssemblerLines(preprocessor.get_lines()).get_lines()
         self.assertEqual("WA0BID&LC0", lines[14].label)
         self.assertEqual("DS", lines[14].operation_code)
         self.assertEqual("CL2", lines[14].operand)
@@ -98,7 +101,7 @@ class SelfDefinedTermTest(unittest.TestCase):
         from p5_v3.file import StreamPreprocessor
         from p5_v3.source_file import continuation_lines
         preprocessor = StreamPreprocessor(continuation_lines)
-        lines = AssemblerLines(preprocessor.process()).process()
+        lines: List[AssemblerLine] = AssemblerLines(preprocessor.get_lines()).get_lines()
         self.assertEqual("BIG", lines[0].label)
         self.assertEqual("DC", lines[0].operation_code)
         self.assertEqual("Y(ADR1-EXAM,L'ADR1-L'EXAM),X'23',YL1(EXAM+ADR1,L'ZON3+L'HALF1-EXAM+#UI2NXT)", lines[0].operand)
@@ -136,6 +139,14 @@ class SelfDefinedTermTest(unittest.TestCase):
         self.assertEqual(2, len(operands))
         self.assertEqual("", operands[0])
         self.assertEqual("", operands[1])
+
+    def test_file_parser(self):
+        file_parser = FileParser(self.WA0AA_FILENAME)
+        lines: List[ParsedLine] = file_parser.get_lines()
+        self.assertEqual("WA0BID&LC0", lines[14].label)
+        self.assertEqual("DS", lines[14].operation_code.get_operation_code())
+        self.assertEqual("C", lines[14].operands[0].data_type)
+        self.assertEqual(2, lines[14].operands[0].get_length_value())
 
 
 if __name__ == '__main__':

@@ -1,3 +1,6 @@
+from typing import List
+
+from p5_v3.file import FilePreprocessor
 from p5_v3.line import AssemblerLine, AssemblerLines
 from p5_v3.operand import OperandParser
 from p5_v3.operation_code import OperationCode
@@ -13,5 +16,16 @@ class ParsedLine:
 
 class ParsedLines:
 
-    def __init__(self, lines: AssemblerLines):
-        self.parsed_lines: list = [ParsedLine(line) for line in lines.lines]
+    def __init__(self, lines: List[AssemblerLine]):
+        self.parsed_lines: List[ParsedLine] = [ParsedLine(line) for line in lines]
+
+    def get_lines(self) -> List[ParsedLine]:
+        return self.parsed_lines
+
+
+class FileParser(ParsedLines):
+
+    def __init__(self, filename: str):
+        preprocessor: FilePreprocessor = FilePreprocessor(filename)
+        assembler_lines: AssemblerLines = AssemblerLines(preprocessor.get_lines())
+        super().__init__(assembler_lines.get_lines())

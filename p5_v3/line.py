@@ -106,10 +106,10 @@ class AssemblerLines:
 
     def __init__(self, strings: List[str]):
         self.lines: List[AssemblerLine] = [AssemblerLine(line) for line in strings]
-
-    def process(self) -> List[AssemblerLine]:
         self.lines = self.remove_commented_out_lines()
         self.lines = self.combine_continuation_lines()
+
+    def get_lines(self) -> List[AssemblerLine]:
         return self.lines
 
     def remove_commented_out_lines(self) -> List[AssemblerLine]:
