@@ -111,6 +111,7 @@ class SelfDefinedTermTest(unittest.TestCase):
         self.assertEqual("TEST1", lines[2].label)
         self.assertEqual("DS", lines[2].operation_code)
         self.assertEqual("Y(LONG_LABEL_TO_FILL_UP_SPACE_IN_THE_LINES_OF_OPERANDS+L'SOME_LABEL)", lines[2].operand)
+        self.assertEqual("MSG='RAMMAANAARJUNA''S DINNER IS ALWAYS MADE FIRST, ISN''T IT?'", lines[3].operand)
 
     def test_term_length(self):
         term = SelfDefinedTerm("X'010'")
