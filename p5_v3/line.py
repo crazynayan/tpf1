@@ -67,14 +67,16 @@ class AssemblerLine:
     def is_continuation_present(self) -> bool:
         return len(self.line) > self.CONTINUATION_START and self.line[self.CONTINUATION_START] != Operators.SPACE
 
-    def get_operand_info(self, continuing: bool, inside_quote: bool, previous_line_ending_with_l: bool) -> Tuple[str, bool]:
+    def get_operand_info(self, continuing: bool, inside_quote: bool, previous_line_ending_with_l: bool,
+                         parenthesis_nesting_level: int) -> Tuple[str, bool, int]:
         try:
             operand_start = self.CONTINUING_START if continuing else self.get_next_non_space(self.operation_code_end)
         except ParserError:
-            return str(), False
+            return str(), bool(), int()
         if operand_start >= self.CONTINUATION_START:
-            return str(), False
+            return str(), bool(), int()
         is_inside_quote = inside_quote
+        nesting_level = parenthesis_nesting_level
         operand_end = self.CONTINUATION_START
         for index, char in enumerate(self.line[operand_start:self.CONTINUATION_START]):
             possible_length_attribute = previous_line_ending_with_l
@@ -86,13 +88,20 @@ class AssemblerLine:
             if is_inside_quote and char == Operators.QUOTE:
                 is_inside_quote = False
                 continue
-            if not is_inside_quote and char == Operators.SPACE:
+            if char == Operators.OPENING_PARENTHESIS:
+                nesting_level += 1
+                continue
+            if char == Operators.CLOSING_PARENTHESIS:
+                nesting_level -= 1
+                continue
+            if not is_inside_quote and not nesting_level and char == Operators.SPACE:
                 operand_end = index + operand_start
                 break
-        return self.line[operand_start:operand_end], is_inside_quote
+        return self.line[operand_start:operand_end], is_inside_quote, nesting_level
 
-    def get_operand(self, *, continuing: bool = False, inside_quote: bool = False, previous_line_ending_with_l: bool = False) -> str:
-        return self.get_operand_info(continuing, inside_quote, previous_line_ending_with_l)[0]
+    def get_operand(self, *, continuing: bool = False, inside_quote: bool = False, previous_line_ending_with_l: bool = False,
+                    nesting_level: int = 0) -> str:
+        return self.get_operand_info(continuing, inside_quote, previous_line_ending_with_l, nesting_level)[0]
 
     def add_to_operand(self, string: str):
         self.operand_accumulator += string
@@ -131,12 +140,14 @@ class AssemblerLines:
         continuing: bool = False
         inside_quote: bool = False
         previous_line_ending_with_l: bool = False
+        nesting_level: int = 0
         main_line: Optional[AssemblerLine] = None
         for line in self.lines:
             if not continuing and not line.is_continuation_present():
                 combined_lines.append(line)
                 continue
-            operand, inside_quote = line.get_operand_info(continuing, inside_quote, previous_line_ending_with_l)
+            operand, inside_quote, nesting_level = line.get_operand_info(continuing, inside_quote, previous_line_ending_with_l,
+                                                                         nesting_level)
             if not continuing:
                 main_line: AssemblerLine = line
                 combined_lines.append(line)

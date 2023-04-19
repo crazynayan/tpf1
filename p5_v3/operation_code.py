@@ -80,7 +80,7 @@ class OperationCode:
     OPERATION.END = NO_OPERAND
 
     OPERATION.MACRO = NO_OPERAND
-    OPERATION.AIF = NO_OPERAND  # TODO: Fix it later
+    OPERATION.AIF = EXPRESSION
 
     def __init__(self, operation_code: str):
         self.operation_code: str = operation_code
