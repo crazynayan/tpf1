@@ -13,6 +13,9 @@ class ParsedLine:
         self.operation_code: OperationCode = OperationCode(line.operation_code)
         self.operands: list = OperandParser(line.operand).parse(self.operation_code)
 
+    def __repr__(self):
+        return f"{self.label}:{self.operation_code}:#{len(self.operands)}"
+
 
 class ParsedLines:
 
