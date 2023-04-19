@@ -259,7 +259,9 @@ class SelfDefinedTerm:
 
     def build_values(self, value_index: int):
         if self._string[value_index] not in {Operators.QUOTE, Operators.OPENING_PARENTHESIS}:
-            raise ParserError("SelfDefinedTerm -> Values if present should start with a quote or parenthesis.")
+            self.remove_term()
+            return
+            # raise ParserError("SelfDefinedTerm -> Values if present should start with a quote or parenthesis.")
         end_index_of_string = GetIndex.after_parenthesis_or_quote(self._string, value_index)
         if end_index_of_string == GetIndex.INVALID_ENCLOSURE:
             self.remove_term()
