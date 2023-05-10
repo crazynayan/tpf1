@@ -13,7 +13,7 @@ class MacroCall(Expression):
     pass
 
 
-class OperationCode:
+class OperationCodeConstants:
     PARSE_AS_SPECIFIED, PARSE_BASED_ON_OPERANDS, PARSE_WITH_NO_OPERANDS = 0, 1, 2
     TERM, EXPRESSION, NO_OPERAND, RI1, RIL1, RR, RRE, RS1, RS2, RSL, SI, RX, SS1, SS2, MACRO_CALL = \
         "TERM", "EXPRESSION", "NO_OPERAND", "RI1", "RIL1", "RR", "RRE", "RS1", "RS2", "RSL", "SI", "RX", "SS1", "SS2", "MACRO_CALL"
@@ -78,9 +78,11 @@ class OperationCode:
     OPERATION.LTORG = NO_OPERAND
     OPERATION.FINIS = NO_OPERAND
     OPERATION.END = NO_OPERAND
-
     OPERATION.MACRO = NO_OPERAND
     OPERATION.AIF = EXPRESSION
+
+
+class OperationCode:
 
     def __init__(self, operation_code: str):
         self.operation_code: str = operation_code
@@ -92,21 +94,30 @@ class OperationCode:
         return self.operation_code
 
     def get_operation_domain(self) -> str:
-        if self.operation_code not in self.OPERATION:
-            return self.MACRO_CALL
-        return self.OPERATION[self.operation_code]
+        if self.operation_code not in OperationCodeConstants.OPERATION:
+            return OperationCodeConstants.MACRO_CALL
+        return OperationCodeConstants.OPERATION[self.operation_code]
 
     def get_operation_type(self) -> int:
-        return self.DOMAIN[self.get_operation_domain()].TYPE
+        return OperationCodeConstants.DOMAIN[self.get_operation_domain()].TYPE
 
     def get_operation_parsers(self) -> List[Callable]:
-        return self.DOMAIN[self.get_operation_domain()].PARSER
+        return OperationCodeConstants.DOMAIN[self.get_operation_domain()].PARSER
 
     def is_parse_with_no_operands(self) -> bool:
-        return self.get_operation_type() == self.PARSE_WITH_NO_OPERANDS
+        return self.get_operation_type() == OperationCodeConstants.PARSE_WITH_NO_OPERANDS
 
     def is_parse_based_on_operands(self) -> bool:
-        return self.get_operation_type() == self.PARSE_BASED_ON_OPERANDS
+        return self.get_operation_type() == OperationCodeConstants.PARSE_BASED_ON_OPERANDS
 
     def is_parse_as_specified(self) -> bool:
-        return self.get_operation_type() == self.PARSE_AS_SPECIFIED
+        return self.get_operation_type() == OperationCodeConstants.PARSE_AS_SPECIFIED
+
+    def is_dsect(self) -> bool:
+        return self.operation_code == OperationCodeConstants.DSECT
+
+    def is_csect(self) -> bool:
+        return self.operation_code == OperationCodeConstants.CSECT
+
+    def is_equ(self) -> bool:
+        return self.operation_code == OperationCodeConstants.EQU

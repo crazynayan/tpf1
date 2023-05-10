@@ -8,3 +8,7 @@ class SourceFileNotFound(ParserError):
 
 class SymbolNotFoundError(ParserError):
     pass
+
+
+class SymbolTableError(ParserError):
+    pass
