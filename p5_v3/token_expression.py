@@ -2,6 +2,7 @@ from typing import Optional, List, Tuple
 
 from p5_v3.base_parser import ParserError, Operators, is_char_first_char_of_symbol, is_char_part_of_symbol, GetIndex
 from p5_v3.data_type import DataType
+from p5_v3.errors import SymbolTableError
 from p5_v3.register import Registers
 from p5_v3.symbol_table import SymbolTable
 
@@ -72,6 +73,14 @@ class Token:
             return False
         first_char_of_symbol: str = self._string[2] if self.is_attributed() else self._string[0]
         return is_char_first_char_of_symbol(first_char_of_symbol)
+
+    def get_symbol(self) -> str:
+        if not self.is_symbol():
+            raise SymbolTableError
+        return self._string[2:] if self.is_attributed() else self._string
+
+    def is_length_attributed(self) -> bool:
+        return self.is_symbol() and self.is_attributed() and self._string[0] == Operators.LENGTH_ATTRIBUTE
 
     def evaluate_symbol(self, symbol_table: SymbolTable) -> int:
         if self._string.startswith(self.LENGTH_PREFIX):
@@ -306,8 +315,11 @@ class SelfDefinedTerm:
         return self.duplication_factor.evaluate_to_int(symbol_table) if self.is_duplication_factor_present() else 1
 
     def get_length_value(self, symbol_table: SymbolTable = None) -> int:
+        return self.length.evaluate_to_int(symbol_table) if self.is_length_present() else self.get_implicit_length()
+
+    def get_implicit_length(self) -> int:
         value: str = self.value.data if self.is_self_defined_term_with_quote() else str()
-        return self.length.evaluate_to_int(symbol_table) if self.is_length_present() else DataType.get_length(self.data_type, value)
+        return DataType.get_length(self.data_type, value)
 
     def get_length_of_generate_term(self, symbol_table: SymbolTable = None) -> int:
         return self.get_duplication_factor_value(symbol_table) * self.get_length_value(symbol_table)
