@@ -4,13 +4,27 @@ from p5_v3.register import Registers
 
 class Symbol:
     DEFAULT_BASE = Registers.R0
+    INVALID_VALUE = -1
+    RELOCATABLE_VALUE = -2
 
-    def __init__(self, name, dsp, length, owner):
+    def __init__(self, name, owner):
         self.name: str = name
-        self.dsp: int = dsp
-        self.length: int = length
+        self.dsp: int = self.INVALID_VALUE
+        self.length: int = self.INVALID_VALUE
         self.base: str = self.DEFAULT_BASE
         self.owner: str = owner
+
+    def set_displacement_as_relocatable(self):
+        self.dsp = self.RELOCATABLE_VALUE
+
+    def set_length_as_relocatable(self):
+        self.length = self.RELOCATABLE_VALUE
+
+    def is_displacement_evaluated(self):
+        return self.dsp not in (self.INVALID_VALUE, self.RELOCATABLE_VALUE)
+
+    def is_length_evaluated(self):
+        return self.length not in (self.INVALID_VALUE, self.RELOCATABLE_VALUE)
 
 
 class SymbolTable:
@@ -25,8 +39,8 @@ class SymbolTable:
         self.default_owner_name: str = f"{self.DEFAULT_OWNER_PREFIX}{name}"
         self.current_owner_name: str = self.default_owner_name
 
-    def add_symbol(self, name: str, dsp: int, length: int):
-        symbol = Symbol(name, dsp, length, self.current_owner_name)
+    def add_symbol(self, name: str):
+        symbol = Symbol(name, self.current_owner_name)
         self._symbol_table[name] = symbol
 
     def get_symbol(self, name: str) -> Symbol:
