@@ -156,7 +156,7 @@ class Pnr:
     def replace_pnr_data(data: bytearray, pnr_locator: str, key: str, item_number: int, packed: bool = False) -> None:
         # item_number starts from 1 for the 1st item (index 0)
         try:
-            pnr_doc = next(pnr["doc"] for pnr in Pnr.DB if pnr["id"] == pnr_locator)
+            pnr_doc: List[Dict[str, bytearray]] = next(pnr["doc"] for pnr in Pnr.DB if pnr["id"] == pnr_locator)
         except StopIteration:
             raise PnrLocatorNotFoundError
         attribute = Pnr.get_attribute_by_key(key)
