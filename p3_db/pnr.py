@@ -2,6 +2,7 @@ from typing import List, Dict, Union, Tuple, Optional
 
 from config import config
 from p1_utils.data_type import DataType
+from p1_utils.domain import get_domain
 from p1_utils.errors import PnrElementError, PnrLocatorNotFoundError, NotFoundInSymbolTableError, TestDataError
 from p2_assembly.mac0_generic import LabelReference
 from p2_assembly.mac2_data_macro import get_macros
@@ -81,6 +82,14 @@ class Pnr:
         PnrAttribute(ADM_CLUB, "82", std_var=bytearray([0x80])),  # Indicate NEW item
         PnrAttribute(TKT_TIM_LMT, "68", std_var=bytearray([0x80])),  # Indicate NEW item
     ]
+    DOMAIN = get_domain()
+
+    @classmethod
+    def init_pdequ(cls):
+        if cls.DOMAIN != get_domain():
+            cls.PDEQU = load_pdequ()
+            cls.DOMAIN = get_domain()
+        return
 
     @classmethod
     def init_db(cls) -> None:
