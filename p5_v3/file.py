@@ -34,6 +34,9 @@ class File:
     def exists(self) -> bool:
         return exists(self.filename)
 
+    def get_name(self) -> str:
+        return self.name_four_char if self.file_type in (self.ASSEMBLER or self.LISTING) else self.filename[:-4].upper()
+
 
 class Preprocessor:
     PREFIX_CHAR = "0"
