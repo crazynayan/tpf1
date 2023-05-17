@@ -1,8 +1,21 @@
-from typing import Callable, List
+from typing import Callable, List, Set
 
 from munch import Munch
 
+from p5_v3.errors import SymbolTableError
 from p5_v3.token_expression import SelfDefinedTerm, Expression
+
+
+class InstructionLength:
+    DEFAULT: int = 4
+    LEN_2: Set[str] = {"BCTR", "BR", "LR", "LTR", "AR", "SR", "BER", "BNER", "BHR", "BNHR", "BLR", "BNLR",
+                       "BMR", "BNMR", "BPR", "BNPR", "BCR", "BOR", "BNOR", "BZR", "BNZR", "NOPR", "LPR",
+                       "LNR", "LCR", "MR", "DR", "MVCL", "BASR", "CR", "CLR", "CLCL", "ALR", "SLR", "NR",
+                       "OR", "XR"}
+    LEN_6: Set[str] = {"OC", "CLC", "XC", "UNPK", "PACK", "MVC", "MVZ", "MVN", "MVO", "NC", "ZAP", "AP",
+                       "SP", "MP", "DP", "CP", "TP", "SRP", "TR", "TRT", "ED", "EDMK"}
+    LEN_0: Set[str] = {"PUSH", "USING", "DSECT", "PGMID", "LTORG", "FINIS", "END", "ORG", "POP", "CSECT",
+                       "EJECT", "SPACE", "PRINT", "BEGIN", "DROP", "DATAS"}
 
 
 class BaseDisplacement(Expression):
@@ -113,6 +126,18 @@ class OperationCode:
     def is_parse_as_specified(self) -> bool:
         return self.get_operation_type() == OperationCodeConstants.PARSE_AS_SPECIFIED
 
+    def get_length(self) -> int:
+        if self.is_ds_or_dc() or self.is_equ():
+            raise SymbolTableError
+        if self.operation_code in InstructionLength.LEN_0:
+            return 0
+        if self.operation_code in InstructionLength.LEN_2:
+            return 2
+        if self.operation_code in InstructionLength.LEN_6:
+            return 6
+        # Consider raising exception for unknown operation code
+        return 4
+
     def is_dsect(self) -> bool:
         return self.operation_code == OperationCodeConstants.DSECT
 
@@ -121,3 +146,12 @@ class OperationCode:
 
     def is_equ(self) -> bool:
         return self.operation_code == OperationCodeConstants.EQU
+
+    def is_ds(self) -> bool:
+        return self.operation_code == OperationCodeConstants.DS
+
+    def is_dc(self) -> bool:
+        return self.operation_code == OperationCodeConstants.DC
+
+    def is_ds_or_dc(self) -> bool:
+        return self.is_ds() or self.is_dc()

@@ -1,4 +1,4 @@
-from p5_v3.errors import SymbolNotFoundError
+from p5_v3.errors import SymbolNotFoundError, SymbolTableError
 from p5_v3.register import Registers
 
 
@@ -26,6 +26,22 @@ class Symbol:
     def is_length_evaluated(self):
         return self.length not in (self.INVALID_VALUE, self.RELOCATABLE_VALUE)
 
+    def is_displacement_relocatable(self):
+        return self.dsp == self.RELOCATABLE_VALUE
+
+    def is_length_relocatable(self):
+        return self.length == self.RELOCATABLE_VALUE
+
+    def set_displacement(self, value: int):
+        if value < 0:
+            raise SymbolTableError
+        self.dsp = value
+
+    def set_length(self, value: int):
+        if value < 0:
+            raise SymbolTableError
+        self.length = value
+
 
 class SymbolTable:
     DEFAULT_OWNER_PREFIX = "START__"
@@ -40,8 +56,13 @@ class SymbolTable:
         self.current_owner_name: str = self.default_owner_name
 
     def add_symbol(self, name: str):
+        if self.is_symbol_created(name):
+            raise SymbolTableError("SymbolTable -> Duplicate symbol added")
         symbol = Symbol(name, self.current_owner_name)
         self._symbol_table[name] = symbol
+
+    def is_symbol_created(self, name: str) -> bool:
+        return name in self._symbol_table
 
     def get_symbol(self, name: str) -> Symbol:
         try:
@@ -73,7 +94,31 @@ class SymbolTable:
             self.csect_location_counter = self.current_location_counter
         self.current_owner_name = dsect_name
         self.current_location_counter = self.max_location_counter = 0
+        if not self.is_symbol_created(dsect_name):
+            self.add_symbol(dsect_name)
+            self.update_displacement(dsect_name, 0)
+            self.update_length(dsect_name, 1)
+        return
 
     def switch_to_csect(self) -> None:
         self.current_owner_name = self.default_owner_name
         self.current_location_counter = self.max_location_counter = self.csect_location_counter
+
+    def update_displacement_as_relocatable(self, label: str):
+        symbol: Symbol = self.get_symbol(label)
+        symbol.set_displacement_as_relocatable()
+
+    def update_displacement(self, label: str, value: int):
+        symbol: Symbol = self.get_symbol(label)
+        symbol.set_displacement(value)
+
+    def update_length_as_relocatable(self, label: str):
+        symbol: Symbol = self.get_symbol(label)
+        symbol.set_length_as_relocatable()
+
+    def update_length(self, label: str, value: int):
+        symbol: Symbol = self.get_symbol(label)
+        symbol.set_length(value)
+
+    def items(self):
+        return self._symbol_table.items()

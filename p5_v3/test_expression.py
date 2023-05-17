@@ -4,6 +4,8 @@ from typing import List
 from p5_v3.line import AssemblerLines, AssemblerLine
 from p5_v3.operand import OperandParser
 from p5_v3.parser import FileParser, ParsedLine
+from p5_v3.symbol_table import SymbolTable
+from p5_v3.symbol_table_builder import SymbolTableBuilderFromFilename
 from p5_v3.token_expression import SelfDefinedTerm, Expression
 
 
@@ -144,7 +146,7 @@ class SelfDefinedTermTest(unittest.TestCase):
     def test_file_parser(self):
         file_parser = FileParser(self.WA0AA_FILENAME)
         lines: List[ParsedLine] = file_parser.get_lines()
-        self.assertEqual("WA0BID&LC0", lines[14].label)
+        self.assertEqual("WA0BID", lines[14].label)
         self.assertEqual("DS", lines[14].operation_code.get_operation_code())
         self.assertEqual("C", lines[14].operands[0].data_type)
         self.assertEqual(2, lines[14].operands[0].get_length_value())
@@ -155,6 +157,10 @@ class SelfDefinedTermTest(unittest.TestCase):
         expression = Expression("S'=P'975.32'")
         self.assertTrue(expression.tokens[0].is_literal())
 
+    def test_symbol_table_builder(self):
+        symbol_table: SymbolTable = SymbolTableBuilderFromFilename(self.WA0AA_FILENAME).create()
+        self.assertTrue(symbol_table.get_symbol("WA0BID").is_displacement_relocatable())
+        # TODO : check #WA0 equates.
 
 if __name__ == '__main__':
     unittest.main()

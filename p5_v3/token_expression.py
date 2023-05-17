@@ -38,6 +38,8 @@ class Token:
             return self.get_value_from_decimal()
         if self.is_register():
             return self.get_value_from_register()
+        if self.is_self_defined_term():
+            return 0
         if not symbol_table:
             raise ParserError("Token -> Symbol Table not provided to evaluate a symbol or location counter.")
         if self.is_symbol():
@@ -69,6 +71,8 @@ class Token:
         return len(self._string) > 2 and self._string[0] in Operators.ATTRIBUTES and self._string[1] == Operators.QUOTE
 
     def is_symbol(self) -> bool:
+        if self.is_self_defined_term():
+            return False
         if self.is_register():
             return False
         first_char_of_symbol: str = self._string[2] if self.is_attributed() else self._string[0]
@@ -83,9 +87,8 @@ class Token:
         return self.is_symbol() and self.is_attributed() and self._string[0] == Operators.LENGTH_ATTRIBUTE
 
     def evaluate_symbol(self, symbol_table: SymbolTable) -> int:
-        if self._string.startswith(self.LENGTH_PREFIX):
-            return symbol_table.get_length(self._string[len(self.LENGTH_PREFIX):])
-        return symbol_table.get_dsp(self._string)
+        label = self.get_symbol()
+        return symbol_table.get_length(label) if self.is_length_attributed() else symbol_table.get_dsp(label)
 
     @property
     def data(self) -> str:
@@ -110,6 +113,9 @@ class Token:
 
     def is_self_defined_term(self):
         return self._term is not None
+
+    def is_self_defined_term_with_symbol(self):
+        return self.is_self_defined_term() and not self._term.is_self_defined_term_with_quote()
 
     def is_literal(self):
         return self.is_self_defined_term() and self._term.is_literal()
@@ -190,6 +196,15 @@ class Expression:
     def evaluate_to_register(self) -> str:
         register_value = self.evaluate_to_int()
         return Registers.get_symbol(register_value)
+
+    def has_location_counter(self) -> bool:
+        return any(token.is_location_counter() for token in self.tokens)
+
+    def has_symbol(self) -> bool:
+        return any(token.is_symbol() or token.is_self_defined_term_with_symbol() for token in self.tokens)
+
+    def get_token_with_symbol(self) -> List[Token]:
+        return [token for token in self.tokens if token.is_symbol()]
 
 
 class SelfDefinedTerm:
