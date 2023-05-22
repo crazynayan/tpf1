@@ -1,7 +1,7 @@
 from munch import Munch
 
 from p5_v3.base_parser import Operators
-from p5_v3.errors import ParserError
+from p5_v3.errors import ParserError, SymbolTableError
 
 
 class DataType:
@@ -27,6 +27,21 @@ class DataType:
         OPENING_ENCLOSURE.P = OPENING_ENCLOSURE.Z = Operators.QUOTE
     OPENING_ENCLOSURE.A = OPENING_ENCLOSURE.Y = OPENING_ENCLOSURE.AD = OPENING_ENCLOSURE.V = OPENING_ENCLOSURE.S = \
         Operators.OPENING_PARENTHESIS
+    VALUE = Munch()
+    VALUE.C = lambda string: int.from_bytes(bytes(string, encoding="cp037"), "big", signed=False)
+    VALUE.X = lambda string: int(string, 16)
+    VALUE.B = lambda string: int(string, 2)
+    VALUE.H = lambda string: round(float(string))
+    VALUE.F = VALUE.H
+    VALUE.D = VALUE.H
+    VALUE.FD = VALUE.H
+    VALUE.P = VALUE.H
+    VALUE.Z = VALUE.H
+    VALUE.A = lambda _: int("A")  # raise Value Error
+    VALUE.Y = VALUE.A
+    VALUE.AD = VALUE.A
+    VALUE.V = VALUE.A
+    VALUE.S = VALUE.A
 
     @classmethod
     def get_data_type_from_start_of_string(cls, string: str) -> str:
@@ -68,3 +83,16 @@ class DataType:
             return cls.OPENING_ENCLOSURE[data_type]
         except KeyError:
             raise ParserError("DataType -> Invalid data type.")
+
+    @classmethod
+    def is_absolute_value(cls, data_type: str):
+        return cls.get_opening_enclosure(data_type) == Operators.QUOTE
+
+    @classmethod
+    def evaluate_to_int(cls, data_type: str, data: str):
+        if not cls.is_absolute_value(data_type):
+            raise SymbolTableError("Data Type -> This data type cannot be evaluated without symbol table.")
+        try:
+            return cls.VALUE[data_type](data)
+        except ValueError:
+            raise SymbolTableError("Data Type -> Data is invalid for its data type.")

@@ -39,7 +39,7 @@ class Token:
         if self.is_register():
             return self.get_value_from_register()
         if self.is_self_defined_term():
-            return 0
+            return self._term.evaluate_to_int(symbol_table)
         if not symbol_table:
             raise ParserError("Token -> Symbol Table not provided to evaluate a symbol or location counter.")
         if self.is_symbol():
@@ -347,3 +347,14 @@ class SelfDefinedTerm:
             return Expression(string[1:-1])
         self.remove_term()
         return None
+
+    def evaluate_to_int(self, symbol_table: SymbolTable = None) -> int:
+        if not self.is_self_defined_term():
+            raise SymbolTableError
+        if DataType.is_absolute_value(self.data_type):
+            return DataType.evaluate_to_int(self.data_type, self.value.data)
+        elif not symbol_table:
+            raise SymbolTableError
+        if len(self.values) != 1:
+            raise SymbolTableError("SelfDefinedTerm -> Only one expression allowed in data type with symbols.")
+        return self.values[0].evaluate_to_int(symbol_table)

@@ -160,7 +160,9 @@ class SelfDefinedTermTest(unittest.TestCase):
     def test_symbol_table_builder(self):
         symbol_table: SymbolTable = SymbolTableBuilderFromFilename(self.WA0AA_FILENAME).create()
         self.assertTrue(symbol_table.get_symbol("WA0BID").is_displacement_relocatable())
-        # TODO : check #WA0 equates.
+        self.assertEqual(36, symbol_table.get_dsp("#WA0TA4"))
+        self.assertEqual(0x80, symbol_table.get_dsp("#WA0PTP"))
+        self.assertEqual(0x7F, symbol_table.get_dsp("#WA0IUU"))
 
 if __name__ == '__main__':
     unittest.main()
