@@ -10,12 +10,13 @@ from p5_v3.operation_code import OperationCode
 class ParsedLine:
 
     def __init__(self, line: AssemblerLine):
+        self.location_counter: int = int()
         self._label: str = line.label
         self.operation_code: OperationCode = OperationCode(line.operation_code)
         self.operands: list = OperandParser(line.operand).parse(self.operation_code)
 
     def __repr__(self):
-        return f"{self._label}:{self.operation_code}:#{len(self.operands)}"
+        return f"{self.location_counter:08X}:{self._label}:{self.operation_code}:#{len(self.operands)}"
 
     @property
     def label(self) -> str:
@@ -35,6 +36,9 @@ class ParsedLine:
             return self.operands[n - 1]
         except IndexError:
             raise ParserError("ParsedLine -> Invalid index of operand requested.")
+
+    def set_location_counter(self, location_counter: int):
+        self.location_counter = location_counter
 
 
 class ParsedLines:

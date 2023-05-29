@@ -81,7 +81,8 @@ class Token:
     def get_symbol(self) -> str:
         if not self.is_symbol():
             raise SymbolTableError
-        return self._string[2:] if self.is_attributed() else self._string
+        label = next(iter(self._string.split("&")))
+        return label[2:] if self.is_attributed() else label
 
     def is_length_attributed(self) -> bool:
         return self.is_symbol() and self.is_attributed() and self._string[0] == Operators.LENGTH_ATTRIBUTE
@@ -110,6 +111,9 @@ class Token:
 
     def is_quote(self):
         return self._string == Operators.QUOTE
+
+    def is_comma(self):
+        return self._string == Operators.COMMA
 
     def is_self_defined_term(self):
         return self._term is not None
@@ -205,6 +209,9 @@ class Expression:
 
     def get_token_with_symbol(self) -> List[Token]:
         return [token for token in self.tokens if token.is_symbol()]
+
+    def is_only_comma(self) -> bool:
+        return len(self.tokens) == 1 and self.tokens[0].is_comma()
 
 
 class SelfDefinedTerm:
@@ -336,8 +343,20 @@ class SelfDefinedTerm:
         value: str = self.value.data if self.is_self_defined_term_with_quote() else str()
         return DataType.get_length(self.data_type, value)
 
-    def get_length_of_generate_term(self, symbol_table: SymbolTable = None) -> int:
-        return self.get_duplication_factor_value(symbol_table) * self.get_length_value(symbol_table)
+    def number_of_values(self) -> int:
+        if not self.is_self_defined_term():
+            return 1
+        if self.is_self_defined_term_with_quote():
+            return 1
+        return len(self.values)
+
+    def get_length_of_generated_term(self, symbol_table: SymbolTable = None) -> int:
+        return self.get_duplication_factor_value(symbol_table) * self.get_length_value(symbol_table) * self.number_of_values()
+
+    def get_boundary_aligned_adjustment(self, symbol_table: SymbolTable) -> int:
+        if self.is_length_present():
+            return 0
+        return DataType.get_boundary_aligned_adjustment(self.data_type, symbol_table.get_location_counter())
 
     def create_expression_for_duplication_factor_or_length(self, start_index: int, end_index: int) -> Optional[Expression]:
         string = self._string[start_index:end_index]

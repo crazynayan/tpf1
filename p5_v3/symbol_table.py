@@ -83,6 +83,10 @@ class SymbolTable:
         self.current_location_counter += increment
         self.max_location_counter = max(self.current_location_counter, self.max_location_counter)
 
+    def set_location_counter(self, location_counter: int) -> None:
+        self.current_location_counter = location_counter
+        self.max_location_counter = max(self.current_location_counter, self.max_location_counter)
+
     def get_location_counter(self) -> int:
         return self.current_location_counter
 

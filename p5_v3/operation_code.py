@@ -15,7 +15,8 @@ class InstructionLength:
     LEN_6: Set[str] = {"OC", "CLC", "XC", "UNPK", "PACK", "MVC", "MVZ", "MVN", "MVO", "NC", "ZAP", "AP",
                        "SP", "MP", "DP", "CP", "TP", "SRP", "TR", "TRT", "ED", "EDMK"}
     LEN_0: Set[str] = {"PUSH", "USING", "DSECT", "PGMID", "LTORG", "FINIS", "END", "ORG", "POP", "CSECT",
-                       "EJECT", "SPACE", "PRINT", "BEGIN", "DROP", "DATAS"}
+                       "EJECT", "SPACE", "PRINT", "BEGIN", "DROP", "DATAS", "MACRO", "MEND",
+                       "AIF", "AGO", "ANOP", "ACTR", "SETA", "SETB", "SETC", "GBLA", "GBLB", "GBLC", "LCLA", "LCLB", "LCLC"}
 
 
 class BaseDisplacement(Expression):
@@ -92,7 +93,7 @@ class OperationCodeConstants:
     OPERATION.FINIS = NO_OPERAND
     OPERATION.END = NO_OPERAND
     OPERATION.MACRO = NO_OPERAND
-    OPERATION.AIF = EXPRESSION
+    # OPERATION.AIF = EXPRESSION
 
 
 class OperationCode:
@@ -155,3 +156,6 @@ class OperationCode:
 
     def is_ds_or_dc(self) -> bool:
         return self.is_ds() or self.is_dc()
+
+    def is_org(self) -> bool:
+        return self.operation_code == OperationCodeConstants.ORG
