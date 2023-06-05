@@ -2,7 +2,7 @@ from typing import Optional, List
 
 from p5_v3.errors import SymbolTableError
 from p5_v3.file import File
-from p5_v3.parser import ParsedLines, FileParser, ParsedLine
+from p5_v3.parser import ParsedLines, FileParser, ParsedLine, StreamParser
 from p5_v3.symbol_table import SymbolTable, Symbol
 from p5_v3.token_expression import Expression, SelfDefinedTerm, Token
 
@@ -153,13 +153,13 @@ class SymbolTableBuilder:
                     self.symbol_table.update_displacement(label, parsed_line.get_nth_operand(1).evaluate_to_int(self.symbol_table))
                 if not symbol.is_length_evaluated():
                     if parsed_line.number_of_operands() < 2 or not parsed_line.get_nth_operand(2):
-                        self.symbol_table.update_length(label, parsed_line.get_nth_operand(2).evaluate_to_int(self.symbol_table))
+                        raise SymbolTableError
+                    self.symbol_table.update_length(label, parsed_line.get_nth_operand(2).evaluate_to_int(self.symbol_table))
                 continue
             if parsed_line.operation_code.is_org():
                 if label:
                     raise SymbolTableError
-                if parsed_line.number_of_operands() < 1 or not parsed_line.get_nth_operand(1) or parsed_line.get_nth_operand(
-                        1).is_only_comma():
+                if parsed_line.number_of_operands() < 1:
                     new_location_counter = self.symbol_table.get_max_location_counter()
                 else:
                     new_location_counter = parsed_line.get_nth_operand(1).evaluate_to_int(self.symbol_table)
@@ -179,6 +179,9 @@ class SymbolTableBuilder:
                     generated_term_length: int = term.get_length_of_generated_term(self.symbol_table)
                     self.symbol_table.update_location_counter_by(boundary_alignment + generated_term_length)
                 continue
+            if symbol and not symbol.is_displacement_evaluated():
+                self.symbol_table.update_displacement(label, self.symbol_table.get_location_counter())
+            self.symbol_table.update_location_counter_by(parsed_line.operation_code.get_length())
 
 
 class SymbolTableBuilderFromFilename(SymbolTableBuilder):
@@ -188,6 +191,14 @@ class SymbolTableBuilderFromFilename(SymbolTableBuilder):
         file = File(filename)
         self.parser = FileParser(filename)
         self.symbol_table = symbol_table if symbol_table else SymbolTable(file.get_name())
+
+
+class SymbolTableBuilderFromStream(SymbolTableBuilder):
+
+    def __init__(self, buffer: str, owner: str, symbol_table: SymbolTable = None):
+        super().__init__()
+        self.parser = StreamParser(buffer)
+        self.symbol_table = symbol_table if symbol_table else SymbolTable(owner)
 
 
 class SymbolTableBuilderFromParser(SymbolTableBuilder):

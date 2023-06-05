@@ -1,7 +1,7 @@
 from typing import List
 
 from p5_v3.errors import ParserError
-from p5_v3.file import FilePreprocessor
+from p5_v3.file import FilePreprocessor, StreamPreprocessor
 from p5_v3.line import AssemblerLine, AssemblerLines
 from p5_v3.operand import OperandParser
 from p5_v3.operation_code import OperationCode
@@ -62,5 +62,13 @@ class FileParser(ParsedLines):
 
     def __init__(self, filename: str):
         preprocessor: FilePreprocessor = FilePreprocessor(filename)
+        assembler_lines: AssemblerLines = AssemblerLines(preprocessor.get_lines())
+        super().__init__(assembler_lines.get_lines())
+
+
+class StreamParser(ParsedLines):
+
+    def __init__(self, buffer: str):
+        preprocessor: StreamPreprocessor = StreamPreprocessor(buffer)
         assembler_lines: AssemblerLines = AssemblerLines(preprocessor.get_lines())
         super().__init__(assembler_lines.get_lines())

@@ -14,6 +14,9 @@ class Symbol:
         self.base: str = self.DEFAULT_BASE
         self.owner: str = owner
 
+    def __repr__(self):
+        return f"{self.name}:{self.dsp:06X}:{self.length}:{self.owner}"
+
     def set_displacement_as_relocatable(self):
         self.dsp = self.RELOCATABLE_VALUE
 

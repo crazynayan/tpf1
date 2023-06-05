@@ -1,11 +1,13 @@
 import unittest
 from typing import List
 
+from p5_v3.file import StreamPreprocessor, FilePreprocessor
 from p5_v3.line import AssemblerLines, AssemblerLine
 from p5_v3.operand import OperandParser
 from p5_v3.parser import FileParser, ParsedLine
+from p5_v3.source_file import continuation_lines
 from p5_v3.symbol_table import SymbolTable
-from p5_v3.symbol_table_builder import SymbolTableBuilderFromFilename
+from p5_v3.symbol_table_builder import SymbolTableBuilderFromFilename, SymbolTableBuilderFromStream
 from p5_v3.token_expression import SelfDefinedTerm, Expression
 
 
@@ -92,7 +94,6 @@ class SelfDefinedTermTest(unittest.TestCase):
         self.assertFalse(SelfDefinedTerm("X'01").is_data_type_present())
 
     def test_file_preprocessor(self):
-        from p5_v3.file import FilePreprocessor
         preprocessor = FilePreprocessor(self.WA0AA_FILENAME)
         lines: List[AssemblerLine] = AssemblerLines(preprocessor.get_lines()).get_lines()
         self.assertEqual("WA0BID&LC0", lines[14].label)
@@ -100,20 +101,20 @@ class SelfDefinedTermTest(unittest.TestCase):
         self.assertEqual("CL2", lines[14].operand)
 
     def test_continuing_lines(self):
-        from p5_v3.file import StreamPreprocessor
-        from p5_v3.source_file import continuation_lines
         preprocessor = StreamPreprocessor(continuation_lines)
         lines: List[AssemblerLine] = AssemblerLines(preprocessor.get_lines()).get_lines()
         self.assertEqual("BIG", lines[0].label)
         self.assertEqual("DC", lines[0].operation_code)
         self.assertEqual("Y(ADR1-EXAM,L'ADR1-L'EXAM),X'23',YL1(EXAM+ADR1,L'ZON3+L'HALF1-EXAM+#UI2NXT)", lines[0].operand)
-        self.assertEqual("TS110060", lines[1].label)
-        self.assertEqual("SENDA", lines[1].operation_code)
-        self.assertEqual("MSG='MAXIMUM NUMBER OF NAMES,PER PNR IS 99 - CREATE NEW PNR'", lines[1].operand)
-        self.assertEqual("TEST1", lines[2].label)
-        self.assertEqual("DS", lines[2].operation_code)
-        self.assertEqual("Y(LONG_LABEL_TO_FILL_UP_SPACE_IN_THE_LINES_OF_OPERANDS+L'SOME_LABEL)", lines[2].operand)
-        self.assertEqual("MSG='RAMMAANAARJUNA''S DINNER IS ALWAYS MADE FIRST, ISN''T IT?'", lines[3].operand)
+        self.assertEqual(",", lines[3].operand)
+        bump_for_org: int = 3
+        self.assertEqual("TS110060", lines[bump_for_org + 1].label)
+        self.assertEqual("SENDA", lines[bump_for_org + 1].operation_code)
+        self.assertEqual("MSG='MAXIMUM NUMBER OF NAMES,PER PNR IS 99 - CREATE NEW PNR'", lines[bump_for_org + 1].operand)
+        self.assertEqual("TEST1", lines[bump_for_org + 2].label)
+        self.assertEqual("DS", lines[bump_for_org + 2].operation_code)
+        self.assertEqual("Y(LONG_LABEL_TO_FILL_UP_SPACE_IN_THE_LINES_OF_OPERANDS+L'SOME_LABEL)", lines[bump_for_org + 2].operand)
+        self.assertEqual("MSG='RAMMAANAARJUNA''S DINNER IS ALWAYS MADE FIRST, ISN''T IT?'", lines[bump_for_org + 3].operand)
 
     def test_term_length(self):
         term = SelfDefinedTerm("X'010'")
@@ -164,6 +165,10 @@ class SelfDefinedTermTest(unittest.TestCase):
         self.assertEqual(0x7F, symbol_table.get_dsp("#WA0IUU"))
         self.assertEqual(0x258, symbol_table.get_dsp("WA0PCL"))
         self.assertEqual(0x2F8, symbol_table.get_dsp("WA2LD6"))
+        symbol_table: SymbolTable = SymbolTableBuilderFromStream(continuation_lines, "TEST").update_symbol_table()
+        self.assertEqual(7, symbol_table.get_dsp("TS110060"))
+        self.assertEqual(5, symbol_table.get_dsp("TEST_ORG"))
+
 
 if __name__ == '__main__':
     unittest.main()

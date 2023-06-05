@@ -210,9 +210,6 @@ class Expression:
     def get_token_with_symbol(self) -> List[Token]:
         return [token for token in self.tokens if token.is_symbol()]
 
-    def is_only_comma(self) -> bool:
-        return len(self.tokens) == 1 and self.tokens[0].is_comma()
-
 
 class SelfDefinedTerm:
     INVALID_SELF_DEFINED_TERM = -99

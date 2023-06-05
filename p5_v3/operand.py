@@ -39,4 +39,5 @@ class OperandParser:
         # operation.is_parse_as_specified()
         if len(operands) != len(parsers):
             raise ParserError("Operand -> For parser as specified, the number of operands do not match.")
+        # Empty operands are ignored. An only comma is equated to no operand.
         return [parsers[index](operand) for index, operand in enumerate(operands) if operand]
