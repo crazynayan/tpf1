@@ -1,7 +1,7 @@
 from munch import Munch
 
-from p5_v3.base_parser import Operators
-from p5_v3.errors import ParserError, SymbolTableError
+from p5_v3.p01_errors import ParserError, SymbolTableError
+from p5_v3.p11_base_parser import Operators
 
 
 class DataType:

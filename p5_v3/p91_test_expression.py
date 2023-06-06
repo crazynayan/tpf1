@@ -1,14 +1,14 @@
 import unittest
 from typing import List
 
-from p5_v3.file import StreamPreprocessor, FilePreprocessor
-from p5_v3.line import AssemblerLines, AssemblerLine
-from p5_v3.operand import OperandParser
-from p5_v3.parser import FileParser, ParsedLine
-from p5_v3.source_file import continuation_lines
-from p5_v3.symbol_table import SymbolTable
-from p5_v3.symbol_table_builder import SymbolTableBuilderFromFilename, SymbolTableBuilderFromStream
-from p5_v3.token_expression import SelfDefinedTerm, Expression
+from p5_v3.p02_source_file import continuation_lines
+from p5_v3.p14_symbol_table import SymbolTable
+from p5_v3.p15_token_expression import SelfDefinedTerm, Expression
+from p5_v3.p16_file import StreamPreprocessor, FilePreprocessor
+from p5_v3.p17_line import AssemblerLines, AssemblerLine
+from p5_v3.p22_operand import OperandParser
+from p5_v3.p28_parser import FileParser, ParsedLine
+from p5_v3.p31_symbol_table_builder import SymbolTableBuilderFromFilename, SymbolTableBuilderFromStream
 
 
 # noinspection SpellCheckingInspection

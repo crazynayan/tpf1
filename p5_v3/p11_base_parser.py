@@ -1,4 +1,4 @@
-from p5_v3.errors import ParserError
+from p5_v3.p01_errors import ParserError
 
 
 class Operators:

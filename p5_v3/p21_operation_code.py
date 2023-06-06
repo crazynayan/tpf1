@@ -2,8 +2,8 @@ from typing import Callable, List, Set
 
 from munch import Munch
 
-from p5_v3.errors import SymbolTableError
-from p5_v3.token_expression import SelfDefinedTerm, Expression
+from p5_v3.p01_errors import SymbolTableError
+from p5_v3.p15_token_expression import SelfDefinedTerm, Expression
 
 
 class InstructionLength:

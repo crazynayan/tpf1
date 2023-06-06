@@ -1,39 +1,41 @@
-from p5_v3.errors import SymbolNotFoundError, SymbolTableError
-from p5_v3.register import Registers
+from p5_v3.p01_errors import SymbolNotFoundError, SymbolTableError
+from p5_v3.p12_register import Registers
 
 
-class Symbol:
+class SymbolConstants:
     DEFAULT_BASE = Registers.R0
     INVALID_VALUE = -1
     RELOCATABLE_VALUE = -2
 
+
+class Symbol:
+
     def __init__(self, name, owner):
         self.name: str = name
-        self.dsp: int = self.INVALID_VALUE
-        self.length: int = self.INVALID_VALUE
-        self.base: str = self.DEFAULT_BASE
+        self.dsp: int = SymbolConstants.INVALID_VALUE
+        self.length: int = SymbolConstants.INVALID_VALUE
         self.owner: str = owner
 
     def __repr__(self):
         return f"{self.name}:{self.dsp:06X}:{self.length}:{self.owner}"
 
     def set_displacement_as_relocatable(self):
-        self.dsp = self.RELOCATABLE_VALUE
+        self.dsp = SymbolConstants.RELOCATABLE_VALUE
 
     def set_length_as_relocatable(self):
-        self.length = self.RELOCATABLE_VALUE
+        self.length = SymbolConstants.RELOCATABLE_VALUE
 
     def is_displacement_evaluated(self):
-        return self.dsp not in (self.INVALID_VALUE, self.RELOCATABLE_VALUE)
+        return self.dsp not in (SymbolConstants.INVALID_VALUE, SymbolConstants.RELOCATABLE_VALUE)
 
     def is_length_evaluated(self):
-        return self.length not in (self.INVALID_VALUE, self.RELOCATABLE_VALUE)
+        return self.length not in (SymbolConstants.INVALID_VALUE, SymbolConstants.RELOCATABLE_VALUE)
 
     def is_displacement_relocatable(self):
-        return self.dsp == self.RELOCATABLE_VALUE
+        return self.dsp == SymbolConstants.RELOCATABLE_VALUE
 
     def is_length_relocatable(self):
-        return self.length == self.RELOCATABLE_VALUE
+        return self.length == SymbolConstants.RELOCATABLE_VALUE
 
     def set_displacement(self, value: int):
         if value < 0:
@@ -80,7 +82,8 @@ class SymbolTable:
         return self.get_symbol(name).length
 
     def get_base(self, name: str) -> str:
-        return self.get_symbol(name).base
+        self.get_symbol(name)
+        return SymbolConstants.DEFAULT_BASE
 
     def update_location_counter_by(self, increment: int) -> None:
         self.current_location_counter += increment

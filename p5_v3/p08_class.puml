@@ -1,0 +1,99 @@
+@startuml
+package base_parser {
+    class GetIndex
+    metaclass is_char_first_char_of_symbol
+    metaclass is_char_part_of_symbol
+    enum Operators
+}
+
+package token_expression {
+    class Token
+    class Expression
+    class SelfDefinedTerm
+    Token  *--  SelfDefinedTerm
+    Expression  *--  Token
+    SelfDefinedTerm *-- Expression
+    SelfDefinedTerm *-- Token
+}
+
+package data_type {
+    class DataType
+}
+
+package file {
+    class File
+    abstract Preprocessor
+    class FilePreprocessor
+    class StreamPreprocessor
+    FilePreprocessor --|> Preprocessor
+    StreamPreprocessor --|> Preprocessor
+}
+
+package line {
+    class AssemblerLine
+    class AssemblerLines
+    AssemblerLines *-- AssemblerLine : contains
+}
+
+package operation_code {
+    class OperationCode
+
+}
+
+package operand {
+    class OperandParser
+}
+
+package parser {
+    class ParsedLine
+    abstract ParsedLines
+    class FileParser
+    class StreamParser
+
+    FileParser --|> ParsedLine
+    StreamParser --|> ParsedLine
+    ParsedLines *-- ParsedLine : contains
+
+}
+
+package register {
+    class Registers
+}
+
+package symbol_table {
+    enum SymbolConstants
+    class Symbol
+    class SymbolTable
+    SymbolTable *-- Symbol : contains
+}
+
+package symbol_table_builder {
+    abstract SymbolTableBuilder
+    class SymbolTableBuilderFromFilename
+    class SymbolTableBuilderFromStream
+    class SymbolTableBuilderFromParser
+    SymbolTableBuilderFromFilename --|> SymbolTableBuilder
+    SymbolTableBuilderFromStream --|> SymbolTableBuilder
+    SymbolTableBuilderFromParser --|> SymbolTableBuilder
+}
+
+token_expression ---> base_parser
+token_expression ---> data_type : uses
+token_expression ---> symbol_table : uses
+data_type --> base_parser : uses
+line --> base_parser : uses
+operand --> operation_code : uses
+operand ---> base_parser : uses
+operation_code --> token_expression : uses
+parser ---> line : uses
+parser ---> file : uses
+parser ---> operation_code : uses
+parser ---> operand : uses
+symbol_table --> register
+token_expression --> register
+symbol_table_builder --> symbol_table : uses
+symbol_table_builder --> token_expression
+symbol_table_builder --> parser
+symbol_table_builder --> file
+
+@enduml

@@ -1,10 +1,10 @@
 from typing import Optional, List
 
-from p5_v3.errors import SymbolTableError
-from p5_v3.file import File
-from p5_v3.parser import ParsedLines, FileParser, ParsedLine, StreamParser
-from p5_v3.symbol_table import SymbolTable, Symbol
-from p5_v3.token_expression import Expression, SelfDefinedTerm, Token
+from p5_v3.p01_errors import SymbolTableError
+from p5_v3.p14_symbol_table import SymbolTable, Symbol
+from p5_v3.p15_token_expression import Expression, SelfDefinedTerm, Token
+from p5_v3.p16_file import File
+from p5_v3.p28_parser import ParsedLines, FileParser, ParsedLine, StreamParser
 
 
 class SymbolTableBuilder:

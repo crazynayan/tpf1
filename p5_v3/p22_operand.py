@@ -1,8 +1,8 @@
 from typing import List, Callable
 
-from p5_v3.base_parser import Operators, GetIndex
-from p5_v3.errors import ParserError
-from p5_v3.operation_code import OperationCode
+from p5_v3.p01_errors import ParserError
+from p5_v3.p11_base_parser import Operators, GetIndex
+from p5_v3.p21_operation_code import OperationCode
 
 
 class OperandParser:

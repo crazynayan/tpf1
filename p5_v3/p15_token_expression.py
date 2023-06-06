@@ -1,10 +1,10 @@
 from typing import Optional, List, Tuple
 
-from p5_v3.base_parser import ParserError, Operators, is_char_first_char_of_symbol, is_char_part_of_symbol, GetIndex
-from p5_v3.data_type import DataType
-from p5_v3.errors import SymbolTableError
-from p5_v3.register import Registers
-from p5_v3.symbol_table import SymbolTable
+from p5_v3.p01_errors import SymbolTableError
+from p5_v3.p11_base_parser import ParserError, Operators, is_char_first_char_of_symbol, is_char_part_of_symbol, GetIndex
+from p5_v3.p12_register import Registers
+from p5_v3.p13_data_type import DataType
+from p5_v3.p14_symbol_table import SymbolTable
 
 
 class Token:

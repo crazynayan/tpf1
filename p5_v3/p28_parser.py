@@ -1,10 +1,10 @@
 from typing import List
 
-from p5_v3.errors import ParserError
-from p5_v3.file import FilePreprocessor, StreamPreprocessor
-from p5_v3.line import AssemblerLine, AssemblerLines
-from p5_v3.operand import OperandParser
-from p5_v3.operation_code import OperationCode
+from p5_v3.p01_errors import ParserError
+from p5_v3.p16_file import FilePreprocessor, StreamPreprocessor
+from p5_v3.p17_line import AssemblerLine, AssemblerLines
+from p5_v3.p21_operation_code import OperationCode
+from p5_v3.p22_operand import OperandParser
 
 
 class ParsedLine:
