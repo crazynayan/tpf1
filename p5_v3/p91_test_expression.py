@@ -6,6 +6,7 @@ from p5_v3.p14_symbol_table import SymbolTable
 from p5_v3.p15_token_expression import SelfDefinedTerm, Expression
 from p5_v3.p16_file import StreamPreprocessor, FilePreprocessor
 from p5_v3.p17_line import AssemblerLines, AssemblerLine
+from p5_v3.p21_operation_code import BaseDisplacement
 from p5_v3.p22_operand import OperandParser
 from p5_v3.p28_parser import FileParser, ParsedLine
 from p5_v3.p31_symbol_table_builder import SymbolTableBuilderFromFilename, SymbolTableBuilderFromStream
@@ -169,6 +170,25 @@ class SelfDefinedTermTest(unittest.TestCase):
         self.assertEqual(7, symbol_table.get_dsp("TS110060"))
         self.assertEqual(5, symbol_table.get_dsp("TEST_ORG"))
 
+    def test_base_displacement(self):
+        base_dsp: BaseDisplacement = BaseDisplacement("ABC")
+        self.assertEqual(True, base_dsp.is_nth_expression_present(1))
+        self.assertEqual(False, base_dsp.is_nth_expression_present(2))
+        self.assertEqual(False, base_dsp.is_nth_expression_present(3))
+        self.assertEqual("ABC", base_dsp.expression1.tokens[0].get_symbol())
+        base_dsp: BaseDisplacement = BaseDisplacement("0(2,R3)")
+        self.assertEqual(True, base_dsp.is_nth_expression_present(1))
+        self.assertEqual(True, base_dsp.is_nth_expression_present(2))
+        self.assertEqual(True, base_dsp.is_nth_expression_present(3))
+        self.assertEqual(0, base_dsp.expression1.tokens[0].evaluate_to_int())
+        self.assertEqual(2, base_dsp.expression2.tokens[0].evaluate_to_int())
+        self.assertEqual("R2", base_dsp.expression2.evaluate_to_register())
+        self.assertEqual("R3", base_dsp.expression3.evaluate_to_register())
+        base_dsp: BaseDisplacement = BaseDisplacement("0(,)")
+        self.assertEqual(True, base_dsp.is_nth_expression_present(1))
+        self.assertEqual(False, base_dsp.is_nth_expression_present(2))
+        self.assertEqual(False, base_dsp.is_nth_expression_present(3))
+        self.assertEqual(0, base_dsp.expression1.tokens[0].evaluate_to_int())
 
 if __name__ == '__main__':
     unittest.main()

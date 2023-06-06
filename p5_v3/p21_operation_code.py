@@ -4,6 +4,7 @@ from munch import Munch
 
 from p5_v3.p01_errors import SymbolTableError
 from p5_v3.p15_token_expression import SelfDefinedTerm, Expression
+from p5_v3.p20_base_displacement import BaseDisplacement
 
 
 class InstructionLength:
@@ -17,10 +18,6 @@ class InstructionLength:
     LEN_0: Set[str] = {"PUSH", "USING", "DSECT", "PGMID", "LTORG", "FINIS", "END", "ORG", "POP", "CSECT",
                        "EJECT", "SPACE", "PRINT", "BEGIN", "DROP", "DATAS", "MACRO", "MEND",
                        "AIF", "AGO", "ANOP", "ACTR", "SETA", "SETB", "SETC", "GBLA", "GBLB", "GBLC", "LCLA", "LCLB", "LCLC"}
-
-
-class BaseDisplacement(Expression):
-    pass
 
 
 class MacroCall(Expression):
