@@ -76,7 +76,7 @@ class SelfDefinedTermTest(unittest.TestCase):
         self.assertTrue(term.is_self_defined_term())
         self.assertEqual("X", term.data_type)
         self.assertTrue(term.opening_enclosure.is_quote())
-        self.assertEqual("01", term.value.data)
+        self.assertEqual("01", term.value.get_data())
 
     def test_error_term_start_with_arithmetic(self):
         self.assertFalse(SelfDefinedTerm("+F").is_data_type_present())

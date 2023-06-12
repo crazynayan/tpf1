@@ -7,25 +7,37 @@ from p5_v3.p13_data_type import DataType
 from p5_v3.p14_symbol_table import SymbolTable
 
 
-class Token:
+class TokenConstants:
     DATA_PREFIX = r"\'"
     LENGTH_PREFIX = f"{Operators.LENGTH_ATTRIBUTE}{Operators.QUOTE}"
+
+
+class Token:
 
     def __init__(self, string: str = None, *, data: bool = False, term: Optional['SelfDefinedTerm'] = None):
         if not string and not term:
             raise ParserError("Token -> Cannot be empty.")
-        if string == self.DATA_PREFIX:
+        if string == TokenConstants.DATA_PREFIX:
             raise ParserError("Token -> Cannot be empty data.")
         if not string and data:
             raise ParserError("Token -> Blank string cannot be data.")
         self._string: str = string if string else str()
         self._term: Optional['SelfDefinedTerm'] = term
         if data:
-            self._string = f"{self.DATA_PREFIX}{string}"
+            self._string = f"{TokenConstants.DATA_PREFIX}{string}"
         if self.is_attributed() and self._string[2] == Operators.LITERAL_IDENTIFIER:
             self._term = SelfDefinedTerm(self._string[2:])
 
     def __repr__(self) -> str:
+        return self.pretty_print()
+
+    def pretty_print(self) -> str:
+        if self.is_self_defined_term():
+            return self._term.pretty_print()
+        if self.is_location_counter():
+            return Operators.LOCATION_COUNTER
+        if self.is_data():
+            return self.get_data()
         return self._string
 
     def evaluate_to_str(self, symbol_table: SymbolTable = None) -> str:
@@ -91,14 +103,13 @@ class Token:
         label = self.get_symbol()
         return symbol_table.get_length(label) if self.is_length_attributed() else symbol_table.get_dsp(label)
 
-    @property
-    def data(self) -> str:
-        if self._string[:len(self.DATA_PREFIX)] != self.DATA_PREFIX:
+    def get_data(self) -> str:
+        if not self.is_data():
             raise ParserError("Token -> Is not data.")
-        return self._string[len(self.DATA_PREFIX):]
+        return self._string[len(TokenConstants.DATA_PREFIX):]
 
-    def get_value_from_data(self, data_type) -> int:
-        pass
+    def is_data(self) -> bool:
+        return self._string[:len(TokenConstants.DATA_PREFIX)] == TokenConstants.DATA_PREFIX
 
     def is_location_counter(self):
         return self._string == Operators.LOCATION_COUNTER
@@ -132,7 +143,10 @@ class Expression:
         self.build(string)
 
     def __repr__(self):
-        return " ".join([str(token) for token in self.tokens])
+        return self.pretty_print()
+
+    def pretty_print(self):
+        return "".join([token.pretty_print() for token in self.tokens])
 
     def build(self, input_string: str):
         string: str = input_string.strip().upper()
@@ -229,6 +243,27 @@ class SelfDefinedTerm:
         self.closing_enclosure: Optional[Token] = None
         self.length_of_string: int = int()
         self.build()
+
+    def pretty_print(self) -> str:
+        string = str()
+        if not self.is_data_type_present():
+            return string
+        if self.is_literal():
+            string += Operators.LITERAL_IDENTIFIER
+        if self.is_duplication_factor_present():
+            string += self.duplication_factor.pretty_print()
+        string += self.data_type
+        if self.is_length_present():
+            string += self.length.pretty_print()
+        if not self.is_self_defined_term():
+            return string
+        string += self.opening_enclosure.pretty_print()
+        if self.is_self_defined_term_with_quote():
+            string += self.value.pretty_print()
+        else:
+            string += Operators.COMMA.join([value.pretty_print() for value in self.values])
+        string += self.closing_enclosure.pretty_print()
+        return string
 
     def build(self):
         data_type_index, length_index = self.build_data_type()
@@ -337,7 +372,7 @@ class SelfDefinedTerm:
         return self.length.evaluate_to_int(symbol_table) if self.is_length_present() else self.get_implicit_length()
 
     def get_implicit_length(self) -> int:
-        value: str = self.value.data if self.is_self_defined_term_with_quote() else str()
+        value: str = self.value.get_data() if self.is_self_defined_term_with_quote() else str()
         return DataType.get_length(self.data_type, value)
 
     def number_of_values(self) -> int:
@@ -368,7 +403,7 @@ class SelfDefinedTerm:
         if not self.is_self_defined_term():
             raise SymbolTableError
         if DataType.is_absolute_value(self.data_type):
-            return DataType.evaluate_to_int(self.data_type, self.value.data)
+            return DataType.evaluate_to_int(self.data_type, self.value.get_data())
         elif not symbol_table:
             raise SymbolTableError
         if len(self.values) != 1:

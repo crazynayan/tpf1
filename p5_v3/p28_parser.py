@@ -1,6 +1,7 @@
 from typing import List
 
 from p5_v3.p01_errors import ParserError
+from p5_v3.p11_base_parser import Operators
 from p5_v3.p16_file import FilePreprocessor, StreamPreprocessor
 from p5_v3.p17_line import AssemblerLine, AssemblerLines
 from p5_v3.p21_operation_code import OperationCode
@@ -16,7 +17,16 @@ class ParsedLine:
         self.operands: list = OperandParser(line.operand).parse(self.operation_code)
 
     def __repr__(self):
-        return f"{self.location_counter:08X}:{self._label}:{self.operation_code}:#{len(self.operands)}"
+        return self.pretty_print(with_location_counter=True)
+
+    def pretty_print(self, with_location_counter=True) -> str:
+        string = str()
+        if with_location_counter:
+            string += f"{self.location_counter:08X}:"
+        string += f"{self._label:8} "
+        string += f"{self.operation_code.pretty_print():5} "
+        string += Operators.COMMA.join([operand.pretty_print() for operand in self.operands])
+        return string
 
     @property
     def label(self) -> str:
@@ -45,6 +55,12 @@ class ParsedLines:
 
     def __init__(self, lines: List[AssemblerLine]):
         self.parsed_lines: List[ParsedLine] = [ParsedLine(line) for line in lines]
+
+    def __repr__(self):
+        return self.pretty_print()
+
+    def pretty_print(self):
+        return "\n".join([parsed_line.pretty_print() for parsed_line in (self.parsed_lines)])
 
     def get_lines(self) -> List[ParsedLine]:
         return self.parsed_lines

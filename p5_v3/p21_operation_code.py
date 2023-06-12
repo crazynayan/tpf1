@@ -99,6 +99,9 @@ class OperationCode:
         self.operation_code: str = operation_code
 
     def __repr__(self):
+        return self.pretty_print()
+
+    def pretty_print(self):
         return self.operation_code
 
     def get_operation_code(self):

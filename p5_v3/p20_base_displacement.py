@@ -1,13 +1,17 @@
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from p5_v3.p01_errors import ParserError
 from p5_v3.p11_base_parser import Operators, GetIndex
 from p5_v3.p15_token_expression import Expression
 
 
-def error_for_invalid_index(n: int) -> None:
-    if not 1 <= n <= 3:
-        raise ParserError
+class BaseDisplacementExpression:
+    VALID_COUNT: Tuple[int] = (1, 2, 3)
+
+    @classmethod
+    def error_for_invalid_index(cls, n: int) -> None:
+        if n not in cls.VALID_COUNT:
+            raise ParserError
 
 
 class BaseDisplacement:
@@ -15,6 +19,25 @@ class BaseDisplacement:
     def __init__(self, string: str):
         self._expressions: List[Optional[Expression]] = [None, None, None]
         self.build(string)
+
+    def __repr__(self):
+        return self.pretty_print()
+
+    def pretty_print(self) -> str:
+        string = str()
+        if not self.is_nth_expression_present(1):
+            return string
+        string += self.expression1.pretty_print()
+        if not self.is_nth_expression_present(2) and not self.is_nth_expression_present(3):
+            return string
+        string += Operators.OPENING_PARENTHESIS
+        if self.is_nth_expression_present(2):
+            string += self.expression2.pretty_print()
+        string += Operators.COMMA
+        if self.is_nth_expression_present(3):
+            string += self.expression3.pretty_print()
+        string += Operators.CLOSING_PARENTHESIS
+        return string
 
     @property
     def expression1(self) -> Expression:
@@ -29,11 +52,11 @@ class BaseDisplacement:
         return self._expressions[2]
 
     def set_nth_expression(self, string: str, n: int) -> None:
-        error_for_invalid_index(n)
+        BaseDisplacementExpression.error_for_invalid_index(n)
         self._expressions[n - 1] = Expression(string)
 
     def is_nth_expression_present(self, n: int) -> bool:
-        error_for_invalid_index(n)
+        BaseDisplacementExpression.error_for_invalid_index(n)
         return self._expressions[n - 1] is not None
 
     def build(self, string: str):
