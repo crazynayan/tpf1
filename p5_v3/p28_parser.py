@@ -1,11 +1,10 @@
-from typing import List
+from typing import List, Callable
 
 from p5_v3.p01_errors import ParserError
-from p5_v3.p11_base_parser import Operators
+from p5_v3.p11_base_parser import Operators, split_operand
 from p5_v3.p16_file import FilePreprocessor, StreamPreprocessor
 from p5_v3.p17_line import AssemblerLine, AssemblerLines
 from p5_v3.p21_operation_code import OperationCode
-from p5_v3.p22_operand import OperandParser
 
 
 class ParsedLine:
@@ -14,7 +13,7 @@ class ParsedLine:
         self.location_counter: int = int()
         self._label: str = line.label
         self.operation_code: OperationCode = OperationCode(line.operation_code)
-        self.operands: list = OperandParser(line.operand).parse(self.operation_code)
+        self.operands = self.parse_operand(line.operand)
 
     def __repr__(self):
         return self.pretty_print(with_location_counter=True)
@@ -50,6 +49,19 @@ class ParsedLine:
     def set_location_counter(self, location_counter: int):
         self.location_counter = location_counter
 
+    def parse_operand(self, operand: str) -> list:
+        if self.operation_code.is_parse_with_no_operands():
+            return list()
+        operands: List[str] = split_operand(operand)
+        parsers: List[Callable] = self.operation_code.get_operation_parsers()
+        if self.operation_code.is_parse_based_on_operands():
+            return [parsers[0](operand) for operand in operands if operand]
+        # Operation code indicates parse as specified
+        if len(operands) != len(parsers):
+            raise ParserError("Operand -> For parser as specified, the number of operands do not match.")
+        # Empty operands are ignored. An only comma is equated to no operand.
+        return [parsers[index](operand) for index, operand in enumerate(operands) if operand]
+
 
 class ParsedLines:
 
@@ -60,7 +72,7 @@ class ParsedLines:
         return self.pretty_print()
 
     def pretty_print(self):
-        return "\n".join([parsed_line.pretty_print() for parsed_line in (self.parsed_lines)])
+        return "\n".join([parsed_line.pretty_print() for parsed_line in self.parsed_lines])
 
     def get_lines(self) -> List[ParsedLine]:
         return self.parsed_lines

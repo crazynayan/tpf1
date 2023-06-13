@@ -12,3 +12,7 @@ class SymbolNotFoundError(ParserError):
 
 class SymbolTableError(ParserError):
     pass
+
+
+class MacroArgumentError(Exception):
+    pass

@@ -2,12 +2,12 @@ import unittest
 from typing import List
 
 from p5_v3.p02_source_file import continuation_lines
+from p5_v3.p11_base_parser import split_operand
 from p5_v3.p14_symbol_table import SymbolTable
 from p5_v3.p15_token_expression import SelfDefinedTerm, Expression
 from p5_v3.p16_file import StreamPreprocessor, FilePreprocessor
 from p5_v3.p17_line import AssemblerLines, AssemblerLine
 from p5_v3.p21_operation_code import BaseDisplacement
-from p5_v3.p22_operand import OperandParser
 from p5_v3.p28_parser import FileParser, ParsedLine
 from p5_v3.p31_symbol_table_builder import SymbolTableBuilderFromFilename, SymbolTableBuilderFromStream
 
@@ -132,15 +132,15 @@ class SelfDefinedTermTest(unittest.TestCase):
         self.assertEqual(3, term.get_length_value())
 
     def test_split_operands(self):
-        operands = OperandParser("0(R2,1),10(R3,1)").split_operands()
+        operands = split_operand("0(R2,1),10(R3,1)")
         self.assertEqual(2, len(operands))
         self.assertEqual("0(R2,1)", operands[0])
         self.assertEqual("10(R3,1)", operands[1])
-        operands = OperandParser("MSG='A,B,C',").split_operands()
+        operands = split_operand("MSG='A,B,C',")
         self.assertEqual(2, len(operands))
         self.assertEqual("MSG='A,B,C'", operands[0])
         self.assertEqual("", operands[1])
-        operands = OperandParser(",").split_operands()
+        operands = split_operand(",")
         self.assertEqual(2, len(operands))
         self.assertEqual("", operands[0])
         self.assertEqual("", operands[1])

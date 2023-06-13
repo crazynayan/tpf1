@@ -1,3 +1,5 @@
+from typing import List
+
 from p5_v3.p01_errors import ParserError
 
 
@@ -27,6 +29,7 @@ class Operators:
     DEFINED_ATTRIBUTE = "D"
     OPERATION_CODE_ATTRIBUTE = "O"
     LITERAL_IDENTIFIER = "="
+    NAMED_MACRO_ARGUMENTS_DELIMITER = "="
     ATTRIBUTES = {LENGTH_ATTRIBUTE, TYPE_ATTRIBUTE, SCALING_ATTRIBUTE, INTEGER_ATTRIBUTE, COUNT_ATTRIBUTE, NUMBER_ATTRIBUTE,
                   DEFINED_ATTRIBUTE, OPERATION_CODE_ATTRIBUTE}
     PARENTHESIS = {OPENING_PARENTHESIS, CLOSING_PARENTHESIS}
@@ -101,3 +104,21 @@ def is_char_part_of_symbol(char: str) -> bool:
     return char.isalnum() or char in Operators.VALID_SYMBOLS
 
 
+def split_operand(string: str) -> List[str]:
+    operands: List[str] = list()
+    start_index: int = int()
+    closing_enclosure_index: int = -1
+    for index, char in enumerate(string):
+        if index <= closing_enclosure_index:
+            continue
+        if char in {Operators.OPENING_PARENTHESIS, Operators.QUOTE}:
+            closing_enclosure_index = GetIndex.of_closing_parenthesis(string, index) if char == Operators.OPENING_PARENTHESIS \
+                else GetIndex.of_closing_quote(string, index)
+            if closing_enclosure_index == GetIndex.INVALID_ENCLOSURE:
+                raise ParserError("Operand -> Invalid closing enclosure while splitting operands.")
+            continue
+        if char == Operators.COMMA:
+            operands.append(string[start_index:index])
+            start_index = index + 1
+    operands.append(string[start_index:len(string)])
+    return operands
