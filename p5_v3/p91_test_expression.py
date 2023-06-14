@@ -7,6 +7,7 @@ from p5_v3.p14_symbol_table import SymbolTable
 from p5_v3.p15_token_expression import SelfDefinedTerm, Expression
 from p5_v3.p16_file import StreamPreprocessor, FilePreprocessor
 from p5_v3.p17_line import AssemblerLines, AssemblerLine
+from p5_v3.p19_macro_arguments import MacroArguments
 from p5_v3.p21_operation_code import BaseDisplacement
 from p5_v3.p28_parser import FileParser, ParsedLine
 from p5_v3.p31_symbol_table_builder import SymbolTableBuilderFromFilename, SymbolTableBuilderFromStream
@@ -189,6 +190,17 @@ class SelfDefinedTermTest(unittest.TestCase):
         self.assertEqual(False, base_dsp.is_nth_expression_present(2))
         self.assertEqual(False, base_dsp.is_nth_expression_present(3))
         self.assertEqual(0, base_dsp.expression1.tokens[0].evaluate_to_int())
+
+    def test_macro_arguments(self):
+        getcc = MacroArguments(["D1", "L4"])
+        self.assertEqual("D1", getcc.get_nth_key(1))
+        self.assertEqual(True, getcc.is_key_only("D1"))
+        dbred = "REF=TR1GAA,REG=R4,BEGIN,KEY1=(PKY=#TR1GK40),KEY2=(R=TR1G_40_OCC,S=$C_AA),KEY3=(R=TR1G_40_ACSTIERCODE,S=FQTUUFF)," \
+                "KEY4=(R=TR1G_40_TIER_EFFD,S=EFFD,C=LE),KEY5=(R=TR1G_40_TIER_DISD,S=EFFD,C=GE),ERRORA=TS110020"
+        dbred = MacroArguments(split_operand(dbred))
+        self.assertEqual(9, dbred.get_number_of_keys())
+        self.assertEqual("#TR1GK40", dbred.get_macro_arguments("KEY1").get_value("PKY"))
+
 
 if __name__ == '__main__':
     unittest.main()

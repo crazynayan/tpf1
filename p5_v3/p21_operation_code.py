@@ -4,6 +4,7 @@ from munch import Munch
 
 from p5_v3.p01_errors import SymbolTableError
 from p5_v3.p15_token_expression import SelfDefinedTerm, Expression
+from p5_v3.p19_macro_arguments import MacroArguments
 from p5_v3.p20_base_displacement import BaseDisplacement
 
 
@@ -20,8 +21,7 @@ class InstructionLength:
                        "AIF", "AGO", "ANOP", "ACTR", "SETA", "SETB", "SETC", "GBLA", "GBLB", "GBLC", "LCLA", "LCLB", "LCLC"}
 
 
-class MacroCall(Expression):
-    pass
+
 
 
 class OperationCodeConstants:
@@ -67,7 +67,7 @@ class OperationCodeConstants:
     DOMAIN.SS2 = DOMAIN.SS1
     DOMAIN.MACRO_CALL = Munch()
     DOMAIN.MACRO_CALL.TYPE = PARSE_BASED_ON_OPERANDS
-    DOMAIN.MACRO_CALL.PARSER = [MacroCall]
+    DOMAIN.MACRO_CALL.PARSER = [MacroArguments]
     DS, DC, EQU, ORG, DSECT, CSECT, USING, DROP, PUSH, POP, SPACE, EJECT, PRINT, BEGIN, LTORG, FINIS, END, MACRO = "DS", "DC", "EQU", \
         "ORG", "DSECT", "CSECT", "USING", "DROP", "PUSH", "POP", "SPACE", "EJECT", "PRINT", "BEGIN", "LTORG", "FINIS", "END", "MACRO"
     AIF = "AIF"
