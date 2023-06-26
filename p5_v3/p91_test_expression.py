@@ -200,7 +200,7 @@ class SelfDefinedTermTest(unittest.TestCase):
         dbred = MacroArguments(split_operand(dbred))
         self.assertEqual(9, dbred.get_number_of_keys())
         self.assertEqual("#TR1GK40", dbred.get_macro_arguments("KEY1").get_value("PKY"))
-
+        self.assertEqual("EFFD", dbred.get_macro_arguments("KEY5").get_value("S"))
 
 if __name__ == '__main__':
     unittest.main()

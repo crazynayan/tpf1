@@ -31,6 +31,9 @@ class ParsedLine:
     def label(self) -> str:
         return next(iter(self._label.split("&")))
 
+    def get_macro_arguments(self):
+        return self.get_nth_operand(1)
+
     def is_label_present(self) -> bool:
         return bool(self.label)
 
