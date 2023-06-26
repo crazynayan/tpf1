@@ -169,13 +169,13 @@ class SymbolTableBuilder:
                 if parsed_line.number_of_operands() < 1:
                     raise SymbolTableError
                 first_term: SelfDefinedTerm = parsed_line.get_nth_operand(1)
-                adjusted_counter: int = first_term.get_boundary_aligned_adjustment(self.symbol_table)
+                adjusted_counter: int = first_term.get_boundary_aligned_adjustment(self.symbol_table.get_location_counter())
                 if symbol and not symbol.is_displacement_evaluated():
                     self.symbol_table.update_displacement(label, self.symbol_table.get_location_counter() + adjusted_counter)
                 if symbol and not symbol.is_length_evaluated():
                     self.symbol_table.update_length(label, first_term.get_length_value(self.symbol_table))
                 for term in parsed_line.operands:
-                    boundary_alignment: int = term.get_boundary_aligned_adjustment(self.symbol_table)
+                    boundary_alignment: int = term.get_boundary_aligned_adjustment(self.symbol_table.get_location_counter())
                     generated_term_length: int = term.get_length_of_generated_term(self.symbol_table)
                     self.symbol_table.update_location_counter_by(boundary_alignment + generated_term_length)
                 continue

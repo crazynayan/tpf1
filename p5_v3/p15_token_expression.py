@@ -385,10 +385,10 @@ class SelfDefinedTerm:
     def get_length_of_generated_term(self, symbol_table: SymbolTable = None) -> int:
         return self.get_duplication_factor_value(symbol_table) * self.get_length_value(symbol_table) * self.number_of_values()
 
-    def get_boundary_aligned_adjustment(self, symbol_table: SymbolTable) -> int:
+    def get_boundary_aligned_adjustment(self, location_counter: int) -> int:
         if self.is_length_present():
             return 0
-        return DataType.get_boundary_aligned_adjustment(self.data_type, symbol_table.get_location_counter())
+        return DataType.get_boundary_aligned_adjustment(self.data_type, location_counter)
 
     def create_expression_for_duplication_factor_or_length(self, start_index: int, end_index: int) -> Optional[Expression]:
         string = self._string[start_index:end_index]
