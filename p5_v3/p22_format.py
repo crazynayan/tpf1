@@ -70,6 +70,17 @@ class RI1Format(GenericFormat):
         return 4
 
 
+class RI2Format(RI1Format):
+    pass
+
+
+class RI2MnemonicFormat(RI2Format):
+
+    def parse(self) -> List[Expression]:
+        self.raise_error_if_operand_count_not_match(1)
+        return [Expression(self.operands[1])]
+
+
 class RIL1Format(RI1Format):
 
     @staticmethod
@@ -103,6 +114,16 @@ class RS2Format(RS1Format):
     pass
 
 
+class RSIFormat(GenericFormat):
+    def parse(self) -> List[Expression]:
+        self.raise_error_if_operand_count_not_match(3)
+        return [Expression(self.operands[0]), Expression(self.operands[1]), Expression(self.operands[2])]
+
+    @staticmethod
+    def get_length() -> int:
+        return 4
+
+
 class RSLFormat(GenericFormat):
 
     def parse(self) -> List[BaseDisplacement]:
@@ -125,6 +146,26 @@ class RXFormat(GenericFormat):
         return 4
 
 
+class RXMnemonicFormat(RXFormat):
+
+    def parse(self) -> List[BaseDisplacement]:
+        self.raise_error_if_operand_count_not_match(1)
+        return [BaseDisplacement(self.operands[1])]
+
+
+class RXYFormat(RXFormat):
+    @staticmethod
+    def get_length() -> int:
+        return 6
+
+
+class SFormat(GenericFormat):
+
+    def parse(self) -> List[BaseDisplacement]:
+        self.raise_error_if_operand_count_not_match(1)
+        return [BaseDisplacement(self.operands[0])]
+
+
 class SIFormat(GenericFormat):
     def parse(self) -> List[Union[BaseDisplacement, Expression]]:
         self.raise_error_if_operand_count_not_match(2)
@@ -133,6 +174,16 @@ class SIFormat(GenericFormat):
     @staticmethod
     def get_length() -> int:
         return 4
+
+
+class SILFormat(GenericFormat):
+    def parse(self) -> List[Union[BaseDisplacement, Expression]]:
+        self.raise_error_if_operand_count_not_match(2)
+        return [BaseDisplacement(self.operands[0]), Expression(self.operands[1])]
+
+    @staticmethod
+    def get_length() -> int:
+        return 6
 
 
 class SS1Format(GenericFormat):
@@ -145,11 +196,18 @@ class SS1Format(GenericFormat):
         return 6
 
 
-class SS2Format(GenericFormat):
+class SS2Format(SS1Format):
     pass
 
 
-class MacroCall(GenericFormat):
+class SS3Format(SS1Format):
+
+    def parse(self) -> List[Union[BaseDisplacement, Expression]]:
+        self.raise_error_if_operand_count_not_match(3)
+        return [BaseDisplacement(self.operands[0]), BaseDisplacement(self.operands[1]), Expression(self.operands[2])]
+
+
+class MacroCallFormat(GenericFormat):
 
     def parse(self) -> List[MacroArguments]:
         return [MacroArguments(self.operands)]
@@ -159,7 +217,7 @@ class MacroCall(GenericFormat):
         return 4
 
 
-class MacroCallNoOperand(MacroCall):
+class MacroCallNoOperandFormat(MacroCallFormat):
 
     def parse(self) -> list:
         return list()

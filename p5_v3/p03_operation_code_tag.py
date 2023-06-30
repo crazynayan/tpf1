@@ -1,3 +1,6 @@
+from typing import Set
+
+
 class OperationCodeTag:
     # Assembler Directive
     DS = "DS"
@@ -272,3 +275,10 @@ class OperationCodeTag:
     EXITC = "EXITC"
 
 # {d:v for d,v in dict(A.__dict__).items() if not d.startswith("_")}
+def get_base_operation_codes() -> Set[str]:
+    return {op_code for field, op_code in dict(OperationCodeTag.__dict__).items()
+            if not field.startswith("_")}
+
+
+def get_operation_codes() -> Set[str]:
+    return get_base_operation_codes()
