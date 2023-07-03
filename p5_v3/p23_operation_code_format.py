@@ -1,7 +1,10 @@
+from typing import Set
+
 from p5_v3.p01_errors import ParserError
-from p5_v3.p22_format import TermFormat, GenericFormat, EquFormat, ExpressionFormat, NoOperandFormat, MacroCallFormat, RRFormat, SS1Format, \
+from p5_v3.p22_format import TermFormat, GenericFormat, EquFormat, ExpressionFormat, AssemblerDirectiveNoOperandFormat, MacroCallFormat, \
+    RRFormat, SS1Format, \
     SS2Format, SS3Format, RSLFormat, SIFormat, SFormat, SILFormat, RXYFormat, RXFormat, RIL1Format, RS1Format, RI1Format, RS2Format, \
-    RSIFormat, RI2Format, RXMnemonicFormat, RI2MnemonicFormat
+    RSIFormat, RI2Format, RXMnemonicFormat, RI2MnemonicFormat, MacroCallNoOperandFormat, OrgFormat, DsectFormat, CsectFormat
 
 
 class OperationCodeFormat:
@@ -9,33 +12,33 @@ class OperationCodeFormat:
     DS = TermFormat
     DC = TermFormat
     EQU = EquFormat
-    ORG = ExpressionFormat
-    DSECT = NoOperandFormat
-    CSECT = NoOperandFormat
+    ORG = OrgFormat
+    DSECT = DsectFormat
+    CSECT = CsectFormat
     USING = ExpressionFormat
     DROP = ExpressionFormat
     PUSH = ExpressionFormat
     POP = ExpressionFormat
     SPACE = ExpressionFormat
-    EJECT = NoOperandFormat
-    PRINT = MacroCallFormat
+    EJECT = AssemblerDirectiveNoOperandFormat
+    PRINT = AssemblerDirectiveNoOperandFormat
     BEGIN = MacroCallFormat
-    LTORG = NoOperandFormat
-    FINIS = NoOperandFormat
-    END = NoOperandFormat
-    MACRO = NoOperandFormat
-    AIF = NoOperandFormat
-    AGO = NoOperandFormat
-    ANOP = NoOperandFormat
-    ACTR = NoOperandFormat
-    SETA = NoOperandFormat
-    SETB = NoOperandFormat
-    SETC = NoOperandFormat
-    GBLA = NoOperandFormat
-    GBLB = NoOperandFormat
-    GBLC = NoOperandFormat
-    LCLA = NoOperandFormat
-    LCLB = NoOperandFormat
+    LTORG = AssemblerDirectiveNoOperandFormat
+    FINIS = AssemblerDirectiveNoOperandFormat
+    END = AssemblerDirectiveNoOperandFormat
+    MACRO = AssemblerDirectiveNoOperandFormat
+    AIF = AssemblerDirectiveNoOperandFormat
+    AGO = AssemblerDirectiveNoOperandFormat
+    ANOP = AssemblerDirectiveNoOperandFormat
+    ACTR = AssemblerDirectiveNoOperandFormat
+    SETA = AssemblerDirectiveNoOperandFormat
+    SETB = AssemblerDirectiveNoOperandFormat
+    SETC = AssemblerDirectiveNoOperandFormat
+    GBLA = AssemblerDirectiveNoOperandFormat
+    GBLB = AssemblerDirectiveNoOperandFormat
+    GBLC = AssemblerDirectiveNoOperandFormat
+    LCLA = AssemblerDirectiveNoOperandFormat
+    LCLB = AssemblerDirectiveNoOperandFormat
     # Machine Instruction
     BCTR = RRFormat
     BR = RRFormat
@@ -214,68 +217,68 @@ class OperationCodeFormat:
     JNO = RI2MnemonicFormat
     BRNO = RI2MnemonicFormat
     # Realtime macros
-    GETCC = "GETCC"
-    LEVTA = "LEVTA"
-    MODEC = "MODEC"
-    DETAC = "DETAC"
-    ATTAC = "ATTAC"
-    RELCC = "RELCC"
-    RCUNC = "RCUNC"
-    RELFC = "RELFC"
-    RLCHA = "RLCHA"
-    CRUSA = "CRUSA"
-    SENDA = "SENDA"
-    SYSRA = "SYSRA"
-    SERRC = "SERRC"
-    SNAPC = "SNAPC"
-    ENTRC = "ENTRC"
-    ENTNC = "ENTNC"
-    ENTDC = "ENTDC"
-    BACKC = "BACKC"
-    ALASC = "ALASC"
-    PNAMC = "PNAMC"
-    FLIPC = "FLIPC"
-    EOWNRC = "EOWNRC"
-    CREMC = "CREMC"
-    CREDC = "CREDC"
-    CREEC = "CREEC"
-    SWISC = "SWISC"
-    POSTC = "POSTC"
-    EVNTC = "EVNTC"
-    EVNQC = "EVNQC"
-    EVNWC = "EVNWC"
-    GLMOD = "GLMOD"
-    FILKW = "FILKW"
-    KEYCC = "KEYCC"
-    KEYRC = "KEYRC"
-    GLBLC = "GLBLC"
-    DLAYC = "DLAYC"
-    DEFRC = "DEFRC"
-    REALTIMA = "REALTIMA"
-    MALOC = "MALOC"
-    CALOC = "CALOC"
-    FREEC = "FREEC"
-    CINFC = "CINFC"
-    WTOPC = "WTOPC"
-    FINWC = "FINWC"
-    FIWHC = "FIWHC"
-    FINHC = "FINHC"
-    SONIC = "SONIC"
-    GETFC = "GETFC"
-    FILUC = "FILUC"
-    FILEC = "FILEC"
-    FILNC = "FILNC"
-    WAITC = "WAITC"
-    UNFRC = "UNFRC"
-    DBOPN = "DBOPN"
-    DBRED = "DBRED"
-    DBCLS = "DBCLS"
-    DBIFB = "DBIFB"
-    DBADD = "DBADD"
-    DBDEL = "DBDEL"
-    DBMOD = "DBMOD"
-    DBREP = "DBREP"
-    EXITC = "EXITC"
+    GETCC = MacroCallFormat
+    LEVTA = MacroCallFormat
+    MODEC = MacroCallFormat
+    DETAC = MacroCallFormat
+    ATTAC = MacroCallFormat
+    RELCC = MacroCallFormat
+    RCUNC = MacroCallFormat
+    RELFC = MacroCallFormat
+    RLCHA = MacroCallFormat
+    CRUSA = MacroCallFormat
+    SENDA = MacroCallFormat
+    SYSRA = MacroCallFormat
+    SERRC = MacroCallFormat
+    SNAPC = MacroCallFormat
+    ENTRC = MacroCallFormat
+    ENTNC = MacroCallFormat
+    ENTDC = MacroCallFormat
+    BACKC = MacroCallNoOperandFormat
+    ALASC = MacroCallFormat
+    PNAMC = MacroCallFormat
+    FLIPC = MacroCallFormat
+    EOWNRC = MacroCallFormat
+    CREMC = MacroCallFormat
+    CREDC = MacroCallFormat
+    CREEC = MacroCallFormat
+    SWISC = MacroCallFormat
+    POSTC = MacroCallFormat
+    EVNTC = MacroCallFormat
+    EVNQC = MacroCallFormat
+    EVNWC = MacroCallFormat
+    GLMOD = MacroCallFormat
+    FILKW = MacroCallFormat
+    KEYCC = MacroCallFormat
+    KEYRC = MacroCallFormat
+    GLBLC = MacroCallFormat
+    DLAYC = MacroCallNoOperandFormat
+    DEFRC = MacroCallNoOperandFormat
+    REALTIMA = MacroCallFormat
+    MALOC = MacroCallFormat
+    CALOC = MacroCallFormat
+    FREEC = MacroCallFormat
+    CINFC = MacroCallFormat
+    WTOPC = MacroCallFormat
+    FINWC = MacroCallFormat
+    FIWHC = MacroCallFormat
+    FINHC = MacroCallFormat
+    SONIC = MacroCallFormat
+    GETFC = MacroCallFormat
+    FILUC = MacroCallFormat
+    FILEC = MacroCallFormat
+    FILNC = MacroCallFormat
+    WAITC = MacroCallFormat
+    UNFRC = MacroCallFormat
+    DBOPN = MacroCallFormat
+    DBRED = MacroCallFormat
+    DBCLS = MacroCallFormat
+    DBIFB = MacroCallFormat
+    DBADD = MacroCallFormat
+    DBDEL = MacroCallFormat
+    DBMOD = MacroCallFormat
+    DBREP = MacroCallFormat
+    EXITC = MacroCallNoOperandFormat
 
 
 def get_base_operation_format(operation_code: str) -> GenericFormat:
@@ -287,3 +290,16 @@ def get_base_operation_format(operation_code: str) -> GenericFormat:
 
 def get_operation_format(operation_code: str) -> GenericFormat:
     return get_base_operation_format(operation_code)
+
+
+def get_base_operation_codes() -> Set[str]:
+    return {field for field, _ in dict(OperationCodeFormat.__dict__).items()
+            if not field.startswith("_")}
+
+
+def get_operation_codes() -> Set[str]:
+    return get_base_operation_codes()
+
+
+def is_valid_operation_code(operation_code: str) -> bool:
+    return operation_code in get_operation_codes()

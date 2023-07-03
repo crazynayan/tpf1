@@ -12,19 +12,75 @@ class GenericFormat:
     def __init__(self, operand: str):
         self.operands: List[str] = split_operand(operand)
 
-    def raise_error_if_no_operands(self) -> None:
-        if not self.operands:
-            raise ParserError
+    def is_ds_or_dc(self) -> bool:
+        return self.is_ds() or self.is_dc()
+
+    @staticmethod
+    def is_assembler_directive() -> bool:
+        return False
+
+    @staticmethod
+    def is_machine_instruction() -> bool:
+        return False
+
+    @staticmethod
+    def is_macro_call() -> bool:
+        return False
+
+    @staticmethod
+    def is_ds() -> bool:
+        return False
+
+    @staticmethod
+    def is_dc() -> bool:
+        return False
+
+    @staticmethod
+    def is_equ() -> bool:
+        return False
+
+    @staticmethod
+    def is_org() -> bool:
+        return False
+
+    @staticmethod
+    def is_dsect() -> bool:
+        return False
+
+    @staticmethod
+    def is_csect() -> bool:
+        return False
 
     def raise_error_if_operand_count_not_match(self, number_of_operands: int) -> None:
         if len(self.operands) != number_of_operands:
             raise ParserError
 
 
-class TermFormat(GenericFormat):
+class AssemblerDirectiveFormat(GenericFormat):
+
+    @staticmethod
+    def is_assembler_directive() -> bool:
+        return True
+
+
+class MachineInstructionFormat(GenericFormat):
+
+    @staticmethod
+    def is_machine_instruction() -> bool:
+        return True
+
+
+class MacroCallFormat(GenericFormat):
+
+    @staticmethod
+    def is_macro_call() -> bool:
+        return True
+
+
+class TermFormat(AssemblerDirectiveFormat):
 
     def parse(self) -> List[SelfDefinedTerm]:
-        self.raise_error_if_no_operands()
+        self.raise_error_if_operand_count_not_match(0)
         return [SelfDefinedTerm(operand) for operand in self.operands]
 
     def get_length(self, symbol_table: SymbolTable = None) -> int:
@@ -37,7 +93,19 @@ class TermFormat(GenericFormat):
         return length
 
 
-class ExpressionFormat(GenericFormat):
+class DSFormat(TermFormat):
+    @staticmethod
+    def is_ds() -> bool:
+        return True
+
+
+class DCFormat(TermFormat):
+    @staticmethod
+    def is_dc() -> bool:
+        return True
+
+
+class ExpressionFormat(AssemblerDirectiveFormat):
 
     def parse(self) -> List[Expression]:
         return [Expression(operand) for operand in self.operands]
@@ -46,17 +114,42 @@ class ExpressionFormat(GenericFormat):
 class EquFormat(ExpressionFormat):
 
     def get_length(self, symbol_table: SymbolTable = None) -> int:
-        self.raise_error_if_no_operands()
+        self.raise_error_if_operand_count_not_match(0)
         if len(self.operands) < 2:
             return 1
         return self.parse()[1].evaluate_to_int(symbol_table)
 
+    @staticmethod
+    def is_equ() -> bool:
+        return True
 
-class NoOperandFormat(GenericFormat):
+
+class OrgFormat(ExpressionFormat):
+
+    @staticmethod
+    def is_org() -> bool:
+        return True
+
+
+class AssemblerDirectiveNoOperandFormat(AssemblerDirectiveFormat):
 
     @staticmethod
     def parse() -> list:
         return list()
+
+
+class DsectFormat(AssemblerDirectiveNoOperandFormat):
+
+    @staticmethod
+    def is_dsect() -> bool:
+        return True
+
+
+class CsectFormat(AssemblerDirectiveNoOperandFormat):
+
+    @staticmethod
+    def is_csect() -> bool:
+        return True
 
 
 class RI1Format(GenericFormat):
