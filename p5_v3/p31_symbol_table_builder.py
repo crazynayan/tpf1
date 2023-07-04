@@ -20,10 +20,10 @@ class SymbolTableBuilder:
         return self.symbol_table
 
     def evaluate_csect_dsect(self, parsed_line: ParsedLine) -> bool:
-        if parsed_line.operation_code.is_csect():
+        if parsed_line.format.is_csect():
             self.symbol_table.switch_to_csect()
             return True
-        if parsed_line.operation_code.is_dsect():
+        if parsed_line.format.is_dsect():
             if not parsed_line.label:
                 raise SymbolTableError
             self.symbol_table.switch_to_dsect(parsed_line.label)
@@ -37,26 +37,26 @@ class SymbolTableBuilder:
             if not parsed_line.is_label_present():
                 continue
             self.symbol_table.add_symbol(parsed_line.label)
-            if parsed_line.operation_code.is_equ():
-                if parsed_line.has_no_operands():
+            if parsed_line.format.is_equ():
+                if parsed_line.format.has_no_operands():
                     raise SymbolTableError
-                self.update_symbol_displacement_from_expression(parsed_line.label, parsed_line.get_nth_operand(1))
-                if parsed_line.number_of_operands() == 1 or not parsed_line.get_nth_operand(2):
+                self.update_symbol_displacement_from_expression(parsed_line.label, parsed_line.format.get_nth_operand(1))
+                if parsed_line.format.number_of_operands() == 1 or not parsed_line.format.get_nth_operand(2):
                     self.symbol_table.update_length(parsed_line.label, 1)
                 else:
-                    self.update_symbol_length_from_expression(parsed_line.label, parsed_line.get_nth_operand(2))
+                    self.update_symbol_length_from_expression(parsed_line.label, parsed_line.format.get_nth_operand(2))
                 continue
             self.symbol_table.update_displacement_as_relocatable(parsed_line.label)
-            if parsed_line.operation_code.is_ds_or_dc():
-                if parsed_line.has_no_operands():
+            if parsed_line.format.is_ds_or_dc():
+                if parsed_line.format.has_no_operands():
                     raise SymbolTableError(f"SymbolTableBuilder -> DS/DC has no operands. {parsed_line}")
-                term: SelfDefinedTerm = parsed_line.get_nth_operand(1)
+                term: SelfDefinedTerm = parsed_line.format.get_nth_operand(1)
                 if term.is_length_present():
                     self.update_symbol_length_from_expression(parsed_line.label, term.length)
                 else:
                     self.symbol_table.update_length(parsed_line.label, term.get_implicit_length())
                 continue
-            self.symbol_table.update_length(parsed_line.label, parsed_line.operation_code.get_length())
+            self.symbol_table.update_length(parsed_line.label, parsed_line.format.get_length())
         return
 
     def evaluate_recursively(self) -> None:
@@ -72,9 +72,9 @@ class SymbolTableBuilder:
         if symbol.is_displacement_evaluated() or symbol.is_displacement_relocatable():
             return symbol
         parsed_line: ParsedLine = self.parser.get_parsed_line(label)
-        if not parsed_line.operation_code.is_equ():
+        if not parsed_line.format.is_equ():
             raise SymbolTableError
-        expression: Expression = parsed_line.get_nth_operand(1)
+        expression: Expression = parsed_line.format.get_nth_operand(1)
         relocatable_flag: bool = self.evaluate_expression(expression)
         if relocatable_flag:
             self.symbol_table.update_displacement_as_relocatable(label)
@@ -88,17 +88,17 @@ class SymbolTableBuilder:
         if symbol.is_length_evaluated() or symbol.is_length_relocatable():
             return symbol
         parsed_line: ParsedLine = self.parser.get_parsed_line(label)
-        if parsed_line.operation_code.is_equ():
-            if parsed_line.has_no_operands():
+        if parsed_line.format.is_equ():
+            if parsed_line.format.has_no_operands():
                 raise SymbolTableError
-            if parsed_line.number_of_operands() == 1 or not parsed_line.get_nth_operand(2):
+            if parsed_line.format.number_of_operands() == 1 or not parsed_line.format.get_nth_operand(2):
                 self.symbol_table.update_length(label, 1)
                 return self.symbol_table.get_symbol(label)
-            expression: Expression = parsed_line.get_nth_operand(2)
-        elif parsed_line.operation_code.is_ds_or_dc():
-            if parsed_line.has_no_operands():
+            expression: Expression = parsed_line.format.get_nth_operand(2)
+        elif parsed_line.format.is_ds_or_dc():
+            if parsed_line.format.has_no_operands():
                 raise SymbolTableError
-            term: SelfDefinedTerm = parsed_line.get_nth_operand(1)
+            term: SelfDefinedTerm = parsed_line.format.get_nth_operand(1)
             expression: Expression = term.length
         else:
             raise SymbolTableError
@@ -146,42 +146,43 @@ class SymbolTableBuilder:
                 continue
             label: str = parsed_line.label if parsed_line.is_label_present() else str()
             symbol: Symbol = self.symbol_table.get_symbol(label) if label else None
-            if parsed_line.operation_code.is_equ():
-                if not symbol or parsed_line.number_of_operands() < 1 or not parsed_line.get_nth_operand(1):
+            if parsed_line.format.is_equ():
+                if not symbol or parsed_line.format.number_of_operands() < 1 or not parsed_line.format.get_nth_operand(1):
                     raise SymbolTableError
                 if not symbol.is_displacement_evaluated():
-                    self.symbol_table.update_displacement(label, parsed_line.get_nth_operand(1).evaluate_to_int(self.symbol_table))
+                    self.symbol_table.update_displacement(label, parsed_line.format.get_nth_operand(1).evaluate_to_int(self.symbol_table))
                 if not symbol.is_length_evaluated():
-                    if parsed_line.number_of_operands() < 2 or not parsed_line.get_nth_operand(2):
+                    if parsed_line.format.number_of_operands() < 2 or not parsed_line.format.get_nth_operand(2):
                         raise SymbolTableError
-                    self.symbol_table.update_length(label, parsed_line.get_nth_operand(2).evaluate_to_int(self.symbol_table))
+                    self.symbol_table.update_length(label, parsed_line.format.get_nth_operand(2).evaluate_to_int(self.symbol_table))
                 continue
-            if parsed_line.operation_code.is_org():
+            if parsed_line.format.is_org():
                 if label:
                     raise SymbolTableError
-                if parsed_line.number_of_operands() < 1:
+                if parsed_line.format.number_of_operands() < 1:
                     new_location_counter = self.symbol_table.get_max_location_counter()
                 else:
-                    new_location_counter = parsed_line.get_nth_operand(1).evaluate_to_int(self.symbol_table)
+                    new_location_counter = parsed_line.format.get_nth_operand(1).evaluate_to_int(self.symbol_table)
                 self.symbol_table.set_location_counter(new_location_counter)
                 continue
-            if parsed_line.operation_code.is_ds_or_dc():
-                if parsed_line.number_of_operands() < 1:
+            if parsed_line.format.is_ds_or_dc():
+                if parsed_line.format.number_of_operands() < 1:
                     raise SymbolTableError
-                first_term: SelfDefinedTerm = parsed_line.get_nth_operand(1)
+                first_term: SelfDefinedTerm = parsed_line.format.get_nth_operand(1)
                 adjusted_counter: int = first_term.get_boundary_aligned_adjustment(self.symbol_table.get_location_counter())
                 if symbol and not symbol.is_displacement_evaluated():
                     self.symbol_table.update_displacement(label, self.symbol_table.get_location_counter() + adjusted_counter)
                 if symbol and not symbol.is_length_evaluated():
                     self.symbol_table.update_length(label, first_term.get_length_value(self.symbol_table))
-                for term in parsed_line.operands:
+                for n in range(1, parsed_line.format.number_of_operands() + 1):
+                    term = parsed_line.format.get_nth_operand(n)
                     boundary_alignment: int = term.get_boundary_aligned_adjustment(self.symbol_table.get_location_counter())
                     generated_term_length: int = term.get_length_of_generated_term(self.symbol_table)
                     self.symbol_table.update_location_counter_by(boundary_alignment + generated_term_length)
                 continue
             if symbol and not symbol.is_displacement_evaluated():
                 self.symbol_table.update_displacement(label, self.symbol_table.get_location_counter())
-            self.symbol_table.update_location_counter_by(parsed_line.operation_code.get_length())
+            self.symbol_table.update_location_counter_by(parsed_line.format.get_length())
 
 
 class SymbolTableBuilderFromFilename(SymbolTableBuilder):

@@ -8,7 +8,7 @@ from p5_v3.p15_token_expression import SelfDefinedTerm, Expression
 from p5_v3.p16_file import StreamPreprocessor, FilePreprocessor
 from p5_v3.p17_line import AssemblerLines, AssemblerLine
 from p5_v3.p19_macro_arguments import MacroArguments
-from p5_v3.p21_operation_code import BaseDisplacement
+from p5_v3.p20_base_displacement import BaseDisplacement
 from p5_v3.p28_parser import FileParser, ParsedLine
 from p5_v3.p31_symbol_table_builder import SymbolTableBuilderFromFilename, SymbolTableBuilderFromStream
 
@@ -150,9 +150,9 @@ class SelfDefinedTermTest(unittest.TestCase):
         file_parser = FileParser(self.WA0AA_FILENAME)
         lines: List[ParsedLine] = file_parser.get_lines()
         self.assertEqual("WA0BID", lines[14].label)
-        self.assertEqual("DS", lines[14].operation_code.get_operation_code())
-        self.assertEqual("C", lines[14].operands[0].data_type)
-        self.assertEqual(2, lines[14].operands[0].get_length_value())
+        self.assertEqual("DS", lines[14].operation_code)
+        self.assertEqual("C", lines[14].format.get_nth_operand(1).data_type)
+        self.assertEqual(2, lines[14].format.get_nth_operand(1).get_length_value())
 
     def test_literal(self):
         expression = Expression("=F'2'")

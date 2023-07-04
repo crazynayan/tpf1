@@ -1,44 +1,43 @@
-from typing import Set
+from typing import Set, Type
 
-from p5_v3.p01_errors import ParserError
-from p5_v3.p22_format import TermFormat, GenericFormat, EquFormat, ExpressionFormat, AssemblerDirectiveNoOperandFormat, MacroCallFormat, \
-    RRFormat, SS1Format, \
+from p5_v3.p22_format import GenericFormat, EquFormat, ExpressionAssemblerDirectiveFormat, NoOperandAssemblerDirectiveFormat, \
+    MacroCallFormat, RRFormat, SS1Format, \
     SS2Format, SS3Format, RSLFormat, SIFormat, SFormat, SILFormat, RXYFormat, RXFormat, RIL1Format, RS1Format, RI1Format, RS2Format, \
-    RSIFormat, RI2Format, RXMnemonicFormat, RI2MnemonicFormat, MacroCallNoOperandFormat, OrgFormat, DsectFormat, CsectFormat
+    RSIFormat, RI2Format, RXMnemonicFormat, RI2MnemonicFormat, NoOperandMacroCallFormat, OrgFormat, DsectFormat, CsectFormat, DSFormat, \
+    DCFormat
 
 
 class OperationCodeFormat:
     # Assembler Directive
-    DS = TermFormat
-    DC = TermFormat
+    DS = DSFormat
+    DC = DCFormat
     EQU = EquFormat
     ORG = OrgFormat
     DSECT = DsectFormat
     CSECT = CsectFormat
-    USING = ExpressionFormat
-    DROP = ExpressionFormat
-    PUSH = ExpressionFormat
-    POP = ExpressionFormat
-    SPACE = ExpressionFormat
-    EJECT = AssemblerDirectiveNoOperandFormat
-    PRINT = AssemblerDirectiveNoOperandFormat
-    BEGIN = MacroCallFormat
-    LTORG = AssemblerDirectiveNoOperandFormat
-    FINIS = AssemblerDirectiveNoOperandFormat
-    END = AssemblerDirectiveNoOperandFormat
-    MACRO = AssemblerDirectiveNoOperandFormat
-    AIF = AssemblerDirectiveNoOperandFormat
-    AGO = AssemblerDirectiveNoOperandFormat
-    ANOP = AssemblerDirectiveNoOperandFormat
-    ACTR = AssemblerDirectiveNoOperandFormat
-    SETA = AssemblerDirectiveNoOperandFormat
-    SETB = AssemblerDirectiveNoOperandFormat
-    SETC = AssemblerDirectiveNoOperandFormat
-    GBLA = AssemblerDirectiveNoOperandFormat
-    GBLB = AssemblerDirectiveNoOperandFormat
-    GBLC = AssemblerDirectiveNoOperandFormat
-    LCLA = AssemblerDirectiveNoOperandFormat
-    LCLB = AssemblerDirectiveNoOperandFormat
+    USING = ExpressionAssemblerDirectiveFormat
+    DROP = ExpressionAssemblerDirectiveFormat
+    PUSH = ExpressionAssemblerDirectiveFormat
+    POP = ExpressionAssemblerDirectiveFormat
+    SPACE = ExpressionAssemblerDirectiveFormat
+    EJECT = NoOperandAssemblerDirectiveFormat
+    PRINT = NoOperandAssemblerDirectiveFormat
+    LTORG = NoOperandAssemblerDirectiveFormat
+    END = NoOperandAssemblerDirectiveFormat
+    MACRO = NoOperandAssemblerDirectiveFormat
+    MEXIT = NoOperandAssemblerDirectiveFormat
+    AIF = NoOperandAssemblerDirectiveFormat
+    AGO = NoOperandAssemblerDirectiveFormat
+    ANOP = NoOperandAssemblerDirectiveFormat
+    ACTR = NoOperandAssemblerDirectiveFormat
+    SETA = NoOperandAssemblerDirectiveFormat
+    SETB = NoOperandAssemblerDirectiveFormat
+    SETC = NoOperandAssemblerDirectiveFormat
+    GBLA = NoOperandAssemblerDirectiveFormat
+    GBLB = NoOperandAssemblerDirectiveFormat
+    GBLC = NoOperandAssemblerDirectiveFormat
+    LCLA = NoOperandAssemblerDirectiveFormat
+    LCLB = NoOperandAssemblerDirectiveFormat
     # Machine Instruction
     BCTR = RRFormat
     BR = RRFormat
@@ -217,6 +216,8 @@ class OperationCodeFormat:
     JNO = RI2MnemonicFormat
     BRNO = RI2MnemonicFormat
     # Realtime macros
+    BEGIN = MacroCallFormat
+    FINIS = NoOperandMacroCallFormat
     GETCC = MacroCallFormat
     LEVTA = MacroCallFormat
     MODEC = MacroCallFormat
@@ -234,7 +235,7 @@ class OperationCodeFormat:
     ENTRC = MacroCallFormat
     ENTNC = MacroCallFormat
     ENTDC = MacroCallFormat
-    BACKC = MacroCallNoOperandFormat
+    BACKC = NoOperandMacroCallFormat
     ALASC = MacroCallFormat
     PNAMC = MacroCallFormat
     FLIPC = MacroCallFormat
@@ -252,8 +253,8 @@ class OperationCodeFormat:
     KEYCC = MacroCallFormat
     KEYRC = MacroCallFormat
     GLBLC = MacroCallFormat
-    DLAYC = MacroCallNoOperandFormat
-    DEFRC = MacroCallNoOperandFormat
+    DLAYC = NoOperandMacroCallFormat
+    DEFRC = NoOperandMacroCallFormat
     REALTIMA = MacroCallFormat
     MALOC = MacroCallFormat
     CALOC = MacroCallFormat
@@ -278,17 +279,18 @@ class OperationCodeFormat:
     DBDEL = MacroCallFormat
     DBMOD = MacroCallFormat
     DBREP = MacroCallFormat
-    EXITC = MacroCallNoOperandFormat
+    EXITC = NoOperandMacroCallFormat
 
 
-def get_base_operation_format(operation_code: str) -> GenericFormat:
+def get_base_operation_format(operation_code: str) -> Type[GenericFormat]:
     try:
         return getattr(OperationCodeFormat, operation_code)
     except AttributeError:
-        raise ParserError
+        # raise ParserError(operation_code) TODO: remove this default
+        return MacroCallFormat
 
 
-def get_operation_format(operation_code: str) -> GenericFormat:
+def get_operation_format(operation_code: str) -> Type[GenericFormat]:
     return get_base_operation_format(operation_code)
 
 

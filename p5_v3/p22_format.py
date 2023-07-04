@@ -51,9 +51,28 @@ class GenericFormat:
     def is_csect() -> bool:
         return False
 
+    def parse(self) -> list:
+        return list()
+
     def raise_error_if_operand_count_not_match(self, number_of_operands: int) -> None:
         if len(self.operands) != number_of_operands:
             raise ParserError
+
+    def raise_error_if_no_operands(self):
+        if len(self.operands) == 0:
+            raise ParserError
+
+    def number_of_operands(self):
+        return len(self.parse())
+
+    def has_no_operands(self):
+        return self.number_of_operands() == 0
+
+    def get_nth_operand(self, n: int):
+        try:
+            return self.parse()[n - 1]
+        except IndexError:
+            raise ParserError("ParsedLine -> Invalid index of operand requested.")
 
 
 class AssemblerDirectiveFormat(GenericFormat):
@@ -62,25 +81,14 @@ class AssemblerDirectiveFormat(GenericFormat):
     def is_assembler_directive() -> bool:
         return True
 
-
-class MachineInstructionFormat(GenericFormat):
-
-    @staticmethod
-    def is_machine_instruction() -> bool:
-        return True
-
-
-class MacroCallFormat(GenericFormat):
-
-    @staticmethod
-    def is_macro_call() -> bool:
-        return True
+    def get_length(self):
+        return 0
 
 
 class TermFormat(AssemblerDirectiveFormat):
 
     def parse(self) -> List[SelfDefinedTerm]:
-        self.raise_error_if_operand_count_not_match(0)
+        self.raise_error_if_no_operands()
         return [SelfDefinedTerm(operand) for operand in self.operands]
 
     def get_length(self, symbol_table: SymbolTable = None) -> int:
@@ -105,16 +113,16 @@ class DCFormat(TermFormat):
         return True
 
 
-class ExpressionFormat(AssemblerDirectiveFormat):
+class ExpressionAssemblerDirectiveFormat(AssemblerDirectiveFormat):
 
     def parse(self) -> List[Expression]:
-        return [Expression(operand) for operand in self.operands]
+        return [Expression(operand) for operand in self.operands if operand]
 
 
-class EquFormat(ExpressionFormat):
+class EquFormat(ExpressionAssemblerDirectiveFormat):
 
     def get_length(self, symbol_table: SymbolTable = None) -> int:
-        self.raise_error_if_operand_count_not_match(0)
+        self.raise_error_if_no_operands()
         if len(self.operands) < 2:
             return 1
         return self.parse()[1].evaluate_to_int(symbol_table)
@@ -124,35 +132,41 @@ class EquFormat(ExpressionFormat):
         return True
 
 
-class OrgFormat(ExpressionFormat):
+class OrgFormat(ExpressionAssemblerDirectiveFormat):
 
     @staticmethod
     def is_org() -> bool:
         return True
 
 
-class AssemblerDirectiveNoOperandFormat(AssemblerDirectiveFormat):
+class NoOperandAssemblerDirectiveFormat(AssemblerDirectiveFormat):
 
-    @staticmethod
-    def parse() -> list:
+    def parse(self) -> list:
         return list()
 
 
-class DsectFormat(AssemblerDirectiveNoOperandFormat):
+class DsectFormat(NoOperandAssemblerDirectiveFormat):
 
     @staticmethod
     def is_dsect() -> bool:
         return True
 
 
-class CsectFormat(AssemblerDirectiveNoOperandFormat):
+class CsectFormat(NoOperandAssemblerDirectiveFormat):
 
     @staticmethod
     def is_csect() -> bool:
         return True
 
 
-class RI1Format(GenericFormat):
+class MachineInstructionFormat(GenericFormat):
+
+    @staticmethod
+    def is_machine_instruction() -> bool:
+        return True
+
+
+class RI1Format(MachineInstructionFormat):
 
     def parse(self) -> List[Expression]:
         self.raise_error_if_operand_count_not_match(2)
@@ -192,7 +206,7 @@ class RREFormat(RI1Format):
     pass
 
 
-class RS1Format(GenericFormat):
+class RS1Format(MachineInstructionFormat):
 
     def parse(self) -> List[Union[BaseDisplacement, Expression]]:
         self.raise_error_if_operand_count_not_match(3)
@@ -207,7 +221,7 @@ class RS2Format(RS1Format):
     pass
 
 
-class RSIFormat(GenericFormat):
+class RSIFormat(MachineInstructionFormat):
     def parse(self) -> List[Expression]:
         self.raise_error_if_operand_count_not_match(3)
         return [Expression(self.operands[0]), Expression(self.operands[1]), Expression(self.operands[2])]
@@ -217,7 +231,7 @@ class RSIFormat(GenericFormat):
         return 4
 
 
-class RSLFormat(GenericFormat):
+class RSLFormat(MachineInstructionFormat):
 
     def parse(self) -> List[BaseDisplacement]:
         self.raise_error_if_operand_count_not_match(1)
@@ -228,7 +242,7 @@ class RSLFormat(GenericFormat):
         return 6
 
 
-class RXFormat(GenericFormat):
+class RXFormat(MachineInstructionFormat):
 
     def parse(self) -> List[Union[BaseDisplacement, Expression]]:
         self.raise_error_if_operand_count_not_match(2)
@@ -252,14 +266,14 @@ class RXYFormat(RXFormat):
         return 6
 
 
-class SFormat(GenericFormat):
+class SFormat(MachineInstructionFormat):
 
     def parse(self) -> List[BaseDisplacement]:
         self.raise_error_if_operand_count_not_match(1)
         return [BaseDisplacement(self.operands[0])]
 
 
-class SIFormat(GenericFormat):
+class SIFormat(MachineInstructionFormat):
     def parse(self) -> List[Union[BaseDisplacement, Expression]]:
         self.raise_error_if_operand_count_not_match(2)
         return [BaseDisplacement(self.operands[0]), Expression(self.operands[1])]
@@ -269,7 +283,7 @@ class SIFormat(GenericFormat):
         return 4
 
 
-class SILFormat(GenericFormat):
+class SILFormat(MachineInstructionFormat):
     def parse(self) -> List[Union[BaseDisplacement, Expression]]:
         self.raise_error_if_operand_count_not_match(2)
         return [BaseDisplacement(self.operands[0]), Expression(self.operands[1])]
@@ -279,7 +293,7 @@ class SILFormat(GenericFormat):
         return 6
 
 
-class SS1Format(GenericFormat):
+class SS1Format(MachineInstructionFormat):
     def parse(self) -> List[BaseDisplacement]:
         self.raise_error_if_operand_count_not_match(2)
         return [BaseDisplacement(self.operands[0]), BaseDisplacement(self.operands[1])]
@@ -302,6 +316,10 @@ class SS3Format(SS1Format):
 
 class MacroCallFormat(GenericFormat):
 
+    @staticmethod
+    def is_macro_call() -> bool:
+        return True
+
     def parse(self) -> List[MacroArguments]:
         return [MacroArguments(self.operands)]
 
@@ -310,7 +328,7 @@ class MacroCallFormat(GenericFormat):
         return 4
 
 
-class MacroCallNoOperandFormat(MacroCallFormat):
+class NoOperandMacroCallFormat(MacroCallFormat):
 
     def parse(self) -> list:
         return list()
