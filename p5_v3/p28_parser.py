@@ -48,16 +48,16 @@ class ParsedLines:
     def __init__(self, lines: List[AssemblerLine]):
         self.parsed_lines: List[ParsedLine] = [ParsedLine(line) for line in lines]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.pretty_print()
 
-    def pretty_print(self):
+    def pretty_print(self) -> str:
         return "\n".join([parsed_line.pretty_print() for parsed_line in self.parsed_lines])
 
     def get_lines(self) -> List[ParsedLine]:
         return self.parsed_lines
 
-    def get_parsed_line(self, label):
+    def get_parsed_line(self, label) -> ParsedLine:
         if not label:
             raise ParserError
         try:

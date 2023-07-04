@@ -12,6 +12,12 @@ class GenericFormat:
     def __init__(self, operand: str):
         self.operands: List[str] = split_operand(operand)
 
+    def parse(self) -> list:
+        return list()
+
+    def get_length(self):
+        return 0
+
     def is_ds_or_dc(self) -> bool:
         return self.is_ds() or self.is_dc()
 
@@ -51,9 +57,6 @@ class GenericFormat:
     def is_csect() -> bool:
         return False
 
-    def parse(self) -> list:
-        return list()
-
     def raise_error_if_operand_count_not_match(self, number_of_operands: int) -> None:
         if len(self.operands) != number_of_operands:
             raise ParserError
@@ -80,9 +83,6 @@ class AssemblerDirectiveFormat(GenericFormat):
     @staticmethod
     def is_assembler_directive() -> bool:
         return True
-
-    def get_length(self):
-        return 0
 
 
 class TermFormat(AssemblerDirectiveFormat):
@@ -172,8 +172,7 @@ class RI1Format(MachineInstructionFormat):
         self.raise_error_if_operand_count_not_match(2)
         return [Expression(self.operands[0]), Expression(self.operands[1])]
 
-    @staticmethod
-    def get_length() -> int:
+    def get_length(self) -> int:
         return 4
 
 
@@ -190,15 +189,13 @@ class RI2MnemonicFormat(RI2Format):
 
 class RIL1Format(RI1Format):
 
-    @staticmethod
-    def get_length() -> int:
+    def get_length(self) -> int:
         return 6
 
 
 class RRFormat(RI1Format):
 
-    @staticmethod
-    def get_length() -> int:
+    def get_length(self) -> int:
         return 2
 
 
@@ -212,8 +209,7 @@ class RS1Format(MachineInstructionFormat):
         self.raise_error_if_operand_count_not_match(3)
         return [Expression(self.operands[0]), Expression(self.operands[1]), BaseDisplacement(self.operands[2])]
 
-    @staticmethod
-    def get_length() -> int:
+    def get_length(self) -> int:
         return 4
 
 
@@ -226,8 +222,7 @@ class RSIFormat(MachineInstructionFormat):
         self.raise_error_if_operand_count_not_match(3)
         return [Expression(self.operands[0]), Expression(self.operands[1]), Expression(self.operands[2])]
 
-    @staticmethod
-    def get_length() -> int:
+    def get_length(self) -> int:
         return 4
 
 
@@ -237,8 +232,7 @@ class RSLFormat(MachineInstructionFormat):
         self.raise_error_if_operand_count_not_match(1)
         return [BaseDisplacement(self.operands[0])]
 
-    @staticmethod
-    def get_length() -> int:
+    def get_length(self) -> int:
         return 6
 
 
@@ -248,8 +242,7 @@ class RXFormat(MachineInstructionFormat):
         self.raise_error_if_operand_count_not_match(2)
         return [Expression(self.operands[0]), BaseDisplacement(self.operands[1])]
 
-    @staticmethod
-    def get_length() -> int:
+    def get_length(self) -> int:
         return 4
 
 
@@ -261,8 +254,7 @@ class RXMnemonicFormat(RXFormat):
 
 
 class RXYFormat(RXFormat):
-    @staticmethod
-    def get_length() -> int:
+    def get_length(self) -> int:
         return 6
 
 
@@ -278,8 +270,7 @@ class SIFormat(MachineInstructionFormat):
         self.raise_error_if_operand_count_not_match(2)
         return [BaseDisplacement(self.operands[0]), Expression(self.operands[1])]
 
-    @staticmethod
-    def get_length() -> int:
+    def get_length(self) -> int:
         return 4
 
 
@@ -288,8 +279,7 @@ class SILFormat(MachineInstructionFormat):
         self.raise_error_if_operand_count_not_match(2)
         return [BaseDisplacement(self.operands[0]), Expression(self.operands[1])]
 
-    @staticmethod
-    def get_length() -> int:
+    def get_length(self) -> int:
         return 6
 
 
@@ -298,8 +288,7 @@ class SS1Format(MachineInstructionFormat):
         self.raise_error_if_operand_count_not_match(2)
         return [BaseDisplacement(self.operands[0]), BaseDisplacement(self.operands[1])]
 
-    @staticmethod
-    def get_length() -> int:
+    def get_length(self) -> int:
         return 6
 
 
@@ -323,8 +312,7 @@ class MacroCallFormat(GenericFormat):
     def parse(self) -> List[MacroArguments]:
         return [MacroArguments(self.operands)]
 
-    @staticmethod
-    def get_length() -> int:
+    def get_length(self) -> int:
         return 4
 
 
