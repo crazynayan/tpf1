@@ -15,6 +15,9 @@ class AssemblerLine:
         self.operand_accumulator: str = str()
 
     def __repr__(self):
+        return self.pretty_print()
+
+    def pretty_print(self):
         return f"{self.label}:{self.operation_code}:{self.operand}"
 
     def get_next_space(self, start_index: int) -> int:

@@ -5,7 +5,7 @@ from p5_v3.p11_base_parser import Operators
 from p5_v3.p16_file import FilePreprocessor, StreamPreprocessor
 from p5_v3.p17_line import AssemblerLine, AssemblerLines
 from p5_v3.p22_format import GenericFormat
-from p5_v3.p23_operation_code_format import get_operation_format
+from p5_v3.p23_operation_code_format import get_operation_format, check_operation_code_validity
 
 
 class ParsedLine:
@@ -46,6 +46,16 @@ class ParsedLine:
 class ParsedLines:
 
     def __init__(self, lines: List[AssemblerLine]):
+        if not lines:
+            raise ParserError
+        operation_codes: List[str] = [line.operation_code for line in lines]
+        operation_codes_validity_status: List[bool] = check_operation_code_validity(operation_codes)
+        if not all(operation_codes_validity_status):
+            invalid_lines: List[AssemblerLine] = [lines[index] for index, status in enumerate(operation_codes_validity_status)
+                                                  if status is False]
+            for line in invalid_lines:
+                print(line.pretty_print())
+            raise ParserError
         self.parsed_lines: List[ParsedLine] = [ParsedLine(line) for line in lines]
 
     def __repr__(self) -> str:

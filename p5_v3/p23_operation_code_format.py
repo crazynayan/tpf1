@@ -1,5 +1,6 @@
-from typing import Set, Type
+from typing import Set, Type, List
 
+from p5_v3.p01_errors import ParserError
 from p5_v3.p22_format import GenericFormat, EquFormat, ExpressionAssemblerDirectiveFormat, NoOperandAssemblerDirectiveFormat, \
     MacroCallFormat, RRFormat, SS1Format, \
     SS2Format, SS3Format, RSLFormat, SIFormat, SFormat, SILFormat, RXYFormat, RXFormat, RIL1Format, RS1Format, RI1Format, RS2Format, \
@@ -26,6 +27,7 @@ class OperationCodeFormat:
     END = NoOperandAssemblerDirectiveFormat
     MACRO = NoOperandAssemblerDirectiveFormat
     MEXIT = NoOperandAssemblerDirectiveFormat
+    MEND = NoOperandAssemblerDirectiveFormat
     AIF = NoOperandAssemblerDirectiveFormat
     AGO = NoOperandAssemblerDirectiveFormat
     ANOP = NoOperandAssemblerDirectiveFormat
@@ -38,6 +40,7 @@ class OperationCodeFormat:
     GBLC = NoOperandAssemblerDirectiveFormat
     LCLA = NoOperandAssemblerDirectiveFormat
     LCLB = NoOperandAssemblerDirectiveFormat
+    LCLC = NoOperandAssemblerDirectiveFormat
     # Machine Instruction
     BCTR = RRFormat
     BR = RRFormat
@@ -280,14 +283,15 @@ class OperationCodeFormat:
     DBMOD = MacroCallFormat
     DBREP = MacroCallFormat
     EXITC = NoOperandMacroCallFormat
+    # TODO : To remove user defined macro format
+    WA0AA = MacroCallFormat
 
 
 def get_base_operation_format(operation_code: str) -> Type[GenericFormat]:
     try:
         return getattr(OperationCodeFormat, operation_code)
     except AttributeError:
-        # raise ParserError(operation_code) TODO: remove this default
-        return MacroCallFormat
+        raise ParserError(operation_code)
 
 
 def get_operation_format(operation_code: str) -> Type[GenericFormat]:
@@ -305,3 +309,8 @@ def get_operation_codes() -> Set[str]:
 
 def is_valid_operation_code(operation_code: str) -> bool:
     return operation_code in get_operation_codes()
+
+
+def check_operation_code_validity(operation_codes: List[str]) -> List[bool]:
+    valid_codes: Set[str] = get_operation_codes()
+    return [operation_code in valid_codes for operation_code in operation_codes]
