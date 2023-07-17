@@ -8,7 +8,6 @@ class AssemblerLine:
     LABEL_START = 0
     CONTINUATION_START = 71
     CONTINUING_START = 15
-    COMMENTED_OUT_CHARS = {"*", "."}
 
     def __init__(self, line):
         self.line: str = line
@@ -31,9 +30,6 @@ class AssemblerLine:
             if char != Operators.SPACE:
                 return index + start_index
         raise ParserError("AssemblerLine -> Next non space not found.")
-
-    def is_label_present(self) -> bool:
-        return self.line[self.LABEL_START] != Operators.SPACE and self.line[self.LABEL_START] not in self.COMMENTED_OUT_CHARS
 
     @property
     def label_end(self) -> int:
@@ -65,7 +61,7 @@ class AssemblerLine:
         return self.line[self.operation_code_start: self.operation_code_end]
 
     def is_commented_out(self) -> bool:
-        return self.line[self.LABEL_START] in self.COMMENTED_OUT_CHARS
+        return self.line[self.LABEL_START] == "*" or self.line[self.LABEL_START: self.LABEL_START + 2] == ".*"
 
     def is_continuation_present(self) -> bool:
         return len(self.line) > self.CONTINUATION_START and self.line[self.CONTINUATION_START] != Operators.SPACE
