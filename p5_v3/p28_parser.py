@@ -31,7 +31,7 @@ class ParsedLine:
 
     @property
     def label(self) -> str:
-        return next(iter(self._label.split("&")))
+        return self._label.split("&")[0]
 
     def get_macro_arguments(self):
         return self.format.get_nth_operand(1)
