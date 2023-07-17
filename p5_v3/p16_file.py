@@ -35,7 +35,7 @@ class File:
         return exists(self.filename)
 
     def get_name(self) -> str:
-        return self.name_four_char if self.file_type in (self.ASSEMBLER or self.LISTING) else self.filename[:-4].upper()
+        return self.name_four_char if self.file_type in (self.ASSEMBLER or self.LISTING) else os.path.basename(self.filename)[:-4].upper()
 
 
 class Preprocessor:
