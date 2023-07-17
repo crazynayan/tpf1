@@ -311,8 +311,6 @@ class MacroCallFormat(GenericFormat):
         return True
 
     def _parse(self) -> List[MacroArguments]:
-        if all([bool(operand) is False for operand in self.operands]):
-            return list()
         return [MacroArguments(self.operands)]
 
     def get_length(self) -> int:
@@ -323,3 +321,13 @@ class NoOperandMacroCallFormat(MacroCallFormat):
 
     def _parse(self) -> list:
         return list()
+
+
+class DataMacroCallFormat(MacroCallFormat):
+    def _parse(self) -> List[MacroArguments]:
+        if all([bool(operand) is False for operand in self.operands]):
+            return list()
+        return [MacroArguments(self.operands)]
+
+    def get_length(self) -> int:
+        return 0

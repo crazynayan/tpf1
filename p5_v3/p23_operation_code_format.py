@@ -5,7 +5,7 @@ from p5_v3.p22_format import GenericFormat, EquFormat, ExpressionAssemblerDirect
     MacroCallFormat, RRFormat, SS1Format, \
     SS2Format, SS3Format, RSLFormat, SIFormat, SFormat, SILFormat, RXYFormat, RXFormat, RIL1Format, RS1Format, RI1Format, RS2Format, \
     RSIFormat, RI2Format, RXMnemonicFormat, RI2MnemonicFormat, NoOperandMacroCallFormat, OrgFormat, DsectFormat, CsectFormat, DSFormat, \
-    DCFormat
+    DCFormat, DataMacroCallFormat
 from p5_v3.p30_data_macro import is_data_macro_valid, get_data_macros
 
 
@@ -29,6 +29,7 @@ class OperationCodeFormat:
     MACRO = NoOperandAssemblerDirectiveFormat
     MEXIT = NoOperandAssemblerDirectiveFormat
     MEND = NoOperandAssemblerDirectiveFormat
+    MNOTE = NoOperandAssemblerDirectiveFormat
     AIF = NoOperandAssemblerDirectiveFormat
     AGO = NoOperandAssemblerDirectiveFormat
     ANOP = NoOperandAssemblerDirectiveFormat
@@ -284,14 +285,24 @@ class OperationCodeFormat:
     DBMOD = MacroCallFormat
     DBREP = MacroCallFormat
     EXITC = NoOperandMacroCallFormat
+    hashUEXIT = NoOperandAssemblerDirectiveFormat
+    hashURTRN = NoOperandAssemblerDirectiveFormat
+
+
+def sanitize_operation_code(operation_code: str) -> str:
+    return operation_code.replace("#", "hash")
+
+
+def desanitize_operation_code(operation_code: str) -> str:
+    return operation_code.replace("hash", "#")
 
 
 def get_base_operation_format(operation_code: str) -> Type[GenericFormat]:
     try:
-        return getattr(OperationCodeFormat, operation_code)
+        return getattr(OperationCodeFormat, sanitize_operation_code(operation_code))
     except AttributeError:
         if is_data_macro_valid(operation_code):
-            return MacroCallFormat
+            return DataMacroCallFormat
         raise ParserError(operation_code)
 
 
@@ -300,7 +311,7 @@ def get_operation_format(operation_code: str) -> Type[GenericFormat]:
 
 
 def get_base_operation_codes() -> Set[str]:
-    return {field for field, _ in dict(OperationCodeFormat.__dict__).items()
+    return {desanitize_operation_code(field) for field, _ in dict(OperationCodeFormat.__dict__).items()
             if not field.startswith("_")}
 
 
