@@ -10,12 +10,13 @@ from p5_v3.p17_line import AssemblerLines, AssemblerLine
 from p5_v3.p19_macro_arguments import MacroArguments
 from p5_v3.p20_base_displacement import BaseDisplacement
 from p5_v3.p28_parser import FileParser, ParsedLine
+from p5_v3.p30_data_macro import get_data_macro_file_path
 from p5_v3.p31_symbol_table_builder import SymbolTableBuilderFromFilename, SymbolTableBuilderFromStream
 
 
 # noinspection SpellCheckingInspection
 class SelfDefinedTermTest(unittest.TestCase):
-    WA0AA_FILENAME = "p0_source/sabre/macro/wa0aa.mac"
+    WA0AA_FILENAME = get_data_macro_file_path("WA0AA")
 
     def test_only_data_type(self):
         term = SelfDefinedTerm("X")
@@ -162,6 +163,7 @@ class SelfDefinedTermTest(unittest.TestCase):
 
     def test_symbol_table_builder(self):
         symbol_table: SymbolTable = SymbolTableBuilderFromFilename(self.WA0AA_FILENAME).update_symbol_table()
+        self.assertEqual("WA0AA", symbol_table.get_owner("WA0PCL"))
         self.assertEqual(36, symbol_table.get_dsp("#WA0TA4"))
         self.assertEqual(0x80, symbol_table.get_dsp("#WA0PTP"))
         self.assertEqual(0x7F, symbol_table.get_dsp("#WA0IUU"))

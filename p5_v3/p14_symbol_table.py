@@ -81,9 +81,8 @@ class SymbolTable:
     def get_length(self, name: str) -> int:
         return self.get_symbol(name).length
 
-    def get_base(self, name: str) -> str:
-        self.get_symbol(name)
-        return SymbolConstants.DEFAULT_BASE
+    def get_owner(self, name: str) -> str:
+        return self.get_symbol(name).owner
 
     def update_location_counter_by(self, increment: int) -> None:
         self.current_location_counter += increment
