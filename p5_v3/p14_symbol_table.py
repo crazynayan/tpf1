@@ -62,7 +62,7 @@ class SymbolTable:
 
     def add_symbol(self, name: str):
         if self.is_symbol_created(name):
-            raise SymbolTableError("SymbolTable -> Duplicate symbol added")
+            print(f"Duplicate symbol added: {name}")
         symbol = Symbol(name, self.current_owner_name)
         self._symbol_table[name] = symbol
 
