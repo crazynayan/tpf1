@@ -31,6 +31,8 @@ class ParsedLine:
 
     @property
     def label(self) -> str:
+        if self._label.startswith("."):
+            return str()
         return self._label.split("&")[0]
 
     def get_macro_arguments(self):

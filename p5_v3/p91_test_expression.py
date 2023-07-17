@@ -5,7 +5,7 @@ from p5_v3.p02_source_file import continuation_lines
 from p5_v3.p11_base_parser import split_operand
 from p5_v3.p14_symbol_table import SymbolTable
 from p5_v3.p15_token_expression import SelfDefinedTerm, Expression
-from p5_v3.p16_file import StreamPreprocessor, FilePreprocessor
+from p5_v3.p16_file import StreamPreprocessor
 from p5_v3.p17_line import AssemblerLines, AssemblerLine
 from p5_v3.p19_macro_arguments import MacroArguments
 from p5_v3.p20_base_displacement import BaseDisplacement
@@ -97,11 +97,11 @@ class SelfDefinedTermTest(unittest.TestCase):
         self.assertFalse(SelfDefinedTerm("X'01").is_data_type_present())
 
     def test_file_preprocessor(self):
-        preprocessor = FilePreprocessor(self.WA0AA_FILENAME)
-        lines: List[AssemblerLine] = AssemblerLines(preprocessor.get_lines()).get_lines()
-        self.assertEqual("WA0BID&LC0", lines[14].label)
-        self.assertEqual("DS", lines[14].operation_code)
-        self.assertEqual("CL2", lines[14].operand)
+        file_parser = FileParser(self.WA0AA_FILENAME)
+        line: ParsedLine = file_parser.get_parsed_line("WA0BID")
+        self.assertEqual("WA0BID", line.label)
+        self.assertEqual("DS", line.operation_code)
+        self.assertEqual("CL2", line.format.get_nth_operand(1).pretty_print())
 
     def test_continuing_lines(self):
         preprocessor = StreamPreprocessor(continuation_lines)
@@ -149,11 +149,11 @@ class SelfDefinedTermTest(unittest.TestCase):
 
     def test_file_parser(self):
         file_parser = FileParser(self.WA0AA_FILENAME)
-        lines: List[ParsedLine] = file_parser.get_lines()
-        self.assertEqual("WA0BID", lines[14].label)
-        self.assertEqual("DS", lines[14].operation_code)
-        self.assertEqual("C", lines[14].format.get_nth_operand(1).data_type)
-        self.assertEqual(2, lines[14].format.get_nth_operand(1).get_length_value())
+        line: ParsedLine = file_parser.get_parsed_line("WA0BID")
+        self.assertEqual("WA0BID", line.label)
+        self.assertEqual("DS", line.operation_code)
+        self.assertEqual("C", line.format.get_nth_operand(1).data_type)
+        self.assertEqual(2, line.format.get_nth_operand(1).get_length_value())
 
     def test_literal(self):
         expression = Expression("=F'2'")

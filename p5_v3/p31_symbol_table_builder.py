@@ -1,10 +1,11 @@
-from typing import Optional, List
+from typing import Optional, List, Set
 
-from p5_v3.p01_errors import SymbolTableError
+from p5_v3.p01_errors import SymbolTableError, SymbolNotFoundError
 from p5_v3.p14_symbol_table import SymbolTable, Symbol
 from p5_v3.p15_token_expression import Expression, SelfDefinedTerm, Token
 from p5_v3.p16_file import File
 from p5_v3.p28_parser import ParsedLines, FileParser, ParsedLine, StreamParser
+from p5_v3.p30_data_macro import is_data_macro_valid, get_data_macro_file_path
 
 
 class SymbolTableBuilder:
@@ -12,11 +13,13 @@ class SymbolTableBuilder:
     def __init__(self):
         self.symbol_table: Optional[SymbolTable] = None
         self.parser: Optional[ParsedLines] = None
+        self.macro_names: Set[str] = set()
 
     def update_symbol_table(self) -> SymbolTable:
         self.evaluate_absolute_symbols()
         self.evaluate_recursively()
         self.evaluate_with_location_counter()
+        self.evaluate_inline_data_macro_calls()
         return self.symbol_table
 
     def evaluate_csect_dsect(self, parsed_line: ParsedLine) -> bool:
@@ -162,7 +165,10 @@ class SymbolTableBuilder:
                 if parsed_line.format.number_of_operands() < 1:
                     new_location_counter = self.symbol_table.get_max_location_counter()
                 else:
-                    new_location_counter = parsed_line.format.get_nth_operand(1).evaluate_to_int(self.symbol_table)
+                    try:
+                        new_location_counter = parsed_line.format.get_nth_operand(1).evaluate_to_int(self.symbol_table)
+                    except SymbolNotFoundError:
+                        continue
                 self.symbol_table.set_location_counter(new_location_counter)
                 continue
             if parsed_line.format.is_ds_or_dc():
@@ -183,15 +189,33 @@ class SymbolTableBuilder:
             if symbol and not symbol.is_displacement_evaluated():
                 self.symbol_table.update_displacement(label, self.symbol_table.get_location_counter())
             self.symbol_table.update_location_counter_by(parsed_line.format.get_length())
+        return
+
+    def evaluate_inline_data_macro_calls(self):
+        for parsed_line in self.parser.get_lines():
+            if not is_data_macro_valid(parsed_line.operation_code):
+                continue
+            if self.data_macro_already_processed(parsed_line.operation_code):
+                continue
+            symbol_table_builder = SymbolTableBuilderFromFilename(filename=get_data_macro_file_path(parsed_line.operation_code),
+                                                                  symbol_table=self.symbol_table,
+                                                                  macro_names=self.macro_names)
+            symbol_table_builder.update_symbol_table()
+        return
+
+    def data_macro_already_processed(self, data_macro_name: str) -> bool:
+        return data_macro_name in self.macro_names
 
 
 class SymbolTableBuilderFromFilename(SymbolTableBuilder):
 
-    def __init__(self, filename: str, symbol_table: SymbolTable = None):
+    def __init__(self, filename: str, symbol_table: SymbolTable = None, macro_names: Optional[set] = None):
         super().__init__()
-        file = File(filename)
+        macro_name = File(filename).get_name()
         self.parser = FileParser(filename)
-        self.symbol_table = symbol_table if symbol_table else SymbolTable(file.get_name())
+        self.symbol_table = symbol_table if symbol_table else SymbolTable(macro_name)
+        self.macro_names: Set[str] = macro_names if macro_names else set()
+        self.macro_names.add(macro_name)
 
 
 class SymbolTableBuilderFromStream(SymbolTableBuilder):
