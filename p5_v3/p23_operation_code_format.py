@@ -6,6 +6,7 @@ from p5_v3.p22_format import GenericFormat, EquFormat, ExpressionAssemblerDirect
     SS2Format, SS3Format, RSLFormat, SIFormat, SFormat, SILFormat, RXYFormat, RXFormat, RIL1Format, RS1Format, RI1Format, RS2Format, \
     RSIFormat, RI2Format, RXMnemonicFormat, RI2MnemonicFormat, NoOperandMacroCallFormat, OrgFormat, DsectFormat, CsectFormat, DSFormat, \
     DCFormat
+from p5_v3.p30_data_macro import is_data_macro_valid, get_data_macros
 
 
 class OperationCodeFormat:
@@ -283,14 +284,14 @@ class OperationCodeFormat:
     DBMOD = MacroCallFormat
     DBREP = MacroCallFormat
     EXITC = NoOperandMacroCallFormat
-    # TODO : To remove user defined macro format
-    WA0AA = MacroCallFormat
 
 
 def get_base_operation_format(operation_code: str) -> Type[GenericFormat]:
     try:
         return getattr(OperationCodeFormat, operation_code)
     except AttributeError:
+        if is_data_macro_valid(operation_code):
+            return MacroCallFormat
         raise ParserError(operation_code)
 
 
@@ -312,5 +313,5 @@ def is_valid_operation_code(operation_code: str) -> bool:
 
 
 def check_operation_code_validity(operation_codes: List[str]) -> List[bool]:
-    valid_codes: Set[str] = get_operation_codes()
+    valid_codes: Set[str] = get_operation_codes() | get_data_macros()
     return [operation_code in valid_codes for operation_code in operation_codes]
