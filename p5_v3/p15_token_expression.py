@@ -93,7 +93,7 @@ class Token:
     def get_symbol(self) -> str:
         if not self.is_symbol():
             raise SymbolTableError
-        label = next(iter(self._string.split("&")))
+        label = self._string.split("&")[0]
         return label[2:] if self.is_attributed() else label
 
     def is_length_attributed(self) -> bool:
@@ -254,7 +254,7 @@ class SelfDefinedTerm:
             string += self.duplication_factor.pretty_print()
         string += self.data_type
         if self.is_length_present():
-            string += self.length.pretty_print()
+            string += f"L{self.length.pretty_print()}"
         if not self.is_self_defined_term():
             return string
         string += self.opening_enclosure.pretty_print()
