@@ -169,6 +169,8 @@ class SelfDefinedTermTest(unittest.TestCase):
         self.assertEqual(0x7F, symbol_table.get_dsp("#WA0IUU"))
         self.assertEqual(0x258, symbol_table.get_dsp("WA0PCL"))
         self.assertEqual(0x2F8, symbol_table.get_dsp("WA2LD6"))
+        self.assertEqual(0x70, symbol_table.get_dsp("TPTCPIP"))
+        self.assertEqual(0xA1, symbol_table.get_dsp("TP88FF"))
         symbol_table: SymbolTable = SymbolTableBuilderFromStream(continuation_lines, "TEST").update_symbol_table()
         self.assertEqual(7, symbol_table.get_dsp("TS110060"))
         self.assertEqual(5, symbol_table.get_dsp("TEST_ORG"))
@@ -203,6 +205,7 @@ class SelfDefinedTermTest(unittest.TestCase):
         self.assertEqual(9, dbred.get_number_of_keys())
         self.assertEqual("#TR1GK40", dbred.get_macro_arguments("KEY1").get_value("PKY"))
         self.assertEqual("EFFD", dbred.get_macro_arguments("KEY5").get_value("S"))
+
 
 if __name__ == '__main__':
     unittest.main()
