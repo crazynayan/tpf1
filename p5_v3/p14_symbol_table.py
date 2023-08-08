@@ -49,7 +49,7 @@ class Symbol:
 
 
 class SymbolTable:
-    DEFAULT_OWNER_PREFIX = "START__"
+    DEFAULT_OWNER_PREFIX = str()
 
     def __init__(self, name: str):
         self._symbol_table: dict = dict()
