@@ -168,7 +168,9 @@ class SymbolTableBuilder:
                     try:
                         new_location_counter = parsed_line.format.get_nth_operand(1).evaluate_to_int(self.symbol_table)
                     except SymbolNotFoundError:
-                        continue
+                        if parsed_line.format.get_nth_operand(1).pretty_print() == "E&GCDATAS":
+                            continue
+                        raise SymbolNotFoundError
                 self.symbol_table.set_location_counter(new_location_counter)
                 continue
             if parsed_line.format.is_ds_or_dc():
