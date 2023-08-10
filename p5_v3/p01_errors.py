@@ -16,3 +16,7 @@ class SymbolTableError(ParserError):
 
 class MacroArgumentError(Exception):
     pass
+
+
+class UsingError(ParserError):
+    pass
