@@ -15,6 +15,7 @@ class ParsedLine:
         self._label: str = line.label
         self.format: GenericFormat = get_operation_format(line.operation_code)(line.operand)
         self.operation_code: str = line.operation_code
+        self.using_id: int = 0
 
     def __repr__(self):
         return self.pretty_print(with_location_counter=True)
@@ -43,6 +44,12 @@ class ParsedLine:
 
     def set_location_counter(self, location_counter: int):
         self.location_counter = location_counter
+
+    def is_operation_code(self, operation_code: str) -> bool:
+        return self.operation_code == operation_code
+
+    def set_using_id(self, using_id: int):
+        self.using_id = using_id
 
 
 class ParsedLines:

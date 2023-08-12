@@ -19,13 +19,19 @@ class UsingState:
             raise UsingError
         return register_number
 
-    def add_using(self, register: Expression, dsect_name: str):
+    def add_using(self, register: Expression, dsect_names: List[Expression]):
         register_number: int = self.get_register_number_from_expression(register)
-        self._usings[register_number] = [dsect_name]
+        for dsect_name in dsect_names:
+            if not dsect_name.has_symbol():
+                raise UsingError
+            dsect_name_string: str = dsect_name.get_token_with_symbol()[0].pretty_print()
+            self._usings[register_number] = [dsect_name_string]
 
-    def drop_using(self, register: Expression):
-        register_number: int = self.get_register_number_from_expression(register)
-        self._usings[register_number] = []
+    def drop_using(self, registers: List[Expression]):
+        for register in registers:
+            register_number: int = self.get_register_number_from_expression(register)
+            self._usings[register_number] = []
+        return
 
     def add_using_datas(self, register: Expression, dsect_name: str):
         register_number: int = self.get_register_number_from_expression(register)
@@ -41,9 +47,10 @@ class UsingState:
 class Using:
     INVALID_ID: int = -1
 
-    def __init__(self):
+    def __init__(self, symbol_table: SymbolTable):
         self._using_states: List[UsingState] = list()
         self._using_stack: List[int] = list()
+        self.symbol_table: SymbolTable = symbol_table
 
     def get_last_using_id(self) -> int:
         return len(self._using_states) - 1
@@ -65,14 +72,14 @@ class Using:
             raise UsingError
         return self._using_states[using_id]
 
-    def add_using(self, register: Expression, dsect_name: str) -> int:
+    def add_using(self, register: Expression, dsect_names: List[Expression]) -> int:
         using_state: UsingState = self.create_copy_of_last_using()
-        using_state.add_using(register, dsect_name)
+        using_state.add_using(register, dsect_names)
         return self.get_last_using_id()
 
-    def drop_using(self, register: Expression) -> int:
+    def drop_using(self, registers: List[Expression]) -> int:
         using_state: UsingState = self.create_copy_of_last_using()
-        using_state.drop_using(register)
+        using_state.drop_using(registers)
         return self.get_last_using_id()
 
     def add_using_datas(self, register: Expression, dsect_name: str) -> int:
@@ -94,7 +101,7 @@ class Using:
         self._using_states.append(new_using_state)
         return self.get_last_using_id()
 
-    def get_register_number(self, using_id: int, symbol: str, symbol_table: SymbolTable) -> int:
+    def get_register_number(self, using_id: int, symbol: str) -> int:
         using_state: UsingState = self.get_using_by_id(using_id)
-        dsect_name: str = symbol_table.get_owner(symbol)
+        dsect_name: str = self.symbol_table.get_owner(symbol)
         return using_state.get_register_number(dsect_name)

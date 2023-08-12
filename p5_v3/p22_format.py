@@ -78,6 +78,9 @@ class GenericFormat:
         except IndexError:
             raise ParserError("ParsedLine -> Invalid index of operand requested.")
 
+    def get_nth_operand_onwards(self, n: int) -> list:
+        return self._parsed_operands[n - 1:]
+
 
 class AssemblerDirectiveFormat(GenericFormat):
 
