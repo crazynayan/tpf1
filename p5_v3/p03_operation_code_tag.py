@@ -21,6 +21,9 @@ class OperationCodeTag:
     FINIS = "FINIS"
     END = "END"
     MACRO = "MACRO"
+    MNOTE = "MNOTE"
+    MEND = "MEND"
+    MEXIT = "MEXIT"
     AIF = "AIF"
     AGO = "AGO"
     ANOP = "ANOP"
@@ -33,6 +36,7 @@ class OperationCodeTag:
     GBLC = "GBLC"
     LCLA = "LCLA"
     LCLB = "LCLB"
+    LCLC = "LCLC"
     # Machine Instruction
     BCTR = "BCTR"
     BR = "BR"
@@ -273,12 +277,11 @@ class OperationCodeTag:
     DBMOD = "DBMOD"
     DBREP = "DBREP"
     EXITC = "EXITC"
+    hashUEXIT = "#UEXIT"
+    hashURTRN = "#URTRN"
 
 # {d:v for d,v in dict(A.__dict__).items() if not d.startswith("_")}
-def get_base_operation_codes() -> Set[str]:
+def get_base_operation_code_tags() -> Set[str]:
     return {op_code for field, op_code in dict(OperationCodeTag.__dict__).items()
             if not field.startswith("_")}
 
-
-def get_operation_codes() -> Set[str]:
-    return get_base_operation_codes()

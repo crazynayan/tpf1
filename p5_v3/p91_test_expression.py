@@ -2,6 +2,7 @@ import unittest
 from typing import List
 
 from p5_v3.p02_source_file import continuation_lines
+from p5_v3.p03_operation_code_tag import get_base_operation_code_tags
 from p5_v3.p11_base_parser import split_operand
 from p5_v3.p14_symbol_table import SymbolTable
 from p5_v3.p15_token_expression import SelfDefinedTerm, Expression
@@ -9,6 +10,7 @@ from p5_v3.p16_file import StreamPreprocessor
 from p5_v3.p17_line import AssemblerLines, AssemblerLine
 from p5_v3.p19_macro_arguments import MacroArguments
 from p5_v3.p20_base_displacement import BaseDisplacement
+from p5_v3.p23_operation_code_format import get_base_operation_codes
 from p5_v3.p28_parser import FileParser, ParsedLine
 from p5_v3.p30_data_macro import get_data_macro_file_path
 from p5_v3.p31_symbol_table_builder import SymbolTableBuilderFromFilename, SymbolTableBuilderFromStream
@@ -205,6 +207,15 @@ class SelfDefinedTermTest(unittest.TestCase):
         self.assertEqual(9, dbred.get_number_of_keys())
         self.assertEqual("#TR1GK40", dbred.get_macro_arguments("KEY1").get_value("PKY"))
         self.assertEqual("EFFD", dbred.get_macro_arguments("KEY5").get_value("S"))
+
+    def test_operation_code_tags(self):
+        operation_code_tags: set = get_base_operation_code_tags()
+        operation_code_formats: set = get_base_operation_codes()
+        tags_vs_formats: set = operation_code_tags - operation_code_formats
+        formats_vs_tags: set = operation_code_formats - operation_code_tags
+        self.assertSetEqual(set(), tags_vs_formats, tags_vs_formats)
+        self.assertSetEqual(set(), formats_vs_tags, formats_vs_tags)
+
 
 
 if __name__ == '__main__':
