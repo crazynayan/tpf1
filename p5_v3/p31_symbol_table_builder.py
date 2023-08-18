@@ -222,15 +222,15 @@ class SymbolTableBuilderFromFilename(SymbolTableBuilder):
 
 class SymbolTableBuilderFromStream(SymbolTableBuilder):
 
-    def __init__(self, buffer: str, owner: str, symbol_table: SymbolTable = None):
+    def __init__(self, buffer: str, owner: str):
         super().__init__()
         self.parser = StreamParser(buffer)
-        self.symbol_table = symbol_table if symbol_table else SymbolTable(owner)
+        self.symbol_table = SymbolTable(owner)
 
 
 class SymbolTableBuilderFromParser(SymbolTableBuilder):
 
-    def __init__(self, name: str, parser: ParsedLines, symbol_table: SymbolTable = None):
+    def __init__(self, parser: ParsedLines, owner: str, ):
         super().__init__()
         self.parser: ParsedLines = parser
-        self.symbol_table: SymbolTable = symbol_table if symbol_table else SymbolTable(name)
+        self.symbol_table: SymbolTable = SymbolTable(owner)
