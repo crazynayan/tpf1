@@ -14,3 +14,10 @@ TEST1    DS    Y(LONG_LABEL_TO_FILL_UP_SPACE_IN_THE_LINES_OF_OPERANDS+LX
          SENDA MSG='RAMMAANAARJUNA''S DINNER IS ALWAYS MADE FIRST, ISN'X
                'T IT?'            
 """
+
+using_lines = """
+ABC      DSECT
+ABC1     DS    XL1
+         CSECT
+US_LABEL USING R2+1,ABC
+"""
