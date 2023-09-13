@@ -1,7 +1,7 @@
 import os
 from typing import List
 
-from p1_utils.domain import get_bucket, get_domain_folder
+from p1_utils.domain import get_bucket, get_domain_folder, is_domain_valid, get_folder_by_domain
 from p7_flask_app.segment import get_seg_lst, reset_seg_assembly
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "google-cloud-tokyo.json"
@@ -69,6 +69,31 @@ def init_asm_seg(filename: str):
     SegLst.objects.filter_by(seg_name=seg_name).delete()
     seg.create()
     return seg
+
+
+def copy_seg_across_domains(seg_name: str, from_domain: str, to_domain):
+    segments = SegLst.objects.filter_by(seg_name=seg_name).get()
+    if not segments:
+        print(f"{seg_name} not found. Use 4 letter codes in upper case.")
+        return
+    if not any(segment.domain == from_domain for segment in segments):
+        print(f"{seg_name} not present in {from_domain} domain.")
+        return
+    if any(segment.domain == to_domain for segment in segments):
+        print(f"{seg_name} is already present in {to_domain} domain.")
+        return
+    if not is_domain_valid(to_domain):
+        print(f"{to_domain} domain is invalid.")
+        return
+    filename: str = f"{seg_name.lower()}.asm"
+    file_path: str = os.path.join(get_folder_by_domain(config.ASM, to_domain), filename)
+    if not os.path.exists(file_path):
+        print(f"{file_path} not found.")
+        return
+    new_segment = get_seg_lst(get_segment(seg_name, file_path, config.ASM, config.LOCAL))
+    new_segment.domain = to_domain
+    new_segment.create()
+    return new_segment
 
 
 
