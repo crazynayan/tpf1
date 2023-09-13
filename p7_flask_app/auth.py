@@ -8,6 +8,7 @@ from flask_httpauth import HTTPBasicAuth, HTTPTokenAuth
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from config import config
+from p1_utils.domain import is_domain_valid
 from p2_assembly.mac2_data_macro import init_macros
 from p2_assembly.seg9_collection import init_seg_collection
 from p3_db.pnr import Pnr
@@ -116,7 +117,7 @@ def create_user(email: str, initial: str, domain: str):
     if not isinstance(email, str) or sum(1 for char in email if char == "@") != 1 or "|" in email:
         print(f"Invalid email - {email}")
         return
-    if domain not in config.DOMAINS.__dict__.keys():
+    if not is_domain_valid(domain):
         print(f"Invalid domain - {domain}")
         return
     if User.objects.filter_by(email=email).first():

@@ -17,6 +17,10 @@ def get_domain_folder(sub_folder_name: str) -> str:
     return os.path.join(config.SOURCES_ROOT, get_domain(), sub_folder_name)
 
 
+def get_folder_by_domain(sub_folder_name: str, domain: str) -> str:
+    return os.path.join(config.SOURCES_ROOT, domain, sub_folder_name)
+
+
 def get_base_folder(sub_folder_name: str) -> str:
     return os.path.join(config.SOURCES_ROOT, config.DOMAINS.BASE, sub_folder_name)
 
@@ -34,3 +38,7 @@ def get_bucket() -> str:
     elif domain == config.DOMAINS.SML:
         return config.BUCKETS.SML
     return config.BUCKETS.GENERAL
+
+
+def is_domain_valid(domain: str) -> bool:
+    return domain in config.DOMAINS.__dict__.values()
