@@ -27,7 +27,7 @@ def make_shell_context():
     from p3_db import template_crud, template_merge, test_data_get, template_models, test_data_variations, \
         test_data_elements, test_results_crud
     from p4_execution.ex5_execute import TpfServer
-    from p7_flask_app.auth import User
+    from p7_flask_app.auth import User, create_user
     from p7_flask_app import routes
     return {
         "TestData": TestData,
@@ -52,4 +52,5 @@ def make_shell_context():
         "td_elements": test_data_elements,
         "test_results": test_results_crud,
         "domain": domain,
+        "create_user": create_user,
     }
