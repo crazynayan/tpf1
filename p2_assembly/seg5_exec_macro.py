@@ -102,6 +102,7 @@ class RealtimeMacroImplementation(InstructionImplementation):
         self._command["PDRED"] = self.pdred
         self._command["PDMOD"] = self.pdred
         self._command["DBADD"] = self.dbadd
+        self._command["PNRJR"] = self.pdred
 
     def key_value(self, line: Line) -> KeyValue:
         operands_list: List[str] = line.split_operands()
