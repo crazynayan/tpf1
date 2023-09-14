@@ -65,7 +65,7 @@ class Tsj1Test(unittest.TestCase):
         self.iy_item[0]["data"] = b64encode(DataType("X", input="00006F2F").to_bytes()).decode()
         self._tjr_setup(2)
         test_data = self.tpf_server.run("TSJ1", self.test_data)
-        self.assertEqual("TSJ1300.3", test_data.output.last_line)
+        self.assertEqual("TSJ1ERR.3", test_data.output.last_line)
         self.assertEqual(8, test_data.output.regs["R6"])
 
     def test_branch_validation_pass_lok_on(self) -> None:
@@ -74,7 +74,7 @@ class Tsj1Test(unittest.TestCase):
         self.iy_item[1]["data"] = b64encode(bytearray([get_macros()["IY1IY"].evaluate("#IY1LOK")])).decode()
         self._tjr_setup()
         test_data = self.tpf_server.run("TSJ1", self.test_data)
-        self.assertEqual("TSJ1100.3", test_data.output.last_line)
+        self.assertEqual("TSJ1PASS.3", test_data.output.last_line)
 
     def test_finwc_fail(self) -> None:
         self.iy_item[0]["data"] = b64encode(DataType("X", input="00006F2F").to_bytes()).decode()
@@ -90,9 +90,9 @@ class Tsj1Test(unittest.TestCase):
         self.iy_item[1]["data"] = b64encode(bytearray([get_macros()["IY1IY"].evaluate("#IY1LOK")])).decode()
         self._tjr_setup(variation=1)
         test_data = self.tpf_server.run("TSJ1", self.test_data)
-        self.assertEqual("TSJ1300.3", test_data.outputs[0].last_line)
+        self.assertEqual("TSJ1ERR.3", test_data.outputs[0].last_line)
         self.assertEqual(8, test_data.outputs[0].regs["R6"])
-        self.assertEqual("TSJ1100.3", test_data.outputs[1].last_line)
+        self.assertEqual("TSJ1PASS.3", test_data.outputs[1].last_line)
         self.assertEqual(0, test_data.outputs[1].regs["R6"])
 
 
