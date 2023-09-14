@@ -3,6 +3,7 @@ from typing import List
 from flask import g
 from munch import Munch
 
+from p1_utils.domain import get_domain
 from p2_assembly.seg9_collection import get_seg_collection
 from p3_db.response import StandardResponse, RequestType, StandardGetResponse
 from p3_db.test_data import TestData
@@ -28,12 +29,12 @@ def create_test_result(test_data: TestData, body: dict):
         return rsp.dict
     td_result: TestData = TpfServer().run(test_data.seg_name, test_data)
     test_results: List[TestResult] = list()
-    test_results.append(TestResult(name=rsp.body.name, test_data=td_result))
-    test_results.extend([TestResult(name=rsp.body.name, core=core) for core in td_result.cores])
-    test_results.extend([TestResult(name=rsp.body.name, pnr=pnr) for pnr in td_result.pnr])
-    test_results.extend([TestResult(name=rsp.body.name, tpfdf=tpfdf) for tpfdf in td_result.tpfdf])
-    test_results.extend([TestResult(name=rsp.body.name, file=file) for file in td_result.fixed_files])
-    test_results.extend([TestResult(name=rsp.body.name, output=output) for output in td_result.outputs])
+    test_results.append(TestResult(name=rsp.body.name, test_data=td_result, domain=get_domain()))
+    test_results.extend([TestResult(name=rsp.body.name, core=core, domain=get_domain()) for core in td_result.cores])
+    test_results.extend([TestResult(name=rsp.body.name, pnr=pnr, domain=get_domain()) for pnr in td_result.pnr])
+    test_results.extend([TestResult(name=rsp.body.name, tpfdf=tpfdf, domain=get_domain()) for tpfdf in td_result.tpfdf])
+    test_results.extend([TestResult(name=rsp.body.name, file=file, domain=get_domain()) for file in td_result.fixed_files])
+    test_results.extend([TestResult(name=rsp.body.name, output=output, domain=get_domain()) for output in td_result.outputs])
     TestResult.objects.truncate.create_all(TestResult.objects.to_dicts(test_results))
     rsp.message = "Test Result saved successfully."
     return rsp.dict
@@ -41,7 +42,7 @@ def create_test_result(test_data: TestData, body: dict):
 
 def get_test_results(name: str) -> dict:
     kwargs: dict = {"name": name} if name else {"type": TestResult.HEADER}
-    test_results: List[TestResult] = TestResult.objects.filter_by(**kwargs).get()
+    test_results: List[TestResult] = TestResult.objects.filter_by(**kwargs).filter_by(domain=get_domain()).get()
     test_results.sort(key=lambda result: (result.type, result.result_id, result.variation, result.ecb_level,
                                           result.heap_name, result.macro_name, result.global_name,
                                           result.locator, result.key, result.owner, result.name))
@@ -72,7 +73,7 @@ def get_test_results(name: str) -> dict:
 def get_test_result(test_result_id: str) -> dict:
     rsp = StandardGetResponse()
     test_result: TestResult = TestResult.get_by_id(test_result_id)
-    if not test_result:
+    if not test_result or test_result.domain != get_domain():
         rsp.error = True
         rsp.message = "Test Result not found."
         return rsp.dict

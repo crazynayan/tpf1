@@ -26,11 +26,13 @@ def make_shell_context():
     from p3_db.test_data import TestData
     from p3_db import template_crud, template_merge, test_data_get, template_models, test_data_variations, \
         test_data_elements, test_results_crud
+    from p3_db.test_result_model import TestResult
     from p4_execution.ex5_execute import TpfServer
     from p7_flask_app.auth import User, create_user
     from p7_flask_app import routes
     return {
         "TestData": TestData,
+        "TestResult": TestResult,
         "TpfServer": TpfServer,
         "User": User,
         "client": tpf1_app.test_client(),

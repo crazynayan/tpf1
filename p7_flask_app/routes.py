@@ -50,6 +50,7 @@ def get_test_data_header() -> Response:
             return error_response(404, f"No test data found by this name")
         return jsonify([test_data.get_header_dict()])
     test_data_list = [test_data.get_header_dict() for test_data in TestData.get_all()]
+    test_data_list.sort(key=lambda item: item["name"])
     return jsonify(test_data_list)
 
 

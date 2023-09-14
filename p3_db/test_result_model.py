@@ -38,10 +38,11 @@ class TestResult(FirestoreDocument):
     }
     VALID_COMMENT_TYPES = {"user_comment", "core_comment", "pnr_comment", "general_comment"}
 
-    def __init__(self, name=str(), test_data=None, core=None, pnr=None, tpfdf=None, file=None, output=None):
+    def __init__(self, name=str(), test_data=None, core=None, pnr=None, tpfdf=None, file=None, output=None, domain=None):
         super().__init__()
         self.name = name  # Each test result should have unique name. Helps in grouping elements of a test result.
         self.type = str()  # Must be from valid type fields.
+        self.domain: str = str()  # Common across all types
         # Header
         self.owner = str()
         self.seg_name = str()
@@ -101,6 +102,8 @@ class TestResult(FirestoreDocument):
         self.core_field_data: List[dict] = list()
         self.pnr_field_data: List[dict] = list()
         # Initialize
+        if domain:
+            self.domain = domain
         self.init_header(test_data, name)
         self.init_core(core)
         self.init_pnr(pnr)
@@ -115,7 +118,7 @@ class TestResult(FirestoreDocument):
             setattr(self, field, getattr(input_object, field))
         return
 
-    def init_header(self, test_data: TestData, name):
+    def init_header(self, test_data: TestData, name: str):
         if not test_data:
             return
         self.type = self.HEADER

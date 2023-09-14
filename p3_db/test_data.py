@@ -7,6 +7,7 @@ from firestore_ci import FirestoreDocument
 
 from config import config
 from p1_utils.data_type import Register
+from p1_utils.domain import get_domain
 from p1_utils.errors import InvalidBaseRegError
 from p2_assembly.mac2_data_macro import get_macros, get_global_ref
 from p2_assembly.seg9_collection import get_seg_collection
@@ -43,6 +44,7 @@ class TestData(FirestoreDocument):
         self.partition: str = str()
         self.regs: Dict[str, int] = dict()
         self.startup_script: str = str()
+        self.domain: str = get_domain()
 
     def ref(self, e_type: str):
         ref: Dict[str, list] = {
@@ -148,6 +150,7 @@ class TestData(FirestoreDocument):
         if cls.objects.filter_by(name=header["name"]).first() is not None:
             return None
         test_data = cls.create_from_dict(header)
+        test_data.domain = get_domain()
         return test_data
 
     def rename(self, header: dict) -> bool:
@@ -170,11 +173,11 @@ class TestData(FirestoreDocument):
 
     @classmethod
     def get_all(cls) -> List["TestData"]:
-        return cls.objects.order_by("name").get()
+        return cls.objects.filter_by(domain=get_domain()).get()
 
     @classmethod
     def get_test_data_by_name(cls, name: str) -> Optional["TestData"]:
-        return cls.objects.filter_by(name=name).first()
+        return cls.objects.filter_by(name=name, domain=get_domain()).first()
 
     @classmethod
     def delete_test_data(cls, test_data_id: str) -> str:
