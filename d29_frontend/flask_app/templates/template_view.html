@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+    <div class="row">
+        <div class="col-md-9">
+            <h1>{{ name }}</h1>
+        </div>
+        <div class="col-md-3">
+            <a class="btn btn-secondary" href="{{ url_for('view_templates', template_type=tc.type) }}">
+                <span class="oi oi-x"></span> Return to {{ tc.type }} Templates
+            </a>
+        </div>
+    </div>
+    {% if templates %}
+        <div class="row">
+            <div class="col">
+                <p>{{ templates[0].description }} ({{ templates[0].owner }})</p>
+            </div>
+        </div>
+    {% endif %}
+    <br>
+    <div class="row">
+        <div class="col-md-3">
+            <a class="btn btn-success btn-block text-center {{ tc.is_add_button_disabled }} {{ templates[0].class_display }}"
+               href="{{ url_for(tc.add, name=name) }}">
+                <span class="oi oi-plus"></span> Add to Template
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a class="btn btn-success btn-block text-center "
+               href="{{ url_for('copy_template', name=name) }}">
+                <span class="oi oi-clipboard"></span> Copy Template
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a class="btn btn-warning btn-block text-center {{ templates[0].class_display }}"
+               href="{{ url_for('rename_template', name=name) }}">
+                <span class="oi oi-pencil"></span> Rename Template
+            </a>
+        </div>
+        <div class="col-md-3">
+            <button type="button" id="deleteTestDataButton" class="btn btn-block btn-danger"
+                    data-toggle="modal" data-target="#deleteConfirmation"
+                    data-id="all" {{ templates[0].class_display }}>
+                <span class="oi oi-trash"></span> Delete Template
+            </button>
+        </div>
+    </div>
+    <br>
+    {% if templates %}
+        <table id="template-list" class="table table-bordered table-hover ">
+            <thead class="thead-dark">
+            <tr>
+                <th class="text-center d-none d-md-table-cell" scope="col">No.</th>
+                <th class="" scope="col">{{ tc.unique_tag }}</th>
+                <th class="text-center d-none d-md-table-cell" scope="col">Type</th>
+                <th class="text-center d-none d-md-table-cell" scope="col">Data</th>
+                <th class="text-center" scope="col">Edit</th>
+                <th class="text-center" scope="col">Delete</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for template in templates %}
+                <tr>
+                    <td class="text-center d-none d-md-table-cell">{{ loop.index }}</td>
+                    <td class="">{{ tc.get_unique_tag_data(template) }}</td>
+                    <td class="text-center d-none d-md-table-cell">{{ tc.get_data_type(template) }}</td>
+                    <td class="text-center d-none d-md-table-cell">{{ tc.get_data(template) }}</td>
+                    <td class="text-center">
+                        <a class="btn btn-warning {{ template.class_display }}"
+                           href="{{ url_for(tc.update, template_id=template.id) }}"
+                           title="Edit Template">
+                            <span class="oi oi-pencil"></span>
+                        </a>
+                    </td>
+                    <td class="text-center">
+                        {% if templates|length > 1 %}
+                            <button type="button" class="btn btn-danger" {{ template.class_display }}
+                                    data-toggle="modal" data-target="#deleteConfirmation" data-id="{{ template.id }}">
+                                <span class="oi oi-trash"></span>
+                            </button>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+    <br>
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteConfirmation" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Template Delete</h5>
+                    <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                </div>
+                <div class="modal-body">
+                    <p id="deleteComment"></p>
+                    <p>This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <form id="deleteTestDataForm" action="" method="POST" novalidate>
+                        {{ form.hidden_tag() }}
+                        {{ form.template_id() }}
+                        {{ form.submit(class_="btn btn-danger") }}
+                    </form>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">No - Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        $(document).ready(function () {
+            $("#template-list").DataTable({
+                paging: false
+            });
+        });
+        $("#deleteConfirmation").on("show.bs.modal", function (event) {
+            const templateId = $(event.relatedTarget).data("id");
+            if (templateId !== "all") {
+                $(this).find("#deleteComment").text("Are you sure you want to delete this element from the template?");
+                $(this).find("#template_id").val(templateId);
+            } else {
+                $(this).find("#deleteComment").text("Are you sure you want to delete the whole template?");
+                $(this).find("#template_id").val("");
+            }
+        });
+    </script>
+{% endblock %}

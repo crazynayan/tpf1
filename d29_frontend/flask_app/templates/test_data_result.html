@@ -1,0 +1,183 @@
+{% extends "test_data_show.html" %}
+
+{% block app_content %}
+    <div class="row">
+        <div class="col-md-9">
+            <h1>Execution Result</h1>
+        </div>
+        <div class="col-md-3">
+            <a class="btn btn-secondary" href="{{ url_for('get_test_data', test_data_id=test_data.id) }}">
+                <span class="oi oi-x"></span> Return to Test Data View
+            </a>
+
+        </div>
+    </div>
+    <br>
+    <div class="row">
+        <div class="col-md">
+            <div class="list-group list-group-item list-group-item-secondary">
+                General Summary
+            </div>
+        </div>
+    </div>
+    <br>
+    <table class="table table-bordered table-sm table-hover">
+        <thead class="thead-dark">
+        <tr>
+            <th scope="col" class="text-center">No</th>
+            <th scope="col" class="text-center">End</th>
+            <th scope="col" class="text-center">Dumps</th>
+            <th scope="col" class="text-center">Message</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <th scope="row" class="text-center">1</th>
+            <td class="text-center"><kbd>{{ output.last_node }}</kbd></td>
+            <td class="text-center">
+                {% if output.dumps %}
+                    {% for dump in output.dumps %}
+                        <kbd>{{ dump }}</kbd>
+                    {% endfor %}
+                {% else %}
+                    -
+                {% endif %}
+            </td>
+            <td class="text-center">
+                {% if output.messages %}
+                    {% for message in output.messages %}
+                        <kbd>{{ message }}</kbd>
+                    {% endfor %}
+                {% else %}
+                    -
+                {% endif %}
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    {% if output.regs %}
+        <br>
+        <div class="list-group list-group-item list-group-item-secondary">Registers</div>
+        <br>
+        {% for reg, values in output.regs.items() %}
+            <div class="row">
+                <div class="col-md-3 text-center">
+                    <pre>{{ reg }}</pre>
+                </div>
+                {% for value in values %}
+                    <div class="col-md-3 text-center"><kbd>{{ value }}</kbd></div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    {% endif %}
+    {% if output.cores %}
+        <br>
+        <div class="list-group list-group-item list-group-item-secondary">Fields</div>
+        <br>
+        {% for core in output.cores %}
+            {% for field_data in core.field_data %}
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        <pre>{{ field_data.field }}</pre>
+                    </div>
+                    {% for value in field_data.data %}
+                        <div class="col-md-3 text-center"><kbd>{{ value }}</kbd></div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        {% endfor %}
+    {% endif %}
+    {% if output.pnr_outputs %}
+        <br>
+        <div class="list-group list-group-item list-group-item-secondary">PNR Fields</div>
+        <br>
+        {% for pnr_output in output.pnr_outputs %}
+            {% for field_data in pnr_output.field_data %}
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        <pre>{{ field_data.field_text }}</pre>
+                    </div>
+                    {% for value in field_data.data %}
+                        <div class="col-md-3 text-center">
+                            {% if value %}
+                                <kbd>{{ value }}</kbd>
+                            {% else %}
+                                <kbd>No data</kbd>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        {% endfor %}
+    {% endif %}
+    {{ show_test_data(test_data, edit_mode=False, output=False) }}
+
+    {% if output.traces %}
+        <br>
+        <div class="list-group list-group-item list-group-item-secondary">Debug</div>
+        <br>
+        <table id="test-data-list" class="table table-bordered table-hover table-sm">
+            <thead class="thead-dark">
+            <tr>
+                <th class="" scope="col">Instruction</th>
+                <th class="text-center" scope="col">1</th>
+                <th class="text-center" scope="col">2</th>
+                <th class="text-center" scope="col">Ptr -></th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for trace in output.traces %}
+                <tr>
+                    <td class="small">{{ trace.instruction }}</td>
+                    <td class="text-center">
+                        {% if  trace.read1 %}
+                            <kbd>{{ trace.read1[:20] }}</kbd>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {% if  trace.read2 %}
+                            <kbd>{{ trace.read2[:20] }}</kbd>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {% if  trace.reg_pointer %}
+                            <kbd>{{ trace.reg_pointer[:20] }}</kbd>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        <br>
+        {% for trace in output.debug %}
+            <div class="row">
+                <div class="col-md-3">
+                    <kbd>{{ trace.hits }}</kbd>-{{ trace.label }}
+                </div>
+                <div class="col-md-3">
+                    {% for label, hits in trace.next_hits.items() %}
+                        {% if hits %}
+                            <div class="row">
+                                <div class="col-md">
+                                    <kbd>{{ hits }}</kbd>-{{ label }}
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <div class="col-md-6">
+                    {{ trace.command }} {{ trace.operands }}
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+
+{% endblock %}

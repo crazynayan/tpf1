@@ -1,0 +1,40 @@
+{% extends "quick_form.html" %}
+
+{% block app_content %}
+    <div class="row">
+        <div class="col-md-9">
+            <h1>{{ title }}</h1>
+        </div>
+        <div class="col-md-3">
+            {% if name %}
+                <a class="btn btn-secondary btn-block text-center"
+                   href="{{ url_for('get_test_results', name=name) }}">
+                    <span class="oi oi-x"></span> Return to Test Result view
+                </a>
+            {% else %}
+                <a class="btn btn-secondary btn-block text-center"
+                   href="{{ url_for('get_test_results') }}">
+                    <span class="oi oi-x"></span> Return to all test results
+                </a>
+
+            {% endif %}
+        </div>
+    </div>
+    <br>
+    {% for label, value in form.display_fields %}
+        <div class="row">
+            <div class="col-md-2 text-center font-weight-bold">
+                {{ label }}
+            </div>
+            <div class="col-md-10">
+                {{ value }}
+            </div>
+        </div>
+        <br>
+    {% endfor %}
+    <div class="row">
+        <div class="col-md-8">
+            {{ quick_form(form) }}
+        </div>
+    </div>
+{% endblock %}

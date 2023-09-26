@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>{% block title %}{{ title|default("TPF Analyzer") }}{% endblock title %}</title>
+    <!-- Bootstrap -->
+    <link rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+          crossorigin="anonymous">
+    <!-- Custom Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <!-- Favicon -->
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <!-- DataTable -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
+    <!-- Open Iconic -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='open-iconic/font/css/open-iconic-bootstrap.css') }}">
+</head>
+
+<body>
+<!-- NavBar -->
+<div class="container">
+    <nav class="navbar navbar-dark bg-dark navbar-expand-md fixed-top">
+        <a class="navbar-brand" href="{{ url_for('home') }}">
+            <img src="{{ url_for('static', filename='brand.png') }}" alt="CI" width="30" height="30" class="">
+        </a>
+        <button class="navbar-toggler" data-toggle="collapse" data-target="#navbarMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarMenu">
+            <div class="navbar-nav mr-auto">
+                {%- if current_user.is_authenticated %}
+                    <a class="nav-item nav-link active" href="{{ url_for('get_my_test_data') }}">
+                        <span class="oi oi-phone"></span> Test Data
+                    </a>
+                    <a class="nav-item nav-link active" href="{{ url_for('get_test_results') }}">
+                        <span class="oi oi-tablet"></span> Test Results
+                    </a>
+                    <div class="nav-item dropdown">
+                        <a class="nav-link active dropdown-toggle" href="#" role="button" data-toggle="dropdown">
+                            <span class="oi oi-aperture"></span> Templates
+                        </a>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" href="{{ url_for('view_templates', template_type='PNR') }}">
+                                PNR Templates
+                            </a>
+                            <a class="dropdown-item" href="{{ url_for('view_templates', template_type='Global') }}">
+                                Global Templates
+                            </a>
+                            <a class="dropdown-item" href="{{ url_for('view_templates', template_type='AAA') }}">
+                                AAA Templates
+                            </a>
+                        </div>
+                    </div>
+                    <a class="nav-item nav-link active" href="{{ url_for('segments') }}">
+                        <span class="oi oi-list"></span> Segments
+                    </a>
+                    <a class="nav-item nav-link active" href="{{ url_for('macros') }}">
+                        <span class="oi oi-list-rich"></span> Macros
+                    </a>
+                    <a class="nav-item nav-link active" href="{{ url_for('upload_segments') }}">
+                        <span class="oi oi-cloud-upload"></span> Upload
+                    </a>
+                    {% if current_user.role == "admin" %}
+                        <a class="nav-item nav-link active" href="{{ url_for('unsupported_instructions') }}">
+                            <span class="oi oi-bolt"></span> Unsupported Instructions
+                        </a>
+                    {% endif %}
+                {%- endif %}
+            </div>
+            <div class="navbar-nav ml-auto">
+                {% if current_user.is_anonymous %}
+                    <a class="nav-item nav-link active" href="{{ url_for('login') }}">
+                        <span class="oi oi-account-login"></span> Login
+                    </a>
+                {% else %}
+                    <a class="nav-item nav-link active" href="{{ url_for('logout') }}">
+                        <span class="oi oi-home"></span> {{ current_user.domain|upper }}
+                    </a>
+                    <a class="nav-item nav-link active" href="{{ url_for('logout') }}">
+                        <span class="oi oi-account-logout"></span> Logout
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+</div>
+
+{% block content %}
+    <div class="container" id="pad-content">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-info" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <br>
+        {% block app_content %}
+        {% endblock %}
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <!-- Bootstrap -->
+    <!-- Bootstrap Google -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <!-- Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+            integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+            crossorigin="anonymous"></script>
+    <!-- Bootstrap -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+            integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+            crossorigin="anonymous"></script>
+    <!-- Data Table -->
+    <script charset="utf8" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js"
+            type="text/javascript"></script>
+    <!-- Default Data Table -->
+    <script>
+        $.extend($.fn.dataTable.defaults, {
+            dom: '<"top"if>rt<"bottom"p>'
+        })
+    </script>
+
+{%- endblock scripts %}
+
+</body>
+</html>

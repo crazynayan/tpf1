@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block app_content %}
+    <div class="row">
+        <div class="col-md">
+            <h1>{{ title }}</h1>
+        </div>
+        <div class="col-md">
+            <a class="btn btn-success"
+               href="{{ url_for('create_test_data') }}">
+                <span class="oi oi-plus"> </span> Create Test Data
+            </a>
+        </div>
+        <div class="col-md">
+            <a class="btn btn-primary"
+               href="{{ url_for('get_all_test_data') }}">
+                <span class="oi oi-people"> </span> All Test Data
+            </a>
+        </div>
+        <div class="col-md text-right">
+            <a class="btn btn-primary"
+               href="{{ url_for('get_test_results') }}">
+                <span class="oi oi-tablet"> </span> Test Results
+            </a>
+        </div>
+    </div>
+    <br>
+    {% if test_data_list %}
+        <table id="test-data-list" class="table table-bordered table-hover ">
+            <thead class="thead-dark">
+            <tr>
+                <th class="text-center d-none d-md-table-cell" scope="col">No.</th>
+                <th class="" scope="col">Name</th>
+                <th class="text-center d-none d-md-table-cell" scope="col">Segment</th>
+                {% if all_flag %}
+                    <th class="text-center d-none d-md-table-cell" scope="col">Owner</th>
+                {% endif %}
+                <th class="text-center" scope="col">Action</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for test_data in test_data_list %}
+                <tr>
+                    <td class="text-center d-none d-md-table-cell">{{ loop.index }}</td>
+                    <td class="">{{ test_data.name }}</td>
+                    <td class="text-center d-none d-md-table-cell">{{ test_data.seg_name }}</td>
+                    {% if all_flag %}
+                        <td class="text-center d-none d-md-table-cell">{{ test_data.owner }}</td>
+                    {% endif %}
+                    <td class="text-center">
+                        <a class="btn btn-primary btn-block"
+                           href="{{ url_for('get_test_data', test_data_id=test_data.id) }}"
+                           title="Open Test Data">
+                            <span class="oi oi-target"></span> Open
+                        </a>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <br>
+        <p>You have NOT yet created any test data.</p>
+        <p>You can either <strong>Create Test Data</strong> OR view the test data that were already created by others
+            by clicking on <strong>All Test Data</strong> on the link in the nav bar above</p>
+    {% endif %}
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        $(document).ready(function () {
+            $("#test-data-list").DataTable({
+                paging: false
+            });
+        });
+    </script>
+{% endblock %}

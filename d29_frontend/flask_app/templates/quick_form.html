@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% macro form_group(field) -%}
+    <div class="form-group required">
+        <label for="{{ field.id }}" class="form-control-label">{{ field.label }}</label>
+        {% if field.errors %}
+            {{ field(class_="form-control is-invalid") }}
+        {% else %}
+            {{ field(class_="form-control") }}
+        {% endif %}
+        {% if field.errors %}
+            <div class="invalid-feedback">
+                {{ field.errors[0] }}
+            </div>
+        {% endif %}
+    </div>
+{% endmacro %}
+
+
+{% macro quick_form(form) -%}
+    <form class="form" method="POST" novalidate>
+        {% for field in form %}
+            {% if field.type in ('HiddenField', 'CSRFTokenField') %}
+                {{ field() }}
+            {% elif field.type == 'SubmitField' %}
+                <br>
+                {{ field(class_="btn btn-primary") }}
+            {% elif field.type =='BooleanField' %}
+                <div class="custom-checkbox custom-control">
+                    {% if field.errors %}
+                        {{ field(class_="custom-control-input is_invalid") }}
+                    {% else %}
+                        {{ field(class_="custom-control-input") }}
+                    {% endif %}
+                    <label class="custom-control-label" for="{{ field.id }}">
+                        {{ field.label.text }}
+                    </label>
+                    {% if field.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ field.errors[0] }}
+                        </div>
+                    {% endif %}
+                </div>
+                <br>
+            {% else %}
+                {{ form_group(field) }}
+            {% endif %}
+        {% endfor %}
+    </form>
+{% endmacro %}
+

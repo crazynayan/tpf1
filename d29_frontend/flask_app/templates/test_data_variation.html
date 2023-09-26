@@ -1,0 +1,377 @@
+{% extends "test_data_show.html" %}
+
+{% block app_content %}
+    <div class="row">
+        <div class="col-md-9">
+            <h1>Execution Result</h1>
+        </div>
+        <div class="col-md-3">
+            <a class="btn btn-secondary" href="{{ url_for('get_test_data', test_data_id=test_data.id) }}">
+                <span class="oi oi-x"></span> Return to Test Data View
+            </a>
+
+        </div>
+    </div>
+
+    <br>
+    <div class="row">
+        <div class="col-md">
+            <div class="list-group list-group-item list-group-item-secondary">
+                General Summary
+            </div>
+        </div>
+    </div>
+    <br>
+    <table class="table table-bordered table-sm table-hover">
+        <thead class="thead-dark">
+        <tr>
+            <th scope="col" class="text-center">No</th>
+            {% if test_data.test_data_variation.core %}
+                <th scope="col" class="text-center">Field</th>
+            {% endif %}
+            {% if test_data.test_data_variation.pnr %}
+                <th scope="col" class="text-center">Pnr</th>
+            {% endif %}
+            {% if test_data.test_data_variation.tpfdf %}
+                <th scope="col" class="text-center">DF</th>
+            {% endif %}
+            {% if test_data.test_data_variation.file %}
+                <th scope="col" class="text-center">File</th>
+            {% endif %}
+            <th scope="col" class="text-center">End</th>
+            <th scope="col" class="text-center">Dumps</th>
+            <th scope="col" class="text-center">Message</th>
+
+        </tr>
+        </thead>
+        <tbody>
+        {% for output in test_data.outputs %}
+            <tr>
+                <th scope="row" class="text-center">{{ output.result_id }}</th>
+                {% if test_data.test_data_variation.core %}
+                    <th scope="row" class="text-center">
+                        {% if output.variation_name.core %}
+                            {{ output.variation_name.core }}
+                        {% else %}
+                            {{ output.variation.core }}
+                        {% endif %}
+                    </th>
+                {% endif %}
+                {% if test_data.test_data_variation.pnr %}
+                    <th scope="row" class="text-center">
+                        {% if output.variation_name.pnr %}
+                            {{ output.variation_name.pnr }}
+                        {% else %}
+                            {{ output.variation.pnr }}
+                        {% endif %}
+                    </th>
+                {% endif %}
+                {% if test_data.test_data_variation.tpfdf %}
+                    <th scope="row" class="text-center">
+                        {% if output.variation_name.tpfdf %}
+                            {{ output.variation_name.tpfdf }}
+                        {% else %}
+                            {{ output.variation.tpfdf }}
+                        {% endif %}
+                    </th>
+                {% endif %}
+                {% if test_data.test_data_variation.file %}
+                    <th scope="row" class="text-center">
+                        {% if output.variation_name.file %}
+                            {{ output.variation_name.file }}
+                        {% else %}
+                            {{ output.variation.file }}
+                        {% endif %}
+                    </th>
+                {% endif %}
+                <td class="text-center"><kbd>{{ output.last_node }}</kbd></td>
+                <td class="text-center">
+                    {% if output.dumps %}
+                        {% for dump in output.dumps %}
+                            <kbd>{{ dump }}</kbd>
+                        {% endfor %}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td class="text-center">
+                    {% if output.messages %}
+                        {% for message in output.messages %}
+                            <kbd>{{ message }}</kbd>
+                        {% endfor %}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% if test_data.fields %}
+        <br>
+        <div class="row">
+            <div class="col-md">
+                <div class="list-group list-group-item list-group-item-secondary">
+                    Field Summary
+                </div>
+            </div>
+        </div>
+        <br>
+        <table class="table table-bordered table-sm table-hover">
+            <thead class="thead-dark">
+            <tr>
+                <th scope="col" class="text-center">No</th>
+                {% if test_data.test_data_variation.core %}
+                    <th scope="col" class="text-center">Field</th>
+                {% endif %}
+                {% if test_data.test_data_variation.pnr %}
+                    <th scope="col" class="text-center">Pnr</th>
+                {% endif %}
+                {% if test_data.test_data_variation.tpfdf %}
+                    <th scope="col" class="text-center">DF</th>
+                {% endif %}
+                {% if test_data.test_data_variation.file %}
+                    <th scope="col" class="text-center">File</th>
+                {% endif %}
+                {% for field in test_data.fields %}
+                    <th scope="col" class="text-center">{{ field }}</th>
+                {% endfor %}
+            </tr>
+            </thead>
+            <tbody>
+            {% for output in test_data.outputs %}
+                <tr>
+                    <th scope="row" class="text-center">{{ output.result_id }}</th>
+                    {% if test_data.test_data_variation.core %}
+                        <th scope="row" class="text-center">
+                            {% if output.variation_name.core %}
+                                {{ output.variation_name.core }}
+                            {% else %}
+                                {{ output.variation.core }}
+                            {% endif %}
+                        </th>
+                    {% endif %}
+                    {% if test_data.test_data_variation.pnr %}
+                        <th scope="row" class="text-center">
+                            {% if output.variation_name.pnr %}
+                                {{ output.variation_name.pnr }}
+                            {% else %}
+                                {{ output.variation.pnr }}
+                            {% endif %}
+                        </th>
+                    {% endif %}
+                    {% if test_data.test_data_variation.tpfdf %}
+                        <th scope="row" class="text-center">
+                            {% if output.variation_name.tpfdf %}
+                                {{ output.variation_name.tpfdf }}
+                            {% else %}
+                                {{ output.variation.tpfdf }}
+                            {% endif %}
+                        </th>
+                    {% endif %}
+                    {% if test_data.test_data_variation.file %}
+                        <th scope="row" class="text-center">
+                            {% if output.variation_name.file %}
+                                {{ output.variation_name.file }}
+                            {% else %}
+                                {{ output.variation.file }}
+                            {% endif %}
+                        </th>
+                    {% endif %}
+                    {% for core in output.cores %}
+                        {% for field_data in core.field_data %}
+                            <td class="text-center">
+                                <kbd>{{ field_data.data[0] }}</kbd>
+                                {% if field_data.data[1] is integer %}
+                                    {% if 9 < field_data.data[1] < 256 %}
+                                        <kbd> ({{ field_data.data[1] }})</kbd>
+                                    {% endif %}
+                                {% endif %}
+                            </td>
+                        {% endfor %}
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+    {# PNR Field #}
+    {% if test_data.pnr_fields %}
+        <br>
+        <div class="row">
+            <div class="col-md">
+                <div class="list-group list-group-item list-group-item-secondary">
+                    PNR Field Summary
+                </div>
+            </div>
+        </div>
+        <br>
+        <table class="table table-bordered table-sm table-hover">
+            <thead class="thead-dark">
+            <tr>
+                <th scope="col" class="text-center">No</th>
+                {% if test_data.test_data_variation.core %}
+                    <th scope="col" class="text-center">Field</th>
+                {% endif %}
+                {% if test_data.test_data_variation.pnr %}
+                    <th scope="col" class="text-center">Pnr</th>
+                {% endif %}
+                {% if test_data.test_data_variation.tpfdf %}
+                    <th scope="col" class="text-center">DF</th>
+                {% endif %}
+                {% if test_data.test_data_variation.file %}
+                    <th scope="col" class="text-center">File</th>
+                {% endif %}
+                {% for field in test_data.pnr_fields %}
+                    <th scope="col" class="text-center">{{ field }}</th>
+                {% endfor %}
+            </tr>
+            </thead>
+            <tbody>
+            {% for output in test_data.outputs %}
+                <tr>
+                    <th scope="row" class="text-center">{{ loop.index }}</th>
+                    {% if test_data.test_data_variation.core %}
+                        <th scope="row" class="text-center">
+                            {% if output.variation_name.core %}
+                                {{ output.variation_name.core }}
+                            {% else %}
+                                {{ output.variation.core }}
+                            {% endif %}
+                        </th>
+                    {% endif %}
+                    {% if test_data.test_data_variation.pnr %}
+                        <th scope="row" class="text-center">
+                            {% if output.variation_name.pnr %}
+                                {{ output.variation_name.pnr }}
+                            {% else %}
+                                {{ output.variation.pnr }}
+                            {% endif %}
+                        </th>
+                    {% endif %}
+                    {% if test_data.test_data_variation.tpfdf %}
+                        <th scope="row" class="text-center">
+                            {% if output.variation_name.tpfdf %}
+                                {{ output.variation_name.tpfdf }}
+                            {% else %}
+                                {{ output.variation.tpfdf }}
+                            {% endif %}
+                        </th>
+                    {% endif %}
+                    {% if test_data.test_data_variation.file %}
+                        <th scope="row" class="text-center">
+                            {% if output.variation_name.file %}
+                                {{ output.variation_name.file }}
+                            {% else %}
+                                {{ output.variation.file }}
+                            {% endif %}
+                        </th>
+                    {% endif %}
+                    {% for pnr_output in output.pnr_outputs %}
+                        {% for field_data in pnr_output.field_data %}
+                            <td class="text-center">
+                                <kbd>{{ field_data.data[0] }}</kbd>
+                                {% if field_data.data[1] is integer %}
+                                    {% if 9 < field_data.data[1] < 256 %}
+                                        <kbd> ({{ field_data.data[1] }})</kbd>
+                                    {% endif %}
+                                {% endif %}
+                            </td>
+                        {% endfor %}
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    {{ show_test_data(test_data, edit_mode=False, output=False) }}
+    {% if test_data.outputs[0].traces or (test_data.outputs|length > 1 and test_data.outputs[1].traces) %}
+        <br>
+        <div class="list-group list-group-item list-group-item-secondary">Debug</div>
+        <br>
+        {% for output in test_data.outputs %}
+            <div class="row">
+                <div class="col-md">
+                    <div class="list-group list-group-item list-group-item-light">
+                        Variation -
+                        {% if output.variation_name.core and test_data.test_data_variation.core %}
+                            Field=<span class="font-weight-bold">{{ output.variation_name.core }}</span>.
+                        {% endif %}
+                        {% if output.variation_name.pnr and test_data.test_data_variation.pnr %}
+                            PNR=<span class="font-weight-bold">{{ output.variation_name.pnr }}</span>.
+                        {% endif %}
+                        {% if output.variation_name.tpfdf and test_data.test_data_variation.tpfdf %}
+                            TPFDF=<span class="font-weight-bold">{{ output.variation_name.tpfdf }}</span>.
+                        {% endif %}
+                        {% if output.variation_name.file and test_data.test_data_variation.file %}
+                            File=<span class="font-weight-bold">{{ output.variation_name.file }}</span>.
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <br>
+            <table id="test-data-list" class="table table-bordered table-hover table-sm">
+                <thead class="thead-dark">
+                <tr>
+                    <th class="" scope="col">Instruction</th>
+                    <th class="text-center" scope="col">1</th>
+                    <th class="text-center" scope="col">2</th>
+                    <th class="text-center" scope="col">Ptr -></th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for trace in output.traces %}
+                    <tr>
+                        <td class="small">{{ trace.instruction }}</td>
+                        <td class="text-center">
+                            {% if  trace.read1 %}
+                                <kbd>{{ trace.read1[:20] }}</kbd>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if  trace.read2 %}
+                                <kbd>{{ trace.read2[:20] }}</kbd>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if  trace.reg_pointer %}
+                                <kbd>{{ trace.reg_pointer[:20] }}</kbd>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            <br>
+            {% for trace in output.debug %}
+                <div class="row">
+                    <div class="col-md-3">
+                        <kbd>{{ trace.hits }}</kbd>-{{ trace.label }}
+                    </div>
+                    <div class="col-md-3">
+                        {% for label, hits in trace.next_hits.items() %}
+                            {% if hits %}
+                                <div class="row">
+                                    <div class="col-md">
+                                        <kbd>{{ hits }}</kbd>-{{ label }}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <div class="col-md-6">
+                        {{ trace.command }} {{ trace.operands }}
+                    </div>
+                </div>
+            {% endfor %}
+        {% endfor %}
+    {% endif %}
+
+{% endblock %}

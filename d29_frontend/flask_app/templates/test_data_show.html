@@ -1,0 +1,1048 @@
+{% extends "base.html" %}
+
+{% macro show_test_data(test_data, edit_mode, output=True) -%}
+    {#  Header#}
+    <br>
+    <div class="row">
+        <div class="col-md list-group list-group-item list-group-item-secondary">
+            <div class="row">
+                <div class="col-md-10">
+                    Test Data Header
+                </div>
+                {% if edit_mode %}
+                    <div class="col-md-2">
+                        <a class="badge badge-warning badge-pill"
+                           href="{{ url_for('rename_test_data', test_data_id=test_data.id) }}">
+                            <span class="oi oi-pencil"></span> Edit Header
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <br>
+    <div class="row">
+        <div class="col-md-2 text-center font-weight-bold">
+            Name
+        </div>
+        <div class="col-md-10">
+            {{ test_data.name }}
+        </div>
+    </div>
+    <div class="row ">
+        <div class="col-md-2 text-center font-weight-bold">
+            Start
+        </div>
+        <div class="col-md-10">
+            {{ test_data.seg_name }}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-2 text-center font-weight-bold">
+            Stop
+        </div>
+        <div class="col-md-10">
+            {% if test_data.stop_segments %}
+                {{ test_data.stop_seg_string }}
+            {% else %}
+                No Stop Segments
+            {% endif %}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-2 text-center font-weight-bold">
+            Startup
+        </div>
+        <div class="col-md-10">
+            {% if test_data.startup_script %}
+                Startup Script exists. Edit Header to view the script.
+            {% else %}
+                No Startup Script
+            {% endif %}
+        </div>
+    </div>
+
+    {% if output %}
+        {#  Debug #}
+        {% if edit_mode or test_data.outputs.debug %}
+            <br>
+            <div class="row">
+                <div class="col-md list-group list-group-item list-group-item-secondary">
+                    <div class="row">
+                        <div class="col-md-10">
+                            Debug Segments
+                        </div>
+                        {% if edit_mode %}
+                            <div class="col-md-2">
+                                <a class="badge badge-success badge-pill"
+                                   href="{{ url_for('add_debug', test_data_id=test_data.id) }}">
+                                    <span class="oi oi-plus"></span> Add Debug Segments
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        {% if test_data.outputs.debug %}
+            <br>
+            <div class="row">
+                {% for seg_name in test_data.outputs.debug %}
+                    <div class="col-md-2 text-center font-weight-bold">{{ seg_name }}
+                        {% if edit_mode %}
+                            <a class="badge badge-danger"
+                               href="{{ url_for('delete_debug', test_data_id=test_data.id, seg_name=seg_name) }}">
+                                X
+                            </a>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% elif edit_mode %}
+            <br>
+            <div class="row">
+                <div class="col-md">
+                    <div class="col-md">There are no debug segments</div>
+                </div>
+            </div>
+        {% endif %}
+        {# Output Registers #}
+        {% if edit_mode or test_data.outputs.regs %}
+            <br>
+            <div class="row" id="output-registers">
+                <div class="col-md list-group list-group-item list-group-item-secondary">
+                    <div class="row">
+                        <div class="col-md-10">
+                            Output - Registers
+                        </div>
+                        {% if edit_mode %}
+                            <div class="col-md-2">
+                                <a class="badge badge-success badge-pill"
+                                   href="{{ url_for('add_output_regs', test_data_id=test_data.id) }}">
+                                    <span class="oi oi-plus"></span> Add Output Registers
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        {% if test_data.outputs.regs %}
+            <br>
+            <div class="row">
+                {% for reg in test_data.outputs.regs %}
+                    <div class="col-md-1 text-center">{{ reg }}</div>
+                {% endfor %}
+            </div>
+        {% elif edit_mode %}
+            <br>
+            <div class="row">
+                <div class="col-md">
+                    <div class="col-md">There are no output registers</div>
+                </div>
+            </div>
+        {% endif %}
+        {# Output Fields #}
+        {% if edit_mode or test_data.outputs.cores %}
+            <br>
+            <div class="row" id="output-core">
+                <div class="col-md list-group list-group-item list-group-item-secondary">
+                    <div class="row">
+                        <div class="col-md-10">
+                            Output - Fields
+                        </div>
+                        {% if edit_mode %}
+                            <div class="col-md-2">
+                                <a class="badge badge-success badge-pill"
+                                   href="{{ url_for('search_output_fields', test_data_id=test_data.id) }}">
+                                    <span class="oi oi-plus"></span> Add Output Fields
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        {% if test_data.outputs.cores %}
+            {% for core in test_data.outputs.cores %}
+                <br>
+                <div class="row">
+                    <div class="col-md-2 text-center font-weight-bold">
+                        {{ core.macro_name }}
+                        {% if core.base_reg and core.base_reg != 'R0' %}
+                            &nbsp;({{ core.base_reg }})
+                        {% endif %}
+                    </div>
+                    {% for field_data in core.field_data %}
+                        <div class="col-md-2 text-center">
+                            {{ field_data.field }} ({{ field_data.length }})
+                            {% if edit_mode %}
+                                <a class="badge badge-danger"
+                                   href="{{ url_for('delete_output_field', test_data_id=test_data.id,
+                                                macro_name=core.macro_name, field_name=field_data.field) }}">
+                                    X
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        {% elif edit_mode %}
+            <br>
+            <div class="row">
+                <div class="col-md">
+                    <div class="col-md">There are no output fields</div>
+                </div>
+            </div>
+        {% endif %}
+    {% endif %}
+    {# Output PNR #}
+    {% if edit_mode or test_data.outputs.pnr_outputs %}
+        <br>
+        <div class="row" id="output-pnr">
+            <div class="col-md list-group list-group-item list-group-item-secondary">
+                <div class="row">
+                    <div class="col-md-10">
+                        Output - PNR
+                    </div>
+                    {% if edit_mode %}
+                        <div class="col-md-2">
+                            <a class="badge badge-pill badge-success "
+                               href="{{ url_for('add_output_pnr', test_data_id=test_data.id) }}">
+                                <span class="oi oi-plus"></span> Add PNR Elements
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+    {% endif %}
+    {% if test_data.outputs.pnr_outputs %}
+        {% for pnr in test_data.outputs.pnr_outputs %}
+            <br>
+            <div class="row">
+                <div class="col-md-2 text-center font-weight-bold">
+                    {% if pnr.locator != "AAAAAA" %}
+                        {{ pnr.locator }}
+                    {% endif %}
+                </div>
+                <div class="col-md-2 font-weight-bold">
+                    {{ pnr.key.upper() }}
+                    {% if edit_mode %}
+                        <a class="badge badge-warning edit-icon"
+                           href="{{ url_for('update_output_pnr', test_data_id=test_data.id,pnr_output_id=pnr.id) }}">
+                            &#9998;</a>
+                        <a class="badge badge-danger"
+                           href="{{ url_for('delete_output_pnr', test_data_id=test_data.id, pnr_output_id=pnr.id) }}">
+                            X</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% for field_item_len in pnr.field_item_len %}
+                <div class="row">
+                    <div class="col-md">
+                        {{ field_item_len.field }} ({{ field_item_len.length }}) #{{ field_item_len.item_number }}
+                    </div>
+                </div>
+            {% endfor %}
+        {% endfor %}
+    {% elif edit_mode %}
+        <br>
+        <div class="row">
+            <div class="col-md">
+                <div class="col-md">There are no PNR output fields</div>
+            </div>
+        </div>
+    {% endif %}
+
+    {# Input Fields #}
+    {% if edit_mode or test_data.cores %}
+        <br>
+        <div class="row" id="input-core">
+            {% if edit_mode %}
+                <div class="col-md list-group list-group-item list-group-item-secondary">
+                    <div class="row ">
+                        <div class="col-md-2">
+                            Input - Fields
+                        </div>
+                        <div class="col-md-1">
+                            <a class="badge badge-success badge-pill" title="Add Global"
+                               href="{{ url_for('add_global', test_data_id=test_data.id) }}">
+                                <span class="oi oi-plus"></span> Global
+                            </a>
+                        </div>
+                        <div class="col-md-1">
+                            <a class="badge badge-warning badge-pill" title="Merge Global Template"
+                               href="{{ url_for('merge_link_template', test_data_id=test_data.id, template_type='Global', action_type='merge') }}">
+                                <span class="oi oi-loop"></span> Global
+                            </a>
+                        </div>
+                        <div class="col-md-1">
+                            <a class="badge badge-warning badge-pill" title="Link Global Template"
+                               href="{{ url_for('merge_link_template', test_data_id=test_data.id, template_type='Global', action_type='link') }}">
+                                <span class="oi oi-link-intact"></span> Global
+                            </a>
+                        </div>
+                        <div class="col-md-1">
+                            <a class="badge badge-success badge-pill" title="Add AAA field"
+                               href="{{ url_for('add_macro', test_data_id=test_data.id, macro_name="WA0AA") }}">
+                                <span class="oi oi-plus"></span> AAA
+                            </a>
+                        </div>
+                        <div class="col-md-1">
+                            <a class="badge badge-warning badge-pill" title="Merge AAA Template"
+                               href="{{ url_for('merge_link_template', test_data_id=test_data.id, template_type='AAA', action_type='merge') }}">
+                                <span class="oi oi-loop"></span> AAA
+                            </a>
+                        </div>
+                        <div class="col-md-1">
+                            <a class="badge badge-warning badge-pill" title="Link AAA Template"
+                               href="{{ url_for('merge_link_template', test_data_id=test_data.id, template_type='AAA', action_type='link') }}">
+                                <span class="oi oi-link-intact"></span> AAA
+                            </a>
+                        </div>
+                        <div class="col-md-1">
+                            <a class="badge badge-success badge-pill" title="Add Heap"
+                               href="{{ url_for('add_heap', test_data_id=test_data.id) }}">
+                                <span class="oi oi-plus"></span> Heap
+                            </a>
+                        </div>
+                        <div class="col-md-1">
+                            <a class="badge badge-success badge-pill" title="Add ECB Field"
+                               href="{{ url_for('add_macro', test_data_id=test_data.id, macro_name="EB0EB") }}">
+                                <span class="oi oi-plus"></span> ECB Field
+                            </a>
+                        </div>
+                        <div class="col-md-1">
+                            <a class="badge badge-success badge-pill" title="Add ECB Level"
+                               href="{{ url_for('add_ecb_level', test_data_id=test_data.id) }}">
+                                <span class="oi oi-plus"></span> ECB Level
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="col-md list-group list-group-item list-group-item-secondary">
+                    Input - Global, AAA, Heap and ECB levels
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+    {% if test_data.cores %}
+        <br>
+        {% for variation in test_data.cores|groupby('variation') %}
+            <div class="row">
+                <div class="col-md">
+                    <div class="list-group list-group-item list-group-item-light">
+                        <div class="row">
+                            <div class="col-md-9">
+                                {{ variation.list[0].variation_name }}
+                            </div>
+                            {% if edit_mode %}
+                                <div class="col-md-1">
+                                    <a class="badge badge-warning badge-pill"
+                                       href="{{ url_for('rename_variation', test_data_id=test_data.id,
+                                           variation=variation.grouper, v_type='core') }}">
+                                        <span class="oi oi-pencil"></span> Rename
+                                    </a>
+                                </div>
+                                <div class="col-md-1">
+                                    <a class="badge badge-success badge-pill"
+                                       href="{{ url_for('copy_variation', test_data_id=test_data.id,
+                                           variation=variation.grouper, v_type='core') }}">
+                                        <span class="oi oi-clipboard"></span> Copy
+                                    </a>
+                                </div>
+                                <div class="col-md-1">
+                                    <a class="badge badge-danger badge-pill"
+                                       href="{{ url_for('delete_variation', test_data_id=test_data.id,
+                                           variation=variation.grouper, v_type='core') }}">
+                                        <span class="oi oi-x"></span> Delete
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% for core in variation.list %}
+                {% if core.macro_name %}
+                    <div class="{% if core.link_status == "inactive" %}alert-secondary {% elif core.link_status == "active" %}alert-primary{% endif %}">
+                        <div class="row">
+                            <div class="col-md-2 text-center font-weight-bold">
+                                {% if core.macro_name == "WA0AA" %}
+                                    AAA
+                                {% else %}
+                                    ECB Field
+                                {% endif %}
+                            </div>
+                            <div class="col-md-2 font-weight-bold">
+                                {{ core.macro_name }}
+                            </div>
+                            <div class="col-md-6">
+                                {% if core.link %}
+                                    {{ core.link }}
+                                {% endif %}
+                            </div>
+                            {% if edit_mode %}
+                                {% if core.link %}
+                                    <div class="col-md-1">
+                                        <a class="badge badge-warning badge-pill"
+                                           href="{{ url_for('update_link_template', test_data_id=test_data.id,
+                                                        variation=core.variation, t_name=core.link, template_type='AAA',
+                                                        v_name=core.variation_name) }}">
+                                            <span class="oi oi-pencil"></span> Link
+                                        </a>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <a class="badge badge-danger badge-pill"
+                                           href="{{ url_for('delete_link_template', test_data_id=test_data.id,
+                                           variation=core.variation, t_name=core.link, template_type='AAA') }}">
+                                            <span class="oi oi-x"></span> Link
+                                        </a>
+                                    </div>
+                                {% else %}
+                                    <div class="col-md-1">
+                                        <a class="badge badge-warning badge-pill"
+                                           href="{{ url_for('update_macro', test_data_id=test_data.id, macro_name=core.macro_name, variation=core.variation) }}">
+                                            <span class="oi oi-pencil"></span> {{ core.macro_name[:4] }}
+                                        </a>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <a class="badge badge-danger badge-pill"
+                                           href="{{ url_for('delete_macro', test_data_id=test_data.id, macro_name=core.macro_name, variation=core.variation) }}">
+                                            <span class="oi oi-x"></span> {{ core.macro_name[:4] }}
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                        {% for field_data in core.field_data %}
+                            <div class="row">
+                                <div class="col-md-3">
+                                    {{ field_data.field }}
+                                </div>
+                                {% for value in field_data.data %}
+                                    <div class="col-md-3"><kbd>{{ value }}</kbd></div>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% elif core.ecb_level %}
+                    <div class="row">
+                        <div class="col-md-2 text-center font-weight-bold">
+                            ECB Level
+                        </div>
+                        <div class="col-md-2 font-weight-bold">
+                            D{{ core.ecb_level }}
+                        </div>
+                        <div class="col-md-6">
+                            {% if core.hex_data[0] != "" %}
+                                <kbd>{{ core.hex_data[0] }}</kbd>
+                            {% elif not core.field_data %}
+                                ECB level initialized with zeroes
+                            {% endif %}
+                        </div>
+                        {% if edit_mode %}
+                            <div class="col-md-1">
+                                <a class="badge badge-warning badge-pill"
+                                   href="{{ url_for('update_ecb_level', test_data_id=test_data.id, ecb_level=core.ecb_level,variation=core.variation) }}">
+                                    <span class="oi oi-pencil"></span> D{{ core.ecb_level }}
+                                </a>
+                            </div>
+                            <div class="col-md-1">
+                                <a class="badge badge-danger badge-pill"
+                                   href="{{ url_for('delete_ecb_level', test_data_id=test_data.id, ecb_level=core.ecb_level, variation=core.variation) }}">
+                                    <span class="oi oi-x"></span> D{{ core.ecb_level }}
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% for field_data in core.field_data %}
+                        <div class="row">
+                            <div class="col-md-3">
+                                {{ field_data.field }}
+                            </div>
+                            {% for value in field_data.data %}
+                                <div class="col-md-3"><kbd>{{ value }}</kbd></div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                {% elif core.heap_name %}
+                    <div class="row">
+                        <div class="col-md-2 text-center font-weight-bold">
+                            Heap
+                        </div>
+                        <div class="col-md-2 font-weight-bold">
+                            {{ core.heap_name }}
+                        </div>
+                        <div class="col-md-6">
+                            {% if core.hex_data[0] != "" %}
+                                <kbd>{{ core.hex_data[0] }}</kbd>
+                            {% elif not core.field_data %}
+                                Heap initialized with zeroes
+                            {% endif %}
+                        </div>
+                        {% if edit_mode %}
+                            <div class="col-md-1">
+                                <a class="badge badge-warning badge-pill"
+                                   href="{{ url_for('update_heap', test_data_id=test_data.id, heap_name=core.heap_name, variation=core.variation) }}">
+                                    <span class="oi oi-pencil"></span> {{ core.heap_name[:4] }}
+                                </a>
+                            </div>
+                            <div class="col-md-1">
+                                <a class="badge badge-danger badge-pill"
+                                   href="{{ url_for('delete_heap', test_data_id=test_data.id, heap_name=core.heap_name, variation=core.variation) }}">
+                                    <span class="oi oi-x"></span> {{ core.heap_name[:4] }}
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% for field_data in core.field_data %}
+                        <div class="row">
+                            <div class="col-md-3">
+                                {{ field_data.field }}
+                            </div>
+                            {% for value in field_data.data %}
+                                <div class="col-md-3"><kbd>{{ value }}</kbd></div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                {% elif core.global_name %}
+                    <div class="{% if core.link_status == "inactive" %}alert-secondary {% elif core.link_status == "active" %}alert-primary{% endif %}">
+                        <div class="row">
+                            <div class="col-md-2 text-center font-weight-bold">
+                                {% if core.is_global_record %}
+                                    Global Record
+                                {% else %}
+                                    Global Field
+                                {% endif %}
+                            </div>
+                            <div class="col-md-2 font-weight-bold">
+                                {{ core.global_name }}
+                            </div>
+                            <div class="col-md-6">
+                                {% if core.link %}
+                                    {{ core.link }}
+                                {% endif %}
+                            </div>
+                            {% if edit_mode %}
+                                {% if core.link %}
+                                    <div class="col-md-1">
+                                        <a class="badge badge-warning badge-pill"
+                                           href="{{ url_for('update_link_template', test_data_id=test_data.id,
+                                                        variation=core.variation, t_name=core.link, template_type='Global',
+                                                        v_name=core.variation_name) }}">
+                                            <span class="oi oi-pencil"></span> Link
+                                        </a>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <a class="badge badge-danger badge-pill"
+                                           href="{{ url_for('delete_link_template', test_data_id=test_data.id,
+                                           variation=core.variation, t_name=core.link, template_type='Global') }}">
+                                            <span class="oi oi-x"></span> Link
+                                        </a>
+                                    </div>
+                                {% else %}
+                                    <div class="col-md-1">
+                                        <a class="badge badge-warning badge-pill"
+                                           href="{{ url_for('update_global', test_data_id=test_data.id, core_id=core.id) }}">
+                                            <span class="oi oi-pencil"></span> {{ core.global_name[:4] }}
+                                        </a>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <a class="badge badge-danger badge-pill"
+                                           href="{{ url_for('delete_global', test_data_id=test_data.id, core_id=core.id) }}">
+                                            <span class="oi oi-x"></span> {{ core.global_name[:4] }}
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                        {% if core.hex_data[0] != "" %}
+                            <div class="row">
+                                <div class="col-md-3 text-center">
+                                </div>
+                                {% for value in core.hex_data %}
+                                    <div class="col-md-3"><kbd>{{ value }}</kbd></div>
+                                {% endfor %}
+                            </div>
+                        {% elif not core.field_data and core.is_global_record %}
+                            <div class="row">
+                                <div class="col-md-3 text-center">
+                                </div>
+                                <div class="col-md-9">Initialized to zeroes</div>
+                            </div>
+
+                        {% endif %}
+                        {% for field_data in core.field_data %}
+                            <div class="row">
+                                <div class="col-md-3">
+                                    {{ field_data.field }}
+                                </div>
+                                {% for value in field_data.data %}
+                                    <div class="col-md-3"><kbd>{{ value }}</kbd></div>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
+    {% elif edit_mode %}
+        <br>
+        <div class="row">
+            <div class="col-md">
+                <div class="col-md">There are no input fields</div>
+            </div>
+        </div>
+    {% endif %}
+    {# Input Registers #}
+    {% if edit_mode or test_data.regs %}
+        <br>
+        <div class="row" id="input-register">
+            <div class="col-md list-group list-group-item list-group-item-secondary">
+                <div class="row">
+                    <div class="col-md-10">
+                        Input - Register
+                    </div>
+                    {% if edit_mode %}
+                        <div class="col-md-2">
+                            <a class="badge badge-success badge-pill"
+                               href="{{ url_for('add_input_regs', test_data_id=test_data.id) }}">
+                                <span class="oi oi-plus"></span> Add Input Registers
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    {% if test_data.regs %}
+        <br>
+        {% for reg, values in test_data.regs.items() %}
+            <div class="row">
+                <div class="col-md-3 text-center">
+                    {{ reg }}
+                    {% if edit_mode %}
+                        <a class="badge badge-danger"
+                           href="{{ url_for('delete_input_regs', test_data_id=test_data.id, reg=reg) }}">
+                            X
+                        </a>
+                    {% endif %}
+                </div>
+                {% for value in values %}
+                    <div class="col-md-3"><kbd>{{ value }}</kbd></div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    {% elif edit_mode %}
+        <br>
+        <div class="row">
+            <div class="col-md">
+                <div class="col-md">There are no input registers</div>
+            </div>
+        </div>
+    {% endif %}
+    {# Input PNR #}
+    {% if edit_mode or test_data.pnr %}
+        <br>
+        <div class="row" id="input-pnr">
+            <div class="col-md list-group list-group-item list-group-item-secondary">
+                <div class="row">
+                    <div class="col-md-6">
+                        Input - PNR
+                    </div>
+                    {% if edit_mode %}
+                        <div class="col-md-2">
+                            <a class="badge badge-success badge-pill"
+                               href="{{ url_for('add_input_pnr', test_data_id=test_data.id) }}">
+                                <span class="oi oi-plus"></span> Add PNR
+                            </a>
+                        </div>
+                        <div class="col-md-2">
+                            <a class="badge badge-warning badge-pill"
+                               href="{{ url_for('merge_link_template', test_data_id=test_data.id, template_type='PNR', action_type='merge') }}">
+                                <span class="oi oi-loop"></span> Merge PNR
+                            </a>
+                        </div>
+                        <div class="col-md-2">
+                            <a class="badge badge-warning badge-pill"
+                               href="{{ url_for('merge_link_template', test_data_id=test_data.id, template_type='PNR', action_type='link') }}">
+                                <span class="oi oi-link-intact"></span> Link PNR
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+    {% endif %}
+    {% if test_data.pnr %}
+        <br>
+        {% for variation in test_data.pnr|groupby('variation') %}
+            <div class="row">
+                <div class="col-md">
+                    <div class="list-group list-group-item list-group-item-light">
+                        <div class="row">
+                            <div class="col-md-9">
+                                {{ variation.list[0].variation_name }}
+                            </div>
+                            {% if edit_mode %}
+                                <div class="col-md-1">
+                                    <a class="badge badge-warning badge-pill"
+                                       href="{{ url_for('rename_variation', test_data_id=test_data.id,
+                                           variation=variation.grouper, v_type='pnr') }}">
+                                        <span class="oi oi-pencil"></span> Rename
+                                    </a>
+                                </div>
+                                <div class="col-md-1">
+                                    <a class="badge badge-success badge-pill"
+                                       href="{{ url_for('copy_variation', test_data_id=test_data.id,
+                                           variation=variation.grouper, v_type='pnr') }}">
+                                        <span class="oi oi-clipboard"></span> Copy
+                                    </a>
+                                </div>
+                                <div class="col-md-1">
+                                    <a class="badge badge-danger badge-pill"
+                                       href="{{ url_for('delete_variation', test_data_id=test_data.id,
+                                           variation=variation.grouper, v_type='pnr') }}">
+                                        <span class="oi oi-x"></span> Delete
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% for pnr in variation.list %}
+                <div class="{% if pnr.link_status == "inactive" %}alert-secondary {% elif pnr.link_status == "active" %}alert-primary{% endif %}">
+                    <div class="row">
+                        <div class="col-md-2 text-center font-weight-bold">
+                            {% if pnr.locator != "AAAAAA" %}
+                                {{ pnr.locator }}
+                            {% endif %}
+                        </div>
+                        <div class="col-md-2 font-weight-bold">
+                            {{ pnr.key.upper() }}
+                        </div>
+                        <div class="col-md-6">
+                            {% if pnr.data %}
+                                <kbd>{{ pnr.data }}</kbd>
+                            {% endif %}
+                            {% if pnr.link %}
+                                {{ pnr.link }}
+                            {% endif %}
+                        </div>
+                        {% if edit_mode %}
+                            {% if pnr.link %}
+                                <div class="col-md-1">
+                                    <a class="badge badge-warning badge-pill"
+                                       href="{{ url_for('update_link_template', test_data_id=test_data.id,
+                                                        variation=pnr.variation, t_name=pnr.link, template_type='PNR',
+                                                        v_name=pnr.variation_name) }}">
+                                        <span class="oi oi-pencil"></span> Link
+                                    </a>
+                                </div>
+                                <div class="col-md-1">
+                                    <a class="badge badge-danger badge-pill"
+                                       href="{{ url_for('delete_link_template', test_data_id=test_data.id,
+                                           variation=pnr.variation, t_name=pnr.link, template_type='PNR') }}">
+                                        <span class="oi oi-x"></span> Link
+                                    </a>
+                                </div>
+                            {% else %}
+                                <div class="col-md-1">
+                                    <a class="badge badge-warning badge-pill"
+                                       href="{{ url_for('update_input_pnr', test_data_id=test_data.id, pnr_input_id=pnr.id) }}">
+                                        <span class="oi oi-pencil"></span> {{ pnr.key.title()[:4] }}
+                                    </a>
+                                </div>
+                                <div class="col-md-1">
+                                    <a class="badge badge-danger badge-pill"
+                                       href="{{ url_for('delete_input_pnr', test_data_id=test_data.id, pnr_input_id=pnr.id) }}">
+                                        <span class="oi oi-x"></span> {{ pnr.key.title()[:4] }}
+                                    </a>
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                    {% for field_data in pnr.field_data %}
+                        <div class="row">
+                            <div class="col-md-3 text-center">
+                                {{ field_data.field }}
+                            </div>
+                            {% for value in field_data.data %}
+                                <div class="col-md-3"><kbd>{{ value }}</kbd></div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                    {% for pnr_text in pnr.text %}
+                        <div class="row">
+                            <div class="col-md-3">Item Number #{{ loop.index }}</div>
+                            <div class="col-md-9">{{ pnr_text }}</div>
+                        </div>
+                    {% endfor %}
+                    {% for field_data_item in pnr.field_data_item %}
+                        <div class="row">
+                            <div class="col-md-3">
+                                {{ field_data_item.field }} #{{ field_data_item.item_number }}
+                            </div>
+                            {% for value in field_data_item.data %}
+                                <div class="col-md-3"><kbd>{{ value }}</kbd></div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        {% endfor %}
+    {% elif edit_mode %}
+        <br>
+        <div class="row">
+            <div class="col-md">
+                <div class="col-md">There are no PNR elements</div>
+            </div>
+        </div>
+    {% endif %}
+    {# Input Tpfdf #}
+    {% if edit_mode or test_data.tpfdf %}
+        <br>
+        <div class="row" id="input-tpfdf">
+            <div class="col-md list-group list-group-item list-group-item-secondary">
+                <div class="row">
+                    <div class="col-md-10">
+                        Input - TPFDF
+                    </div>
+                    {% if edit_mode %}
+                        <div class="col-md-2">
+                            <a class="badge badge-success badge-pill"
+                               href="{{ url_for('add_tpfdf_lrec', test_data_id=test_data.id) }}">
+                                <span class="oi oi-plus"></span> Add TPFDF Lrec
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+    {% endif %}
+    {% if test_data.tpfdf %}
+        <br>
+        {% for variation in test_data.tpfdf|groupby('variation') %}
+            {% if loop.length > 1 %}
+                <div class="row">
+                    <div class="col-md">
+                        <div class="list-group list-group-item list-group-item-light">
+                            {{ variation.list[0].variation_name }} (Variation {{ variation.grouper }})
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            {% for lrec in variation.list %}
+                <div class="row">
+                    <div class="col-md-2 text-center font-weight-bold">
+                        {{ lrec.macro_name }}
+                    </div>
+                    <div class="col-md-2 font-weight-bold">
+                        {{ lrec.key.upper() }}
+                        {% if edit_mode %}
+                            <a class="badge badge-danger"
+                               href="{{ url_for('delete_tpfdf_lrec', test_data_id=test_data.id, df_id=lrec.id) }}">
+                                X
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% for field_data in lrec.field_data %}
+                    <div class="row">
+                        <div class="col-md-3">
+                            {{ field_data.field }}
+                        </div>
+                        {% for value in field_data.data %}
+                            <div class="col-md-3"><kbd>{{ value }}</kbd></div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        {% endfor %}
+    {% elif edit_mode %}
+        <br>
+        <div class="row">
+            <div class="col-md">
+                <div class="col-md">There are no TPFDF lrecs</div>
+            </div>
+        </div>
+    {% endif %}
+    {# Input Fixed Files #}
+    {% if edit_mode or test_data.fixed_files %}
+        <br>
+        <div class="row" id="input-file">
+            <div class="col-md list-group list-group-item list-group-item-secondary">
+                <div class="row">
+                    <div class="col-md-10">
+                        Input - Fixed Files
+                    </div>
+                    {% if edit_mode %}
+                        <div class="col-md-2">
+                            <a class="badge badge-success badge-pill"
+                               href="{{ url_for('add_fixed_file', test_data_id=test_data.id) }}">
+                                <span class="oi oi-plus"></span> Add Fixed File
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    {% if test_data.fixed_files %}
+        <br>
+        {% for variation in test_data.fixed_files|groupby('variation') %}
+            {% if loop.length > 1 %}
+                <div class="row">
+                    <div class="col-md">
+                        <div class="list-group list-group-item list-group-item-light">
+                            {{ variation.list[0].variation_name }} (Variation {{ variation.grouper }})
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            {% for fixed_file in variation.list %}
+                <div class="row">
+                    <div class="col-md-2 text-center font-weight-bold">
+                        {{ fixed_file.macro_name }}
+                        {% if edit_mode %}
+                            <a class="badge badge-danger"
+                               href="{{ url_for('delete_fixed_file', test_data_id=test_data.id, file_id=fixed_file.id) }}">
+                                X
+                            </a>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-2">
+                        ID-{{ fixed_file.rec_id }}
+                    </div>
+                    <div class="col-md-2">
+                        TYP-{{ fixed_file.fixed_type }}
+                    </div>
+                    <div class="col-md-2">
+                        ORD-{{ fixed_file.fixed_ordinal }}
+                    </div>
+                    {% if fixed_file.fixed_forward_chain_label %}
+                        <div class="col-md-2">
+                            FCH-{{ fixed_file.fixed_forward_chain_label }} ({{ fixed_file.fixed_forward_chain_count }})
+                        </div>
+                    {% endif %}
+                </div>
+                {% for field_data in fixed_file.field_data %}
+                    <div class="row">
+                        <div class="col-md-3">
+                            {{ field_data.field }}
+                        </div>
+                        {% for value in field_data.data %}
+                            <div class="col-md-3"><kbd>{{ value }}</kbd></div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+                {% for file_item in fixed_file.file_items %}
+                    <div class="row">
+                        <div class="col-md-3 text-center font-weight-bold">
+                            ITM-{{ file_item.field }}
+                        </div>
+                        <div class="col-md-3">
+                            CNT-
+                            {% if file_item.count_field %}
+                                {{ file_item.count_field }}
+                            {% else %}
+                                No count field
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            ADJ-{{ file_item.adjust }}
+                        </div>
+                        <div class="col-md-3">
+                            REPEAT-{{ file_item.repeat }}
+                        </div>
+                    </div>
+                    {% for field_data in file_item.field_data %}
+                        <div class="row">
+                            <div class="col-md-2"></div>
+                            <div class="col-md-2">
+                                {{ field_data.field }}
+                            </div>
+                            {% for value in field_data.data %}
+                                <div class="col-md-2"><kbd>{{ value }}</kbd></div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+                {% for pool_file in fixed_file.pool_files %}
+                    <div class="row">
+                        <div class="col-md-3 text-center font-weight-bold">
+                            POOL-{{ pool_file.macro_name }}
+                        </div>
+                        <div class="col-md-2">
+                            ID-{{ pool_file.rec_id }}
+                        </div>
+                        <div class="col-md-2">
+                            IDX-{{ pool_file.index_field }}
+                        </div>
+                        {% if pool_file.fixed_forward_chain_label %}
+                            <div class="col-md-2">
+                                FCH-{{ pool_file.fixed_forward_chain_label }} ({{ pool_file.fixed_forward_chain_count }})
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% for field_data in pool_file.field_data %}
+                        <div class="row">
+                            <div class="col-md-3">
+                                {{ field_data.field }}
+                            </div>
+                            {% for value in field_data.data %}
+                                <div class="col-md-3"><kbd>{{ value }}</kbd></div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                    {% for file_item in pool_file.file_items %}
+                        <div class="row">
+                            <div class="col-md-3 text-center font-weight-bold">
+                                ITM-{{ file_item.field }}
+                            </div>
+                            <div class="col-md-3">
+                                CNT-
+                                {% if file_item.count_field %}
+                                    {{ file_item.count_field }}
+                                {% else %}
+                                    No count field
+                                {% endif %}
+                            </div>
+                            <div class="col-md-3">
+                                ADJ-{{ file_item.adjust }}
+                            </div>
+                            <div class="col-md-3">
+                                REPEAT-{{ file_item.repeat }}
+                            </div>
+                        </div>
+                        {% for field_data in file_item.field_data %}
+                            <div class="row">
+                                <div class="col-md-2"></div>
+                                <div class="col-md-2">
+                                    {{ field_data.field }}
+                                </div>
+                                {% for value in field_data.data %}
+                                    <div class="col-md-2"><kbd>{{ value }}</kbd></div>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                    {% endfor %}
+                {% endfor %}
+            {% endfor %}
+        {% endfor %}
+    {% elif edit_mode %}
+        <br>
+        <div class="row">
+            <div class="col-md">
+                <div class="col-md">There are no Fixed files</div>
+            </div>
+        </div>
+    {% endif %}
+{%- endmacro %}

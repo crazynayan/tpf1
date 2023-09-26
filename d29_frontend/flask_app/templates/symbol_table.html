@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+    <h1>{{ macro_name }}</h1>
+    <br>
+    <table class="table table-bordered table-sm table-hover">
+        <thead class="thead-dark">
+        <tr>
+            <th scope="col" class="text-center">Label</th>
+            <th scope="col" class="text-center">Dsp</th>
+            <th scope="col" class="text-center">Length</th>
+            <th scope="col" class="text-center">Name</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for label_ref in symbol_table %}
+            <tr>
+                <td class="align-middle">
+                    {{ label_ref.label }}
+                </td>
+                <td class="text-center align-middle">
+                    X'{{ label_ref.dsp_hex }}' = {{ label_ref.dsp }}
+                </td>
+                <td class="text-center align-middle">
+                    {{ label_ref.length }}
+                </td>
+                <td class="text-center align-middle">
+                    {{ label_ref.name }}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

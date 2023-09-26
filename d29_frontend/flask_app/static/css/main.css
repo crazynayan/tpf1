@@ -1,0 +1,61 @@
+.edit-icon {
+    display: inline-block;
+    transform: rotateZ(90deg);
+}
+
+#pad-content {
+    padding-top: 65px;
+}
+
+html {
+    scroll-padding-top: 75px; /* height of sticky header */
+}
+
+/*--------------------
+1. About Us
+--------------------*/
+
+.section-title h2 {
+    font-size: 32px;
+    color: #292929;
+    font-weight: bold;
+    letter-spacing: -0.6px;
+    position: relative;
+    margin: 15px 0;
+    padding-bottom: 5px;
+}
+
+.section-title h2:after {
+    left: 50%;
+    z-index: 1;
+    width: 60px;
+    height: 3px;
+    content: " ";
+    bottom: -5px;
+    margin-left: -30px;
+    text-align: center;
+    position: absolute;
+    background: #D4D4D4;
+}
+
+.dark-bg .section-title h2 {
+    color: #fff;
+}
+
+
+.section-title p {
+    font-size: 18px;
+    font-weight: 300;
+    line-height: 31px;
+    margin: 20px;
+    text-align: justify;
+}
+
+/*--------------------
+1. Contact Us
+--------------------*/
+
+.dark-bg {
+    background-color: #292929;
+    color: #fff;
+}

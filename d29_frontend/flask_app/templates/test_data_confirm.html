@@ -1,0 +1,17 @@
+{% extends "test_data_show.html" %}
+
+{% block app_content %}
+    <div class="row">
+        <div class="col-md-9">
+            <h1>Edit Test Data</h1>
+        </div>
+        <div class="col-md-3">
+            <a class="btn btn-secondary btn-block"
+               href="{{ url_for('get_test_data', test_data_id=test_data.id) }}">
+                <span class="oi oi-x"></span> Return to Test Data View
+            </a>
+        </div>
+    </div>
+    {{ show_test_data(test_data, edit_mode=True) }}
+    <br>
+{% endblock %}

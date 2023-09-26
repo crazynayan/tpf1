@@ -1,0 +1,17 @@
+runtime: python310
+
+entrypoint: gunicorn -b :$PORT flask_app:tpf2_app
+
+handlers:
+  - url: /static
+    static_dir: flask_app/static
+
+  - url: /.*
+    secure: always
+    redirect_http_response_code: 301
+    script: auto
+
+env_variables:
+  GOOGLE_APPLICATION_CREDENTIALS: "google-cloud-tokyo.json"
+  SERVER_URL: "https://tpf-server-tokyo.crazyideas.co.in/"
+  ENVIRONMENT: "prod"

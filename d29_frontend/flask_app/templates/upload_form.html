@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+    <div class="row">
+        <div class="col-md-9">
+            <h1>{{ title }}</h1>
+        </div>
+    </div>
+    <br>
+    <div class="row">
+        <div class="col-md-6">
+            <form id="uploadForm" class="form" method="POST" enctype="multipart/form-data" novalidate>
+                {{ form.csrf_token() }}
+                <div class="form-group required">
+                    <div class="custom-file">
+                        {% if form.listing.errors %}
+                            {{ form.listing(class_="custom-file-input is-invalid") }}
+                        {% else %}
+                            {{ form.listing(class_="custom-file-input") }}
+                        {% endif %}
+                        <label for="{{ form.listing.id }}" class="custom-file-label">{{ form.listing.label }}</label>
+                        {% if form.listing.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.listing.errors[0] }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <br>
+                <button id="uploadButton" class="btn btn-primary">
+                    <span id="uploadSpinner" role="status"></span>
+                    <i class="oi oi-cloud-upload"></i>
+                    <span id="uploadText">Upload</span>
+                </button>
+            </form>
+        </div>
+    </div>
+    <br>
+    <div class="row">
+        <div class="col-md-6">
+            <p id="message">{{ response.message }}</p>
+            {% if response.error %}
+                <p id="error-message" class="small alert-danger">
+                    Your file is not uploaded
+                </p>
+            {% elif response %}
+                <a id="viewSeg" class="btn btn-primary" href="{{ url_for('instructions', seg_name=form.seg_name) }}">
+                    View {{ form.seg_name }}
+                </a>
+            {% endif %}
+            <p id="warning-message" class="small alert-danger">{{ response.warning }}</p>
+        </div>
+    </div>
+    <br>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        document.querySelector(".custom-file-input").addEventListener("change", (e) => {
+            const fileName = e.target.value.split("\\").pop();
+            e.target.classList.remove("is-invalid");
+            const label = document.querySelector(".custom-file-label");
+            label.classList.add("selected");
+            label.innerText = fileName;
+            document.getElementById("message").innerText = "";
+            document.getElementById("error-message").innerText = "";
+            document.getElementById("warning-message").innerText = "";
+        });
+        document.getElementById("uploadButton").addEventListener("click", () => {
+            document.getElementById("uploadSpinner").classList.add("spinner-border", "spinner-border-sm");
+            document.getElementById("uploadText").innerText = "Uploading..";
+            document.getElementById("uploadButton").disabled = true;
+            const viewSeg = document.getElementById("viewSeg");
+            if (viewSeg) {
+                viewSeg.hidden = true;
+            }
+            document.forms["uploadForm"].submit();
+        });
+
+    </script>
+
+{% endblock %}

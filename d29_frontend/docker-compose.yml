@@ -1,0 +1,13 @@
+version: '3.3'
+services:
+  tpf_client:
+    container_name: tpf_frontend
+    build:
+      context: .
+      labels:
+        in.co.crazyideas.tpf_analyzer: "TPF Frontend"
+    image: tpf_frontend
+    ports:
+      - "8001:8001"
+    environment:
+      - PORT=8001

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+    <h1>{{ title }}</h1>
+    <div class="container">
+        <div class="row">
+            {% for macro_name in macros %}
+                <div class="col-md-2">
+                    <a href="{{ url_for('symbol_table_view', macro_name=macro_name) }}">
+                        {{ macro_name }}
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

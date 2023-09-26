@@ -1,0 +1,714 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+    <div class="row">
+        <div class="col-md-9">
+            <h3>{{ tr.headers[0].name }}</h3>
+        </div>
+        <div class="col-md-3">
+            <a class="btn btn-secondary" href="{{ url_for('get_test_results') }}">
+                <span class="oi oi-x"></span> Return to Test Result List
+            </a>
+
+        </div>
+    </div>
+    <br>
+    <div class="row">
+        <div class="col-md">
+            <div class="list-group list-group-item list-group-item-secondary">
+                General Observation
+            </div>
+        </div>
+    </div>
+    <br>
+    <table class="table table-bordered table-sm table-hover">
+        <thead class="thead-dark">
+        <tr>
+            <th scope="col">
+                Overall Comment for the whole result
+                {% if current_user.email == tr.results[0].owner %}
+                    <a class="badge badge-warning badge-pill"
+                       href="{{ url_for('update_comment', test_result_id=tr.results[0].id, comment_type='general_comment') }}">
+                        <span class="oi oi-pencil"></span> Edit
+                    </a>
+                {% endif %}
+            </th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>
+                {% if tr.results[0].general_comment %}
+                    {{ tr.results[0].general_comment }}
+                {% else %}
+                    No general observation made.
+                {% endif %}
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <br>
+    <div class="row">
+        <div class="col-md">
+            <div class="list-group list-group-item list-group-item-secondary">
+                General Summary
+            </div>
+        </div>
+    </div>
+    <br>
+    <table class="table table-bordered table-sm table-hover">
+        <thead class="thead-dark">
+        <tr>
+            <th scope="col" class="text-center">No</th>
+            {% if tr.counters.core_variations > 1 %}
+                <th scope="col" class="text-center">Field</th>
+            {% endif %}
+            {% if tr.counters.pnr_variations > 1 %}
+                <th scope="col" class="text-center">Pnr</th>
+            {% endif %}
+            {% if tr.counters.tpfdf_variations > 1 %}
+                <th scope="col" class="text-center">DF</th>
+            {% endif %}
+            {% if tr.counters.file_variations > 1 %}
+                <th scope="col" class="text-center">File</th>
+            {% endif %}
+            <th scope="col" class="text-center">End</th>
+            {% if tr.counters.dumps %}
+                <th scope="col" class="text-center">Dumps</th>
+            {% endif %}
+            {% if tr.counters.messages %}
+                <th scope="col" class="text-center">Message</th>
+            {% endif %}
+            <th scope="col" class="text-center">Comments</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for result in tr.results %}
+            <tr>
+                <th scope="row" class="text-center">{{ result.result_id }}</th>
+                {% if tr.counters.core_variations > 1 %}
+                    <th scope="row" class="text-center">
+                        {{ result.variation_name.core }}
+                    </th>
+                {% endif %}
+                {% if tr.counters.pnr_variations > 1 %}
+                    <th scope="row" class="text-center">
+                        {{ result.variation_name.pnr }}
+                    </th>
+                {% endif %}
+                {% if tr.counters.tpfdf_variations > 1 %}
+                    <th scope="row" class="text-center">
+                        {{ result.variation_name.tpfdf }}
+                    </th>
+                {% endif %}
+                {% if tr.counters.file_variations > 1 %}
+                    <th scope="row" class="text-center">
+                        {{ result.variation_name.file }}
+                    </th>
+                {% endif %}
+                <td class="text-center"><kbd>{{ result.last_node }}</kbd></td>
+                {% if tr.counters.dumps %}
+                    <td class="text-center">
+                        {% if result.dumps %}
+                            {% for dump in result.dumps %}
+                                <kbd>{{ dump }}</kbd>
+                            {% endfor %}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                {% endif %}
+                {% if tr.counters.messages %}
+                    <td class="text-center">
+                        {% if result.messages %}
+                            {% for message in result.messages %}
+                                <kbd>{{ message }}</kbd>
+                            {% endfor %}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                {% endif %}
+                <td>
+                    {{ result.user_comment }}
+                    {% if current_user.email == tr.results[0].owner %}
+                        <a class="badge badge-warning badge-pill"
+                           href="{{ url_for('update_comment', test_result_id=result.id, comment_type='user_comment') }}">
+                            <span class="oi oi-pencil"></span> Edit
+                        </a>
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% if tr.results[0].core_field_data %}
+        <br>
+        <div class="row">
+            <div class="col-md">
+                <div class="list-group list-group-item list-group-item-secondary">
+                    Field Summary
+                </div>
+            </div>
+        </div>
+        <br>
+        <table class="table table-bordered table-sm table-hover">
+            <thead class="thead-dark">
+            <tr>
+                <th scope="col" class="text-center">No</th>
+                {% if tr.counters.core_variations > 1 %}
+                    <th scope="col" class="text-center">Field</th>
+                {% endif %}
+                {% if tr.counters.pnr_variations > 1 %}
+                    <th scope="col" class="text-center">Pnr</th>
+                {% endif %}
+                {% if tr.counters.tpfdf_variations > 1 %}
+                    <th scope="col" class="text-center">DF</th>
+                {% endif %}
+                {% if tr.counters.file_variations > 1 %}
+                    <th scope="col" class="text-center">File</th>
+                {% endif %}
+                {% for field in tr.results[0].core_fields %}
+                    <th scope="col" class="text-center">{{ field }}</th>
+                {% endfor %}
+                <th scope="col" class="text-center">Comments</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for result in tr.results %}
+                <tr>
+                    <th scope="row" class="text-center">{{ loop.index }}</th>
+                    {% if tr.counters.core_variations > 1 %}
+                        <th scope="row" class="text-center">
+                            {{ result.variation_name.core }}
+                        </th>
+                    {% endif %}
+                    {% if tr.counters.pnr_variations > 1 %}
+                        <th scope="row" class="text-center">
+                            {{ result.variation_name.pnr }}
+                        </th>
+                    {% endif %}
+                    {% if tr.counters.tpfdf_variations > 1 %}
+                        <th scope="row" class="text-center">
+                            {{ result.variation_name.tpfdf }}
+                        </th>
+                    {% endif %}
+                    {% if tr.counters.file_variations > 1 %}
+                        <th scope="row" class="text-center">
+                            {{ result.variation_name.file }}
+                        </th>
+                    {% endif %}
+                    {% for field_data in result.core_field_data %}
+                        <td class="text-center">
+                            <kbd>{{ field_data.data }}</kbd>
+                        </td>
+                    {% endfor %}
+                    <td>
+                        {{ result.core_comment }}
+                        {% if current_user.email == tr.results[0].owner %}
+                            <a class="badge badge-warning badge-pill "
+                               href="{{ url_for('update_comment', test_result_id=result.id, comment_type='core_comment') }}">
+                                <span class="oi oi-pencil"></span> Edit
+                            </a>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+    {# PNR Field #}
+    {% if tr.results[0].pnr_field_data %}
+        <br>
+        <div class="row">
+            <div class="col-md">
+                <div class="list-group list-group-item list-group-item-secondary">
+                    PNR Field Summary
+                </div>
+            </div>
+        </div>
+        <br>
+        <table class="table table-bordered table-sm table-hover">
+            <thead class="thead-dark">
+            <tr>
+                <th scope="col" class="text-center">No</th>
+                {% if tr.counters.core_variations > 1 %}
+                    <th scope="col" class="text-center">Field</th>
+                {% endif %}
+                {% if tr.counters.pnr_variations > 1 %}
+                    <th scope="col" class="text-center">Pnr</th>
+                {% endif %}
+                {% if tr.counters.tpfdf_variations > 1 %}
+                    <th scope="col" class="text-center">DF</th>
+                {% endif %}
+                {% if tr.counters.file_variations > 1 %}
+                    <th scope="col" class="text-center">File</th>
+                {% endif %}
+                {% for field in tr.results[0].pnr_fields %}
+                    <th scope="col" class="text-center">{{ field }}</th>
+                {% endfor %}
+                <th scope="col" class="text-center">Comments</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for result in tr.results %}
+                <tr>
+                    <th scope="row" class="text-center">{{ loop.index }}</th>
+                    {% if tr.counters.core_variations > 1 %}
+                        <th scope="row" class="text-center">
+                            {{ result.variation_name.core }}
+                        </th>
+                    {% endif %}
+                    {% if tr.counters.pnr_variations > 1 %}
+                        <th scope="row" class="text-center">
+                            {{ result.variation_name.pnr }}
+                        </th>
+                    {% endif %}
+                    {% if tr.counters.tpfdf_variations > 1 %}
+                        <th scope="row" class="text-center">
+                            {{ result.variation_name.tpfdf }}
+                        </th>
+                    {% endif %}
+                    {% if tr.counters.file_variations > 1 %}
+                        <th scope="row" class="text-center">
+                            {{ result.variation_name.file }}
+                        </th>
+                    {% endif %}
+                    {% for field_data in result.pnr_field_data %}
+                        <td class="text-center">
+                            <kbd>{{ field_data.data }}</kbd>
+                        </td>
+                    {% endfor %}
+                    <td>
+                        {{ result.pnr_comment }}
+                        {% if current_user.email == tr.results[0].owner %}
+                            <a class="badge badge-warning badge-pill"
+                               href="{{ url_for('update_comment', test_result_id=result.id, comment_type='pnr_comment') }}">
+                                <span class="oi oi-pencil"></span> Edit
+                            </a>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+    <br>
+    <div class="row">
+        <div class="col-md list-group list-group-item list-group-item-secondary">
+            <div class="row">
+                <div class="col-md-10">
+                    Test Data Header
+                </div>
+            </div>
+        </div>
+    </div>
+    <br>
+    <div class="row">
+        <div class="col-md-2 text-center font-weight-bold">
+            Name
+        </div>
+        <div class="col-md-10">
+            {{ tr.headers[0].name }}
+        </div>
+    </div>
+    <div class="row ">
+        <div class="col-md-2 text-center font-weight-bold">
+            Start
+        </div>
+        <div class="col-md-10">
+            {{ tr.headers[0].seg_name }}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-2 text-center font-weight-bold">
+            Stop
+        </div>
+        <div class="col-md-10">
+            {{ tr.headers[0].stop_segments }}
+        </div>
+    </div>
+    {# Input Core #}
+    {% if tr.cores %}
+        <br>
+        <div class="row" id="input-core">
+            <div class="col-md list-group list-group-item list-group-item-secondary">
+                <div class="row">
+                    <div class="col-md-10">
+                        Input - Global, AAA, Heap and ECB levels
+                    </div>
+                </div>
+            </div>
+        </div>
+        <br>
+        {% for variation in tr.cores|groupby('variation') %}
+            <div class="row">
+                <div class="col-md">
+                    <div class="list-group list-group-item list-group-item-light">
+                        <div class="row">
+                            <div class="col-md-9">
+                                {{ variation.list[0].variation_name }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% for core in variation.list %}
+                {% if core.macro_name %}
+                    <div class="row">
+                        <div class="col-md-2 text-center font-weight-bold">
+                            {% if core.macro_name == "WA0AA" %}
+                                AAA
+                            {% else %}
+                                ECB Field
+                            {% endif %}
+                        </div>
+                        <div class="col-md-2 font-weight-bold">
+                            {{ core.macro_name }}
+                        </div>
+                        <div class="col-md-6">
+                        </div>
+                    </div>
+                    {% for field_data in core.field_data %}
+                        <div class="row">
+                            <div class="col-md-3">
+                                {{ field_data.field }}
+                            </div>
+                            <div class="col-md-3"><kbd>{{ field_data.data }}</kbd></div>
+                        </div>
+                    {% endfor %}
+                {% elif core.ecb_level %}
+                    <div class="row">
+                        <div class="col-md-2 text-center font-weight-bold">
+                            ECB Level
+                        </div>
+                        <div class="col-md-2 font-weight-bold">
+                            D{{ core.ecb_level }}
+                        </div>
+                        <div class="col-md-6">
+                            {% if core.hex_data != "" %}
+                                <kbd>{{ core.hex_data }}</kbd>
+                            {% elif not core.field_data %}
+                                ECB level initialized with zeroes
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% for field_data in core.field_data %}
+                        <div class="row">
+                            <div class="col-md-3">
+                                {{ field_data.field }}
+                            </div>
+                            <div class="col-md-3"><kbd>{{ field_data.data }}</kbd></div>
+                        </div>
+                    {% endfor %}
+                {% elif core.heap_name %}
+                    <div class="row">
+                        <div class="col-md-2 text-center font-weight-bold">
+                            Heap
+                        </div>
+                        <div class="col-md-2 font-weight-bold">
+                            {{ core.heap_name }}
+                        </div>
+                        <div class="col-md-6">
+                            {% if core.hex_data != "" %}
+                                <kbd>{{ core.hex_data }}</kbd>
+                            {% elif not core.field_data %}
+                                Heap initialized with zeroes
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% for field_data in core.field_data %}
+                        <div class="row">
+                            <div class="col-md-3">
+                                {{ field_data.field }}
+                            </div>
+                            <div class="col-md-3"><kbd>{{ field_data.data }}</kbd></div>
+                        </div>
+                    {% endfor %}
+                {% elif core.global_name %}
+                    <div class="row">
+                        <div class="col-md-2 text-center font-weight-bold">
+                            {% if core.is_global_record %}
+                                Global Record
+                            {% else %}
+                                Global Field
+                            {% endif %}
+                        </div>
+                        <div class="col-md-2 font-weight-bold">
+                            {{ core.global_name }}
+                        </div>
+                        <div class="col-md-6">
+                        </div>
+                    </div>
+                    {% if core.hex_data != "" %}
+                        <div class="row">
+                            <div class="col-md-3 text-center">
+                            </div>
+                            <div class="col-md-3"><kbd>{{ core.hex_data }}</kbd></div>
+                        </div>
+                    {% elif not core.field_data and core.is_global_record %}
+                        <div class="row">
+                            <div class="col-md-3 text-center">
+                            </div>
+                            <div class="col-md-9">Initialized to zeroes</div>
+                        </div>
+                    {% endif %}
+                    {% for field_data in core.field_data %}
+                        <div class="row">
+                            <div class="col-md-3">
+                                {{ field_data.field }}
+                            </div>
+                            <div class="col-md-3"><kbd>{{ field_data.data }}</kbd></div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
+    {% endif %}
+    {# Input PNR #}
+    {% if tr.pnr %}
+        <br>
+        <div class="row" id="input-pnr">
+            <div class="col-md list-group list-group-item list-group-item-secondary">
+                <div class="row">
+                    <div class="col-md-6">
+                        Input - PNR
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <br>
+        {% for variation in tr.pnr|groupby("variation") %}
+            <div class="row">
+                <div class="col-md">
+                    <div class="list-group list-group-item list-group-item-light">
+                        <div class="row">
+                            <div class="col-md-9">
+                                {{ variation.list[0].variation_name }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% for pnr in variation.list %}
+                <div class="{">
+                    <div class="row">
+                        <div class="col-md-2 text-center font-weight-bold">
+                            {% if pnr.locator != "AAAAAA" %}
+                                {{ pnr.locator }}
+                            {% endif %}
+                        </div>
+                        <div class="col-md-2 font-weight-bold">
+                            {{ pnr.key.upper() }}
+                        </div>
+                        <div class="col-md-6">
+                        </div>
+                    </div>
+                    {% for pnr_text in pnr.text %}
+                        <div class="row">
+                            <div class="col-md-3">Item Number #{{ loop.index }}</div>
+                            <div class="col-md-9"><kbd>{{ pnr_text }}</kbd></div>
+                        </div>
+                    {% endfor %}
+                    {% for field_data_item in pnr.field_data %}
+                        <div class="row">
+                            <div class="col-md-3">
+                                {{ field_data_item.field }} #{{ field_data_item.item_number }}
+                            </div>
+                            <div class="col-md-3"><kbd>{{ field_data_item.data }}</kbd></div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        {% endfor %}
+    {% endif %}
+    {# Input Tpfdf #}
+    {% if tr.tpfdf %}
+        <br>
+        <div class="row" id="input-tpfdf">
+            <div class="col-md list-group list-group-item list-group-item-secondary">
+                <div class="row">
+                    <div class="col-md-10">
+                        Input - TPFDF
+                    </div>
+                </div>
+            </div>
+        </div>
+        <br>
+        {% for variation in tr.tpfdf|groupby("variation") %}
+            <div class="row">
+                <div class="col-md">
+                    <div class="list-group list-group-item list-group-item-light">
+                        <div class="row">
+                            <div class="col-md-9">
+                                {{ variation.list[0].variation_name }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% for lrec in variation.list %}
+                <div class="row">
+                    <div class="col-md-2 text-center font-weight-bold">
+                        {{ lrec.macro_name }}
+                    </div>
+                    <div class="col-md-2 font-weight-bold">
+                        {{ lrec.key.upper() }}
+                    </div>
+                </div>
+                {% for field_data in lrec.field_data %}
+                    <div class="row">
+                        <div class="col-md-3">
+                            {{ field_data.field }}
+                        </div>
+                        <div class="col-md-3"><kbd>{{ field_data.data }}</kbd></div>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        {% endfor %}
+    {% endif %}
+    {# Input Fixed Files #}
+    {% if tr.files %}
+        <br>
+        <div class="row" id="input-file">
+            <div class="col-md list-group list-group-item list-group-item-secondary">
+                <div class="row">
+                    <div class="col-md-10">
+                        Input - Fixed Files
+                    </div>
+                </div>
+            </div>
+        </div>
+        <br>
+        {% for variation in tr.files|groupby("variation") %}
+            <div class="row">
+                <div class="col-md">
+                    <div class="list-group list-group-item list-group-item-light">
+                        <div class="row">
+                            <div class="col-md-9">
+                                {{ variation.list[0].variation_name }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% for file in variation.list %}
+                <div class="row">
+                    <div class="col-md-2 text-center font-weight-bold">
+                        {{ file.fixed_macro_name }}
+                    </div>
+                    <div class="col-md-2">
+                        ID-{{ file.fixed_rec_id }}
+                    </div>
+                    <div class="col-md-2">
+                        TYP-{{ file.fixed_type }}
+                    </div>
+                    <div class="col-md-2">
+                        ORD-{{ file.fixed_ordinal }}
+                    </div>
+                    {% if file.fixed_forward_chain_label %}
+                        <div class="col-md-2">
+                            FCH-{{ file.fixed_forward_chain_label }} ({{ file.fixed_forward_chain_count }})
+                        </div>
+                    {% endif %}
+                </div>
+                {% for field_data in file.fixed_field_data %}
+                    <div class="row">
+                        <div class="col-md-3">
+                            {{ field_data.field }}
+                        </div>
+                        <div class="col-md-3"><kbd>{{ field_data.data }}</kbd></div>
+                    </div>
+                {% endfor %}
+                {% if file.fixed_item_field_data %}
+                    <div class="row">
+                        <div class="col-md-3 text-center font-weight-bold">
+                            ITM-{{ file.fixed_item_label }}
+                        </div>
+                        <div class="col-md-3">
+                            CNT-
+                            {% if file.fixed_item_count_label %}
+                                {{ file.fixed_item_count_label }}
+                            {% else %}
+                                No count field
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            ADJ-{{ file.fixed_item_adjust }}
+                        </div>
+                        <div class="col-md-3">
+                            REPEAT-{{ file.fixed_item_repeat }}
+                        </div>
+                    </div>
+                    {% for field_data in file_item.field_data %}
+                        <div class="row">
+                            <div class="col-md-2"></div>
+                            <div class="col-md-2">
+                                {{ field_data.field }}
+                            </div>
+                            <div class="col-md-2"><kbd>{{ field_data.data }}</kbd></div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                {% if file.pool_rec_id %}
+                    <div class="row">
+                        <div class="col-md-3 text-center font-weight-bold">
+                            POOL-{{ file.pool_macro_name }}
+                        </div>
+                        <div class="col-md-2">
+                            ID-{{ file.pool_rec_id }}
+                        </div>
+                        <div class="col-md-2">
+                            IDX-{{ file.pool_fixed_label }}
+                        </div>
+                        {% if file.pool_forward_chain_label %}
+                            <div class="col-md-2">
+                                FCH-{{ file.pool_forward_chain_label }} ({{ file.pool_forward_chain_count }})
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% for field_data in file.pool_field_data %}
+                        <div class="row">
+                            <div class="col-md-3">
+                                {{ field_data.field }}
+                            </div>
+                            <div class="col-md-3"><kbd>{{ field_data.data }}</kbd></div>
+                        </div>
+                    {% endfor %}
+                    {% if file.pool_item_field_data %}
+                        <div class="row">
+                            <div class="col-md-3 text-center font-weight-bold">
+                                ITM-{{ file.pool_item_label }}
+                            </div>
+                            <div class="col-md-3">
+                                CNT-
+                                {% if file.pool_item_count_label %}
+                                    {{ file.pool_item_count_label }}
+                                {% else %}
+                                    No count field
+                                {% endif %}
+                            </div>
+                            <div class="col-md-3">
+                                ADJ-{{ file.pool_item_adjust }}
+                            </div>
+                            <div class="col-md-3">
+                                REPEAT-{{ file.pool_item_repeat }}
+                            </div>
+                        </div>
+                        {% for field_data in file.pool_item_field_data %}
+                            <div class="row">
+                                <div class="col-md-2"></div>
+                                <div class="col-md-2">
+                                    {{ field_data.field }}
+                                </div>
+                                <div class="col-md-2"><kbd>{{ field_data.data }}</kbd></div>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
+    {% endif %}
+    <br>
+{% endblock %}

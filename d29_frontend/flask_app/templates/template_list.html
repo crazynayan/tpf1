@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block app_content %}
+    <div class="row">
+        <div class="col-md">
+            <h1>{{ title }}</h1>
+        </div>
+        <div class="col-md text-right">
+            <a class="btn btn-success text-right" href="{{ url_for(tc.create) }}">
+                <span class="oi oi-plus"> </span> Create {{ tc.type }} Template
+            </a>
+        </div>
+    </div>
+    <br>
+    {% if templates %}
+        <table id="template-list" class="table table-bordered table-hover ">
+            <thead class="thead-dark">
+            <tr>
+                <th class="text-center d-none d-md-table-cell" scope="col">No.</th>
+                <th class="" scope="col">Name</th>
+                <th class="text-center d-none d-md-table-cell" scope="col">Description</th>
+                <th class="text-center d-none d-md-table-cell" scope="col">Owner</th>
+                <th class="text-center d-none d-md-table-cell" scope="col">Items</th>
+                <th class="text-center d-none d-md-table-cell" scope="col">Links</th>
+                <th class="text-center" scope="col">Open</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for template in templates %}
+                <tr>
+                    <td class="text-center d-none d-md-table-cell">{{ loop.index }}</td>
+                    <td class="">{{ template.name }}</td>
+                    <td class="text-center d-none d-md-table-cell">{{ template.description }}</td>
+                    <td class="text-center d-none d-md-table-cell">{{ template.owner }}</td>
+                    <td class="text-center d-none d-md-table-cell">{{ template.count }}</td>
+                    <td class="text-center d-none d-md-table-cell">{{ template.test_data_links|length }}</td>
+                    <td class="text-center">
+                        <a class="btn btn-primary"
+                           href="{{ url_for('view_template', name=template.name) }}"
+                           title="Open Template">
+                            <span class="oi oi-target"></span>
+                        </a>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <br>
+        <p>There are no {{ tc.type }} templates.</p>
+    {% endif %}
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        $(document).ready(function () {
+            $("#template-list").DataTable({
+                paging: false
+            });
+        });
+    </script>
+{% endblock %}

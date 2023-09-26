@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+    <h2 class="mb-3">{{ title }}</h2>
+    <table id="segment-list" class="table table-bordered table-hover ">
+        <thead class="thead-dark">
+        <tr>
+            <th class="text-center" scope="col">Name</th>
+            <th class="text-center" scope="col">Type</th>
+            <th class="text-center" scope="col">Source</th>
+            <th class="text-center" scope="col">LOC</th>
+            <th class="text-center" scope="col">%</th>
+            <th class="" scope="col">Unsupported Instruction</th>
+            <th class="text-center" scope="col">Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for seg_name, attribute in segments %}
+            <tr>
+                <td class="text-center font-weight-bold">{{ seg_name }}</td>
+                <td class="text-center">{{ attribute.file_type }}</td>
+                <td class="text-center">{{ attribute.source }}</td>
+                <td class="text-center">{{ attribute.loc }}</td>
+                <td class="text-center">{{ attribute.execution_percentage }}</td>
+                <td>
+                    {% if attribute.assembly_error %}
+                        Assembly Error on the instruction {{ attribute.assembly_error }}
+                    {% elif attribute.error_cmds %}
+                        {% for cmd in attribute.error_cmds %} {{ cmd }} {% endfor %}
+                    {% endif %}
+                </td>
+                <td class="text-center">
+                    <a class="btn btn-primary btn-block"
+                       href="{{ url_for('instructions', seg_name=seg_name) }}"
+                       title="View Segment Details">
+                        {{ seg_name }}
+                    </a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        $(document).ready(function () {
+            $("#segment-list").DataTable({
+                paging: false
+            });
+        });
+    </script>
+{% endblock %}

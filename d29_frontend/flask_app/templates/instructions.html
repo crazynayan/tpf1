@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+    <h2 class="mb-3">{{ seg_name }} - {{ supported_percentage }}% supported</h2>
+    {% if response.error %}
+        <p>{{ response.message }}</p>
+    {% else %}
+        {% for instruction in instructions %}
+            <div class="row mt-0 mb-0" style="line-height: 100%">
+                <div class="col-md-1">
+                    <pre class="mb-0">{{ instruction.index }}</pre>
+                </div>
+                <div class="col-md-2">
+                    <pre class="mb-0">{{ instruction.label }}</pre>
+                </div>
+                <div class="col-md-1">
+                    {% if instruction.supported %}
+                        <pre class="mb-0">{{ instruction.command }}</pre>
+                    {% else %}
+                        <pre class="alert-danger mb-0">{{ instruction.command }}</pre>
+                    {% endif %}
+                </div>
+                <div class="col-md-8">
+                    <pre class="mb-0">{{ instruction.operands }}</pre>
+                </div>
+            </div>
+        {% endfor %}
+        {% if response.constants or response.literals %}
+            <h3 class="mb-3 mt-3">Data Constants</h3>
+            <table id="test-data-list" class="table table-bordered table-hover table-sm">
+                <thead class="thead-dark">
+                <tr>
+                    <th class="" scope="col">Label</th>
+                    <th class="text-center" scope="col">Dsp</th>
+                    <th class="text-center" scope="col">Length</th>
+                    <th class="" scope="col">Data</th>
+                </tr>
+                </thead>
+                {% for dc in response.constants %}
+                    <tr>
+                        <td class="small">{{ dc.label }}</td>
+                        <td class="small text-center">{{ dc.dsp }}</td>
+                        <td class="small text-center">{{ dc.length }}</td>
+                        <td class="small">{{ dc.data }}</td>
+                    </tr>
+                {% endfor %}
+                {% if response.literals %}
+                    <tr>
+                        <td class="text-center font-weight-bold" colspan="4">Literals</td>
+                    </tr>
+                {% endif %}
+                {% for dc in response.literals %}
+                    <tr>
+                        <td class="small">{{ dc.label }}</td>
+                        <td class="small text-center">{{ dc.dsp }}</td>
+                        <td class="small text-center">{{ dc.length }}</td>
+                        <td class="small">{{ dc.data }}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+        {% endif %}
+        <h3 class="mb-3 mt-3">Unsupported Instructions</h3>
+        {% if not_supported_instructions %}
+            {% for instruction in not_supported_instructions %}
+                <div class="row mt-0 mb-0" style="line-height: 100%">
+                    <div class="col-md-1">
+                        <pre>{{ instruction.index }}</pre>
+                    </div>
+                    <div class="col-md-2">
+                        <pre>{{ instruction.label }}</pre>
+                    </div>
+                    <div class="col-md-1">
+                        <pre>{{ instruction.command }}</pre>
+                    </div>
+                    <div class="col-md-8">
+                        <pre>{{ instruction.operands }}</pre>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>All instructions are supported</p>
+        {% endif %}
+    {% endif %}
+{% endblock %}

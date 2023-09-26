@@ -1,0 +1,81 @@
+{% extends "test_data_show.html" %}
+
+{% block app_content %}
+    <div class="row">
+        <div class="col-md-9">
+            <h1>Test Data View</h1>
+        </div>
+        <div class="col-md-3">
+            <a class="btn btn-secondary" href="{{ url_for('get_my_test_data') }}">
+                <span class="oi oi-x"></span> Return to My Test Data List
+            </a>
+
+        </div>
+    </div>
+    <br>
+    <div class="row">
+        <div class="col-md-2">
+            <a class="btn btn-primary btn-block text-center"
+               href="{{ url_for('run_test_data', test_data_id=test_data.id) }}">
+                <span class="oi oi-task"></span> Run
+            </a>
+        </div>
+        <div class="col-md-2">
+            <a class="btn btn-success btn-block text-center"
+               href="{{ url_for('save_test_results', test_data_id=test_data.id, name=test_data.name, seg_name=test_data.seg_name) }}">
+                <span class="oi oi-tag"></span> Save
+            </a>
+        </div>
+        <div class="col-md-2">
+            <a class="btn btn-success btn-block text-center"
+               href="{{ url_for('copy_test_data', test_data_id=test_data.id) }}">
+                <span class="oi oi-clipboard"></span> Copy
+            </a>
+        </div>
+        <div class="col-md-2">
+            <a class="btn btn-warning btn-block text-center {{ test_data.class_display }}"
+               href="{{ url_for('confirm_test_data', test_data_id=test_data.id) }}">
+                <span class="oi oi-pencil"></span> Edit
+            </a>
+        </div>
+        <div class="col-md-2">
+            {% if test_data.class_display %}
+                <a class="btn btn-danger btn-block text-center {{ test_data.class_display }}">
+                    <span class="oi oi-trash"></span> Delete
+                </a>
+            {% else %}
+                <button type="button" id="deleteTestDataButton" class="btn btn-block btn-danger"
+                        data-toggle="modal" data-target="#deleteConfirmation">
+                    <span class="oi oi-trash"></span> Delete
+                </button>
+            {% endif %}
+        </div>
+    </div>
+    <br>
+    {{ show_test_data(test_data, edit_mode=False) }}
+    <br>
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteConfirmation" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Test Data Delete</h5>
+                    <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete the test data?</p>
+                    <p> This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <form id="deleteTestDataForm" action="" method="POST" novalidate>
+                        {{ form.hidden_tag() }}
+                        {{ form.submit(class_="btn btn-danger") }}
+                    </form>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">No - Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
