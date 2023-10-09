@@ -73,6 +73,7 @@ class Config:
                                    "SP", "MP", "DP", "CP", "TP", "SRP", "TR", "TRT", "ED", "EDMK"}
     SW00SR: Set[str] = {"DBOPN", "DBRED", "DBCLS", "DBIFB"}
     NO_FALL_DOWN: Set[str] = {"BR", "ENTNC", "B", "J", "SENDA", "ENTDC", "EXITC", "BACKC"}
+    CALL_AND_RETURN: Set[str] = {"ENTRC", "BAS", "BAL", "JAS", "BRAS"}
 
     # Used by assembly
     MASK: Dict[str, int] = {"BR": 15, "B": 15, "J": 15, "BAS": 15, "JAS": 15, "BE": 8, "BNE": 7, "BH": 2, "BNH": 13,

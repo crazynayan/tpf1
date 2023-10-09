@@ -26,6 +26,7 @@ from p3_db.test_data_elements import Output, Core
 from p3_db.tpfdf import Tpfdf
 from p4_execution.debug import Debug
 from p4_execution.ex0_regs_store import Registers, Storage
+from p4_execution.profiler import SegmentProfiler
 from p4_execution.trace import TraceList, TraceData
 
 
@@ -136,7 +137,7 @@ class State:
         Tpfdf.init_db()
         FlatFile.init_db()
 
-    def run(self, seg_name: str, test_data: TestData) -> TestData:
+    def run(self, seg_name: str, test_data: TestData, profiler: SegmentProfiler = None) -> TestData:
         if not get_seg_collection().is_seg_present(seg_name):
             raise SegmentNotFoundError
         outputs = list()
@@ -154,7 +155,7 @@ class State:
                 self.init_aaa_field_data(test_data_variant)
                 self.init_aaa()
                 self._set_from_test_data(test_data_variant)
-                node = self.run_seg()
+                node = self.run_seg(profiler)
             # noinspection PyUnboundLocalVariable
             self._capture_output(test_data_variant.output, node)
             outputs.append(test_data_variant.output)
@@ -164,7 +165,7 @@ class State:
         output_test_data.outputs = outputs
         return output_test_data
 
-    def run_seg(self) -> InstructionType:
+    def run_seg(self, profiler: SegmentProfiler = None) -> InstructionType:
         label = self.seg.root_label()
         node = self.seg.equ(Line.from_line(f"{label} EQU 0"))
         try:
@@ -172,7 +173,7 @@ class State:
                 raise ExecutionError
             node: InstructionType = self.seg.nodes[label]
             while self.instruction_counter < 2000:
-                label = self._ex_command(node)
+                label = self._ex_command(node, profiler)
                 if label is None:
                     break
                 node = self.seg.nodes[label]
@@ -190,13 +191,15 @@ class State:
             self.messages.append("MEMORY ERROR")
         return node
 
-    def _ex_command(self, node: InstructionType) -> str:
+    def _ex_command(self, node: InstructionType, profiler: SegmentProfiler = None) -> str:
         seg_name = self.seg.seg_name
         self.trace_data = TraceData()
         if node.command not in self._ex:
             raise NotImplementedExecutionError(node)
         label = self._ex[node.command](node)
         self.trace_list.hit(self.trace_data, node, seg_name)
+        if profiler:
+            profiler.hit(node, label)
         return label
 
     def set_number_cc(self, number: int) -> None:

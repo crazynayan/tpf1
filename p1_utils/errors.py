@@ -216,3 +216,7 @@ class FileItemSpecificationError(TestDataError):
 
 class PoolFileSpecificationError(TestDataError):
     pass
+
+
+class ProfilerError(ExecutionError):
+    pass
