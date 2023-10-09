@@ -1,4 +1,4 @@
-from typing import Optional, Set, TypeVar
+from typing import Optional, Set, TypeVar, List
 
 from p1_utils.data_type import Register
 from p1_utils.file_line import Line
@@ -30,6 +30,11 @@ class InstructionGeneric:
     @property
     def on(self) -> str:
         return self.command
+
+    def get_operand_string(self) -> str:
+        split_instruction: List[str] = str(self).split(":")
+        return split_instruction[3] if len(split_instruction) > 3 else str()
+
 
 
 class FieldBits(InstructionGeneric):
