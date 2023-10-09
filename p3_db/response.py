@@ -24,6 +24,7 @@ class RequestType:
     RESULT_COMMENT_UPDATE = SimpleNamespace(comment_type=str(), comment=str())
     RESULT_CREATE = SimpleNamespace(name=str())
     TEST_DATA_CREATE = SimpleNamespace(name=str(), seg_name=str(), stop_segments=str(), startup_script=str())
+    PROFILER_RUN = SimpleNamespace(seg_name=str(), test_data_ids=list())
 
 
 class StandardResponse:
@@ -36,6 +37,7 @@ class StandardResponse:
         self.error_fields: SimpleNamespace = SimpleNamespace() if request_type is None else copy(request_type)
         self.body: SimpleNamespace = SimpleNamespace()
         self.id: str = str()
+        self.data: dict = dict()
         if body is None:
             return
         if not isinstance(body, dict) or not body:
@@ -69,6 +71,12 @@ class StandardResponse:
     def dict_with_id(self):
         rsp_dict = self.dict
         rsp_dict["id"] = self.id
+        return rsp_dict
+
+    @property
+    def dict_with_data(self):
+        rsp_dict = self.dict
+        rsp_dict["data"] = self.data
         return rsp_dict
 
 
