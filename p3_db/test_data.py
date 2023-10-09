@@ -115,6 +115,13 @@ class TestData(FirestoreDocument):
             yield test_data
         return
 
+    def get_total_variation_count(self):
+        core_variations = len(self.cores) if self.cores else 1
+        pnr_variations = len(self.pnr) if self.pnr else 1
+        df_variations = len(self.tpfdf) if self.tpfdf else 1
+        file_variations = len(self.fixed_files) if self.fixed_files else 1
+        return core_variations * pnr_variations * df_variations * file_variations
+
     @classmethod
     def _validate_header(cls, header: dict) -> bool:
         if not header:
