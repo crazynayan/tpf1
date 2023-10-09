@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List
 
 from config import config
 from p1_utils.data_type import Register
@@ -181,6 +181,9 @@ class InstructionImplementation(InstructionOperand):
     @staticmethod
     def instruction_generic(line: Line) -> InstructionGeneric:
         return InstructionGeneric(line)
+
+    def get_instructions(self) -> List[InstructionType]:
+        return [instruction for _, instruction in self.nodes.items()]
 
     def equ(self, line: Line) -> InstructionGeneric:
         if not self.check(line.label):
