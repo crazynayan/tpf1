@@ -8,7 +8,7 @@ tpf1_app.config.from_object(Config)
 cors = CORS(tpf1_app)
 
 # noinspection PyPep8
-from p7_flask_app import routes, auth, template_routes
+from p7_flask_app import routes, auth, template_routes, profiler_routes
 
 from p7_flask_app.api import bp as api_bp
 

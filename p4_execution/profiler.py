@@ -3,7 +3,6 @@ from typing import List
 from munch import Munch
 
 from config import config
-from p1_utils.errors import ExecutionError
 from p2_assembly.seg3_ins_type import InstructionType
 
 
@@ -17,8 +16,11 @@ class InstructionPath:
         self.operand: str = instruction.get_operand_string()
         self.next_label: str = next_label
 
+    def __repr__(self):
+        return f"{self.label:10}:{self.command:6}:{self.next_label:10}:{self.hit_counter}:{self.operand}"
+
     def is_hit(self) -> bool:
-        return self.hit_counter == 0
+        return self.hit_counter > 0
 
     def is_equal(self, label: str, next_label: str) -> bool:
         return self.label == label and self.next_label == next_label
@@ -68,19 +70,15 @@ class SegmentProfiler:
         return f"{round(self.covered_requirements * 100 / self.total_requirements)}%"
 
     def hit(self, instruction: InstructionType, next_label) -> None:
-        try:
-            instruction_path: InstructionPath = next(instruction_path for instruction_path in self.instruction_paths
-                                                     if instruction_path.is_equal(instruction.label, next_label))
-        except StopIteration:
-            raise ExecutionError
-        instruction_path.increment_hit_counter()
-        if instruction.command in config.CALL_AND_RETURN:
-            try:
-                instruction_path: InstructionPath = next(instruction_path for instruction_path in self.instruction_paths
-                                                         if instruction_path.is_equal(instruction.label, instruction.fall_down))
-            except StopIteration:
-                raise ExecutionError
+        instruction_path: InstructionPath = next((instruction_path for instruction_path in self.instruction_paths
+                                                  if instruction_path.is_equal(instruction.label, next_label)), None)
+        if instruction_path:
             instruction_path.increment_hit_counter()
+        if instruction.command in config.CALL_AND_RETURN:
+            instruction_path: InstructionPath = next((instruction_path for instruction_path in self.instruction_paths
+                                                      if instruction_path.is_equal(instruction.label, instruction.fall_down)), None)
+            if instruction_path:
+                instruction_path.increment_hit_counter()
         return
 
     def get_all_instruction_paths(self) -> List[Munch]:

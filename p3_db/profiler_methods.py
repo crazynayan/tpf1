@@ -39,6 +39,7 @@ def extract_test_data(rsp: StandardResponse, test_data_ids: List[str]) -> List[T
             rsp.error_fields.test_data_ids = "Test Data not found."
             rsp.error = True
             return test_data_list
+        test_data_list.append(test_data)
     return test_data_list
 
 
@@ -50,11 +51,13 @@ def execute_profiler(profiler: SegmentProfiler, test_data_list: List[TestData]) 
 
 
 def extract_data_from_profiler(profiler: SegmentProfiler) -> Munch:
+    all_instruction_paths: List[Munch] = sorted(profiler.get_all_instruction_paths(), key=lambda item: item.index)
+    missing_instruction_paths: List[Munch] = sorted(profiler.get_missing_instruction_paths(), key=lambda item: item.index)
     return Munch(total_instruction_paths=profiler.total_instruction_paths,
                  covered_instruction_paths=profiler.covered_instruction_paths,
                  documentation_coverage=profiler.documentation_coverage,
-                 all_instruction_paths=profiler.get_all_instruction_paths(),
-                 missing_instruction_paths=profiler.get_missing_instruction_paths(),
+                 all_instruction_paths=all_instruction_paths,
+                 missing_instruction_paths=missing_instruction_paths,
                  total_requirements=profiler.total_requirements,
                  covered_requirements=profiler.covered_requirements,
                  requirement_coverage=profiler.requirement_coverage
@@ -65,10 +68,10 @@ def run_profiler(body: Munch) -> Munch:
     rsp: StandardResponse = StandardResponse(body, RequestType.PROFILER_RUN)
     if rsp.error:
         return rsp.dict_with_data
-    profiler: SegmentProfiler = initialize_profiler(rsp, body.seg_name)
+    profiler: SegmentProfiler = initialize_profiler(rsp, rsp.body.seg_name)
     if rsp.error:
         return rsp.dict_with_data
-    test_data_list: List[TestData] = extract_test_data(rsp, body.test_data_ids)
+    test_data_list: List[TestData] = extract_test_data(rsp, rsp.body.test_data_ids)
     if rsp.error:
         return rsp.dict_with_data
     profiler.set_covered_requirements(sum(test_data.get_total_variation_count() for test_data in test_data_list))
