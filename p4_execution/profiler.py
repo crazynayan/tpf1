@@ -1,8 +1,10 @@
 from typing import List
 
+import networkx as nx
 from munch import Munch
 
 from config import config
+from p1_utils.errors import ProfilerError
 from p2_assembly.seg3_ins_type import InstructionType
 
 
@@ -35,23 +37,33 @@ def convert_instructions_to_instruction_paths(instructions: List[InstructionType
     return instruction_paths
 
 
-def get_total_requirements(instructions: List[InstructionType]) -> int:
-    requirements: int = 1
+def create_graph(instructions: List[InstructionType]) -> nx.DiGraph:
+    graph = nx.DiGraph()
     for instruction in instructions:
-        if len(instruction.next_labels) < 2:
-            continue
-        requirements += len(instruction.next_labels) - 1
-        if instruction.command in config.CALL_AND_RETURN:
-            requirements -= 1
-    return requirements
+        graph.add_node(instruction.label)
+    for instruction in instructions:
+        if instruction.command.startswith("ENT") and instruction.fall_down:
+            graph.add_edge(instruction.label, instruction.fall_down)
+        else:
+            for next_label in instruction.next_labels:
+                graph.add_edge(instruction.label, next_label)
+    return graph
 
+
+def get_requirements(graph: nx.DiGraph, source: str) -> int:
+    end_nodes: List[str] = [node for node in graph.nodes if len(list(graph.successors(node))) == 0]
+    requirements = list(nx.all_simple_paths(graph, source=source, target=end_nodes))
+    return len(requirements)
 
 class SegmentProfiler:
 
     def __init__(self, instructions: List[InstructionType]):
+        if len(instructions) == 0:
+            raise ProfilerError
         self.instruction_paths: List[InstructionPath] = convert_instructions_to_instruction_paths(instructions)
-        self.total_requirements: int = get_total_requirements(instructions)
-        self.covered_requirements: int = 0
+        self.graph: nx.DiGraph = create_graph(instructions)
+        self.source_label: str = instructions[0].label
+
 
     @property
     def total_instruction_paths(self) -> int:
@@ -65,9 +77,19 @@ class SegmentProfiler:
     def documentation_coverage(self) -> str:
         return f"{round(self.covered_instruction_paths * 100 / self.total_instruction_paths)}%"
 
+    def get_total_requirements(self) -> int:
+        return get_requirements(self.graph, self.source_label)
+
+    def get_covered_requirements(self) -> int:
+        covered_graph: nx.DiGraph = nx.DiGraph(self.graph)
+        missing_paths: List[Munch] = self.get_missing_instruction_paths()
+        for path in missing_paths:
+            covered_graph.remove_edge(path.label, path.next_label)
+        return get_requirements(covered_graph, self.source_label)
+
     @property
     def requirement_coverage(self) -> str:
-        return f"{round(self.covered_requirements * 100 / self.total_requirements)}%"
+        return f"{round(self.get_covered_requirements() * 100 / self.get_total_requirements())}%"
 
     def hit(self, instruction: InstructionType, next_label) -> None:
         instruction_path: InstructionPath = next((instruction_path for instruction_path in self.instruction_paths
@@ -87,5 +109,3 @@ class SegmentProfiler:
     def get_missing_instruction_paths(self) -> List[Munch]:
         return [Munch(instruction_path.__dict__) for instruction_path in self.instruction_paths if not instruction_path.is_hit()]
 
-    def set_covered_requirements(self, covered_requirements: int) -> None:
-        self.covered_requirements = covered_requirements

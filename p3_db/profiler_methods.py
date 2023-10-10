@@ -58,8 +58,8 @@ def extract_data_from_profiler(profiler: SegmentProfiler) -> Munch:
                  documentation_coverage=profiler.documentation_coverage,
                  all_instruction_paths=all_instruction_paths,
                  missing_instruction_paths=missing_instruction_paths,
-                 total_requirements=profiler.total_requirements,
-                 covered_requirements=profiler.covered_requirements,
+                 total_requirements=profiler.get_total_requirements(),
+                 covered_requirements=profiler.get_covered_requirements(),
                  requirement_coverage=profiler.requirement_coverage
                  )
 
@@ -74,7 +74,6 @@ def run_profiler(body: Munch) -> Munch:
     test_data_list: List[TestData] = extract_test_data(rsp, rsp.body.test_data_ids)
     if rsp.error:
         return rsp.dict_with_data
-    profiler.set_covered_requirements(sum(test_data.get_total_variation_count() for test_data in test_data_list))
     execute_profiler(profiler, test_data_list)
     rsp.data = extract_data_from_profiler(profiler)
     rsp.data.test_data_list = [Munch(name=test_data.name, id=test_data.id) for test_data in test_data_list]
