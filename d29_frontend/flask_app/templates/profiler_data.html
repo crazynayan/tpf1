@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+    <div class="row">
+        <div class="col-md-9">
+            <h1>{{ title }}</h1>
+        </div>
+    </div>
+    <br>
+    <div class="row">
+        <!-- Placeholder for action buttons -->
+    </div>
+    <br>
+    <div class="row">
+        <div class="col-md list-group list-group-item list-group-item-secondary">
+            <div class="row">
+                <div class="col-md-10">
+                    Summary
+                </div>
+            </div>
+        </div>
+    </div>
+    <br>
+    <div class="row">
+        <div class="col-md ">
+            <table id="summary" class="table table-bordered table-hover ">
+                <thead class="thead-dark">
+                <tr>
+                    <th class="" scope="col">Description</th>
+                    <th class="text-center" scope="col">Coverage</th>
+                    <th class="text-center">Total</th>
+                    <th class="text-center">Covered</th>
+                </thead>
+                <tbody>
+                <tr>
+                    <td class="" style="vertical-align: middle;">Documentation Coverage</td>
+                    <td class="text-center" style="font-weight:bold;font-size:1.5em;">{{ data.documentation_coverage }}</td>
+                    <td class="text-center" style="vertical-align: middle;">{{ data.total_instruction_paths }}</td>
+                    <td class="text-center" style="vertical-align: middle;">{{ data.covered_instruction_paths }}</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="col-md">
+        </div>
+    </div>
+    <br>
+    <div class="row">
+        <div class="col-md list-group list-group-item list-group-item-secondary">
+            <div class="row">
+                <div class="col-md-10">
+                    Missing Instruction Paths
+                </div>
+            </div>
+        </div>
+    </div>
+    <br>
+    <table id="summary" class="table table-sm table-bordered table-hover ">
+        <thead class="thead-dark">
+        <tr>
+            <th class="">From</th>
+            <th class="" scope="col">To</th>
+            <th class="">Instruction</th>
+        </thead>
+        <tbody>
+        {% for missing_path in data.missing_instruction_paths %}
+            <tr>
+                <td class="">{{ missing_path.label }}</td>
+                <td class="">{{ missing_path.next_label }}</td>
+                <td class="">{{ missing_path.command }} {{ missing_path.operand }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <br>
+    <div class="row">
+        <div class="col-md list-group list-group-item list-group-item-secondary">
+            <div class="row">
+                <div class="col-md-10">
+                    All Instruction paths
+                </div>
+            </div>
+        </div>
+    </div>
+    <br>
+    <table id="summary" class="table table-sm table-bordered table-hover ">
+        <thead class="thead-dark">
+        <tr>
+            <th class="">From</th>
+            <th class="" scope="col">To</th>
+            <th class="">Instruction</th>
+            <th class="text-center">Hits</th>
+
+        </thead>
+        <tbody>
+        {% for path in data.all_instruction_paths %}
+            <tr class="{% if path.hit_counter == 0 %}table-danger{% endif %}">
+                <td class="">{{ path.label }}</td>
+                <td class="">{{ path.next_label }}</td>
+                <td class="">{{ path.command }} {{ path.operand }}</td>
+                <td class="text-center">{{ path.hit_counter }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <br>    <!-- Placeholder for Delete Confirmation Modal -->
+
+
+{% endblock %}
+
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        $(document).ready(function () {
+            $("#template-list").DataTable({
+                paging: false
+            });
+        });
+    </script>
+{% endblock %}

@@ -17,6 +17,8 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
     <!-- Open Iconic -->
     <link rel="stylesheet" href="{{ url_for('static', filename='open-iconic/font/css/open-iconic-bootstrap.css') }}">
+    <!-- Select 2 -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
 </head>
 
 <body>
@@ -37,6 +39,9 @@
                     </a>
                     <a class="nav-item nav-link active" href="{{ url_for('get_test_results') }}">
                         <span class="oi oi-tablet"></span> Test Results
+                    </a>
+                    <a class="nav-item nav-link active" href="{{ url_for('profiler_run') }}">
+                        <span class="oi oi-project"></span> Profiler
                     </a>
                     <div class="nav-item dropdown">
                         <a class="nav-link active dropdown-toggle" href="#" role="button" data-toggle="dropdown">
@@ -126,6 +131,33 @@
             dom: '<"top"if>rt<"bottom"p>'
         })
     </script>
+    <!-- Select 2 -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <!-- Select fields -->
+    {%- set _select_fields = [] %}
+    {%- for field in form %}
+        {%- if field.type in ("SelectField", "SelectMultipleField") %}
+            {%- set _ = _select_fields.append((field.id, field.type)) -%}
+        {%- endif %}
+    {%- endfor %}
+    {%- if _select_fields[0] %}
+        <script>
+            $(document).ready(() => {
+                {%- for field_id, field_type in _select_fields %}
+                    {% if field_type in ("SelectField", "SelectMultipleField") %}
+                        $("#{{ field_id }}").select2({
+                            {#theme: "bootstrap4",#}
+                            {%- if field_type == "SelectField" %}
+                                selectOnClose: true,
+                            {%- else %}
+                                allowClear: false,
+                            {%- endif %}
+                        })
+                    {% endif %}
+                {%- endfor %}
+            })
+        </script>
+    {%- endif %}
 
 {%- endblock scripts %}
 
