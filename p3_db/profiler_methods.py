@@ -5,18 +5,18 @@ from munch import Munch
 from p2_assembly.seg6_segment import Segment
 from p2_assembly.seg9_collection import get_seg_collection
 from p3_db.response import StandardResponse, RequestType
+from p3_db.startup_script import validate_seg_name
 from p3_db.test_data import TestData
 from p3_db.test_data_get import get_whole_test_data
 from p4_execution.ex5_execute import TpfServer
 from p4_execution.profiler import SegmentProfiler
 
 
-def initialize_profiler(rsp: StandardResponse, seg_name: str) -> Optional[SegmentProfiler]:
-    if not get_seg_collection().is_seg_present(seg_name):
-        rsp.error_fields.seg_name = "Segment not found."
-        rsp.error = True
+def initialize_profiler(rsp: StandardResponse) -> Optional[SegmentProfiler]:
+    validate_seg_name(rsp)
+    if rsp.error:
         return None
-    segment: Segment = get_seg_collection().get_seg(seg_name)
+    segment: Segment = get_seg_collection().get_seg(rsp.body.seg_name)
     segment.assemble()
     assembly_error: str = segment.error_line or segment.error_constant
     if assembly_error:
@@ -27,9 +27,13 @@ def initialize_profiler(rsp: StandardResponse, seg_name: str) -> Optional[Segmen
     return profiler
 
 
-def extract_test_data(rsp: StandardResponse, test_data_ids: List[str]) -> List[TestData]:
+def extract_test_data(rsp: StandardResponse) -> List[TestData]:
+    if not rsp.body.test_data_ids:
+        rsp.error_fields.test_data_ids = "At least one test data is required."
+        rsp.error = True
+        return list()
     test_data_list: List[TestData] = list()
-    for test_data_id in test_data_ids:
+    for test_data_id in rsp.body.test_data_ids:
         if not isinstance(test_data_id, str):
             rsp.error_fields.test_data_ids = "Invalid format of Test Data."
             rsp.error = True
@@ -58,9 +62,6 @@ def extract_data_from_profiler(profiler: SegmentProfiler) -> Munch:
                  documentation_coverage=profiler.documentation_coverage,
                  all_instruction_paths=all_instruction_paths,
                  missing_instruction_paths=missing_instruction_paths,
-                 total_requirements=profiler.get_total_requirements(),
-                 covered_requirements=profiler.get_covered_requirements(),
-                 requirement_coverage=profiler.requirement_coverage
                  )
 
 
@@ -68,10 +69,10 @@ def run_profiler(body: Munch) -> Munch:
     rsp: StandardResponse = StandardResponse(body, RequestType.PROFILER_RUN)
     if rsp.error:
         return rsp.dict_with_data
-    profiler: SegmentProfiler = initialize_profiler(rsp, rsp.body.seg_name)
+    profiler: SegmentProfiler = initialize_profiler(rsp)
     if rsp.error:
         return rsp.dict_with_data
-    test_data_list: List[TestData] = extract_test_data(rsp, rsp.body.test_data_ids)
+    test_data_list: List[TestData] = extract_test_data(rsp)
     if rsp.error:
         return rsp.dict_with_data
     execute_profiler(profiler, test_data_list)
