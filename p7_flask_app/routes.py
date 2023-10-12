@@ -51,7 +51,7 @@ def get_test_data_header() -> Response:
         return jsonify([test_data.get_header_dict()])
     test_data_list = [test_data.get_header_dict() for test_data in TestData.get_all()]
     test_data_list.sort(key=lambda item: item["name"])
-    return jsonify(test_data_list)
+    return jsonify({"test_data_list": test_data_list})
 
 
 @tpf1_app.route("/test_data/<string:test_data_id>/rename", methods=["POST"])
