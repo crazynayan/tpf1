@@ -48,19 +48,17 @@ def _convert_field_data(form_data: str) -> list:
 
 @tpf2_app.route("/test_data")
 @cookie_login_required
+@error_check
 def get_all_test_data():
-    test_data_list = Server.get_all_test_data()
-    if not current_user.is_authenticated:
-        return redirect(url_for("logout"))
+    test_data_list = Server.get_all_test_data().test_data_list
     return render_template("test_data_list.html", title="All Test Data", test_data_list=test_data_list, all_flag=True)
 
 
 @tpf2_app.route("/my_test_data")
 @cookie_login_required
+@error_check
 def get_my_test_data():
-    test_data_list = Server.get_all_test_data()
-    if not current_user.is_authenticated:
-        return redirect(url_for("logout"))
+    test_data_list = Server.get_all_test_data().test_data_list
     my_list = [test_data for test_data in test_data_list if test_data["owner"] == current_user.email]
     return render_template("test_data_list.html", title="Test Data", test_data_list=my_list, all_flag=False)
 

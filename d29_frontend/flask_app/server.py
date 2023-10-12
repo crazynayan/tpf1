@@ -31,6 +31,9 @@ class RequestType:
     RESULT_COMMENT_UPDATE = SimpleNamespace(comment_type=str(), comment=str())
     TEST_DATA_CREATE = SimpleNamespace(name=str(), seg_name=str(), stop_segments=str(), startup_script=str())
 
+    def __init__(self):
+        self.profiler_run = SimpleNamespace(seg_name=str(), test_data_ids=list())
+
 
 class Server:
     class Timeout(Exception):
@@ -177,9 +180,8 @@ class Server:
         return response["symbol_table"] if response else list()
 
     @classmethod
-    def get_all_test_data(cls) -> List[dict]:
-        response = cls._common_request(f"/test_data")
-        return response if response else list()
+    def get_all_test_data(cls) -> Munch:
+        return cls._request_with_exception(f"/test_data")
 
     @classmethod
     def get_test_data(cls, test_data_id: str) -> dict:
@@ -491,3 +493,7 @@ class Server:
     @classmethod
     def delete_test_result(cls, name: str) -> Munch:
         return cls._request_with_exception(f"/test_results/delete", method="DELETE", params={"name": name})
+
+    @classmethod
+    def run_profiler(cls, body: dict) -> Munch:
+        return cls._request_with_exception(f"/profiler/run", method="POST", json=body)
