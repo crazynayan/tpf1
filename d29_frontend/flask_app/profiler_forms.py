@@ -29,4 +29,4 @@ class ProfilerRunForm(FlaskForm):
         evaluate_error(self.response, "seg_name")
 
     def validate_test_data_list(self, _):
-        evaluate_error(self.response, "test_data_list")
+        evaluate_error(self.response, "test_data_ids")
