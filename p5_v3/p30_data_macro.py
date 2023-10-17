@@ -37,3 +37,7 @@ def is_data_macro_valid(data_macro_name: str) -> bool:
 def get_data_macro_file_path(data_macro_name: str) -> str:
     filename = data_macro_name.lower() + ".mac"
     return get_domain_macro_path() + filename if data_macro_name in client_domain_data_macros else base_data_macro_path + filename
+
+
+def get_client_domain() -> str:
+    return client_domain

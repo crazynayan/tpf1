@@ -6,6 +6,7 @@ from p5_v3.p16_file import FilePreprocessor, StreamPreprocessor
 from p5_v3.p17_line import AssemblerLine, AssemblerLines
 from p5_v3.p22_format import GenericFormat
 from p5_v3.p23_operation_code_format import get_operation_format, check_operation_code_validity
+from p5_v3.p30_data_macro import get_client_domain
 
 
 class ParsedLine:
@@ -14,7 +15,7 @@ class ParsedLine:
         self.location_counter: int = int()
         self._label: str = line.label
         self.line_number: int = line.line_number
-        self.format: GenericFormat = get_operation_format(line.operation_code)(line.operand)
+        self.format: GenericFormat = get_operation_format(line.operation_code, get_client_domain())(line.operand)
         self.operation_code: str = line.operation_code
         self.using_id: int = 0
 

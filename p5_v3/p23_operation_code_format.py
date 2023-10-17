@@ -289,6 +289,25 @@ class OperationCodeFormat:
     hashURTRN = NoOperandAssemblerDirectiveFormat
 
 
+class GeneralOperationCodeFormat(OperationCodeFormat):
+    PNRJR = MacroCallFormat
+
+
+class SabreOperationCodeFormat(OperationCodeFormat):
+    PDRED = MacroCallFormat
+
+
+class SmlOperationCodeFormat(OperationCodeFormat):
+    RETURN = MacroCallFormat
+
+
+domain_operation_code_format: dict = {
+    "general": GeneralOperationCodeFormat,
+    "sabre": SabreOperationCodeFormat,
+    "sml": SmlOperationCodeFormat,
+}
+
+
 def sanitize_operation_code(operation_code: str) -> str:
     return operation_code.replace("#", "hash")
 
@@ -306,8 +325,15 @@ def get_base_operation_format(operation_code: str) -> Type[GenericFormat]:
         raise ParserError(operation_code)
 
 
-def get_operation_format(operation_code: str) -> Type[GenericFormat]:
-    return get_base_operation_format(operation_code)
+def get_operation_format(operation_code: str, domain: str) -> Type[GenericFormat]:
+    try:
+        return getattr(domain_operation_code_format[domain], sanitize_operation_code(operation_code))
+    except AttributeError:
+        if is_data_macro_valid(operation_code):
+            return DataMacroCallFormat
+        raise ParserError(operation_code)
+    except KeyError:
+        raise ParserError("Invalid domain")
 
 
 def get_base_operation_codes() -> Set[str]:
@@ -323,6 +349,11 @@ def is_valid_operation_code(operation_code: str) -> bool:
     return operation_code in get_operation_codes()
 
 
+def get_user_defined_macros() -> Set[str]:
+    # TODO: Do domain specific implementation
+    return {"PNRJR"}
+
+
 def check_operation_code_validity(operation_codes: List[str]) -> List[bool]:
-    valid_codes: Set[str] = get_operation_codes() | get_data_macros()
+    valid_codes: Set[str] = get_operation_codes() | get_data_macros() | get_user_defined_macros()
     return [operation_code in valid_codes for operation_code in operation_codes]
