@@ -103,6 +103,8 @@ class RealtimeMacroImplementation(InstructionImplementation):
         self._command["PDMOD"] = self.pdred
         self._command["DBADD"] = self.dbadd
         self._command["PNRJR"] = self.pdred
+        self._command["FINWC"] = self.finwc
+        self._command["FIWHC"] = self.finwc
 
     def key_value(self, line: Line) -> KeyValue:
         operands_list: List[str] = line.split_operands()
@@ -125,6 +127,12 @@ class RealtimeMacroImplementation(InstructionImplementation):
                 if self.is_branch(value):
                     branches.append(value)
         return KeyValue(line, operands, branches)
+
+    def finwc(self, line: Line) -> KeyValue:
+        finxc = self.key_value(line)
+        if len(finxc.keys) >= 2 and self.is_branch(finxc.keys[1]):
+            finxc.branches.append(finxc.keys[1])
+        return finxc
 
     def seg_call(self, line: Line) -> SegmentCall:
         entxc = self.key_value(line)
