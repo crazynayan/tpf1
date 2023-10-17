@@ -48,15 +48,12 @@ class Preprocessor:
         self.lines: List[str] = list()
 
     def process(self):
-        self.remove_empty_lines()
         self.make_it_upper_case()
         self.remove_trailing_newline_char()
 
     def get_lines(self) -> List[str]:
         return self.lines
 
-    def remove_empty_lines(self) -> None:
-        self.lines = [line for line in self.lines if line.strip()]
 
     def make_it_upper_case(self) -> None:
         self.lines = [line.upper() for line in self.lines]
@@ -81,7 +78,7 @@ class FilePreprocessor(Preprocessor):
         return all(line[0] == self.PREFIX_CHAR for line in self.lines[self.LEN_OF_HEADER:] if line.strip())
 
     def remove_cvs_tags(self) -> None:
-        self.lines = [line[self.LEN_OF_PREFIX_TO_REMOVE:] for line in self.lines[self.LEN_OF_HEADER:] if line.strip()]
+        self.lines = [line[self.LEN_OF_PREFIX_TO_REMOVE:] for line in self.lines[self.LEN_OF_HEADER:]]
 
 
 class StreamPreprocessor(Preprocessor):

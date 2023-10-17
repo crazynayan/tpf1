@@ -13,6 +13,7 @@ class ParsedLine:
     def __init__(self, line: AssemblerLine):
         self.location_counter: int = int()
         self._label: str = line.label
+        self.line_number: int = line.line_number
         self.format: GenericFormat = get_operation_format(line.operation_code)(line.operand)
         self.operation_code: str = line.operation_code
         self.using_id: int = 0
@@ -21,7 +22,7 @@ class ParsedLine:
         return self.pretty_print(with_location_counter=True)
 
     def pretty_print(self, with_location_counter=True) -> str:
-        string = str()
+        string = f"{self.line_number:05}"
         if with_location_counter:
             string += f"{self.location_counter:08X}:"
         string += f"{self._label:8} "
