@@ -139,7 +139,7 @@ class SymbolTable:
 
     def print(self):
         symbols: List[Symbol] = [symbol for _, symbol in self._symbol_table.items()]
-        symbols.sort(key=lambda item: item.dsp)
+        symbols.sort(key=lambda item: (item.owner, item.dsp))
         for symbol in symbols:
             symbol.print()
         return
