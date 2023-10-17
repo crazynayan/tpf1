@@ -188,7 +188,7 @@ class RI2MnemonicFormat(RI2Format):
 
     def _parse(self) -> List[Expression]:
         self.raise_error_if_operand_count_not_match(1)
-        return [Expression(self.operands[1])]
+        return [Expression(self.operands[0])]
 
 
 class RIL1Format(RI1Format):
