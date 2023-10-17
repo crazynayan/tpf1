@@ -12,7 +12,7 @@ from p5_v3.p19_macro_arguments import MacroArguments
 from p5_v3.p20_base_displacement import BaseDisplacement
 from p5_v3.p23_operation_code_format import get_base_operation_codes
 from p5_v3.p28_parser import FileParser, ParsedLine
-from p5_v3.p30_data_macro import get_data_macro_file_path
+from p5_v3.p30_data_macro import get_data_macro_file_path, update_client_domain
 from p5_v3.p31_symbol_table_builder import SymbolTableBuilderFromFilename, SymbolTableBuilderFromStream
 from p5_v3.p32_using import Using
 from p5_v3.p33_using_builder import UsingBuilderFromStream
@@ -223,6 +223,11 @@ class SelfDefinedTermTest(unittest.TestCase):
         using: Using = using_builder.update_using()
         parsed_line: ParsedLine = using_builder.parser.get_parsed_line("US_LABEL")
         self.assertEqual(3, using.get_register_number(parsed_line.using_id, "ABC1"))
+
+    def test_symbol_table_print(self):
+        update_client_domain("general")
+        symbol_table: SymbolTable = SymbolTableBuilderFromFilename("p0_source/general/asm/tsj1.asm").update_symbol_table()
+        symbol_table.print()
 
 
 

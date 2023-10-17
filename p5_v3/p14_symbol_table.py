@@ -1,3 +1,5 @@
+from typing import List
+
 from p5_v3.p01_errors import SymbolNotFoundError, SymbolTableError
 from p5_v3.p12_register import Registers
 
@@ -17,7 +19,10 @@ class Symbol:
         self.owner: str = owner
 
     def __repr__(self):
-        return f"{self.name}:{self.dsp:06X}:{self.length}:{self.owner}"
+        return f"{self.name:20}{self.dsp:06X}{self.length:5}  {self.owner}"
+
+    def print(self):
+        print(str(self))
 
     def set_displacement_as_relocatable(self):
         self.dsp = SymbolConstants.RELOCATABLE_VALUE
@@ -131,3 +136,10 @@ class SymbolTable:
 
     def items(self):
         return self._symbol_table.items()
+
+    def print(self):
+        symbols: List[Symbol] = [symbol for _, symbol in self._symbol_table.items()]
+        symbols.sort(key=lambda item: item.dsp)
+        for symbol in symbols:
+            symbol.print()
+        return
