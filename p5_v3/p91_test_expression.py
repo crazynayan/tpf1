@@ -226,8 +226,12 @@ class SelfDefinedTermTest(unittest.TestCase):
 
     def test_symbol_table_print(self):
         update_client_domain("general")
-        symbol_table: SymbolTable = SymbolTableBuilderFromFilename("p0_source/general/asm/tsj1.asm").update_symbol_table()
+        filename = "p0_source/general/asm/tsj1.asm"
+        symbol_table_builder: SymbolTableBuilderFromFilename = SymbolTableBuilderFromFilename(filename)
+        symbol_table: SymbolTable = symbol_table_builder.update_symbol_table()
         symbol_table.print()
+        parser: FileParser = symbol_table_builder.parser
+        parser.print()
 
 
 

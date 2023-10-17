@@ -23,14 +23,17 @@ class ParsedLine:
         return self.pretty_print(with_location_counter=True)
 
     def pretty_print(self, with_location_counter=True) -> str:
-        string = f"{self.line_number:05}"
+        string = f"{self.line_number:5} : "
         if with_location_counter:
-            string += f"{self.location_counter:08X}:"
+            string += f"{self.location_counter:08X} :"
         string += f"{self._label:8} "
         string += f"{self.operation_code:5} "
         string += Operators.COMMA.join(
             [self.format.get_nth_operand(n).pretty_print() for n in range(1, self.format.number_of_operands() + 1)])
         return string
+
+    def print(self):
+        print(self.pretty_print(with_location_counter=True))
 
     @property
     def label(self) -> str:
@@ -71,6 +74,9 @@ class ParsedLines:
 
     def __repr__(self) -> str:
         return self.pretty_print()
+
+    def print(self):
+        print(self.pretty_print())
 
     def pretty_print(self) -> str:
         return "\n".join([parsed_line.pretty_print() for parsed_line in self.parsed_lines])
