@@ -122,3 +122,13 @@ def split_operand(string: str) -> List[str]:
             start_index = index + 1
     operands.append(string[start_index:len(string)])
     return operands
+
+
+def is_segment_name(seg_name: str) -> bool:
+    if len(seg_name) != 4:
+        return False
+    if not seg_name.isalnum():
+        return False
+    if not seg_name[0].isalpha():
+        return False
+    return True

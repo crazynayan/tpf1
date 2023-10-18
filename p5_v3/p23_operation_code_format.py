@@ -5,7 +5,7 @@ from p5_v3.p22_format import GenericFormat, EquFormat, ExpressionAssemblerDirect
     MacroCallFormat, RRFormat, SS1Format, \
     SS2Format, SS3Format, RSLFormat, SIFormat, SFormat, SILFormat, RXYFormat, RXFormat, RIL1Format, RS1Format, RI1Format, RS2Format, \
     RSIFormat, RI2Format, RXMnemonicFormat, RI2MnemonicFormat, NoOperandMacroCallFormat, OrgFormat, DsectFormat, CsectFormat, DSFormat, \
-    DCFormat, DataMacroCallFormat
+    DCFormat, DataMacroCallFormat, CallSegmentFormat, CretcFormat, SwiscFormat
 from p5_v3.p30_data_macro import is_data_macro_valid, get_data_macros
 
 
@@ -237,18 +237,20 @@ class OperationCodeFormat:
     SYSRA = MacroCallFormat
     SERRC = MacroCallFormat
     SNAPC = MacroCallFormat
-    ENTRC = MacroCallFormat
-    ENTNC = MacroCallFormat
-    ENTDC = MacroCallFormat
+    ENTRC = CallSegmentFormat
+    ENTNC = CallSegmentFormat
+    ENTDC = CallSegmentFormat
     BACKC = NoOperandMacroCallFormat
     ALASC = MacroCallFormat
     PNAMC = MacroCallFormat
     FLIPC = MacroCallFormat
     EOWNRC = MacroCallFormat
-    CREMC = MacroCallFormat
-    CREDC = MacroCallFormat
-    CREEC = MacroCallFormat
-    SWISC = MacroCallFormat
+    CREMC = CallSegmentFormat
+    CREDC = CallSegmentFormat
+    CREEC = CallSegmentFormat
+    CREXC = CallSegmentFormat
+    CRETC = CretcFormat
+    SWISC = SwiscFormat
     POSTC = MacroCallFormat
     EVNTC = MacroCallFormat
     EVNQC = MacroCallFormat

@@ -1,7 +1,7 @@
 from typing import List, Union
 
 from p5_v3.p01_errors import ParserError
-from p5_v3.p11_base_parser import split_operand
+from p5_v3.p11_base_parser import split_operand, is_segment_name
 from p5_v3.p14_symbol_table import SymbolTable
 from p5_v3.p15_token_expression import SelfDefinedTerm, Expression
 from p5_v3.p19_macro_arguments import MacroArguments
@@ -334,3 +334,39 @@ class DataMacroCallFormat(MacroCallFormat):
 
     def get_length(self) -> int:
         return 0
+
+
+class CallSegmentFormat(MacroCallFormat):
+
+    def return_on_error(self, optional: bool):
+        if optional:
+            return str()
+        raise ParserError("Segment name not found.")
+
+    def get_seg_name_based_on_operand_number(self, operand_number: int, optional: bool = False) -> str:
+        macro_arguments: MacroArguments = self._parsed_operands[0]
+        if operand_number > macro_arguments.get_number_of_keys():
+            return self.return_on_error(optional)
+        seg_name: str = macro_arguments.get_nth_key(operand_number)
+        if is_segment_name(seg_name):
+            return seg_name
+        if seg_name == "PROGRAM":
+            seg_name: str = macro_arguments.get_value("PROGRAM")
+            if is_segment_name(seg_name):
+                return seg_name
+        return self.return_on_error(optional)
+
+    def get_segment_name(self):
+        return self.get_seg_name_based_on_operand_number(1)
+
+
+class CretcFormat(CallSegmentFormat):
+
+    def get_segment_name(self):
+        return self.get_seg_name_based_on_operand_number(2)
+
+
+class SwiscFormat(CallSegmentFormat):
+
+    def get_segment_name(self):
+        return self.get_seg_name_based_on_operand_number(1, optional=True)

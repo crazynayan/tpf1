@@ -240,6 +240,8 @@ class OperationCodeTag:
     CREMC = "CREMC"
     CREDC = "CREDC"
     CREEC = "CREEC"
+    CRETC = "CRETC"
+    CREXC = "CREXC"
     SWISC = "SWISC"
     POSTC = "POSTC"
     EVNTC = "EVNTC"
