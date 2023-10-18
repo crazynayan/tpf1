@@ -35,7 +35,7 @@ class Token:
         if self.is_self_defined_term():
             return self._term.pretty_print()
         if self.is_location_counter():
-            return Operators.LOCATION_COUNTER
+            return "*"
         if self.is_data():
             return self.get_data()
         return self._string
