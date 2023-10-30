@@ -416,10 +416,6 @@ def get_operation_codes(domain: ClientDomain) -> Set[str]:
         domain.get_user_defined_operation_code_class()) | get_tool_specific_operation_codes()
 
 
-def is_valid_operation_code(operation_code: str) -> bool:
-    return operation_code in get_operation_codes()
-
-
 def check_operation_code_validity(operation_codes: List[str], domain: ClientDomain) -> List[bool]:
     valid_codes: Set[str] = get_operation_codes(domain) | set(domain.get_macro_list())
     return [operation_code in valid_codes for operation_code in operation_codes]
