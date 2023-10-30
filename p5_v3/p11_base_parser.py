@@ -111,6 +111,8 @@ def split_operand(string: str) -> List[str]:
     for index, char in enumerate(string):
         if index <= closing_enclosure_index:
             continue
+        if char == Operators.QUOTE and index > 0 and string[index - 1] in Operators.ATTRIBUTES:
+            continue
         if char in {Operators.OPENING_PARENTHESIS, Operators.QUOTE}:
             closing_enclosure_index = GetIndex.of_closing_parenthesis(string, index) if char == Operators.OPENING_PARENTHESIS \
                 else GetIndex.of_closing_quote(string, index)
