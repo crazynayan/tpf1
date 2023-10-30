@@ -1,12 +1,12 @@
 from typing import Set, Type, List
 
 from p5_v3.p01_errors import ParserError
+from p5_v3.p05_domain import ClientDomain
 from p5_v3.p22_format import GenericFormat, EquFormat, ExpressionAssemblerDirectiveFormat, NoOperandAssemblerDirectiveFormat, \
     MacroCallFormat, RRFormat, SS1Format, \
     SS2Format, SS3Format, RSLFormat, SIFormat, SFormat, SILFormat, RXYFormat, RXFormat, RIL1Format, RS1Format, RI1Format, RS2Format, \
     RSIFormat, RI2Format, RXMnemonicFormat, RI2MnemonicFormat, NoOperandMacroCallFormat, OrgFormat, DsectFormat, CsectFormat, DSFormat, \
-    DCFormat, DataMacroCallFormat, CallSegmentFormat, CretcFormat, SwiscFormat
-from p5_v3.p30_data_macro import is_data_macro_valid, get_data_macros
+    DCFormat, DataMacroCallFormat, CallSegmentFormat, CretcFormat, SwiscFormat, RIL2Format, EFormat, RREFormat, RSY1Format
 
 
 class OperationCodeFormat:
@@ -24,6 +24,7 @@ class OperationCodeFormat:
     SPACE = ExpressionAssemblerDirectiveFormat
     EJECT = NoOperandAssemblerDirectiveFormat
     PRINT = NoOperandAssemblerDirectiveFormat
+    TITLE = NoOperandAssemblerDirectiveFormat
     LTORG = NoOperandAssemblerDirectiveFormat
     END = NoOperandAssemblerDirectiveFormat
     MACRO = NoOperandAssemblerDirectiveFormat
@@ -50,6 +51,8 @@ class OperationCodeFormat:
     LTR = RRFormat
     AR = RRFormat
     SR = RRFormat
+    SGR = RREFormat
+    LTGR = RREFormat
     BER = RRFormat
     BNER = RRFormat
     BHR = RRFormat
@@ -57,6 +60,7 @@ class OperationCodeFormat:
     BLR = RRFormat
     BNLR = RRFormat
     BMR = RRFormat
+    BNMR = RRFormat
     BPR = RRFormat
     BNPR = RRFormat
     BCR = RRFormat
@@ -72,6 +76,7 @@ class OperationCodeFormat:
     DR = RRFormat
     MVCL = RRFormat
     BASR = RRFormat
+    BALR = RRFormat
     CR = RRFormat
     CLR = RRFormat
     CLCL = RRFormat
@@ -92,6 +97,7 @@ class OperationCodeFormat:
     MVO = SS2Format
     ZAP = SS2Format
     AP = SS2Format
+    DP = SS2Format
     SP = SS2Format
     MP = SS2Format
     CP = SS2Format
@@ -111,6 +117,7 @@ class OperationCodeFormat:
     MVI = SIFormat
     MVHHI = SILFormat
     LG = RXYFormat
+    LLGF = RXYFormat
     L = RXFormat
     LH = RXFormat
     LA = RXFormat
@@ -126,6 +133,7 @@ class OperationCodeFormat:
     STC = RXFormat
     CVB = RXFormat
     CVD = RXFormat
+    CVDG = RXYFormat
     CH = RXFormat
     C = RXFormat
     CL = RXFormat
@@ -138,12 +146,14 @@ class OperationCodeFormat:
     MH = RXFormat
     M = RXFormat
     D = RXFormat
+    DSGF = RXYFormat
     SLA = RS1Format
     SRA = RS1Format
     SLDA = RS1Format
     SRDA = RS1Format
     SLL = RS1Format
     SRL = RS1Format
+    SRLG = RSY1Format
     SLDL = RS1Format
     SRDL = RS1Format
     AFI = RIL1Format
@@ -151,6 +161,8 @@ class OperationCodeFormat:
     LHI = RI1Format
     CHI = RI1Format
     MHI = RI1Format
+    LGHI = RI1Format
+    AGHI = RI1Format
     LM = RS1Format
     STM = RS1Format
     ICM = RS2Format
@@ -161,6 +173,7 @@ class OperationCodeFormat:
     JAS = RI1Format
     BRAS = RI1Format
     BCT = RXFormat
+    BCTG = RXYFormat
     JCT = RI1Format
     BRCT = RI1Format
     BXH = RS1Format
@@ -170,6 +183,7 @@ class OperationCodeFormat:
     JXLE = RSIFormat
     BRXLE = RSIFormat
     EX = RXFormat
+    EXRL = RIL2Format
     BC = RXFormat
     JC = RI2Format
     BRC = RI2Format
@@ -220,6 +234,9 @@ class OperationCodeFormat:
     BNO = RXMnemonicFormat
     JNO = RI2MnemonicFormat
     BRNO = RI2MnemonicFormat
+    SAM64 = EFormat
+    SAM31 = EFormat
+    SAM24 = EFormat
     # Realtime macros
     BEGIN = MacroCallFormat
     FINIS = NoOperandMacroCallFormat
@@ -230,8 +247,10 @@ class OperationCodeFormat:
     ATTAC = MacroCallFormat
     RELCC = MacroCallFormat
     RCUNC = MacroCallFormat
+    RCRFC = MacroCallFormat
     RELFC = MacroCallFormat
-    RLCHA = MacroCallFormat
+    RLCHA = NoOperandMacroCallFormat
+    RCHKA = NoOperandMacroCallFormat
     CRUSA = MacroCallFormat
     SENDA = MacroCallFormat
     SYSRA = MacroCallFormat
@@ -255,10 +274,10 @@ class OperationCodeFormat:
     EVNTC = MacroCallFormat
     EVNQC = MacroCallFormat
     EVNWC = MacroCallFormat
-    GLMOD = MacroCallFormat
+    GLMOD = NoOperandMacroCallFormat
     FILKW = MacroCallFormat
-    KEYCC = MacroCallFormat
-    KEYRC = MacroCallFormat
+    KEYCC = NoOperandMacroCallFormat
+    KEYRC = NoOperandMacroCallFormat
     GLBLC = MacroCallFormat
     DLAYC = NoOperandMacroCallFormat
     DEFRC = NoOperandMacroCallFormat
@@ -268,6 +287,7 @@ class OperationCodeFormat:
     FREEC = MacroCallFormat
     CINFC = MacroCallFormat
     WTOPC = MacroCallFormat
+    FINDC = MacroCallFormat
     FINWC = MacroCallFormat
     FIWHC = MacroCallFormat
     FINHC = MacroCallFormat
@@ -278,6 +298,30 @@ class OperationCodeFormat:
     FILNC = MacroCallFormat
     WAITC = MacroCallFormat
     UNFRC = MacroCallFormat
+    EXITC = NoOperandMacroCallFormat
+    GLOBZ = MacroCallFormat
+    GLOBLC = MacroCallFormat
+    SYNCC = MacroCallFormat
+    DECBC = MacroCallFormat
+    LODIC = MacroCallFormat
+    SIPCC = MacroCallFormat
+    TOUTC = MacroCallFormat
+    TOURC = MacroCallFormat
+    ALPHA = MacroCallFormat
+    SREGSC = MacroCallFormat
+    LREGSC = MacroCallFormat
+    EDITA = MacroCallFormat
+    MOVEC = MacroCallFormat
+    GSVAC = MacroCallFormat
+    # System Macros
+    CCIDC = MacroCallFormat
+    SYSTC = MacroCallFormat
+    ECBMC = MacroCallFormat
+    TIMEC = MacroCallFormat
+    TMSLC = MacroCallFormat
+    CRATC = MacroCallFormat
+    # TPFDF
+    TPFDB = MacroCallFormat
     DBOPN = MacroCallFormat
     DBRED = MacroCallFormat
     DBCLS = MacroCallFormat
@@ -286,28 +330,51 @@ class OperationCodeFormat:
     DBDEL = MacroCallFormat
     DBMOD = MacroCallFormat
     DBREP = MacroCallFormat
-    EXITC = NoOperandMacroCallFormat
+    DBRET = MacroCallFormat
+    DBDSP = MacroCallFormat
+    DBCRE = MacroCallFormat
+    DBCLR = NoOperandMacroCallFormat
+    DBKEY = MacroCallFormat
+    DBCPY = MacroCallFormat
+    DBSRT = MacroCallFormat
+    DBCKP = MacroCallFormat
+    # SPM
     hashUEXIT = NoOperandAssemblerDirectiveFormat
     hashURTRN = NoOperandAssemblerDirectiveFormat
-
-
-class GeneralOperationCodeFormat(OperationCodeFormat):
-    PNRJR = MacroCallFormat
-
-
-class SabreOperationCodeFormat(OperationCodeFormat):
-    PDRED = MacroCallFormat
-
-
-class SmlOperationCodeFormat(OperationCodeFormat):
-    RETURN = MacroCallFormat
-
-
-domain_operation_code_format: dict = {
-    "general": GeneralOperationCodeFormat,
-    "sabre": SabreOperationCodeFormat,
-    "sml": SmlOperationCodeFormat,
-}
+    hashSPM = NoOperandMacroCallFormat
+    hashGOTO = NoOperandMacroCallFormat
+    hashLOCA = NoOperandMacroCallFormat
+    hashPERF = NoOperandMacroCallFormat
+    hashIF = NoOperandMacroCallFormat
+    hash = NoOperandMacroCallFormat
+    hashEIF = NoOperandMacroCallFormat
+    hashELIF = NoOperandMacroCallFormat
+    hashELSE = NoOperandMacroCallFormat
+    hashDO = NoOperandMacroCallFormat
+    hashEDO = NoOperandMacroCallFormat
+    hashEXIF = NoOperandMacroCallFormat
+    hashOREL = NoOperandMacroCallFormat
+    hashDOEX = NoOperandMacroCallFormat
+    hashELOP = NoOperandMacroCallFormat
+    hashSUBR = NoOperandMacroCallFormat
+    hashESUB = NoOperandMacroCallFormat
+    hashEIFM = NoOperandMacroCallFormat
+    hashSTPH = NoOperandMacroCallFormat
+    hashSTPR = NoOperandMacroCallFormat
+    hashSTPC = NoOperandMacroCallFormat
+    hashSTPF = NoOperandMacroCallFormat
+    hashEXEC = MacroCallFormat
+    hashCOND = NoOperandMacroCallFormat
+    hashCONB = NoOperandMacroCallFormat
+    hashCONT = NoOperandMacroCallFormat
+    hashCONX = NoOperandMacroCallFormat
+    hashCAST = NoOperandMacroCallFormat
+    hashCASE = NoOperandMacroCallFormat
+    hashECAS = NoOperandMacroCallFormat
+    # DCL
+    DCL = NoOperandMacroCallFormat
+    IF = NoOperandMacroCallFormat
+    ENDIF = NoOperandMacroCallFormat
 
 
 def sanitize_operation_code(operation_code: str) -> str:
@@ -318,44 +385,41 @@ def desanitize_operation_code(operation_code: str) -> str:
     return operation_code.replace("hash", "#")
 
 
-def get_base_operation_format(operation_code: str) -> Type[GenericFormat]:
+def get_operation_format(operation_code: str, domain: ClientDomain) -> Type[GenericFormat]:
     try:
-        return getattr(OperationCodeFormat, sanitize_operation_code(operation_code))
+        return getattr(domain.get_user_defined_operation_code_class(), sanitize_operation_code(operation_code))
     except AttributeError:
-        if is_data_macro_valid(operation_code):
+        if domain.is_macro_valid(operation_code):
             return DataMacroCallFormat
-        raise ParserError(operation_code)
-
-
-def get_operation_format(operation_code: str, domain: str) -> Type[GenericFormat]:
-    try:
-        return getattr(domain_operation_code_format[domain], sanitize_operation_code(operation_code))
-    except AttributeError:
-        if is_data_macro_valid(operation_code):
-            return DataMacroCallFormat
+        if operation_code in get_tool_specific_operation_codes():
+            return NoOperandMacroCallFormat
         raise ParserError(operation_code)
     except KeyError:
         raise ParserError("Invalid domain")
 
 
-def get_base_operation_codes() -> Set[str]:
-    return {desanitize_operation_code(field) for field, _ in dict(OperationCodeFormat.__dict__).items()
+def get_operation_codes_from_format(operation_code_format: Type[object]) -> Set[str]:
+    return {desanitize_operation_code(field) for field, _ in dict(operation_code_format.__dict__).items()
             if not field.startswith("_")}
 
 
-def get_operation_codes() -> Set[str]:
-    return get_base_operation_codes()
+def get_base_operation_codes() -> Set[str]:
+    return get_operation_codes_from_format(OperationCodeFormat)
+
+
+def get_tool_specific_operation_codes() -> Set[str]:
+    return {"FACE"}
+
+
+def get_operation_codes(domain: ClientDomain) -> Set[str]:
+    return get_base_operation_codes() | get_operation_codes_from_format(
+        domain.get_user_defined_operation_code_class()) | get_tool_specific_operation_codes()
 
 
 def is_valid_operation_code(operation_code: str) -> bool:
     return operation_code in get_operation_codes()
 
 
-def get_user_defined_macros() -> Set[str]:
-    # TODO: Do domain specific implementation
-    return {"PNRJR"}
-
-
-def check_operation_code_validity(operation_codes: List[str]) -> List[bool]:
-    valid_codes: Set[str] = get_operation_codes() | get_data_macros() | get_user_defined_macros()
+def check_operation_code_validity(operation_codes: List[str], domain: ClientDomain) -> List[bool]:
+    valid_codes: Set[str] = get_operation_codes(domain) | set(domain.get_macro_list())
     return [operation_code in valid_codes for operation_code in operation_codes]
