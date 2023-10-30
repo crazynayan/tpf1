@@ -1,18 +1,18 @@
 import unittest
 from typing import List
 
-from p5_v3.p02_source_file import continuation_lines, using_lines
+from p5_v3.p02_source_file import continuation_lines, using_lines, continuation_lines_bug
 from p5_v3.p03_operation_code_tag import get_base_operation_code_tags
+from p5_v3.p04_file import StreamPreprocessor
+from p5_v3.p05_domain import ClientDomainCollection, ClientDomain
 from p5_v3.p11_base_parser import split_operand
 from p5_v3.p14_symbol_table import SymbolTable
 from p5_v3.p15_token_expression import SelfDefinedTerm, Expression
-from p5_v3.p16_file import StreamPreprocessor
 from p5_v3.p17_line import AssemblerLines, AssemblerLine
 from p5_v3.p19_macro_arguments import MacroArguments
 from p5_v3.p20_base_displacement import BaseDisplacement
 from p5_v3.p23_operation_code_format import get_base_operation_codes
-from p5_v3.p28_parser import FileParser, ParsedLine
-from p5_v3.p30_data_macro import get_data_macro_file_path, update_client_domain
+from p5_v3.p28_parser import FileParser, ParsedLine, StreamParser
 from p5_v3.p31_symbol_table_builder import SymbolTableBuilderFromFilename, SymbolTableBuilderFromStream
 from p5_v3.p32_using import Using
 from p5_v3.p33_using_builder import UsingBuilderFromStream
@@ -20,7 +20,11 @@ from p5_v3.p33_using_builder import UsingBuilderFromStream
 
 # noinspection SpellCheckingInspection
 class SelfDefinedTermTest(unittest.TestCase):
-    WA0AA_FILENAME = get_data_macro_file_path("WA0AA")
+
+    @classmethod
+    def setUpClass(cls):
+        from p5_v3.domain_initializer import initialize_all_domains
+        initialize_all_domains()
 
     def test_only_data_type(self):
         term = SelfDefinedTerm("X")
@@ -101,7 +105,8 @@ class SelfDefinedTermTest(unittest.TestCase):
         self.assertFalse(SelfDefinedTerm("X'01").is_data_type_present())
 
     def test_file_preprocessor(self):
-        file_parser = FileParser(self.WA0AA_FILENAME)
+        domain: ClientDomain = ClientDomain(ClientDomainCollection.CLIENTS.SABRE, ClientDomainCollection.DOMAINS.PSS)
+        file_parser = FileParser(domain.get_file_path_from_macro_name("WA0AA"), domain)
         line: ParsedLine = file_parser.get_parsed_line("WA0BID")
         self.assertEqual("WA0BID", line.label)
         self.assertEqual("DS", line.operation_code)
@@ -152,7 +157,8 @@ class SelfDefinedTermTest(unittest.TestCase):
         self.assertEqual("", operands[1])
 
     def test_file_parser(self):
-        file_parser = FileParser(self.WA0AA_FILENAME)
+        domain: ClientDomain = ClientDomain(ClientDomainCollection.CLIENTS.SABRE, ClientDomainCollection.DOMAINS.PSS)
+        file_parser = FileParser(domain.get_file_path_from_macro_name("WA0AA"), domain)
         line: ParsedLine = file_parser.get_parsed_line("WA0BID")
         self.assertEqual("WA0BID", line.label)
         self.assertEqual("DS", line.operation_code)
@@ -166,7 +172,9 @@ class SelfDefinedTermTest(unittest.TestCase):
         self.assertTrue(expression.tokens[0].is_literal())
 
     def test_symbol_table_builder(self):
-        symbol_table: SymbolTable = SymbolTableBuilderFromFilename(self.WA0AA_FILENAME).update_symbol_table()
+        domain: ClientDomain = ClientDomain(ClientDomainCollection.CLIENTS.SABRE, ClientDomainCollection.DOMAINS.PSS)
+        symbol_table: SymbolTable = SymbolTableBuilderFromFilename(domain.get_file_path_from_macro_name("WA0AA"),
+                                                                   domain).update_symbol_table()
         self.assertEqual("WA0AA", symbol_table.get_owner("WA0PCL"))
         self.assertEqual(36, symbol_table.get_dsp("#WA0TA4"))
         self.assertEqual(0x80, symbol_table.get_dsp("#WA0PTP"))
@@ -175,7 +183,7 @@ class SelfDefinedTermTest(unittest.TestCase):
         self.assertEqual(0x2F8, symbol_table.get_dsp("WA2LD6"))
         self.assertEqual(0x70, symbol_table.get_dsp("TPTCPIP"))
         self.assertEqual(0xA1, symbol_table.get_dsp("TP88FF"))
-        symbol_table: SymbolTable = SymbolTableBuilderFromStream(continuation_lines, "TEST").update_symbol_table()
+        symbol_table: SymbolTable = SymbolTableBuilderFromStream(continuation_lines, "TEST", domain).update_symbol_table()
         self.assertEqual(7, symbol_table.get_dsp("TS110060"))
         self.assertEqual(5, symbol_table.get_dsp("TEST_ORG"))
 
@@ -219,20 +227,31 @@ class SelfDefinedTermTest(unittest.TestCase):
         self.assertSetEqual(set(), formats_vs_tags, formats_vs_tags)
 
     def test_using(self):
-        using_builder: UsingBuilderFromStream = UsingBuilderFromStream(using_lines, "TEST")
+        domain: ClientDomain = ClientDomain(ClientDomainCollection.CLIENTS.GENERAL, ClientDomainCollection.DOMAINS.GENERAL)
+        using_builder: UsingBuilderFromStream = UsingBuilderFromStream(using_lines, "TEST", domain)
         using: Using = using_builder.update_using()
         parsed_line: ParsedLine = using_builder.parser.get_parsed_line("US_LABEL")
         self.assertEqual(3, using.get_register_number(parsed_line.using_id, "ABC1"))
 
     def test_symbol_table_print(self):
-        update_client_domain("general")
-        filename = "p0_source/general/asm/tsj1.asm"
-        symbol_table_builder: SymbolTableBuilderFromFilename = SymbolTableBuilderFromFilename(filename)
+        domain: ClientDomain = ClientDomain(ClientDomainCollection.CLIENTS.GENERAL, ClientDomainCollection.DOMAINS.GENERAL)
+        symbol_table_builder: SymbolTableBuilderFromFilename = SymbolTableBuilderFromFilename(
+            domain.get_file_path_from_segment_name("TSJ1"), domain)
         symbol_table: SymbolTable = symbol_table_builder.update_symbol_table()
         symbol_table.print()
         parser: FileParser = symbol_table_builder.parser
         parser.print()
+        self.assertTrue(True)
 
+    def test_continuation_line_bug(self):
+        domain: ClientDomain = ClientDomain(ClientDomainCollection.CLIENTS.GENERAL, ClientDomainCollection.DOMAINS.GENERAL)
+        parser = StreamParser(continuation_lines_bug, domain)
+        macro_arguments: MacroArguments = parser.get_lines()[0].get_macro_arguments()
+        self.assertTrue(macro_arguments.is_key_present("FIELD"))
+        self.assertTrue(macro_arguments.is_key_present("FORMATOUT"))
+        self.assertTrue(macro_arguments.is_key_present("WORKAREA"))
+        self.assertFalse(macro_arguments.is_key_present("NOTFOUND"))
+        self.assertFalse(macro_arguments.is_key_present("ERROR"))
 
 
 if __name__ == '__main__':

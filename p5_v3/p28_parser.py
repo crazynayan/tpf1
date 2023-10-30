@@ -1,21 +1,25 @@
 from typing import List
 
 from p5_v3.p01_errors import ParserError
+from p5_v3.p04_file import FilePreprocessor, StreamPreprocessor
+from p5_v3.p05_domain import ClientDomain
 from p5_v3.p11_base_parser import Operators
-from p5_v3.p16_file import FilePreprocessor, StreamPreprocessor
 from p5_v3.p17_line import AssemblerLine, AssemblerLines
 from p5_v3.p22_format import GenericFormat
 from p5_v3.p23_operation_code_format import get_operation_format, check_operation_code_validity
-from p5_v3.p30_data_macro import get_client_domain
 
 
 class ParsedLine:
 
-    def __init__(self, line: AssemblerLine):
+    def __init__(self, line: AssemblerLine, domain: ClientDomain):
         self.location_counter: int = int()
         self._label: str = line.label
         self.line_number: int = line.line_number
-        self.format: GenericFormat = get_operation_format(line.operation_code, get_client_domain())(line.operand)
+        try:
+            self.format: GenericFormat = get_operation_format(line.operation_code, domain)(line.operand)
+        except ParserError as e:
+            print(line)
+            raise e
         self.operation_code: str = line.operation_code
         self.using_id: int = 0
 
@@ -59,18 +63,18 @@ class ParsedLine:
 
 class ParsedLines:
 
-    def __init__(self, lines: List[AssemblerLine]):
+    def __init__(self, lines: List[AssemblerLine], domain: ClientDomain):
         if not lines:
             raise ParserError
         operation_codes: List[str] = [line.operation_code for line in lines]
-        operation_codes_validity_status: List[bool] = check_operation_code_validity(operation_codes)
+        operation_codes_validity_status: List[bool] = check_operation_code_validity(operation_codes, domain)
         if not all(operation_codes_validity_status):
             invalid_lines: List[AssemblerLine] = [lines[index] for index, status in enumerate(operation_codes_validity_status)
                                                   if status is False]
             for line in invalid_lines:
                 print(line.pretty_print())
             raise ParserError
-        self.parsed_lines: List[ParsedLine] = [ParsedLine(line) for line in lines]
+        self.parsed_lines: List[ParsedLine] = [ParsedLine(line, domain) for line in lines]
 
     def __repr__(self) -> str:
         return self.pretty_print()
@@ -95,7 +99,7 @@ class ParsedLines:
 
 class FileParser(ParsedLines):
 
-    def __init__(self, filename: str):
+    def __init__(self, filename: str, domain: ClientDomain):
         preprocessor: FilePreprocessor = FilePreprocessor(filename)
         assembler_lines: AssemblerLines = AssemblerLines(preprocessor.get_lines())
         super().__init__(assembler_lines.get_lines())
@@ -103,7 +107,7 @@ class FileParser(ParsedLines):
 
 class StreamParser(ParsedLines):
 
-    def __init__(self, buffer: str):
+    def __init__(self, buffer: str, domain: ClientDomain):
         preprocessor: StreamPreprocessor = StreamPreprocessor(buffer)
         assembler_lines: AssemblerLines = AssemblerLines(preprocessor.get_lines())
-        super().__init__(assembler_lines.get_lines())
+        super().__init__(assembler_lines.get_lines(), domain)

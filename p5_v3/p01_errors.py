@@ -20,3 +20,7 @@ class MacroArgumentError(Exception):
 
 class UsingError(ParserError):
     pass
+
+
+class DomainError(Exception):
+    pass

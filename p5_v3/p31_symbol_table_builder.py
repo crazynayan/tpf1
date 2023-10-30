@@ -1,19 +1,20 @@
 from typing import Optional, List, Set
 
 from p5_v3.p01_errors import SymbolTableError, SymbolNotFoundError
+from p5_v3.p04_file import File
+from p5_v3.p05_domain import ClientDomain
 from p5_v3.p14_symbol_table import SymbolTable, Symbol
 from p5_v3.p15_token_expression import Expression, SelfDefinedTerm, Token
-from p5_v3.p16_file import File
 from p5_v3.p28_parser import ParsedLines, FileParser, ParsedLine, StreamParser
-from p5_v3.p30_data_macro import is_data_macro_valid, get_data_macro_file_path
 
 
 class SymbolTableBuilder:
 
-    def __init__(self):
+    def __init__(self, domain: ClientDomain):
         self.symbol_table: Optional[SymbolTable] = None
         self.parser: Optional[ParsedLines] = None
         self.macro_names: Set[str] = set()
+        self.domain: ClientDomain = domain
 
     def update_symbol_table(self) -> SymbolTable:
         self.evaluate_absolute_symbols()
@@ -195,13 +196,15 @@ class SymbolTableBuilder:
 
     def evaluate_inline_data_macro_calls(self):
         for parsed_line in self.parser.get_lines():
-            if not is_data_macro_valid(parsed_line.operation_code):
+            if not self.domain.is_macro_valid(parsed_line.operation_code):
                 continue
             if self.data_macro_already_processed(parsed_line.operation_code):
                 continue
-            symbol_table_builder = SymbolTableBuilderFromFilename(filename=get_data_macro_file_path(parsed_line.operation_code),
-                                                                  symbol_table=self.symbol_table,
-                                                                  macro_names=self.macro_names)
+            symbol_table_builder = SymbolTableBuilderFromFilename(
+                filename=self.domain.get_file_path_from_macro_name(parsed_line.operation_code),
+                domain=self.domain,
+                symbol_table=self.symbol_table,
+                macro_names=self.macro_names)
             symbol_table_builder.update_symbol_table()
         return
 
@@ -211,10 +214,10 @@ class SymbolTableBuilder:
 
 class SymbolTableBuilderFromFilename(SymbolTableBuilder):
 
-    def __init__(self, filename: str, symbol_table: SymbolTable = None, macro_names: Optional[set] = None):
-        super().__init__()
+    def __init__(self, filename: str, domain: ClientDomain, symbol_table: SymbolTable = None, macro_names: Optional[set] = None):
+        super().__init__(domain)
         macro_name = File(filename).get_name()
-        self.parser = FileParser(filename)
+        self.parser = FileParser(filename, self.domain)
         self.symbol_table = symbol_table if symbol_table else SymbolTable(macro_name)
         self.macro_names: Set[str] = macro_names if macro_names else set()
         self.macro_names.add(macro_name)
@@ -222,15 +225,15 @@ class SymbolTableBuilderFromFilename(SymbolTableBuilder):
 
 class SymbolTableBuilderFromStream(SymbolTableBuilder):
 
-    def __init__(self, buffer: str, owner: str):
-        super().__init__()
-        self.parser = StreamParser(buffer)
+    def __init__(self, buffer: str, owner: str, domain: ClientDomain):
+        super().__init__(domain)
+        self.parser = StreamParser(buffer, self.domain)
         self.symbol_table = SymbolTable(owner)
 
 
 class SymbolTableBuilderFromParser(SymbolTableBuilder):
 
-    def __init__(self, parser: ParsedLines, owner: str, ):
-        super().__init__()
+    def __init__(self, parser: ParsedLines, owner: str, domain: ClientDomain):
+        super().__init__(domain)
         self.parser: ParsedLines = parser
         self.symbol_table: SymbolTable = SymbolTable(owner)
