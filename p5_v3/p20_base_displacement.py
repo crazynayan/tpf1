@@ -65,7 +65,32 @@ class BaseDisplacement:
             return
         opening_parenthesis_index: int = string.index(Operators.OPENING_PARENTHESIS)
         if opening_parenthesis_index == 0:
-            raise ParserError
+            closing_parenthesis_index: int = GetIndex.of_closing_parenthesis(string, opening_parenthesis_index)
+            if closing_parenthesis_index == GetIndex.INVALID_ENCLOSURE:
+                raise ParserError
+            if closing_parenthesis_index + 1 == len(string):
+                self.set_nth_expression(string, 1)
+                return
+            if Operators.OPENING_PARENTHESIS not in string[closing_parenthesis_index + 1:]:
+                self.set_nth_expression(string, 1)
+                return
+            current_index = closing_parenthesis_index + 1
+            if string[current_index] != Operators.OPENING_PARENTHESIS:
+                opening_parenthesis_index: int = string[current_index:].index(Operators.OPENING_PARENTHESIS)
+                closing_parenthesis_index: int = GetIndex.of_closing_parenthesis(string[current_index:], opening_parenthesis_index)
+                if closing_parenthesis_index == GetIndex.INVALID_ENCLOSURE:
+                    raise ParserError
+                opening_parenthesis_index += current_index
+                closing_parenthesis_index += current_index
+                if closing_parenthesis_index + 1 == len(string):
+                    self.set_nth_expression(string, 1)
+                    return
+                if Operators.OPENING_PARENTHESIS not in string[closing_parenthesis_index + 1:]:
+                    self.set_nth_expression(string, 1)
+                    return
+                # TODO: Do cases like LA R1,(ABC-XYZ)/(ABC+XYZ)(R1,R3) later
+                raise ParserError
+            opening_parenthesis_index = closing_parenthesis_index + 1
         self.set_nth_expression(string[:opening_parenthesis_index], 1)
         closing_parenthesis_index: int = GetIndex.of_closing_parenthesis(string, opening_parenthesis_index)
         if closing_parenthesis_index == GetIndex.INVALID_ENCLOSURE:
