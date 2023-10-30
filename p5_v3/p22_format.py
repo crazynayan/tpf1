@@ -170,11 +170,21 @@ class MachineInstructionFormat(GenericFormat):
         return True
 
 
+class EFormat(MachineInstructionFormat):
+
+    def _parse(self) -> list:
+        return list()
+
+    def get_length(self) -> int:
+        return 2
+
+
 class RI1Format(MachineInstructionFormat):
 
     def _parse(self) -> List[Expression]:
-        self.raise_error_if_operand_count_not_match(2)
-        return [Expression(self.operands[0]), Expression(self.operands[1])]
+        if len(self.operands) not in (1, 2):
+            raise ParserError
+        return [Expression(self.operands[0]), Expression(self.operands[1]) if len(self.operands) == 2 else Expression("R0")]
 
     def get_length(self) -> int:
         return 4
@@ -192,9 +202,15 @@ class RI2MnemonicFormat(RI2Format):
 
 
 class RIL1Format(RI1Format):
+    # The operand 2 is an immediate operand field
 
     def get_length(self) -> int:
         return 6
+
+
+class RIL2Format(RIL1Format):
+    # The operand 2 is a relative-immediate operand field
+    pass
 
 
 class RRFormat(RI1Format):
@@ -210,8 +226,10 @@ class RREFormat(RI1Format):
 class RS1Format(MachineInstructionFormat):
 
     def _parse(self) -> List[Union[BaseDisplacement, Expression]]:
-        self.raise_error_if_operand_count_not_match(3)
-        return [Expression(self.operands[0]), Expression(self.operands[1]), BaseDisplacement(self.operands[2])]
+        if len(self.operands) not in (2, 3):
+            raise ParserError
+        return [Expression(self.operands[0]), Expression(self.operands[1]),
+                BaseDisplacement(self.operands[2]) if len(self.operands) == 3 else BaseDisplacement("R0")]
 
     def get_length(self) -> int:
         return 4
@@ -221,7 +239,14 @@ class RS2Format(RS1Format):
     pass
 
 
+class RSY1Format(RS1Format):
+
+    def get_length(self) -> int:
+        return 6
+
+
 class RSIFormat(MachineInstructionFormat):
+
     def _parse(self) -> List[Expression]:
         self.raise_error_if_operand_count_not_match(3)
         return [Expression(self.operands[0]), Expression(self.operands[1]), Expression(self.operands[2])]
@@ -254,7 +279,7 @@ class RXMnemonicFormat(RXFormat):
 
     def _parse(self) -> List[BaseDisplacement]:
         self.raise_error_if_operand_count_not_match(1)
-        return [BaseDisplacement(self.operands[1])]
+        return [BaseDisplacement(self.operands[0])]
 
 
 class RXYFormat(RXFormat):
