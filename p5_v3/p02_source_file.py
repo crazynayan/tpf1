@@ -21,3 +21,11 @@ ABC1     DS    XL1
          CSECT
 US_LABEL USING R2+1,ABC
 """
+
+continuation_lines_bug = """
+         PNRJR FIELD=DEL_ITMS,    CANCELLED ITEMS?              SMJ0612X
+               FORMATOUT=PACKED,                                       X
+               WORKAREA=(REG,R7)                                       X
+               NOTFOUND=CK_ACTV                                        X
+               ERROR=TOYF6000
+"""

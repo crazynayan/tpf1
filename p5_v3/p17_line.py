@@ -137,6 +137,7 @@ def combine_continuation_lines(lines: List[AssemblerLine]) -> List[AssemblerLine
     previous_line_ending_with_l: bool = False
     nesting_level: int = 0
     main_line: Optional[AssemblerLine] = None
+    continuing_comma_missing: bool = False
     for line in lines:
         if not continuing and not line.is_continuation_present():
             combined_lines.append(line)
@@ -146,7 +147,13 @@ def combine_continuation_lines(lines: List[AssemblerLine]) -> List[AssemblerLine
         if not continuing:
             main_line: AssemblerLine = line
             combined_lines.append(line)
-        main_line.add_to_operand(operand)
+        if not continuing_comma_missing:
+            main_line.add_to_operand(operand)
+        continuing_comma_missing = line.is_continuation_present() and not inside_quote and not nesting_level \
+                                   and operand and operand[-1] not in (Operators.COMMA, Operators.QUOTE)
+        # TODO: continuing_comma_missing was incorrectly turned on when there is continuing lines with consecutive single quotes split in
+        #  different lines. Added a check to keep continuing_comma_missing flag to be FALSE if the line with continuation ends with quote
+        #  (the assumption being that it is a consecutive single quotes split in different lines).
         previous_line_ending_with_l = operand and operand[-1] in Operators.ATTRIBUTES
         if line.is_continuation_present():
             continuing = True
@@ -156,8 +163,13 @@ def combine_continuation_lines(lines: List[AssemblerLine]) -> List[AssemblerLine
     return combined_lines
 
 
+def remove_characters_after_cc72(strings: List[str]) -> List[str]:
+    return [string[:AssemblerLine.CONTINUATION_START + 1] for string in strings]
+
+
 def build_assembler_lines(strings: List[str]) -> List[AssemblerLine]:
-    lines: List[AssemblerLine] = create_assembler_lines(strings)
+    adjusted_strings = remove_characters_after_cc72(strings)
+    lines: List[AssemblerLine] = create_assembler_lines(adjusted_strings)
     lines: List[AssemblerLine] = remove_commented_out_lines(lines)
     lines: List[AssemblerLine] = combine_continuation_lines(lines)
     return lines
