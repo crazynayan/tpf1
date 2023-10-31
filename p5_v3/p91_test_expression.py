@@ -206,6 +206,13 @@ class SelfDefinedTermTest(unittest.TestCase):
         self.assertEqual(False, base_dsp.is_nth_expression_present(2))
         self.assertEqual(False, base_dsp.is_nth_expression_present(3))
         self.assertEqual(0, base_dsp.expression1.tokens[0].evaluate_to_int())
+        base_dsp: BaseDisplacement = BaseDisplacement("(ABC-XYZ)/(ABC+XYZ)(RG1,RGB+2)")
+        self.assertEqual(True, base_dsp.is_nth_expression_present(1))
+        self.assertEqual(True, base_dsp.is_nth_expression_present(2))
+        self.assertEqual(True, base_dsp.is_nth_expression_present(3))
+        self.assertEqual("(ABC-XYZ)/(ABC+XYZ)", base_dsp.expression1.pretty_print())
+        self.assertEqual("RG1", base_dsp.expression2.pretty_print())
+        self.assertEqual("R5", base_dsp.expression3.evaluate_to_register())
 
     def test_macro_arguments(self):
         getcc = MacroArguments(["D1", "L4"])
