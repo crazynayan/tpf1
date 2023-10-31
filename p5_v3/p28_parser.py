@@ -102,7 +102,19 @@ class FileParser(ParsedLines):
     def __init__(self, filename: str, domain: ClientDomain):
         preprocessor: FilePreprocessor = FilePreprocessor(filename)
         assembler_lines: AssemblerLines = AssemblerLines(preprocessor.get_lines())
-        super().__init__(assembler_lines.get_lines())
+        super().__init__(assembler_lines.get_lines(), domain)
+
+
+class FileParserFromSegmentName(FileParser):
+
+    def __init__(self, segment_name: str, domain: ClientDomain):
+        super().__init__(domain.get_file_path_from_segment_name(segment_name), domain)
+
+
+class FileParserFromMacroName(FileParser):
+
+    def __init__(self, macro_name: str, domain: ClientDomain):
+        super().__init__(domain.get_file_path_from_macro_name(macro_name), domain)
 
 
 class StreamParser(ParsedLines):

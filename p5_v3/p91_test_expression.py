@@ -12,7 +12,7 @@ from p5_v3.p17_line import AssemblerLines, AssemblerLine
 from p5_v3.p19_macro_arguments import MacroArguments
 from p5_v3.p20_base_displacement import BaseDisplacement
 from p5_v3.p23_operation_code_format import get_base_operation_codes
-from p5_v3.p28_parser import FileParser, ParsedLine, StreamParser
+from p5_v3.p28_parser import FileParser, ParsedLine, StreamParser, FileParserFromMacroName
 from p5_v3.p31_symbol_table_builder import SymbolTableBuilderFromFilename, SymbolTableBuilderFromStream
 from p5_v3.p32_using import Using
 from p5_v3.p33_using_builder import UsingBuilderFromStream
@@ -106,7 +106,7 @@ class SelfDefinedTermTest(unittest.TestCase):
 
     def test_file_preprocessor(self):
         domain: ClientDomain = ClientDomain(ClientDomainCollection.CLIENTS.SABRE, ClientDomainCollection.DOMAINS.PSS)
-        file_parser = FileParser(domain.get_file_path_from_macro_name("WA0AA"), domain)
+        file_parser = FileParserFromMacroName("WA0AA", domain)
         line: ParsedLine = file_parser.get_parsed_line("WA0BID")
         self.assertEqual("WA0BID", line.label)
         self.assertEqual("DS", line.operation_code)
@@ -158,7 +158,7 @@ class SelfDefinedTermTest(unittest.TestCase):
 
     def test_file_parser(self):
         domain: ClientDomain = ClientDomain(ClientDomainCollection.CLIENTS.SABRE, ClientDomainCollection.DOMAINS.PSS)
-        file_parser = FileParser(domain.get_file_path_from_macro_name("WA0AA"), domain)
+        file_parser = FileParserFromMacroName("WA0AA", domain)
         line: ParsedLine = file_parser.get_parsed_line("WA0BID")
         self.assertEqual("WA0BID", line.label)
         self.assertEqual("DS", line.operation_code)
