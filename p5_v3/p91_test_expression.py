@@ -105,10 +105,10 @@ class SelfDefinedTermTest(unittest.TestCase):
         self.assertFalse(SelfDefinedTerm("X'01").is_data_type_present())
 
     def test_file_preprocessor(self):
-        domain: ClientDomain = ClientDomain(ClientDomainCollection.CLIENTS.SABRE, ClientDomainCollection.DOMAINS.PSS)
-        file_parser = FileParserFromMacroName("WA0AA", domain)
-        line: ParsedLine = file_parser.get_parsed_line("WA0BID")
-        self.assertEqual("WA0BID", line.label)
+        domain: ClientDomain = ClientDomain(ClientDomainCollection.CLIENTS.TIGER, ClientDomainCollection.DOMAINS.TIG)
+        file_parser = FileParserFromMacroName("XB0BB", domain)
+        line: ParsedLine = file_parser.get_parsed_line("XB0BID")
+        self.assertEqual("XB0BID", line.label)
         self.assertEqual("DS", line.operation_code)
         self.assertEqual("CL2", line.format.get_nth_operand(1).pretty_print())
 
@@ -157,10 +157,10 @@ class SelfDefinedTermTest(unittest.TestCase):
         self.assertEqual("", operands[1])
 
     def test_file_parser(self):
-        domain: ClientDomain = ClientDomain(ClientDomainCollection.CLIENTS.SABRE, ClientDomainCollection.DOMAINS.PSS)
-        file_parser = FileParserFromMacroName("WA0AA", domain)
-        line: ParsedLine = file_parser.get_parsed_line("WA0BID")
-        self.assertEqual("WA0BID", line.label)
+        domain: ClientDomain = ClientDomain(ClientDomainCollection.CLIENTS.TIGER, ClientDomainCollection.DOMAINS.TIG)
+        file_parser = FileParserFromMacroName("XB0BB", domain)
+        line: ParsedLine = file_parser.get_parsed_line("XB0BID")
+        self.assertEqual("XB0BID", line.label)
         self.assertEqual("DS", line.operation_code)
         self.assertEqual("C", line.format.get_nth_operand(1).data_type)
         self.assertEqual(2, line.format.get_nth_operand(1).get_length_value())
@@ -172,15 +172,15 @@ class SelfDefinedTermTest(unittest.TestCase):
         self.assertTrue(expression.tokens[0].is_literal())
 
     def test_symbol_table_builder(self):
-        domain: ClientDomain = ClientDomain(ClientDomainCollection.CLIENTS.SABRE, ClientDomainCollection.DOMAINS.PSS)
-        symbol_table: SymbolTable = SymbolTableBuilderFromFilename(domain.get_file_path_from_macro_name("WA0AA"),
+        domain: ClientDomain = ClientDomain(ClientDomainCollection.CLIENTS.TIGER, ClientDomainCollection.DOMAINS.TIG)
+        symbol_table: SymbolTable = SymbolTableBuilderFromFilename(domain.get_file_path_from_macro_name("XB0BB"),
                                                                    domain).update_symbol_table()
-        self.assertEqual("WA0AA", symbol_table.get_owner("WA0PCL"))
-        self.assertEqual(36, symbol_table.get_dsp("#WA0TA4"))
-        self.assertEqual(0x80, symbol_table.get_dsp("#WA0PTP"))
-        self.assertEqual(0x7F, symbol_table.get_dsp("#WA0IUU"))
-        self.assertEqual(0x258, symbol_table.get_dsp("WA0PCL"))
-        self.assertEqual(0x2F8, symbol_table.get_dsp("WA2LD6"))
+        self.assertEqual("XB0BB", symbol_table.get_owner("XB0PCL"))
+        self.assertEqual(36, symbol_table.get_dsp("#XB0TA4"))
+        self.assertEqual(0x80, symbol_table.get_dsp("#XB0PTP"))
+        self.assertEqual(0x7F, symbol_table.get_dsp("#XB0IUU"))
+        self.assertEqual(0x258, symbol_table.get_dsp("XB0PCL"))
+        self.assertEqual(0x2F8, symbol_table.get_dsp("XB2LD6"))
         self.assertEqual(0x70, symbol_table.get_dsp("TPTCPIP"))
         self.assertEqual(0xA1, symbol_table.get_dsp("TP88FF"))
         symbol_table: SymbolTable = SymbolTableBuilderFromStream(continuation_lines, "TEST", domain).update_symbol_table()

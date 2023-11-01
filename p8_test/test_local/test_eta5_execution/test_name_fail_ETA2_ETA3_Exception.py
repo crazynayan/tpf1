@@ -16,7 +16,7 @@ class NameFailETA2(NameGeneral):
         self.assertEqual(1, self.output.regs["R1"])
 
     def test_invalid_name_after_group_ETA2(self):
-        self.test_data.add_pnr_element(["Z/25SABRE", "ZAVERI", "1SHAH"], "name")
+        self.test_data.add_pnr_element(["Z/25TIGER", "ZAVERI", "1SHAH"], "name")
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
         self.assertEqual("$$ETA2$$.1", self.output.last_line)
@@ -24,7 +24,7 @@ class NameFailETA2(NameGeneral):
         self.assertEqual(1, self.output.regs["R1"])
 
     def test_invalid_name_high_after_group_ETA2(self):
-        self.test_data.add_pnr_element(["Z/25SABRE", chr(0xDB) + "ZAVERI", "1SHAH"], "name")
+        self.test_data.add_pnr_element(["Z/25TIGER", chr(0xDB) + "ZAVERI", "1SHAH"], "name")
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
         self.assertEqual("$$ETA2$$.1", self.output.last_line)

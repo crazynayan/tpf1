@@ -28,12 +28,12 @@ class Config:
     ROOT_DIR: str = os.path.dirname(os.path.abspath(__file__))
     BUCKETS = SimpleNamespace()
     BUCKETS.GENERAL = "tpf-general"
-    BUCKETS.SABRE = "tpf-listings"
+    BUCKETS.TIGER = "tpf-listings"
     BUCKETS.SML = "tpf-sml"
     DOMAINS = SimpleNamespace()
     DOMAINS.GENERAL = "general"
     DOMAINS.BASE = "base"
-    DOMAINS.SABRE = "sabre"
+    DOMAINS.TIGER = "tiger"
     DOMAINS.SML = "sml"
     DOMAIN = os.environ.get("DOMAIN") or DOMAINS.GENERAL
     MAC_FOLDER = "macro"
