@@ -4,7 +4,7 @@ __pycache__
 *.env
 *.csv
 tpf1-key.json
-p0_source/
+d20_source/
 google-cloud.json
 google-cloud-tokyo.json
 tmp/

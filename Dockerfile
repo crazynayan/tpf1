@@ -6,7 +6,7 @@ COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install --no-cache-dir gunicorn
 
-COPY p0_source p0_source
+COPY d20_source d20_source
 COPY p1_utils p1_utils
 COPY p2_assembly p2_assembly
 COPY p3_db p3_db

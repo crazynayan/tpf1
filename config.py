@@ -37,7 +37,7 @@ class Config:
     DOMAINS.SML = "sml"
     DOMAIN = os.environ.get("DOMAIN") or DOMAINS.GENERAL
     MAC_FOLDER = "macro"
-    SOURCES_ROOT = "p0_source"
+    SOURCES_ROOT = "d20_source"
     ASM_EXT = {".asm", ".txt"}
     LXP_EXT = {".lxp"}
     MAC_EXT = {".mac", ".txt"}

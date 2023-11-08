@@ -1205,7 +1205,8 @@ UI2CNN = [
 
 
 def create_canned():
-    with open("p0_source/macro/ui2pf.txt") as ui2pf:
+    from config import Config
+    with open(f"{Config.SOURCES_ROOT}/macro/ui2pf.txt") as ui2pf:
         ui2_file = ui2pf.readlines()
     ui2_file = [line.strip() for line in ui2_file]
     canned_list = list()
