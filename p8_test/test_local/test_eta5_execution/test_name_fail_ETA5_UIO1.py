@@ -50,7 +50,7 @@ class NameFailUIO1(NameGeneral):
         self.assertEqual("60", test_data.get_field("EBRS01"))
 
     def test_multiple_groups_CC_UIO1(self):
-        self.test_data.add_pnr_element(["C/25SABRE", "C/21TOURS", "1SHAH"], "name")
+        self.test_data.add_pnr_element(["C/25TIGER", "C/21TOURS", "1SHAH"], "name")
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
         self.assertEqual("$$UIO1$$.2", self.output.last_line)
@@ -59,7 +59,7 @@ class NameFailUIO1(NameGeneral):
         self.assertEqual("C3", test_data.get_field("EBW014"))
 
     def test_multiple_groups_ZC_UIO1(self):
-        self.test_data.add_pnr_element(["Z/25SABRE", "C/21TOURS", "1SHAH"], "name")
+        self.test_data.add_pnr_element(["Z/25TIGER", "C/21TOURS", "1SHAH"], "name")
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
         self.assertEqual("$$UIO1$$.2", self.output.last_line)

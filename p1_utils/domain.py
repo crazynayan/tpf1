@@ -33,8 +33,8 @@ def read_folder(folder_name: str, extensions: set, filename_parser: Callable) ->
 
 def get_bucket() -> str:
     domain = get_domain()
-    if domain == config.DOMAINS.SABRE:
-        return config.BUCKETS.SABRE
+    if domain == config.DOMAINS.TIGER:
+        return config.BUCKETS.TIGER
     elif domain == config.DOMAINS.SML:
         return config.BUCKETS.SML
     return config.BUCKETS.GENERAL

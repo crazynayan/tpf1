@@ -27,7 +27,7 @@ class NameFailETK1(NameGeneral):
         self.assertEqual("60", test_data.get_field("EBRS01"))
 
     def test_group_overbooking_tty_ETK1_33(self):
-        self.test_data.add_pnr_element(["Z/15SABRE", "11ZAVERI", "5SHAH"], "name")
+        self.test_data.add_pnr_element(["Z/15TIGER", "11ZAVERI", "5SHAH"], "name")
         self.test_data.set_field("WA0ET4", bytes([self.wa0tty]))
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
@@ -47,7 +47,7 @@ class NameFailETK1(NameGeneral):
         self.assertEqual("C3", test_data.get_field("EBW014"))
 
     def test_multiple_groups_ZC_tty_ETK1_33(self):
-        self.test_data.add_pnr_element(["Z/25SABRE", "C/21TOURS", "1SHAH"], "name")
+        self.test_data.add_pnr_element(["Z/25TIGER", "C/21TOURS", "1SHAH"], "name")
         self.test_data.set_field("WA0ET4", bytes([self.wa0tty]))
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
@@ -58,7 +58,7 @@ class NameFailETK1(NameGeneral):
         self.assertEqual("E9", test_data.get_field("EBW014"))
 
     def test_multiple_groups_CZ_tty_ETK1_16(self):
-        self.test_data.add_pnr_element(["C/25TOURS", "Z/21SABRE", "1SHAH"], "name")
+        self.test_data.add_pnr_element(["C/25TOURS", "Z/21TIGER", "1SHAH"], "name")
         self.test_data.set_field("WA0ET4", bytes([self.wa0tty]))
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
@@ -69,7 +69,7 @@ class NameFailETK1(NameGeneral):
         self.assertEqual("C3", test_data.get_field("EBW014"))
 
     def test_multiple_groups_ZZ_tty_ETK1_16(self):
-        self.test_data.add_pnr_element(["Z/25SABRE", "Z/21SABRE", "1SHAH"], "name")
+        self.test_data.add_pnr_element(["Z/25TIGER", "Z/21TIGER", "1SHAH"], "name")
         self.test_data.set_field("WA0ET4", bytes([self.wa0tty]))
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
@@ -90,7 +90,7 @@ class NameFailETK1(NameGeneral):
 
     def test_group_Z_not_at_start_ETK1_16(self):
         # It will give the same error if number of party is mentioned in Z/
-        self.test_data.add_pnr_element(["3ZAVERI", "Z/SABRE", "1SHAH"], "name")
+        self.test_data.add_pnr_element(["3ZAVERI", "Z/TIGER", "1SHAH"], "name")
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
         self.assertEqual(self.ETK1_END, self.output.last_line)
@@ -99,7 +99,7 @@ class NameFailETK1(NameGeneral):
         self.assertEqual("00", test_data.get_field("EBW014"))
 
     def test_multiple_groups_ZZ_ETK1_16(self):
-        self.test_data.add_pnr_element(["Z/25SABRE", "Z/21TOURS", "1FSHAH"], "name")
+        self.test_data.add_pnr_element(["Z/25TIGER", "Z/21TOURS", "1FSHAH"], "name")
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
         self.assertEqual(self.ETK1_END, self.output.last_line)
@@ -108,7 +108,7 @@ class NameFailETK1(NameGeneral):
         self.assertEqual("E9", test_data.get_field("EBW014"))
 
     def test_multiple_groups_CZ_ETK1_16(self):
-        self.test_data.add_pnr_element(["C/25SABRE", "Z/21TOURS", "1SHAH"], "name")
+        self.test_data.add_pnr_element(["C/25TIGER", "Z/21TOURS", "1SHAH"], "name")
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
         self.assertEqual(self.ETK1_END, self.output.last_line)

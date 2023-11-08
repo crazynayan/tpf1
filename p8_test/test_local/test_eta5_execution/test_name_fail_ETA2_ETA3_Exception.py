@@ -86,7 +86,7 @@ class NameFailException(NameGeneral):
     def test_invalid_group_at_start_Exception(self):
         # Both C/ and Z/ will give an exception.
         # I/ will NOT give an exception.
-        self.test_data.add_pnr_element(["Z/SABRE", "1ZAVERI"], "name")
+        self.test_data.add_pnr_element(["Z/TIGER", "1ZAVERI"], "name")
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
         self.assertIn("000003", self.output.dumps)

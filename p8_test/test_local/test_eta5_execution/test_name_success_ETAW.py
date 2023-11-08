@@ -56,7 +56,7 @@ class NameSuccessETAW(NameGeneral):
         self.assertEqual(f"{21:02X}", test_data.get_field("WA0PTY"))
 
     def test_group_Z_ETAW_wa0pyt_no_match(self) -> None:
-        self.test_data.add_pnr_element(["Z/25SABRE", "3SHAH"], "name")
+        self.test_data.add_pnr_element(["Z/25TIGER", "3SHAH"], "name")
         self.test_data.set_field("WA0PTY", bytearray([3]))
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
@@ -94,7 +94,7 @@ class NameSuccessETAW(NameGeneral):
 
     def test_pn2_on_group_Z_wa0pty_history_match_ETAW(self):
         # wa0PN2 OFF behaves the same way
-        self.test_data.add_pnr_element(["Z/99W/SABRE", "3SHAH"], "name")
+        self.test_data.add_pnr_element(["Z/99W/TIGER", "3SHAH"], "name")
         self.test_data.set_field("WA0UB1", bytearray([self.wa0pn2]))
         self.test_data.set_field("WA0PTY", bytearray([0xE3]))  # 99 = 0x63 with bit0 on is 0xE3
         test_data = self.tpf_server.run("ETA5", self.test_data)
@@ -148,7 +148,7 @@ class NameSuccessETAW(NameGeneral):
         self.assertEqual(f"{55:02X}", test_data.get_field("WA0PTI"))
 
     def test_infant_with_group_wa0pti_ETAW(self):
-        self.test_data.add_pnr_element(["Z/21SABRE", "3ZAVERI", "I/1ZAVERI", "4SHAH", "I/2SHAH"], "name")
+        self.test_data.add_pnr_element(["Z/21TIGER", "3ZAVERI", "I/1ZAVERI", "4SHAH", "I/2SHAH"], "name")
         self.test_data.set_field("WA0PTI", bytearray([0x03]))
         test_data = self.tpf_server.run("ETA5", self.test_data)
         self.output = test_data.output
