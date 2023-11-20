@@ -1,4 +1,4 @@
-from p1_utils.errors import AssemblyError
+from p5_v3.p01_errors import ParserError
 
 
 class Registers:
@@ -19,7 +19,7 @@ class Registers:
         try:
             return cls.TO_VALUE[register]
         except KeyError:
-            raise AssemblyError("Registers -> Invalid Register.")
+            raise ParserError("Registers -> Invalid Register.")
 
     @classmethod
     def is_value_valid(cls, register_value: int) -> bool:
@@ -28,5 +28,5 @@ class Registers:
     @classmethod
     def get_symbol(cls, register_value: int) -> str:
         if not cls.is_value_valid(register_value):
-            raise AssemblyError("Registers -> Invalid Register.")
+            raise ParserError("Registers -> Invalid Register.")
         return f"{cls.REGISTER_PREFIX}{register_value}"
