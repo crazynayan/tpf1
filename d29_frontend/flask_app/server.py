@@ -64,7 +64,11 @@ class Server:
 
     @classmethod
     def _common_request(cls, url: str, method: str = "GET", **kwargs) -> Union[list, dict]:
-        response = cls._send_request(url, method, **kwargs)
+        try:
+            response = cls._send_request(url, method, **kwargs)
+        except requests.exceptions.ConnectionError:
+            flash("Unable to connect to server. Try after some time or contact administrator.")
+            return dict()
         if response.status_code == 401 and current_user.is_authenticated:
             flash("Session timeout. Please login again.")
             logout_user()
@@ -72,7 +76,11 @@ class Server:
 
     @classmethod
     def _request_with_exception(cls, url: str, method: str = "GET", **kwargs) -> Union[list, Munch]:
-        response = cls._send_request(url, method, **kwargs)
+        try:
+            response = cls._send_request(url, method, **kwargs)
+        except requests.exceptions.ConnectionError:
+            flash("Unable to connect to server. Try after some time or contact administrator.")
+            raise cls.SystemError
         if response.status_code == 401 and current_user.is_authenticated:
             raise cls.Timeout
         if response.status_code != 200:
