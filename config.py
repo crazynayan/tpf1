@@ -136,9 +136,9 @@ class Config:
     ET_DEBUG_DATA_MISSED: Dict[str, set] = dict()
     ET_CLASS_COUNTER: int = 0
     ET_TEST_CLASS_COUNT: int = 22
-    # Change 4CC1 to 4E2F to 4F9C to 5109 i.e. 20Oct19 to 20Oct20 to 20Oct21 to 20Oct22 (every year after 20NOV)
-    # Next is 5276
-    PARS_DATE: str = "5276"
+    # Change 4CC1 to 4E2F to 4F9C to 5109 to 5276 to 53E4 to 5551 to 56BE to 582B
+    #        20Oct19 20Oct20 20Oct21 20Oct22 20Oct23 20Oct24 20Oct25 20Oct26 20Oct27 (every year after 20NOV)
+    PARS_DATE: str = "53E4"
 
 
 config = Config()
