@@ -4,6 +4,7 @@ services:
     container_name: tpf_analyzer
     build:
       context: .
+      dockerfile: ./d21_backend/Dockerfile
       labels:
         in.co.crazyideas.tpf1: "TPF Server"
     image: tpf_analyzer
