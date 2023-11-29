@@ -1,0 +1,9 @@
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - build
+      - "--tag=gcr.io/tpf-tokyo/tpf-server"
+      - "--file=./d21_backend/Dockerfile"
+      - .
+images:
+  - "gcr.io/tpf-tokyo/tpf-server"
