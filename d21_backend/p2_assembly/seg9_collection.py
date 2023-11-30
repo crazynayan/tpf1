@@ -73,10 +73,18 @@ class SegmentCollection:
         if config.CI_CLOUD_STORAGE:
             self.init_seg_from_db()
         else:
-            self.init_seg_from_folder(get_domain_folder(config.LXP), config.LXP_EXT, config.LST)
-            self.init_seg_from_folder(get_base_folder(config.LXP), config.LXP_EXT, config.LST)
-            self.init_seg_from_folder(get_domain_folder(config.ASM), config.ASM_EXT, config.ASM)
-            self.init_seg_from_folder(get_base_folder(config.ASM), config.ASM_EXT, config.ASM)
+            lxp_domain_folder = get_domain_folder(config.LXP)
+            if os.path.exists(lxp_domain_folder):
+                self.init_seg_from_folder(lxp_domain_folder, config.LXP_EXT, config.LST)
+            lxp_base_folder = get_base_folder(config.LXP)
+            if os.path.exists(lxp_base_folder):
+                self.init_seg_from_folder(lxp_base_folder, config.LXP_EXT, config.LST)
+            asm_domain_folder = get_domain_folder(config.ASM)
+            if os.path.exists(asm_domain_folder):
+                self.init_seg_from_folder(asm_domain_folder, config.ASM_EXT, config.ASM)
+            asm_base_folder = get_base_folder(config.ASM)
+            if os.path.exists(asm_base_folder):
+                self.init_seg_from_folder(asm_base_folder, config.ASM_EXT, config.ASM)
 
     @staticmethod
     def filename_parser(filename: str):
