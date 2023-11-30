@@ -4,12 +4,13 @@ from typing import Dict, List, Union
 from urllib.parse import quote
 
 import requests
+from flask import Response as FlaskResponse
 from flask import flash
 from flask_login import current_user, logout_user
 from munch import Munch, DefaultMunch
 from requests import Response
 
-from d29_frontend.config import Config
+from d29_frontend.config import Config, ServerCallTags
 
 
 class RequestType:
@@ -43,21 +44,30 @@ class Server:
         pass
 
     @staticmethod
-    def _send_request(url, method: str = "GET", **kwargs) -> Response:
-        request_url = f"{Config.SERVER_URL}{url}"
+    def _send_request(url, method: str = "GET", **kwargs) -> Union[Response, FlaskResponse]:
+        if Config.SERVER_URL == ServerCallTags.CALL_LOCAL:
+            from d21_backend.p7_flask_app import tpf1_app
+            request_url = url
+            requesting_app = tpf1_app.test_client()
+            if "params" in kwargs:
+                kwargs["query_string"] = kwargs["params"]
+                del kwargs["params"]
+        else:
+            request_url = f"{Config.SERVER_URL}{url}"
+            requesting_app = requests
         if "auth" not in kwargs:
             if current_user.is_anonymous:
                 return Response()
             auth_header = {"Authorization": f"Bearer {current_user.api_key}"}
             kwargs["headers"] = auth_header
         if method == "GET":
-            response: Response = requests.get(request_url, **kwargs)
+            response: Response = requesting_app.get(request_url, **kwargs)
         elif method == "POST":
-            response: Response = requests.post(request_url, **kwargs)
+            response: Response = requesting_app.post(request_url, **kwargs)
         elif method == "PATCH":
-            response: Response = requests.patch(request_url, **kwargs)
+            response: Response = requesting_app.patch(request_url, **kwargs)
         elif method == "DELETE":
-            response: Response = requests.delete(request_url, **kwargs)
+            response: Response = requesting_app.delete(request_url, **kwargs)
         else:
             raise TypeError
         return response
@@ -72,7 +82,9 @@ class Server:
         if response.status_code == 401 and current_user.is_authenticated:
             flash("Session timeout. Please login again.")
             logout_user()
-        return response.json() if response.status_code == 200 else dict()
+        if response.status_code == 200:
+            return response.get_json() if Config.SERVER_URL == ServerCallTags.CALL_LOCAL else response.json()
+        return dict()
 
     @classmethod
     def _request_with_exception(cls, url: str, method: str = "GET", **kwargs) -> Union[list, Munch]:
@@ -85,7 +97,8 @@ class Server:
             raise cls.Timeout
         if response.status_code != 200:
             raise cls.SystemError
-        return DefaultMunch.fromDict(response.json(), DefaultMunch())
+        response_json: dict = response.get_json() if Config.SERVER_URL == ServerCallTags.CALL_LOCAL else response.json()
+        return DefaultMunch.fromDict(response_json, DefaultMunch())
 
     @staticmethod
     def _decode_data(encoded_data) -> List[str]:

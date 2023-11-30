@@ -3,9 +3,23 @@ from base64 import b64encode
 from socket import gethostname, gethostbyname
 
 
+class ServerCallTags:
+    CALL_LOCAL = "call_local"
+    CALL_DOCKER = "call_docker"
+
+
+def get_server_url() -> str:
+    server_url = os.environ.get("SERVER_URL")
+    if not server_url:  # default option
+        return ServerCallTags.CALL_LOCAL
+    if server_url == ServerCallTags.CALL_DOCKER:
+        return f"http://{gethostbyname(gethostname())}:8000"
+    return server_url
+
+
 class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY") or b64encode(os.urandom(24)).decode()
-    SERVER_URL = os.environ.get("SERVER_URL") or f"http://{gethostbyname(gethostname())}:8000"
+    SERVER_URL = get_server_url()
     CI_SECURITY = True if os.environ.get("ENVIRONMENT") == "prod" else False
     DOWNLOAD_PATH = os.path.join(os.path.abspath(os.sep), "tmp")
     SESSION_COOKIE_SECURE = CI_SECURITY
