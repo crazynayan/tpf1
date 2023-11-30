@@ -16,3 +16,5 @@ env_variables:
   #  SERVER_URL: "https://tpf-server-tokyo.crazyideas.co.in/"
   SERVER_URL: "call_local"
   ENVIRONMENT: "prod"
+  DOMAIN: "general"
+  CI_CLOUD_STORAGE: "use"
