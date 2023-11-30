@@ -27,6 +27,8 @@ def get_base_folder(sub_folder_name: str) -> str:
 
 def read_folder(folder_name: str, extensions: set, filename_parser: Callable) -> List[Tuple[str, str]]:
     # Returns a list of seg_name and filename
+    if not os.path.exists(folder_name):
+        return list()
     return [(filename_parser(filename), os.path.join(folder_name, filename)) for filename in os.listdir(folder_name)
             if len(filename) >= 6 and filename[-4:].lower() in extensions]
 
