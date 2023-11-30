@@ -1,4 +1,4 @@
-from d21_backend.p7_flask_app.api import Types, NAME, SEG_NAME, TYPE, ACTION, Actions, ErrorMsg, TEST_DATA, \
+from d21_backend.p7_flask_app.api.api0_constants import Types, NAME, SEG_NAME, TYPE, ACTION, Actions, ErrorMsg, TEST_DATA, \
     SuccessMsg
 from d21_backend.p8_test.test_refactor_api import TestAPI
 

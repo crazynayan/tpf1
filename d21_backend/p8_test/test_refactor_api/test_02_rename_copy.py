@@ -1,5 +1,5 @@
 from d21_backend.config import config
-from d21_backend.p7_flask_app.api import Types, NAME, SEG_NAME, TYPE, ACTION, Actions, ErrorMsg, NEW_NAME, VARIATION, \
+from d21_backend.p7_flask_app.api.api0_constants import Types, NAME, SEG_NAME, TYPE, ACTION, Actions, ErrorMsg, NEW_NAME, VARIATION, \
     NEW_VARIATION_NAME, VARIATION_NAME, MACRO_NAME, FIELD_DATA, FIELD, DATA
 from d21_backend.p8_test.test_refactor_api import TestAPI
 

@@ -2,11 +2,10 @@ from functools import wraps
 from random import choice
 from unittest import TestCase
 
-from p7_flask_app import tpf1_app
-from p7_flask_app.auth import User
-
 from d21_backend.config import config
-from d21_backend.p7_flask_app.api import NAME
+from d21_backend.p7_flask_app import tpf1_app
+from d21_backend.p7_flask_app.api.api0_constants import NAME
+from d21_backend.p7_flask_app.auth import User
 
 
 def authenticated_request(func):
