@@ -44,9 +44,9 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["D"] = self.divide_fullword
         self._ex["DR"] = self.divide_register
         self._ex["SRDA"] = self.shift_right_double_algebraic
+        self._ex["SLDA"] = self.shift_left_double_algebraic
         self._ex["SLA"] = self.shift_left_algebraic
         self._ex["SRA"] = self.shift_right_algebraic
-        # SLDA - Not in ETA5
 
         # S05 - Move Store & Logic Control
         self._ex["MVC"] = self.move_character
@@ -125,7 +125,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["CL"] = self.compare_logical_fullword
         self._ex["CH"] = self.compare_halfword
         self._ex["CHI"] = self.compare_halfword_immediate
-        #  CLR - Not in ETA5
+        #  CLR - 'Not yet supported'
         self._ex["CLI"] = self.compare_logical_immediate
         self._ex["CLC"] = self.compare_logical_character
         self._ex["CLM"] = self.compare_logical_character_mask
@@ -134,7 +134,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["SRL"] = self.shift_right_logical
         self._ex["SLDL"] = self.shift_left_double_logical
         self._ex["SRDL"] = self.shift_right_double_logical
-        # ALR, AL, SLR, SL - Not in ETA5
+        # ALR, AL, SLR, SL - 'Not yet supported'
 
         # S07 - And/Or/Xor, TM, EX, Data Conversion
         self._ex["OR"] = self.or_register
@@ -253,7 +253,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["FMSG_USER_EXIT"] = self.fmsg_user_exit
         self._ex["GENERATE_LOCATOR"] = self.generate_locator
 
-        # Realtime Db Macros - Not in ETA5
+        # Realtime Db Macros - 'Not yet supported'
         self._ex["FINWC"] = self.finwc
         self._ex["FIWHC"] = self.finwc
         # FINHC

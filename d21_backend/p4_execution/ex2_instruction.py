@@ -265,6 +265,12 @@ class ArithmeticShiftAlgebraic(State):
         self.regs.set_double_value(value, node.reg)
         return node.fall_down
 
+    def shift_left_double_algebraic(self, node: RegisterFieldIndex) -> str:
+        factor = self.regs.get_address(node.field.base, node.field.dsp) & 0x3F
+        value = self.regs.get_double_value(node.reg) << factor
+        self.regs.set_double_value(value, node.reg)
+        return node.fall_down
+
     def shift_left_algebraic(self, node: RegisterFieldIndex):
         factor = self.regs.get_address(node.field.base, node.field.dsp) & 0x3F
         value = self.regs.get_value(node.reg) << factor
