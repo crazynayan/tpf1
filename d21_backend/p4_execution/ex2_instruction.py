@@ -528,6 +528,48 @@ class CompareLogical(State):
         self.regs.set_double_value(value, node.reg)
         return node.fall_down
 
+    def add_logical_register(self, node: RegisterRegister) -> str:
+        value: int = self.regs.get_unsigned_value(node.reg1) + self.regs.get_unsigned_value(node.reg2)
+        self.regs.set_unsigned_value(value, node.reg1)
+        if value <= config.REG_MAX:
+            self.set_zero_cc(value)
+        else:
+            self.cc = 2 if value == 0 else 3
+        return node.fall_down
+
+    def add_logical_fullword(self, node: RegisterFieldIndex) -> str:
+        address = self.regs.get_address(node.field.base, node.field.dsp, node.field.index)
+        value: int = self.regs.get_unsigned_value(node.reg) + self.vm.get_unsigned_value(address, 4)
+        self.regs.set_unsigned_value(value, node.reg)
+        if value <= config.REG_MAX:
+            self.set_zero_cc(value)
+        else:
+            self.cc = 2 if value == 0 else 3
+        return node.fall_down
+
+    def subtract_logical_register(self, node: RegisterRegister) -> str:
+        op1: int = self.regs.get_unsigned_value(node.reg1)
+        value: int = self.regs.get_unsigned_value(node.reg2) * -1
+        diff: int = op1 + value
+        self.regs.set_unsigned_value(diff, node.reg1)
+        if op1 < self.regs.get_unsigned_value(node.reg2) and diff != 0:
+            self.cc = 1
+        else:
+            self.cc = 2 if diff == 0 else 3
+        return node.fall_down
+
+    def subtract_logical_fullword(self, node: RegisterFieldIndex) -> str:
+        address = self.regs.get_address(node.field.base, node.field.dsp, node.field.index)
+        op1: int = self.regs.get_unsigned_value(node.reg)
+        value1: int = self.vm.get_unsigned_value(address, 4) * -1
+        diff: int = op1 + value1
+        self.regs.set_unsigned_value(diff, node.reg)
+        if op1 < self.vm.get_unsigned_value(address, 4) and diff != 0:
+            self.cc = 1
+        else:
+            self.cc = 2 if diff == 0 else 3
+        return node.fall_down
+
 
 class LogicalUsefulConversion(State):
     def or_register(self, node: RegisterRegister) -> str:

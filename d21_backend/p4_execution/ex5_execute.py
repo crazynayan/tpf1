@@ -134,7 +134,10 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["SRL"] = self.shift_right_logical
         self._ex["SLDL"] = self.shift_left_double_logical
         self._ex["SRDL"] = self.shift_right_double_logical
-        # ALR, AL, SLR, SL - 'Not yet supported'
+        self._ex["ALR"] = self.add_logical_register
+        self._ex["AL"] = self.add_logical_fullword
+        self._ex["SLR"] = self.subtract_logical_register
+        self._ex["SL"] = self.subtract_logical_fullword
 
         # S07 - And/Or/Xor, TM, EX, Data Conversion
         self._ex["OR"] = self.or_register
