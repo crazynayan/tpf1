@@ -531,20 +531,22 @@ class CompareLogical(State):
     def add_logical_register(self, node: RegisterRegister) -> str:
         value: int = self.regs.get_unsigned_value(node.reg1) + self.regs.get_unsigned_value(node.reg2)
         self.regs.set_unsigned_value(value, node.reg1)
+        sum1: int = self.regs.get_unsigned_value(node.reg1)
         if value <= config.REG_MAX:
             self.set_zero_cc(value)
         else:
-            self.cc = 2 if value == 0 else 3
+            self.cc = 2 if sum1 == 0 else 3
         return node.fall_down
 
     def add_logical_fullword(self, node: RegisterFieldIndex) -> str:
         address = self.regs.get_address(node.field.base, node.field.dsp, node.field.index)
         value: int = self.regs.get_unsigned_value(node.reg) + self.vm.get_unsigned_value(address, 4)
         self.regs.set_unsigned_value(value, node.reg)
+        sum1: int = self.regs.get_unsigned_value(node.reg)
         if value <= config.REG_MAX:
-            self.set_zero_cc(value)
+            self.set_zero_cc(sum1)
         else:
-            self.cc = 2 if value == 0 else 3
+            self.cc = 2 if sum1 == 0 else 3
         return node.fall_down
 
     def subtract_logical_register(self, node: RegisterRegister) -> str:
