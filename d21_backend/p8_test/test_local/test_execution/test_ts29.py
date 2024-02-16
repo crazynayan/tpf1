@@ -52,6 +52,14 @@ class Ts29Test(unittest.TestCase):
         self.assertEqual(67108864, int(test_data.get_field("EBX020"), 16))
         self.assertEqual(3, int(test_data.get_field("EBT000"), 16))
 
+    def test_ts29_alr_5(self):
+        # CC3 GETS SET
+        self.test_data.regs["R5"] = -10
+        self.test_data.regs["R6"] = -3
+        test_data = self.tpf_server.run("TS29", self.test_data)
+        self.assertEqual(4294967283, int(test_data.get_field("EBX020"), 16))
+        self.assertEqual(3, int(test_data.get_field("EBT000"), 16))
+
     def test_ts29_al_1(self):
         # CC3 GETS SET
         self.test_data.regs["R6"] = 2147483648
@@ -84,6 +92,13 @@ class Ts29Test(unittest.TestCase):
         self.assertEqual(0, int(test_data.get_field("EBX024"), 16))
         self.assertEqual(0, int(test_data.get_field("EBT001"), 16))
 
+    def test_ts29_al_5(self):
+        # CC0 GETS SET
+        self.test_data.regs["R6"] = -10
+        self.test_data.set_field("EBW000", DataType("F", input="-3").to_bytes())
+        test_data = self.tpf_server.run("TS29", self.test_data)
+        self.assertEqual(4294967283, int(test_data.get_field("EBX024"), 16))
+        self.assertEqual(3, int(test_data.get_field("EBT001"), 16))
     def test_ts29_slr_1(self):
         # CC3 GETS SET
         self.test_data.regs["R7"] = 5
@@ -108,6 +123,14 @@ class Ts29Test(unittest.TestCase):
         self.assertEqual(4294967293, int(test_data.get_field("EBX028"), 16))
         self.assertEqual(1, int(test_data.get_field("EBT002"), 16))
 
+    def test_ts29_slr_4(self):
+        # CC1 GETS SET
+        self.test_data.regs["R7"] = -10
+        self.test_data.regs["R1"] = -3
+        test_data = self.tpf_server.run("TS29", self.test_data)
+        self.assertEqual(4294967289, int(test_data.get_field("EBX028"), 16))
+        self.assertEqual(1, int(test_data.get_field("EBT002"), 16))
+
     def test_ts29_sl_1(self):
         # CC3 GETS SET
         self.test_data.regs["R1"] = 5
@@ -130,6 +153,14 @@ class Ts29Test(unittest.TestCase):
         self.test_data.set_field("EBW000", DataType("F", input="3").to_bytes())
         test_data = self.tpf_server.run("TS29", self.test_data)
         self.assertEqual(4294967295, int(test_data.get_field("EBX004"), 16))
+        self.assertEqual(1, int(test_data.get_field("EBT003"), 16))
+
+    def test_ts29_sl_4(self):
+        # CC1 GETS SET#
+        self.test_data.regs["R1"] = -10
+        self.test_data.set_field("EBW000", DataType("F", input="-3").to_bytes())
+        test_data = self.tpf_server.run("TS29", self.test_data)
+        self.assertEqual(4294967289, int(test_data.get_field("EBX004"), 16))
         self.assertEqual(1, int(test_data.get_field("EBT003"), 16))
 
 

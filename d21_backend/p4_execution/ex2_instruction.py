@@ -533,7 +533,7 @@ class CompareLogical(State):
         self.regs.set_unsigned_value(value, node.reg1)
         sum1: int = self.regs.get_unsigned_value(node.reg1)
         if value <= config.REG_MAX:
-            self.set_zero_cc(value)
+            self.set_zero_cc(sum1)
         else:
             self.cc = 2 if sum1 == 0 else 3
         return node.fall_down
@@ -551,25 +551,29 @@ class CompareLogical(State):
 
     def subtract_logical_register(self, node: RegisterRegister) -> str:
         op1: int = self.regs.get_unsigned_value(node.reg1)
-        value: int = self.regs.get_unsigned_value(node.reg2) * -1
-        diff: int = op1 + value
+        op2: int = self.regs.get_unsigned_value(node.reg2)
+        diff: int = op1 - op2
         self.regs.set_unsigned_value(diff, node.reg1)
-        if op1 < self.regs.get_unsigned_value(node.reg2) and diff != 0:
+        if op1 < op2:
             self.cc = 1
+        elif op1 == op2:
+            self.cc = 2
         else:
-            self.cc = 2 if diff == 0 else 3
+            self.cc = 3
         return node.fall_down
 
     def subtract_logical_fullword(self, node: RegisterFieldIndex) -> str:
         address = self.regs.get_address(node.field.base, node.field.dsp, node.field.index)
         op1: int = self.regs.get_unsigned_value(node.reg)
-        value1: int = self.vm.get_unsigned_value(address, 4) * -1
-        diff: int = op1 + value1
+        op2: int = self.vm.get_unsigned_value(address, 4)
+        diff: int = op1 - op2
         self.regs.set_unsigned_value(diff, node.reg)
-        if op1 < self.vm.get_unsigned_value(address, 4) and diff != 0:
+        if op1 < op2:
             self.cc = 1
+        elif op1 == op2:
+            self.cc = 2
         else:
-            self.cc = 2 if diff == 0 else 3
+            self.cc = 3
         return node.fall_down
 
 
