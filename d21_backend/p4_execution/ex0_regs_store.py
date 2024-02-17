@@ -73,6 +73,10 @@ class Registers:
             value -= config.REG_MAX + 1
         setattr(self, str(reg), value)
 
+    def set_unsigned_value(self,value:int, reg: Union[Register,str]) -> None:
+        value &= config.REG_MAX
+        setattr(self, str(reg), value)
+
     def set_value64(self, value: int, reg: Union[Register, str]) -> None:
         self.get_value(reg)
         if value < -config.REG_NEG64 or value > config.REG_MAX64:
