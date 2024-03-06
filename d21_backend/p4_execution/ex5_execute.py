@@ -54,7 +54,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["MVCL"] = self.move_character_long
         self._ex["MVN"] = self.move_numeric
         self._ex["MVZ"] = self.move_zone
-        # MVO
+        self._ex["MVO"] = self.move_with_offset
         self._ex["BCT"] = self.branch_on_count
         self._ex["JCT"] = self.branch_on_count
         self._ex["BRCT"] = self.branch_on_count
@@ -125,11 +125,11 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["CL"] = self.compare_logical_fullword
         self._ex["CH"] = self.compare_halfword
         self._ex["CHI"] = self.compare_halfword_immediate
-        #  CLR - 'Not yet supported'
+        self._ex["CLR"] = self.compare_logical_register
         self._ex["CLI"] = self.compare_logical_immediate
         self._ex["CLC"] = self.compare_logical_character
         self._ex["CLM"] = self.compare_logical_character_mask
-        # CLM, CLCL - Not in ETA5
+        self._ex["CLCL"] = self.compare_logical_character_long
         self._ex["SLL"] = self.shift_left_logical
         self._ex["SRL"] = self.shift_right_logical
         self._ex["SLDL"] = self.shift_left_double_logical
@@ -165,7 +165,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["MP"] = self.mp
         self._ex["DP"] = self.dp
         # SRP
-        # CP
+        self._ex["CP"] = self.cp
         self._ex["TP"] = self.tp
         self._ex["TR"] = self.tr
         self._ex["TRT"] = self.trt
