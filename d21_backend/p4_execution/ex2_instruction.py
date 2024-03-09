@@ -342,6 +342,42 @@ class MoveLogicControl(State):
             self.vm.set_byte(target_byte, target_address + index)
         return node.fall_down
 
+    def move_with_offset(self, node: FieldLenFieldLen) -> str:
+        source_length: int = node.field_len2.length + 1
+        target_length: int = node.field_len1.length + 1
+        # source_address points to the last byte of the source
+        source_address: int = self.regs.get_address(node.field_len2.base, node.field_len2.dsp) + source_length - 1
+        # target_address points to the last byte of the target
+        target_address: int = self.regs.get_address(node.field_len1.base, node.field_len1.dsp) + target_length - 1
+        # The loop will copy one nibble at a time form source_address to target_address
+        # The loop will execute target_length * 2 - 1 times. If target_length is 5 then the loop will execute 9 times and copy 9 nibbles
+        for loop_index in range(target_length * 2 - 1):
+            # If loop_index >= source_length * 2 (all source bytes already read), then source_nibble is set to 0 (padding).
+            if loop_index >= source_length * 2:
+                source_nibble: int = 0
+            else:
+                source_nibble: int = self.vm.get_byte(source_address)
+                # On even loop_index (0,2,4...), read the right nibble from the source_address as the source_nibble.
+                if loop_index % 2 == 0:
+                    source_nibble &= 0x0F
+                else:  # On odd loop_index (1,3,5...), read the left nibble from the source_address and decrement the source_address by 1
+                    source_nibble &= 0xF0
+                    source_nibble = source_nibble >> 4
+                    source_address -= 1
+            target_nibble: int = self.vm.get_byte(target_address)
+            # On even loop index, write at the left nibble of the target_address and decrement target_address by one
+            if loop_index % 2 == 0:
+                target_nibble &= 0x0F
+                source_nibble = source_nibble << 4
+                target_nibble |= source_nibble
+                self.vm.set_byte(target_nibble, target_address)
+                target_address -= 1
+            else:  # On odd loop index, write at the right nibble of the target_address.
+                target_nibble &= 0xF0
+                target_nibble |= source_nibble
+                self.vm.set_byte(target_nibble, target_address)
+        return node.fall_down
+
     def move_immediate(self, node: FieldData) -> str:
         address = self.regs.get_address(node.field.base, node.field.dsp)
         self.vm.set_value(node.data, address, 1)
@@ -466,6 +502,12 @@ class CompareLogical(State):
         self.trace_data.set_signed_value2(node.data)
         return node.fall_down
 
+    def compare_logical_register(self, node: RegisterRegister) -> str:
+        reg_value1: int = self.regs.get_unsigned_value(node.reg1)
+        reg_value2: int = self.regs.get_unsigned_value(node.reg2)
+        self.set_number_cc(reg_value1 - reg_value2)
+        return node.fall_down
+
     def compare_fullword(self, node: RegisterFieldIndex) -> str:
         address = self.regs.get_address(node.field.base, node.field.dsp, node.field.index)
         value = self.vm.get_value(address, 4)
@@ -496,12 +538,42 @@ class CompareLogical(State):
         if node.data == 0:
             self.set_number_cc(0)
             return node.fall_down
-        bytes1 = self.regs.get_bytes_from_mask(node.reg, node.data)
-        address = self.regs.get_address(node.field.base, node.field.dsp)
-        bytes2 = self.vm.get_bytes(address, bin(node.data).count('1'))
-        value1 = DataType('X', bytes=bytes1).value
-        value2 = DataType('X', bytes=bytes2).value
+        bytes1: bytearray = self.regs.get_bytes_from_mask(node.reg, node.data)
+        address: int = self.regs.get_address(node.field.base, node.field.dsp)
+        bytes2: bytearray = self.vm.get_bytes(address, bin(node.data).count('1'))
+        value1: int = DataType('X', bytes=bytes1).value
+        value2: int = DataType('X', bytes=bytes2).value
         self.set_number_cc(value1 - value2)
+        return node.fall_down
+
+    def compare_logical_character_long(self, node: RegisterRegister) -> str:
+        target_address: int = self.regs.get_unsigned_value(node.reg1)
+        target_reg: str = self.regs.next_reg(node.reg1)
+        target_length: int = self.regs.get_unsigned_value(target_reg) & 0x00FFFFFF
+        source_address: int = self.regs.get_unsigned_value(node.reg2)
+        source_reg = self.regs.next_reg(node.reg2)
+        source_length: int = self.regs.get_unsigned_value(source_reg) & 0x00FFFFFF
+        pad_character: int = self.regs.get_bytes_from_mask(source_reg, 0b1000)[0]
+        max_length: int = max(target_length, source_length)
+        target_byte: int = 0
+        source_byte: int = 0
+        for index in range(max_length):
+            source_byte: int = self.vm.get_byte(source_address) if source_length > 0 else pad_character
+            target_byte: int = self.vm.get_byte(target_address) if target_length > 0 else pad_character
+            if source_byte != target_byte:
+                break
+            if source_length > 0:
+                source_address += 1
+                source_length -= 1
+            if target_length > 0:
+                target_address += 1
+                target_length -= 1
+        source_length |= pad_character << 24
+        self.regs.set_unsigned_value(target_address, node.reg1)
+        self.regs.set_unsigned_value(source_address, node.reg2)
+        self.regs.set_unsigned_value(target_length, target_reg)
+        self.regs.set_unsigned_value(source_length, source_reg)
+        self.set_number_cc(target_byte - source_byte)
         return node.fall_down
 
     def shift_left_logical(self, node: RegisterFieldIndex):
@@ -843,6 +915,14 @@ class DecimalArithmeticComplex(State):
         self.vm.set_bytes(DataType('P', input=str(quotient)).to_bytes(quotient_len), target_address, quotient_len)
         self.vm.set_bytes(DataType('P', input=str(remainder)).to_bytes(remainder_len), target_address + quotient_len,
                           remainder_len)
+        return node.fall_down
+
+    def cp(self, node: FieldLenFieldLen) -> str:
+        source_address = self.regs.get_address(node.field_len2.base, node.field_len2.dsp)
+        target_address = self.regs.get_address(node.field_len1.base, node.field_len1.dsp)
+        value: int = DataType('P', bytes=self.vm.get_bytes(target_address, node.field_len1.length + 1)).value
+        value -= DataType('P', bytes=self.vm.get_bytes(source_address, node.field_len2.length + 1)).value
+        self.set_number_cc(value)
         return node.fall_down
 
     def tr(self, node: FieldLenField) -> str:
