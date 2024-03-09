@@ -343,43 +343,39 @@ class MoveLogicControl(State):
         return node.fall_down
 
     def move_with_offset(self, node: FieldLenFieldLen) -> str:
-        source_address = self.regs.get_address(node.field_len2.base, node.field_len2.dsp)
-        target_address = self.regs.get_address(node.field_len1.base, node.field_len1.dsp)
         source_length: int = node.field_len2.length + 1
         target_length: int = node.field_len1.length + 1
-        target_nibble: int = self.vm.get_byte(target_address + target_length - 1)
-        target_nibble &= 0x0F  # Zeroes the zone nibble
-        pad_character: int = 00
-        if source_length < target_length:
-            for index in range(target_length):
-                self.vm.set_byte(pad_character, target_address + index)
-        elif source_length > target_length:
-            count: int = source_length - target_length
-            source_value: int = self.vm.get_value(source_address, source_length)
-            source_value = source_value << (count * 8) & 0xFFFFFF
-            self.vm.set_value(source_value, source_address + -count)
-        for index in range(target_length - 1, -1, -1):
-            source_byte = self.vm.get_byte(source_address + index)
-            self.vm.set_byte(source_byte, target_address + index)
-        if target_length > source_length:
-            target_value: int = self.vm.get_value(target_address, target_length) >> 4
-            self.vm.set_value(target_value, target_address + 0)
-        elif target_length < source_length:
-            target_value = self.vm.get_value(target_address, target_length)
-            binary_value: int = bin(target_value)[2:].zfill(16)
-            shifted_binary: int = binary_value[4:]+'0000'
-            shifted_target = int(shifted_binary, 2)
-            self.vm.set_value(shifted_target, target_address + -2)
-        else:
-            target_value = self.vm.get_value(target_address, target_length)
-            binary_value: int = bin(target_value).zfill(16)
-            shifted_binary: int = binary_value[4:] + '0000'
-            shifted_target: int = int(shifted_binary, 2)
-            self.vm.set_value(shifted_target, target_address + 0)
-        target_byte: int = self.vm.get_byte(target_address + target_length - 1)
-        target_byte &= 0xF0  # zeroes the numeric nibble
-        target_byte |= target_nibble
-        self.vm.set_byte(target_byte, target_address + target_length - 1)
+        # source_address points to the last byte of the source
+        source_address: int = self.regs.get_address(node.field_len2.base, node.field_len2.dsp) + source_length - 1
+        # target_address points to the last byte of the target
+        target_address: int = self.regs.get_address(node.field_len1.base, node.field_len1.dsp) + target_length - 1
+        # The loop will copy one nibble at a time form source_address to target_address
+        # The loop will execute target_length * 2 - 1 times. If target_length is 5 then the loop will execute 9 times and copy 9 nibbles
+        for loop_index in range(target_length * 2 - 1):
+            # If loop_index >= source_length * 2 (all source bytes already read), then source_nibble is set to 0 (padding).
+            if loop_index >= source_length * 2:
+                source_nibble: int = 0
+            else:
+                source_nibble: int = self.vm.get_byte(source_address)
+                # On even loop_index (0,2,4...), read the right nibble from the source_address as the source_nibble.
+                if loop_index % 2 == 0:
+                    source_nibble &= 0x0F
+                else:  # On odd loop_index (1,3,5...), read the left nibble from the source_address and decrement the source_address by 1
+                    source_nibble &= 0xF0
+                    source_nibble = source_nibble >> 4
+                    source_address -= 1
+            target_nibble: int = self.vm.get_byte(target_address)
+            # On even loop index, write at the left nibble of the target_address and decrement target_address by one
+            if loop_index % 2 == 0:
+                target_nibble &= 0x0F
+                source_nibble = source_nibble << 4
+                target_nibble |= source_nibble
+                self.vm.set_byte(target_nibble, target_address)
+                target_address -= 1
+            else:  # On odd loop index, write at the right nibble of the target_address.
+                target_nibble &= 0xF0
+                target_nibble |= source_nibble
+                self.vm.set_byte(target_nibble, target_address)
         return node.fall_down
 
     def move_immediate(self, node: FieldData) -> str:
@@ -542,37 +538,42 @@ class CompareLogical(State):
         if node.data == 0:
             self.set_number_cc(0)
             return node.fall_down
-        bytes1 = self.regs.get_bytes_from_mask(node.reg, node.data)
-        address = self.regs.get_address(node.field.base, node.field.dsp)
-        bytes2 = self.vm.get_bytes(address, bin(node.data).count('1'))
-        value1 = DataType('X', bytes=bytes1).value
-        value2 = DataType('X', bytes=bytes2).value
+        bytes1: bytearray = self.regs.get_bytes_from_mask(node.reg, node.data)
+        address: int = self.regs.get_address(node.field.base, node.field.dsp)
+        bytes2: bytearray = self.vm.get_bytes(address, bin(node.data).count('1'))
+        value1: int = DataType('X', bytes=bytes1).value
+        value2: int = DataType('X', bytes=bytes2).value
         self.set_number_cc(value1 - value2)
         return node.fall_down
 
     def compare_logical_character_long(self, node: RegisterRegister) -> str:
-        target_address = self.regs.get_unsigned_value(node.reg1)
-        target_reg = self.regs.next_reg(node.reg1)
+        target_address: int = self.regs.get_unsigned_value(node.reg1)
+        target_reg: str = self.regs.next_reg(node.reg1)
         target_length: int = self.regs.get_unsigned_value(target_reg) & 0x00FFFFFF
-        source_address = self.regs.get_unsigned_value(node.reg2)
+        source_address: int = self.regs.get_unsigned_value(node.reg2)
         source_reg = self.regs.next_reg(node.reg2)
         source_length: int = self.regs.get_unsigned_value(source_reg) & 0x00FFFFFF
-        source_value: int = self.vm.get_unsigned_value(source_address, source_length)
-        target_value: int = self.vm.get_unsigned_value(target_address, target_length)
         pad_character: int = self.regs.get_bytes_from_mask(source_reg, 0b1000)[0]
-        matched: int = 0
-        for index in range(target_length):
-            source_byte = self.vm.get_byte(source_address + index)
-            target_byte = self.vm.get_byte(target_address + index)
-            if source_byte == target_byte:
-                matched = matched+1
-            else:
+        max_length: int = max(target_length, source_length)
+        target_byte: int = 0
+        source_byte: int = 0
+        for index in range(max_length):
+            source_byte: int = self.vm.get_byte(source_address) if source_length > 0 else pad_character
+            target_byte: int = self.vm.get_byte(target_address) if target_length > 0 else pad_character
+            if source_byte != target_byte:
                 break
-        self.regs.set_value(target_address, node.reg1)
-        self.regs.set_value(source_address, node.reg2)
-        self.regs.set_value(target_length-matched, target_reg)
-        self.regs.set_value(source_length-matched , source_reg)
-        self.set_number_cc(target_value - source_value)
+            if source_length > 0:
+                source_address += 1
+                source_length -= 1
+            if target_length > 0:
+                target_address += 1
+                target_length -= 1
+        source_length |= pad_character << 24
+        self.regs.set_unsigned_value(target_address, node.reg1)
+        self.regs.set_unsigned_value(source_address, node.reg2)
+        self.regs.set_unsigned_value(target_length, target_reg)
+        self.regs.set_unsigned_value(source_length, source_reg)
+        self.set_number_cc(target_byte - source_byte)
         return node.fall_down
 
     def shift_left_logical(self, node: RegisterFieldIndex):
