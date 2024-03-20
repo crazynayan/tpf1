@@ -7,7 +7,7 @@ from google.cloud.storage import Client
 
 from d21_backend.config import config
 from d21_backend.p1_utils.data_type import DataType
-from d21_backend.p1_utils.domain import get_bucket, get_domain_folder, is_domain_valid, get_folder_by_domain
+from d21_backend.p1_utils.domain import get_bucket, get_domain_folder, is_domain_valid, get_folder_by_domain, get_base_folder
 from d21_backend.p1_utils.ucdr import date_to_pars, pars_to_date
 from d21_backend.p2_assembly.seg6_segment import Segment
 from d21_backend.p2_assembly.seg8_listing import LstCmd, create_lxp
@@ -60,9 +60,10 @@ def reset_and_create_lxp(blob_name: str):
     return
 
 
-def init_asm_seg(filename: str):
+def init_asm_seg(filename: str, base: bool = False):
     seg_name: str = filename[:4].upper()
-    file_path: str = os.path.join(get_domain_folder(config.ASM), filename)
+    folder_path: str = get_domain_folder(config.ASM) if not base else get_base_folder(config.ASM)
+    file_path: str = os.path.join(folder_path, filename)
     segment: Segment = get_segment(seg_name, file_path, config.ASM, config.LOCAL)
     seg: SegLst = get_seg_lst(segment)  # Assemble the segment and create LstCmd
     SegLst.objects.filter_by(seg_name=seg_name).delete()

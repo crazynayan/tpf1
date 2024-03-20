@@ -14,7 +14,7 @@ def get_domain():
 
 
 def get_domain_folder(sub_folder_name: str) -> str:
-    return os.path.join(config.SOURCES_ROOT, get_domain(), sub_folder_name)
+    return str(os.path.join(config.SOURCES_ROOT, get_domain(), sub_folder_name))
 
 
 def get_folder_by_domain(sub_folder_name: str, domain: str) -> str:
@@ -22,7 +22,7 @@ def get_folder_by_domain(sub_folder_name: str, domain: str) -> str:
 
 
 def get_base_folder(sub_folder_name: str) -> str:
-    return os.path.join(config.SOURCES_ROOT, config.DOMAINS.BASE, sub_folder_name)
+    return str(os.path.join(config.SOURCES_ROOT, config.DOMAINS.BASE, sub_folder_name))
 
 
 def read_folder(folder_name: str, extensions: set, filename_parser: Callable) -> List[Tuple[str, str]]:

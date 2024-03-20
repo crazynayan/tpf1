@@ -6,7 +6,7 @@ from d21_backend.p4_execution.ex5_execute import TpfServer
 
 
 class SegmentTest(unittest.TestCase):
-    SEG_NAME: str = "ETAJ"
+    SEG_NAME: str = "TS29"
 
     def test_segment(self):
         self.maxDiff = None
