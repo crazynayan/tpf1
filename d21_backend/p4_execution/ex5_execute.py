@@ -65,7 +65,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["BAL"] = self.branch_and_save
         self._ex["JAS"] = self.branch_and_save
         self._ex["BRAS"] = self.branch_and_save
-        # BASR
+        self._ex["BASR"] = self.branch_and_save_register
         self._ex["B"] = self.branch
         self._ex["NOP"] = self.branch
         self._ex["BZ"] = self.branch

@@ -404,10 +404,9 @@ class MoveLogicControl(State):
         value = self.regs.get_value(node.reg1) - 1
         self.regs.set_value(value, node.reg1)
         if dsp == 0 or value == 0:
-            label = node.fall_down
+            return node.fall_down
         else:
-            label = self.seg.get_field_name(Register('R8'), dsp, 4)
-        return label
+            return self._branch_to(dsp)
 
     def branch_on_count(self, node: RegisterBranch) -> str:
         value = self.regs.get_value(node.reg)
@@ -419,23 +418,37 @@ class MoveLogicControl(State):
             return self.index_to_label(node.branch)
         return node.fall_down
 
+    def _branch_to(self, branch_add: int) -> str:
+        label = self.seg.get_field_name(Register('R8'), branch_add, 4)
+        if label is None:
+            branch_add += 0x078
+            label = self.seg.get_field_name(Register('R8'), branch_add, 4)
+            if label is None:
+                raise BctExecutionError
+        return label
+
     def branch_and_save(self, node: RegisterBranch) -> str:
         value = self.seg.evaluate(node.fall_down) + self.regs.R8
         self.regs.set_value(value, node.reg)
         return self.index_to_label(node.branch)
 
+    def branch_and_save_register(self, node: RegisterRegister) -> str:
+        value = self.seg.evaluate(node.fall_down) + self.regs.R8
+        self.regs.set_value(value, node.reg1)
+        register: str = node.reg2.reg
+        if register == "R0":
+            return node.fall_down
+        branch_address: int = self.regs.get_address(node.reg2)
+        if branch_address > 0:
+            branch_address -= self.regs.R8
+        return self._branch_to(branch_address)
+
     def branch_return(self, node: BranchConditionRegister) -> str:
         if node.mask & (1 << 3 - self.cc) != 0:
             value = self.regs.get_address(node.reg) - self.regs.R8
-            label = self.seg.get_field_name(Register('R8'), value, 4)
-            if label is None:
-                value += 0x078
-                label = self.seg.get_field_name(Register('R8'), value, 4)
-                if label is None:
-                    raise BctExecutionError
+            return self._branch_to(value)
         else:
-            label = node.fall_down
-        return label
+            return node.fall_down
 
     def branch_on_index_low_or_equal(self, node: RegisterRegisterBranch) -> str:
         increment: Register = node.reg2
