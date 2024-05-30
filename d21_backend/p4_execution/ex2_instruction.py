@@ -946,38 +946,19 @@ class DecimalArithmeticComplex(State):
             value = value * 10 ** shift_by
             packed_data = DataType('P', input=str(value)).to_bytes(node.field_len.length + 1)
             self.vm.set_bytes(packed_data, target_address, node.field_len.length + 1)
-            for index in range(node.field_len.length + 1):
-                item = self.vm.get_byte(target_address+index)
-                print("packed data", item)
         else:
             # perform right shift
             shift_by = abs(shift_by)
             rounding = node.data
             last_byte = str(value)
             first_digit = int (last_byte[-1])
-            # last_byte = self.vm.get_byte(target_address+3)
-            # print("last_byte",last_byte)
-            # last_byte &= 0xF0
-            # print("last_byte",last_byte)
-            # hex_value = hex(last_byte)
-            # print("hex_value",hex_value)
-            # extracted_digit = hex_value[2]
-            # print("extracted_digit",extracted_digit)
-            # first_digit: int = int(extracted_digit,16)
-            print("first digit",first_digit)
             sum1 = rounding + first_digit
-            print ("sum1",sum1)
-            print ("value",value)
             if sum1 > 9:
                 value = value // (10 ** shift_by) + 1
             else:
                 value = value // (10 ** shift_by)
-            print("value",value)
             packed_data = DataType('P', input=str(value)).to_bytes(node.field_len.length + 1)
             self.vm.set_bytes(packed_data, target_address, node.field_len.length + 1)
-            for index in range(node.field_len.length + 1):
-                item = self.vm.get_byte(target_address+index)
-                print("packed data", item)
         self.set_number_cc(value)
         return node.fall_down
 

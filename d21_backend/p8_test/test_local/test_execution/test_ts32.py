@@ -23,20 +23,28 @@ class Ts32Test(unittest.TestCase):
         self.assertEqual(2, int(test_data.get_field("EBT001"), 16))
 
     def test_ts32_spr_2(self):
+        self.test_data.set_field('EBW000', bytes([0x12, 0x34, 0x56, 0x7C]))
         self.test_data.set_field('EBW004', bytes([0x12, 0x35, 0x56, 0x7C]))
         test_data = self.tpf_server.run("TS32", self.test_data)
         self.assertEqual("0001235C", test_data.get_field("EBX008"))
         self.assertEqual(2, int(test_data.get_field("EBT002"), 16))
 
-    # def test_ts31_spr_3(self):
-    #     test_data = self.tpf_server.run("TS32", self.test_data)
-    #     self.assertEqual("025C", test_data.get_field("EBX012"))
-    #     self.assertEqual(2, int(test_data.get_field("EBT003"), 16))
+    def test_ts31_spr_3(self):
+        self.test_data.set_field('EBW000', bytes([0x12, 0x34, 0x56, 0x7C]))
+        self.test_data.set_field('EBW004', bytes([0x12, 0x35, 0x56, 0x7C]))
+        self.test_data.set_field('EBW008', bytes([0x25, 0x2C]))
+        test_data = self.tpf_server.run("TS32", self.test_data)
+        self.assertEqual("025C", test_data.get_field("EBX012"))
+        self.assertEqual(2, int(test_data.get_field("EBT003"), 16))
 
-    # def test_ts31_spr_4(self):
-    #     test_data = self.tpf_server.run("TS32", self.test_data)
-    #     self.assertEqual("003C", test_data.get_field("EBX016"))
-    #     self.assertEqual(2, int(test_data.get_field("EBT004"), 16))
+    def test_ts31_spr_4(self):
+        self.test_data.set_field('EBW000', bytes([0x12, 0x34, 0x56, 0x7C]))
+        self.test_data.set_field('EBW004', bytes([0x12, 0x35, 0x56, 0x7C]))
+        self.test_data.set_field('EBW008', bytes([0x25, 0x2C]))
+        self.test_data.set_field('EBW012', bytes([0x02, 0x5C]))
+        test_data = self.tpf_server.run("TS32", self.test_data)
+        self.assertEqual("003C", test_data.get_field("EBX016"))
+        self.assertEqual(2, int(test_data.get_field("EBT004"), 16))
 
 
 if __name__ == "__main__":
