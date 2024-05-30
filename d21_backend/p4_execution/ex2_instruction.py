@@ -7,7 +7,7 @@ from d21_backend.p1_utils.data_type import DataType, Register, PDataType
 from d21_backend.p1_utils.errors import PackExecutionError, BctExecutionError, ExExecutionError
 from d21_backend.p2_assembly.seg3_ins_type import RegisterRegister, RegisterFieldIndex, RegisterData, RegisterDataField, \
     RegisterRegisterField, FieldLenField, FieldData, BranchCondition, RegisterBranch, BranchConditionRegister, \
-    FieldBits, FieldLenFieldLen, FieldSingle, RegisterRegisterBranch, FieldSingleBaseDsp
+    FieldBits, FieldLenFieldLen, FieldSingle, RegisterRegisterBranch, FieldSingleBaseDsp,FieldLenFieldData
 from d21_backend.p4_execution.ex1_state import State
 
 
@@ -928,6 +928,57 @@ class DecimalArithmeticComplex(State):
         self.vm.set_bytes(DataType('P', input=str(quotient)).to_bytes(quotient_len), target_address, quotient_len)
         self.vm.set_bytes(DataType('P', input=str(remainder)).to_bytes(remainder_len), target_address + quotient_len,
                           remainder_len)
+        return node.fall_down
+
+    def srp(self, node: FieldLenFieldData) -> str:
+        def convert_six_bit_ubi_to_sbi(value1: int) -> int:
+            number_of_bits: int = 6
+            max_6_bit_ubi: int = (1 << number_of_bits) - 1
+            min_6_bit_sbi: int = 1 << number_of_bits - 1
+            return value1 - (max_6_bit_ubi + 1) if value1 & min_6_bit_sbi != 0 else value1
+
+        target_address = self.regs.get_address(node.field_len.base, node.field_len.dsp)
+        value: int = DataType('P', bytes=self.vm.get_bytes(target_address, node.field_len.length + 1)).value
+        shift_by = self.regs.get_address(node.field.base, node.field.dsp) & 0x3F
+        shift_by = convert_six_bit_ubi_to_sbi(shift_by)
+        if shift_by > 0:
+            # perform left shift
+            value = value * 10 ** shift_by
+            packed_data = DataType('P', input=str(value)).to_bytes(node.field_len.length + 1)
+            self.vm.set_bytes(packed_data, target_address, node.field_len.length + 1)
+            for index in range(node.field_len.length + 1):
+                item = self.vm.get_byte(target_address+index)
+                print("packed data", item)
+        else:
+            # perform right shift
+            shift_by = abs(shift_by)
+            rounding = node.data
+            last_byte = str(value)
+            first_digit = int (last_byte[-1])
+            # last_byte = self.vm.get_byte(target_address+3)
+            # print("last_byte",last_byte)
+            # last_byte &= 0xF0
+            # print("last_byte",last_byte)
+            # hex_value = hex(last_byte)
+            # print("hex_value",hex_value)
+            # extracted_digit = hex_value[2]
+            # print("extracted_digit",extracted_digit)
+            # first_digit: int = int(extracted_digit,16)
+            print("first digit",first_digit)
+            sum1 = rounding + first_digit
+            print ("sum1",sum1)
+            print ("value",value)
+            if sum1 > 9:
+                value = value // (10 ** shift_by) + 1
+            else:
+                value = value // (10 ** shift_by)
+            print("value",value)
+            packed_data = DataType('P', input=str(value)).to_bytes(node.field_len.length + 1)
+            self.vm.set_bytes(packed_data, target_address, node.field_len.length + 1)
+            for index in range(node.field_len.length + 1):
+                item = self.vm.get_byte(target_address+index)
+                print("packed data", item)
+        self.set_number_cc(value)
         return node.fall_down
 
     def cp(self, node: FieldLenFieldLen) -> str:

@@ -164,7 +164,7 @@ class TpfServer(Instruction, ExecutableMacro, DbMacro):
         self._ex["SP"] = self.sp
         self._ex["MP"] = self.mp
         self._ex["DP"] = self.dp
-        # SRP
+        self._ex["SRP"] = self.srp
         self._ex["CP"] = self.cp
         self._ex["TP"] = self.tp
         self._ex["TR"] = self.tr
