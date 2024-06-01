@@ -2,7 +2,6 @@ import unittest
 
 from d21_backend.p4_execution.ex5_execute import TpfServer
 from d21_backend.p8_test.test_local import TestDataUTS
-from d21_backend.p1_utils.data_type import DataType
 
 
 class Ts32Test(unittest.TestCase):
