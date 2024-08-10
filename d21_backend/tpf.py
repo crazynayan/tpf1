@@ -60,13 +60,16 @@ def reset_and_create_lxp(blob_name: str):
     return
 
 
-def init_asm_seg(filename: str, base: bool = False):
+def init_asm_seg(filename: str, base):
+    # Example: init_asm_seg("ts30.asm",base=True)
     seg_name: str = filename[:4].upper()
     folder_path: str = get_domain_folder(config.ASM) if not base else get_base_folder(config.ASM)
     file_path: str = os.path.join(folder_path, filename)
     segment: Segment = get_segment(seg_name, file_path, config.ASM, config.LOCAL)
     seg: SegLst = get_seg_lst(segment)  # Assemble the segment and create LstCmd
     SegLst.objects.filter_by(seg_name=seg_name).delete()
+    if base:
+        seg.domain = "base"
     seg.create()
     return seg
 

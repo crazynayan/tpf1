@@ -514,6 +514,8 @@ def segment_upload() -> Response:
     client = Client()
     blob = client.bucket(get_bucket()).blob(blob_name)
     if not blob.exists():
+        # The blob needs to be uploaded by the client before calling the server.
+        # If this message is being reported then server and client are out of sync. Most likely trying to upload seg in base domain.
         response["message"] = "File does NOT exists in cloud storage."
         return close_jsonify(response, client)
     valid_extensions = {f".{config.LST}", f".{config.ASM}"}
