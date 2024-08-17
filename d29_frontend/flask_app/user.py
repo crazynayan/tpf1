@@ -5,7 +5,7 @@ from flask import flash, redirect, url_for, render_template, request, Response, 
 from flask_login import UserMixin, current_user, login_user, logout_user
 from flask_wtf import FlaskForm
 from munch import Munch
-from werkzeug.urls import url_parse
+from urllib.parse import urlparse as url_parse
 from wtforms import PasswordField, SubmitField, EmailField
 from wtforms.validators import DataRequired
 
