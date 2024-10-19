@@ -6,7 +6,7 @@ chardet==5.2.0
 charset-normalizer==3.3.2
 click==8.1.7
 colorama==0.4.6
-firestore-ci==2020.8.15
+firestore-ci==2024.8.24
 Flask==3.0.3
 Flask-Cors==4.0.1
 Flask-HTTPAuth==4.8.0

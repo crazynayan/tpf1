@@ -19,4 +19,10 @@ tsj1.asm
 bo9bo.mac
 gy0box.mac
 ok1ok.mac
+.firebaserc
+firebase-debug.log
+firebase.json
+firestore-debug.log
+saved-data/
+ui-debug.log
 
