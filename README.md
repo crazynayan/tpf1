@@ -16,6 +16,10 @@ A tool to document TPF Assembler code.
 4. Python (Latest Stable version)
 5. Node.js (Latest Stable version)
 6. d20_source folder from info@crazyideas.co.in
+### Another Operating System
+* The tool will also work on other operating systems like Linux or Mac. 
+* The installation instructions here are specific to Windows, and these instructions have been tested on Windows.
+* For other operating systems, the user needs to be familiar equivalent instruction mentioned here.
 
 ## Installation Instructions
 (All commands are given on Windows Terminal)
@@ -96,6 +100,8 @@ A tool to document TPF Assembler code.
 - Activate the virtual environment. `venv\Scripts\activate`
 - Set the environment variables as per [Step 10](#10-setup-environment-variables) above.
 - `set FLASK_APP=d29_frontend.flask_app:tpf2_app`
+-  Start the web server 
+- `flask run`
 - This will give you an http endpoint. You can Ctrl-Click it to view the page in the browser.
 
 ## Using The TPF Analyzer Tool

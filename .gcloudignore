@@ -10,3 +10,4 @@ docker-compose.yml
 .gitignore
 venv/
 .git/
+d20_source.zip
