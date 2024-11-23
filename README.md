@@ -54,29 +54,36 @@ A tool to document TPF Assembler code.
 - `git config --global user.name "Your Name"`
 - Check your remote connection `git remote -v`
 - If not connected with  https://github.com/crazynayan/tpf1.git then you would need to manually connect it.
-### 10. Setup Environment Variables
-- `set SERVER_URL=call_local`
-- `set FIRESTORE_EMULATOR_HOST=127.0.0.1:8080`
-- `set FIRESTORE_EMULATOR_PROJECT_ID=tpf-analyzer`
-### 11. Installing And Initializing Firebase
-- Installing Firebase `npm install -g firebase-tools`
-- Login Firebase by following prompts and login via your google account `firebase login`
-- Initialize Firebase
+### 10. Installing And Initializing Firebase
+- Go to Firebase (http://console.firebase.google.com) 
+  - Login with your google account
+  - Create a new project. 
+  - Note down the project id. (For e.g. tpf-analyzer)
+- Return to Command Window 2 - Backend shell
+  - Install Firebase tools `npm install -g firebase-tools`
+  - Login Firebase by following prompts and login via your google account `firebase login`
+  - Initialize Firebase 
   - `firebase init `
   - Select Emulators
-  - Don't set up a default project
   - Select Firestore Emulator 
-  - Select the project tpf-analyzer (Create a new project if you don't already have one)
+  - Use the existing project id and select the project id created at http://console.firebase.google.com. (tpf-analyzer)
   - Say Yes to Emulator UI
   - Use any available port for emulator UI
   - Download the emulators now
+### 11. Setup Environment Variables
+- `set SERVER_URL=call_local`
+- `set FIRESTORE_EMULATOR_HOST=127.0.0.1:8080`
+- `set FIRESTORE_EMULATOR_PROJECT_ID=tpf-analyzer`
+  - Use the project id created in Step 10. Here we have used the project id 'tpf-analyzer'
 ### 12. Start The Firestore Emulator 
 - Open a new terminal window (Let's call it Command Window 1 - FirestoreEmulator)
 - Go to the project directory (H:\My Drive\PythonProjects\TPFAnalyzer)
 - `firebase emulators:start --only firestore --export-on-exit --import=./saved-data`
-- Please confirm the firestore has started on the same address on which the FIRESTORE_EMULATOR_HOST environment variable is set on [step 10](#10-setup-environment-variables) above.
+- Please confirm the firestore has started on the same address on which the FIRESTORE_EMULATOR_HOST environment variable is set on [step 11](#11-setup-environment-variables) above.
+- This command ensures that the data is saved across session in firestore emulator. 
+- In order for data to persist, it is important that the firestore emulator is closed properly via Ctl-C.
 ### 13. Run Unit Test
-- Go back to the project window (Command Window 2 — Backend Shell).
+- Return to the project window (Command Window 2 — Backend Shell).
 - `python -m unittest d21_backend.p8_test.test_local.test_execution.test_ts29 -v`
 - You should see 19 tests ran successfully.
 ### 14. Start The Flask Shell
@@ -86,7 +93,7 @@ A tool to document TPF Assembler code.
 - You will now be in the python prompt where you can give python commands to create users, etc.
 ### 15. Create Your User Account
 - `create_user(email="you@example.com",initial="YO",domain="general")`
-- Note down the password for later login. Or reset the password using following steps.
+- Note down the password for later login. Or reset the password using the following steps.
 ### 16. Reset Password
 - `u = User.objects.filter_by(email="you@example.com").first()`
 - `u.set_password("simple")`
@@ -98,10 +105,12 @@ A tool to document TPF Assembler code.
 - Open a new terminal window (Let's call it Command Window 3 — Web Server).
 - Go to the project directory. `H:` `cd \My Drive\PythonProjects\TPFAnalyzer`
 - Activate the virtual environment. `venv\Scripts\activate`
-- Set the environment variables as per [Step 10](#10-setup-environment-variables) above.
-- `set FLASK_APP=d29_frontend.flask_app:tpf2_app`
--  Start the web server 
-- `flask run`
+- Set the environment variables as per [Step 11](#11-setup-environment-variables) above and set FLASK_APP.
+  - `set SERVER_URL=call_local`
+  - `set FIRESTORE_EMULATOR_HOST=127.0.0.1:8080`
+  - `set FIRESTORE_EMULATOR_PROJECT_ID=tpf-analyzer`
+  - `set FLASK_APP=d29_frontend.flask_app:tpf2_app`
+-  Start the web server `flask run`
 - This will give you an http endpoint. You can Ctrl-Click it to view the page in the browser.
 
 ## Using The TPF Analyzer Tool
@@ -294,8 +303,9 @@ set FLASK_APP=d29_frontend.flask_app:tpf2_app
 set SERVER_URL=call_local
 set FIRESTORE_EMULATOR_PROJECT_ID=tpf-analyzer
 set FIRESTORE_EMULATOR_HOST=127.0.0.1:8080
+venv\Scripts\activate
 ```
-- Note: If you have created the project in a different path/drive update the batch file accordingly.
+- Note: If you have created the project in a different path/drive and used a different project id then update the batch file accordingly.
 ### 2. Flask Shell Batch File
 - Create tpfanalyzershell.bat on your home directory with the following code
 ```
