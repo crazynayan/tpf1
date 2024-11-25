@@ -79,9 +79,9 @@ A tool to document TPF Assembler code.
 - Open a new terminal window (Let's call it Command Window 1 - FirestoreEmulator)
 - Go to the project directory (H:\My Drive\PythonProjects\TPFAnalyzer)
 - `firebase emulators:start --only firestore --export-on-exit --import=./saved-data`
-- Please confirm the firestore has started on the same address on which the FIRESTORE_EMULATOR_HOST environment variable is set on [step 11](#11-setup-environment-variables) above.
-- This command ensures that the data is saved across session in firestore emulator. 
-- In order for data to persist, it is important that the firestore emulator is closed properly via Ctl-C.
+  - Please confirm the firestore has started on the same address on which the FIRESTORE_EMULATOR_HOST environment variable is set on [step 11](#11-setup-environment-variables) above.
+  - This command ensures that the data is saved across session in firestore emulator. 
+  - In order for data to persist, it is important that the firestore emulator is closed properly via Ctrl-C.
 ### 13. Run Unit Test
 - Return to the project window (Command Window 2 — Backend Shell).
 - `python -m unittest d21_backend.p8_test.test_local.test_execution.test_ts29 -v`
