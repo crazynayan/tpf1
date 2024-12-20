@@ -35,9 +35,12 @@ class Config:
     DOMAINS.BASE = "base"
     DOMAINS.TIGER = "tiger"
     DOMAINS.SML = "sml"
+    DOMAINS.CMFIRST = "cmfirst"
     DOMAIN = os.environ.get("DOMAIN") or DOMAINS.GENERAL
     MAC_FOLDER = "macro"
-    SOURCES_ROOT = os.path.join(os.path.abspath(os.path.dirname("d21_backend")), "d20_source")
+    # SOURCES_ROOT = os.path.join(os.path.abspath(os.path.dirname("d21_backend")), "d20_source")
+    SOURCES_ROOT = "d20_source"
+
     ASM_EXT = {".asm", ".txt"}
     LXP_EXT = {".lxp"}
     MAC_EXT = {".mac", ".txt"}
@@ -46,10 +49,10 @@ class Config:
     REG_INVALID: str = "??"
     REG: Dict[str, List[str]] = {
         "R0": ["0", "00", "R0", "R00", "RAC"], "R1": ["1", "01", "R1", "R01", "RG1"],
-        "R2": ["2", "02", "R2", "R02", "RGA"], "R3": ["3", "03", "R3", "R03", "RGB"],
-        "R4": ["4", "04", "R4", "R04", "RGC"], "R5": ["5", "05", "R5", "R05", "RGD"],
-        "R6": ["6", "06", "R6", "R06", "RGE"], "R7": ["7", "07", "R7", "R07", "RGF"],
-        "R8": ["8", "08", "R8", "R08", "RAP"], "R9": ["9", "09", "R9", "R09", "REB"],
+        "R2": ["2", "02", "R2", "R02", "RGA", "RG2"], "R3": ["3", "03", "R3", "R03", "RGB", "RG3"],
+        "R4": ["4", "04", "R4", "R04", "RGC", "RG4"], "R5": ["5", "05", "R5", "R05", "RGD", "RG5"],
+        "R6": ["6", "06", "R6", "R06", "RGE", "RG6"], "R7": ["7", "07", "R7", "R07", "RGF", "RG7"],
+        "R8": ["8", "08", "R8", "R08", "RAP","RG8"], "R9": ["9", "09", "R9", "R09", "REB", "RG9"],
         "R10": ["10", "R10", "RLA"], "R11": ["11", "R11", "RLB"],
         "R12": ["12", "R12", "RLC"], "R13": ["13", "R13", "RLD"],
         "R14": ["14", "R14", "RDA"], "R15": ["15", "R15", "RDB"],
