@@ -295,6 +295,9 @@ class RealTimeDbMacro(State):
         face_type = self.regs.R6
         address = self.regs.R7 + 4
         file_address = int(FlatFile.face(face_type, ordinal), 16)
+        if file_address == FlatFile.FACE_FAIL_ERROR:
+            self.regs.R0 = 0
+            return node.fall_down
         self.vm.set_value(file_address, address)
         return node.fall_down
 

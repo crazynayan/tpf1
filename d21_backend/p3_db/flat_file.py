@@ -6,6 +6,7 @@ from d21_backend.p1_utils.errors import FaceError, FileError
 
 class FlatFile:
     DB: Dict[str, bytearray] = dict()
+    FACE_FAIL_ERROR: str = "Face Fail Error"
 
     @classmethod
     def init_db(cls):
@@ -62,7 +63,7 @@ class FlatFile:
         elif face_type < 0x7FFFFF and ordinal < 0xFF:
             file_address = f"{face_type:06X}{ordinal:02X}"
         else:
-            raise FaceError
+            return FlatFile.FACE_FAIL_ERROR
         return file_address
 
     @classmethod
