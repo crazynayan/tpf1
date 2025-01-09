@@ -291,13 +291,15 @@ class RealTimeDbMacro(State):
         return success_label
 
     def face(self, node: InstructionGeneric) -> str:
-        ordinal = self.regs.R0
-        face_type = self.regs.R6
-        address = self.regs.R7 + 4
-        file_address = int(FlatFile.face(face_type, ordinal), 16)
-        if file_address == FlatFile.FACE_FAIL_ERROR:
+        ordinal: int = self.regs.R0
+        face_type: int = self.regs.R6
+        address: int = self.regs.R7 + 4
+        file_address_str: str = FlatFile.face(face_type, ordinal)
+        if file_address_str == FlatFile.FACE_FAIL_ERROR:
             self.regs.R0 = 0
             return node.fall_down
+        file_address: int = int(file_address_str, 16)
+        self.regs.R0 = face_type # Actual implementation would be to set the max ordinal of the face type
         self.vm.set_value(file_address, address)
         return node.fall_down
 
