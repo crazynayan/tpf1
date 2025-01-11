@@ -641,15 +641,17 @@
                             REPEAT-{{ file.fixed_item_repeat }}
                         </div>
                     </div>
-                    {% for field_data in file_item.field_data %}
-                        <div class="row">
-                            <div class="col-md-2"></div>
-                            <div class="col-md-2">
-                                {{ field_data.field }}
+                    {% if file.file_item %}
+                        {% for field_data in file.file_item.field_data %}
+                            <div class="row">
+                                <div class="col-md-2"></div>
+                                <div class="col-md-2">
+                                    {{ field_data.field }}
+                                </div>
+                                <div class="col-md-2"><kbd>{{ field_data.data }}</kbd></div>
                             </div>
-                            <div class="col-md-2"><kbd>{{ field_data.data }}</kbd></div>
-                        </div>
-                    {% endfor %}
+                        {% endfor %}
+                    {% endif %}
                 {% endif %}
                 {% if file.pool_rec_id %}
                     <div class="row">
