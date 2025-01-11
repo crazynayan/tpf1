@@ -1,4 +1,5 @@
 import os
+import pathlib
 from typing import List
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "google-cloud-tokyo.json"
@@ -65,6 +66,7 @@ def init_asm_seg(filename: str, base):
     seg_name: str = SegmentCollection.filename_parser(filename)
     folder_path: str = get_domain_folder(config.ASM) if not base else get_base_folder(config.ASM)
     file_path: str = os.path.join(folder_path, filename)
+    file_path = pathlib.Path(file_path).as_posix()
     segment: Segment = get_segment(seg_name, file_path, config.ASM, config.LOCAL)
     seg: SegLst = get_seg_lst(segment)  # Assemble the segment and create LstCmd
     SegLst.objects.filter_by(seg_name=seg_name).delete()
