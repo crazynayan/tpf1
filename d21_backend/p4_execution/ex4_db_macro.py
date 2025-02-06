@@ -436,7 +436,7 @@ class TpfdfMacro(State):
         other_keys = self._get_other_keys(node)
         # Get the lrec
         ref_name = node.get_value("REF")
-        item_number = 1 if node.get_value("BEGIN") else self.tpfdf_ref.get(ref_name, -1) + 1
+        item_number = 1 if "BEGIN" in node.keys else self.tpfdf_ref.get(ref_name, -1) + 1
         item_numbers = Tpfdf.get_item_numbers(ref_name, key, other_keys, item_number)
         self.tpfdf_ref[ref_name] = item_numbers[0] if item_numbers else Tpfdf.get_size(ref_name)
         lrec = Tpfdf.get_lrec_from_item_number(ref_name, item_numbers[0]) if item_numbers else None
