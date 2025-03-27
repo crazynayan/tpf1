@@ -1,8 +1,6 @@
 import unittest
 from base64 import b64encode
 from copy import deepcopy
-
-from d21_backend.config import config
 from d21_backend.p1_utils.data_type import DataType
 from d21_backend.p2_assembly.mac2_data_macro import get_macros
 from d21_backend.p3_db.test_data_elements import FixedFile, PoolFile, FileItem
@@ -27,18 +25,18 @@ class CctTest(unittest.TestCase):
         # Test data display fields
         self.test_data.add_fields([("EBW000",2),("EBX00",2),("EBT000",2)],"EB0EB")
         # Item setup
-        self.t4_item = [{"field": "T40CCD", "data": b64encode(bytearray[0xC1, 0xC1]).decode()}]
-        self.u4_item = [{"field": "U49CAR", "data": b64encode(bytearray[0xC1, 0xC1]).decode()},
-                        {"field": "U49NAM", "data": b64encode(bytearray[0xC1, 0xD4, 0xC5, 0xD9, 0xC9, 0xC3, 0xC1, 0xD5, 0x40, 0xC1, 0xC9, 0xD9, 0xD3, 0xC9, 0xD5, 0xC5, 0xE2]).decode()}]
+        self.t4_item = [{"field": "T40CCD", "data": b64encode(bytearray([0xC1, 0xC1])).decode()}]
+        self.u4_item = [{"field": "U49CAR", "data": b64encode(bytearray([0xC1, 0xC1])).decode()},
+                        {"field": "U49NAM", "data": b64encode(bytearray([0xC1, 0xD4, 0xC5, 0xD9, 0xC9, 0xC3, 0xC1, 0xD5, 0x40, 0xC1, 0xC9, 0xD9, 0xD3, 0xC9, 0xD5, 0xC5, 0xE2])).decode()}]
 
-    def _tjr_setup(self, iy_chain_count: int = 0, variation: int = 0):
+    def _tjr_setup(self, u4_chain_count: int = 0):
         # Fixed File setup
         fixed_file = FixedFile()
-        fixed_file.variation = variation
-        fixed_file.rec_id = DataType("C", input="T4").value
+        fixed_file.variation = 0
+        fixed_file.rec_id = DataType("C", input="4T").value
         fixed_file.macro_name = "T404T"
         fixed_file.fixed_type = get_macros()["SYSEQC"].evaluate("#MISCL")
-        fixed_file.fixed_ordinal = 0x17F
+        fixed_file.fixed_ordinal = 0x6E
         item = FileItem()
         fixed_file.file_items.append(item)
         item.macro_name = "T404T"
@@ -50,10 +48,10 @@ class CctTest(unittest.TestCase):
         pool_file = PoolFile()
         fixed_file.pool_files.append(pool_file)
         pool_file.macro_name = "U404U"
-        pool_file.rec_id = DataType("C", input="U4").value
+        pool_file.rec_id = DataType("C", input="4U").value
         pool_file.index_macro_name = "T404T"
-        pool_file.index_field = "TJ0ATH"
-        pool_file.forward_chain_label = "T40FAD"
+        pool_file.index_field = "T40FAD"
+        pool_file.forward_chain_label = "U40FCH"
         pool_file.forward_chain_count = u4_chain_count
         item = FileItem()
         pool_file.file_items.append(item)
@@ -64,6 +62,7 @@ class CctTest(unittest.TestCase):
         item.adjust = False
         file_dict = fixed_file.cascade_to_dict()
         del file_dict["id"]
+        del file_dict["file_items"][0]["id"]
         del file_dict["pool_files"][0]["id"]
         del file_dict["pool_files"][0]["file_items"][0]["id"]
         self.test_data.create_fixed_file(file_dict, persistence=False)
@@ -83,12 +82,14 @@ class CctTest(unittest.TestCase):
                                          "field_data": str(), "seg_name": str()}, persistence=False)
         self.test_data.create_ecb_level({"variation": 3, "variation_name": str(), "ecb_level": "0", "hex_data": "0000D96161C2C161C2C14E",
                                          "field_data": str(), "seg_name": str()}, persistence=False)
-        self._tjr_setup
+        self._tjr_setup()
+        self.test_data.output.debug = ["TRG1"]
         test_data = self.tpf_server.run("TRG1", self.test_data)
-        self.assertIn("AMERICAN AIRLIN", test_data.output[0].messages)
-        self.assertIn("CARRIER CODE NOT PRESENT", test_data.output[1].messages)
-        self.assertIn("TRAINEE CODE NOT PRESENT", test_data.output[2].messages)
-        self.assertIn("TRAINEE CODE NOT PRESENT", test_data.output[3].messages)
+        self.assertListEqual([],test_data.outputs[0].dumps)
+        self.assertEqual("AMERICAN AIRLIN", test_data.outputs[0].messages[0][:15])
+        self.assertIn("CARRIER CODE NOT PRESENT", test_data.outputs[1].messages)
+        self.assertIn("TRAINEE CODE NOT PRESENT", test_data.outputs[2].messages)
+        self.assertIn("TRAINEE CODE NOT PRESENT", test_data.outputs[3].messages)
 
     def test_cct02_input_entry_validation(self) -> None:
         self.test_data.create_ecb_level({"variation": 0, "variation_name": str(), "ecb_level": "0", "hex_data": "0000D96161C1C161C1C1C14E",
@@ -107,42 +108,22 @@ class CctTest(unittest.TestCase):
                                          "field_data": str(), "seg_name": str()}, persistence=False)
         self._tjr_setup()
         test_data = self.tpf_server.run("TRG1", self.test_data)
-        self.assertIn("INVALID CARRIER CODE", test_data.output[0].messages)
-        self.assertIn("INVALID ACTION CODE", test_data.output[1].messages)
-        self.assertIn("INVALID SEPARATOR", test_data.output[2].messages)
-        self.assertIn("TRAINEE CODE NOT ALPHA", test_data.output[3].messages)
-        self.assertIn("TRAINEE CODE NOT ALPHA", test_data.output[4].messages)
-        self.assertIn("CARRIER CODE NOT ALPHA", test_data.output[5].messages)
-        self.assertIn("CARRIER CODE NOT ALPHA", test_data.output[6].messages)
+        self.assertIn("INVALID CARRIER CODE", test_data.outputs[0].messages)
+        self.assertIn("INVALID ACTION CODE", test_data.outputs[1].messages)
+        self.assertIn("INVALID SEPARATOR", test_data.outputs[2].messages)
+        self.assertIn("TRAINEE CODE NOT ALPHA", test_data.outputs[3].messages)
+        self.assertIn("TRAINEE CODE NOT ALPHA", test_data.outputs[4].messages)
+        self.assertIn("CARRIER CODE NOT ALPHA", test_data.outputs[5].messages)
+        self.assertIn("CARRIER CODE NOT ALPHA", test_data.outputs[6].messages)
 
     def test_cct03_file_error(self) -> None:
         # Test data setup
         self.test_data.set_global_field("@TRROR", "00000000", 0)
         self.test_data.create_ecb_level({"variation": 0, "variation_name": str(), "ecb_level": "0", "hex_data": "0000D96161C1C161C1C14E",
                                          "field_data": str(), "seg_name": str()}, persistence=False)
-        self._tjr_setup
-        test_data = self.tpf_server.run("TRG1", self.test_data
-        self.assertIn("CAD002", test_data.output[0].dumps)
-
-    def test_finwc_fail(self) -> None:
-        self.iy_item[0]["data"] = b64encode(DataType("X", input="00006F2F").to_bytes()).decode()
         self._tjr_setup()
-        self.test_data.errors.append("TSJ1FINE")
         test_data = self.tpf_server.run("TRG1", self.test_data)
-        self.assertEqual("TSJ1500.1", test_data.output.last_line)
-        self.assertIn("BAD123", test_data.output.dumps)
-
-    def test_variation(self):
-        self.iy_item[0]["data"] = b64encode(DataType("X", input="00006F2F").to_bytes()).decode()
-        self._tjr_setup()
-        self.iy_item[1]["data"] = b64encode(bytearray([get_macros()["IY1IY"].evaluate("#IY1LOK")])).decode()
-        self._tjr_setup(variation=1)
-        test_data = self.tpf_server.run("TSJ1", self.test_data)
-        self.assertEqual("TSJ1ERR.3", test_data.outputs[0].last_line)
-        self.assertEqual(8, test_data.outputs[0].regs["R6"])
-        self.assertEqual("TSJ1PASS.3", test_data.outputs[1].last_line)
-        self.assertEqual(0, test_data.outputs[1].regs["R6"])
-
+        self.assertIn("CAD002", test_data.outputs[0].dumps)
 
 if __name__ == "__main__":
     unittest.main()
