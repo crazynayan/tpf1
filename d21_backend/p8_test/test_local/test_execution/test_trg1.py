@@ -29,7 +29,7 @@ class CctTest(unittest.TestCase):
         self.u4_item = [{"field": "U49CAR", "data": b64encode(bytearray([0xC1, 0xC1])).decode()},
                         {"field": "U49NAM", "data": b64encode(bytearray([0xC1, 0xD4, 0xC5, 0xD9, 0xC9, 0xC3, 0xC1, 0xD5, 0x40, 0xC1, 0xC9, 0xD9, 0xD3, 0xC9, 0xD5, 0xC5, 0xE2])).decode()}]
 
-    def _tjr_setup(self, u4_chain_count: int = 0):
+    def _file_setup(self, u4_chain_count: int = 0):
         # Fixed File setup
         fixed_file = FixedFile()
         fixed_file.variation = 0
@@ -82,7 +82,7 @@ class CctTest(unittest.TestCase):
                                          "field_data": str(), "seg_name": str()}, persistence=False)
         self.test_data.create_ecb_level({"variation": 3, "variation_name": str(), "ecb_level": "0", "hex_data": "0000D96161C2C161C2C14E",
                                          "field_data": str(), "seg_name": str()}, persistence=False)
-        self._tjr_setup()
+        self._file_setup()
         self.test_data.output.debug = ["TRG1"]
         test_data = self.tpf_server.run("TRG1", self.test_data)
         self.assertListEqual([],test_data.outputs[0].dumps)
@@ -106,7 +106,7 @@ class CctTest(unittest.TestCase):
                                          "field_data": str(), "seg_name": str()}, persistence=False)
         self.test_data.create_ecb_level({"variation": 6, "variation_name": str(), "ecb_level": "0", "hex_data": "0000D96161C1C161C1F14E",
                                          "field_data": str(), "seg_name": str()}, persistence=False)
-        self._tjr_setup()
+        self._file_setup()
         test_data = self.tpf_server.run("TRG1", self.test_data)
         self.assertIn("INVALID CARRIER CODE", test_data.outputs[0].messages)
         self.assertIn("INVALID ACTION CODE", test_data.outputs[1].messages)
@@ -121,7 +121,7 @@ class CctTest(unittest.TestCase):
         self.test_data.set_global_field("@TRROR", "00000000", 0)
         self.test_data.create_ecb_level({"variation": 0, "variation_name": str(), "ecb_level": "0", "hex_data": "0000D96161C1C161C1C14E",
                                          "field_data": str(), "seg_name": str()}, persistence=False)
-        self._tjr_setup()
+        self._file_setup()
         test_data = self.tpf_server.run("TRG1", self.test_data)
         self.assertIn("CAD002", test_data.outputs[0].dumps)
 
