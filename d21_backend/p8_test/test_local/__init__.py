@@ -38,10 +38,10 @@ class TestDataUTS(TestData):
                       "variation_name": str()}
         self.create_field_byte(macro_name, field_dict, persistence=False)
 
-    def set_global_field(self, global_name: str, hex_data: str, variation: int = 0) -> None:
+    def set_global_field(self, global_name: str, hex_data: str, variation: int = 0, persistence: bool = False) -> None:
         body = {"global_name": global_name, "variation": variation, "variation_name": str(), "is_global_record": False,
                 "hex_data": hex_data, "seg_name": str(), "field_data": str()}
-        self.create_global(body, persistence=False)
+        self.create_global(body, persistence)
 
     def set_global_record(self, global_name: str, field_data: str, seg_name: str, variation: int = 0) -> None:
         body = {"global_name": global_name, "variation": variation, "variation_name": str(), "is_global_record": True,
