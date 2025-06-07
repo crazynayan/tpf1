@@ -130,29 +130,60 @@ class CctTest(unittest.TestCase):
         return
 
     def create_cct02_input_entry_validation(self, test_data, persistence: bool = False) -> None:
-        # TODO: make this as above test_data creation
-        test_data.create_ecb_level({"variation": 0, "variation_name": str(), "ecb_level": "0", "hex_data": "0000D96161C1C161C1C1C14E",
-                                    "field_data": str(), "seg_name": str()}, persistence=persistence)
-        test_data.create_ecb_level({"variation": 1, "variation_name": str(), "ecb_level": "0", "hex_data": "0000D76161C1C161C1C14E",
-                                    "field_data": str(), "seg_name": str()}, persistence=persistence)
-        test_data.create_ecb_level({"variation": 2, "variation_name": str(), "ecb_level": "0", "hex_data": "0000D96161C1C1C1C14E",
-                                    "field_data": str(), "seg_name": str()}, persistence=persistence)
-        test_data.create_ecb_level({"variation": 3, "variation_name": str(), "ecb_level": "0", "hex_data": "0000D96161F1C161C1C14E",
-                                    "field_data": str(), "seg_name": str()}, persistence=persistence)
-        test_data.create_ecb_level({"variation": 4, "variation_name": str(), "ecb_level": "0", "hex_data": "0000D96161C1F161C1C14E",
-                                    "field_data": str(), "seg_name": str()}, persistence=persistence)
-        test_data.create_ecb_level({"variation": 5, "variation_name": str(), "ecb_level": "0", "hex_data": "0000D96161C1C161F1C14E",
-                                    "field_data": str(), "seg_name": str()}, persistence=persistence)
-        test_data.create_ecb_level({"variation": 6, "variation_name": str(), "ecb_level": "0", "hex_data": "0000D96161C1C161C1F14E",
-                                    "field_data": str(), "seg_name": str()}, persistence=persistence)
+        create_ecb_level_request: Munch = Munch()
+        create_ecb_level_request.variation_name = ""
+        create_ecb_level_request.ecb_level = "0"
+        create_ecb_level_request.field_data = ""
+        create_ecb_level_request.seg_name = ""
+        create_ecb_level_request0: Munch = deepcopy(create_ecb_level_request)
+        create_ecb_level_request0.variation = 0
+        create_ecb_level_request0.hex_data = "0000D96161C1C161C1C1C14E"
+        test_data.create_ecb_level(create_ecb_level_request0, persistence=persistence)
+        create_ecb_level_request1: Munch = deepcopy(create_ecb_level_request)
+        create_ecb_level_request1.variation = 1
+        create_ecb_level_request1.hex_data = "0000D76161C1C161C1C14E"
+        test_data.create_ecb_level(create_ecb_level_request1, persistence=persistence)
+        create_ecb_level_request2: Munch = deepcopy(create_ecb_level_request)
+        create_ecb_level_request2.variation = 2
+        create_ecb_level_request2.hex_data = "0000D96161C1C1C1C14E"
+        test_data.create_ecb_level(create_ecb_level_request2, persistence=persistence)
+        create_ecb_level_request3: Munch = deepcopy(create_ecb_level_request)
+        create_ecb_level_request3.variation = 3
+        create_ecb_level_request3.hex_data = "0000D96161F1C161C1C14E"
+        test_data.create_ecb_level(create_ecb_level_request3, persistence=persistence)
+        create_ecb_level_request4: Munch = deepcopy(create_ecb_level_request)
+        create_ecb_level_request4.variation = 4
+        create_ecb_level_request4.hex_data = "0000D96161C1F161C1C14E"
+        test_data.create_ecb_level(create_ecb_level_request4, persistence=persistence)
+        create_ecb_level_request5: Munch = deepcopy(create_ecb_level_request)
+        create_ecb_level_request5.variation = 5
+        create_ecb_level_request5.hex_data = "0000D96161C1C161F1C14E"
+        test_data.create_ecb_level(create_ecb_level_request5, persistence=persistence)
+        create_ecb_level_request6: Munch = deepcopy(create_ecb_level_request)
+        create_ecb_level_request6.variation = 6
+        create_ecb_level_request6.hex_data = "0000D96161C1C161C1F14E"
+        test_data.create_ecb_level(create_ecb_level_request6, persistence=persistence)
         self.file_setup(test_data, persistence=persistence)
         return
 
     def create_cct03_file_error(self, test_data, persistence: bool = False) -> None:
-        # TODO: make this as above test_data creation
-        test_data.set_global_field("@TRROR", "00000000", 0, persistence=persistence)  # This needs to be updated to use create_global
-        test_data.create_ecb_level({"variation": 0, "variation_name": str(), "ecb_level": "0", "hex_data": "0000D96161C1C161C1C14E",
-                                    "field_data": str(), "seg_name": str()}, persistence=persistence)
+        create_global_request: Munch = Munch()
+        create_global_request.global_name = "@TRROR"
+        create_global_request.variation_name = ""
+        create_global_request.is_global_record = False
+        create_global_request.hex_data = "00000000"
+        create_global_request.seg_name = ""
+        create_global_request.field_data = ""
+        create_global_request.variation = 0
+        test_data.create_global(create_global_request, persistence=persistence)
+        create_ecb_level_request: Munch = Munch()
+        create_ecb_level_request.variation_name = ""
+        create_ecb_level_request.ecb_level = "0"
+        create_ecb_level_request.field_data = ""
+        create_ecb_level_request.seg_name = ""
+        create_ecb_level_request.variation = 0
+        create_ecb_level_request.hex_data = "0000D96161C1C161C1C14E"
+        test_data.create_ecb_level(create_ecb_level_request, persistence=persistence)
         self.file_setup(test_data, persistence=persistence)
         return
 
@@ -186,21 +217,39 @@ class CctTest(unittest.TestCase):
         create_test_data_request.seg_name = "TRG1"
         create_test_data_request.stop_segments = ""
         create_test_data_request.startup_script = ""
+        # cct01
         cct01_create_test_data_request = deepcopy(create_test_data_request)
         cct01_create_test_data_request.name = "cct01"
-        rsp = test_data_create(cct01_create_test_data_request)
-        cct01_test_data_id = rsp["id"]
+        rsp = Munch.fromDict(test_data_create(cct01_create_test_data_request))
+        cct01_test_data_id = rsp.id
         self.assertIsNotNone(cct01_test_data_id)
         cct01_test_data = get_whole_test_data(cct01_test_data_id, link=False)
         self.create_cct01_carrier_code_to_airline_name_translation(cct01_test_data, persistence=True)
-        # TODO: Add cct02 and cct03
+        # cct02
+        cct02_create_test_data_request = deepcopy(create_test_data_request)
+        cct02_create_test_data_request.name = "cct02"
+        rsp = Munch.fromDict(test_data_create(cct02_create_test_data_request))
+        cct02_test_data_id = rsp.id
+        self.assertIsNotNone(cct02_test_data_id)
+        cct02_test_data = get_whole_test_data(cct02_test_data_id, link=False)
+        self.create_cct02_input_entry_validation(cct02_test_data, persistence=True)
+        # cct03
+        cct03_create_test_data_request = deepcopy(create_test_data_request)
+        cct03_create_test_data_request.name = "cct03"
+        rsp = Munch.fromDict(test_data_create(cct03_create_test_data_request))
+        cct03_test_data_id = rsp.id
+        self.assertIsNotNone(cct03_test_data_id)
+        cct03_test_data = get_whole_test_data(cct03_test_data_id, link=False)
+        self.create_cct03_file_error(cct03_test_data, persistence=True)
         run_profiler_request: Munch = Munch()
         run_profiler_request.seg_name = "TRG1"
-        run_profiler_request.test_data_ids = [cct01_test_data_id]
+        run_profiler_request.test_data_ids = [cct01_test_data_id, cct02_test_data_id, cct03_test_data_id]
         rsp = Munch.fromDict(run_profiler(run_profiler_request))
         cct01_test_data.delete_test_data(cct01_test_data_id)
+        cct02_test_data.delete_test_data(cct02_test_data_id)
+        cct03_test_data.delete_test_data(cct03_test_data_id)
         self.assertEqual("Profiler ran successfully.", rsp.message, rsp.error_fields)
-        self.assertEqual("58%", rsp.data.documentation_coverage)
+        self.assertEqual("76%", rsp.data.documentation_coverage)
 
 
 
