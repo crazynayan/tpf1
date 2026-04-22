@@ -65,11 +65,11 @@ def init_asm_seg(filename: str, base):
     # Example: init_asm_seg("ts30.asm",base=True)
     seg_name: str = SegmentCollection.filename_parser(filename)
     folder_path: str = get_domain_folder(config.ASM) if not base else get_base_folder(config.ASM)
-    file_path: str = os.path.join(folder_path, filename)
+    file_path: str = os.path.join(folder_path, filename.lower())
     file_path = pathlib.Path(file_path).as_posix()
     segment: Segment = get_segment(seg_name, file_path, config.ASM, config.LOCAL)
     seg: SegLst = get_seg_lst(segment)  # Assemble the segment and create LstCmd
-    SegLst.objects.filter_by(seg_name=seg_name).delete()
+    SegLst.objects.filter_by(seg_name=seg_name,domain=config.DOMAIN).delete()
     if base:
         seg.domain = "base"
     seg.create()
@@ -83,6 +83,10 @@ def init_all_asm_segments_in_base():
     
     
 def init_all_asm_segments_in_domain(domain: str):
+    if not is_domain_valid(domain):
+        print("Invalid domain")
+        return
+    config.DOMAIN = domain
     for seg_name, _ in read_folder(get_domain_folder(config.ASM), config.ASM_EXT, SegmentCollection.filename_parser):
         seg = init_asm_seg(f"{seg_name}.asm", base=False)
         print(f"{seg.seg_name} initialized")
