@@ -30,12 +30,16 @@ class Config:
     BUCKETS.GENERAL = "tpf-general"
     BUCKETS.TIGER = "tpf-listings"
     BUCKETS.SML = "tpf-sml"
+    BUCKETS.UNITED = "tpf-general"
+    BUCKETS.DELTA = "tpf-general"
     DOMAINS = SimpleNamespace()
     DOMAINS.GENERAL = "general"
     DOMAINS.BASE = "base"
     DOMAINS.TIGER = "tiger"
     DOMAINS.SML = "sml"
     DOMAINS.CMFIRST = "cmfirst"
+    DOMAINS.UNITED = "united"
+    DOMAINS.DELTA = "delta"
     DOMAIN = os.environ.get("DOMAIN") or DOMAINS.GENERAL
     MAC_FOLDER = "macro"
     # SOURCES_ROOT = os.path.join(os.path.abspath(os.path.dirname("d21_backend")), "d20_source")
