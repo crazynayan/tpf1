@@ -8,6 +8,12 @@ tpf2_app.config.from_object(Config)
 login = LoginManager(tpf2_app)
 login.login_view = 'login'
 
+from wtforms.widgets import Input
+
+# Force the missing attribute onto the Input class at runtime
+if not hasattr(Input, 'validation_attrs'):
+    Input.validation_attrs = ["required", "datalist", "minlength", "maxlength", "min", "max", "step"]
+
 # noinspection PyPep8
 from d29_frontend.flask_app import routes
 from d29_frontend.flask_app.user import login, logout

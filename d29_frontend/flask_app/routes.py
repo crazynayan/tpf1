@@ -79,3 +79,14 @@ def unsupported_instructions():
         return redirect(url_for("logout"))
     return render_template("unsupported_instructions.html", title="Unsupported Instructions",
                            commands=commands["unsupported_instructions"])
+
+
+@tpf2_app.route('/debug/wtforms/')
+def debug_version():
+    import wtforms
+    import flask_wtf
+    return {
+        "wtforms_version": wtforms.__version__,
+        "wtforms_path": wtforms.__file__,
+        "flask_wtf_version": flask_wtf.__version__
+    }

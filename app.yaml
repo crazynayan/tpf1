@@ -1,4 +1,4 @@
-runtime: python310
+runtime: python311
 
 entrypoint: gunicorn -b :$PORT d29_frontend.flask_app:tpf2_app
 
